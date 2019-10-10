@@ -88,7 +88,7 @@ END UnlockOberon;
 
 (** List all currently loaded modules *)
 PROCEDURE ListModules*(context : Commands.Context);
-VAR m: Modules.Module; options: Options.Options; details: BOOLEAN; first, reverse: BOOLEAN;
+VAR options: Options.Options; first, reverse: BOOLEAN;
 
 	PROCEDURE List(m: Modules.Module);
 	BEGIN
@@ -618,7 +618,7 @@ with command line shell to act as simple CGI script this way:
 **)
 PROCEDURE RemoveFirstLineComment(string: Strings.String);
 VAR
-	i, j, len: SIZE;
+	i, len: SIZE;
 BEGIN
 	IF string # NIL THEN
 		len := LEN(string^);

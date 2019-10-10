@@ -121,7 +121,7 @@ TYPE
 		END DataBlock;
 
 		PROCEDURE ParseLogFile*(file: Files.File): Block;
-		VAR reader: Files.Reader; newline: BOOLEAN; sectionName: ObjectFile.SectionName; scanner: Scanner.AssemblerScanner;
+		VAR reader: Files.Reader; sectionName: ObjectFile.SectionName; scanner: Scanner.AssemblerScanner;
 			token: Scanner.Token; b: BOOLEAN; block: Block; first: Block; last: Block;
 
 			PROCEDURE GetNextToken;

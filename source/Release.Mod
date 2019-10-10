@@ -1681,7 +1681,7 @@ TYPE
 		END Show;
 
 		PROCEDURE GetReleaseSet(build : BuildObj; VAR release : Set): BOOLEAN;
-		VAR prefix, index, i : SIZE;
+		VAR prefix, index : SIZE;
 		BEGIN
 			SetEmpty(release);
 			FOR prefix := 0 TO LEN(build.prefixes)-1 DO
@@ -2385,7 +2385,7 @@ TYPE
 
 			(* Factor = Identifier | '~' Factor | '(' Prefixes ')'. *)
 			PROCEDURE Factor (VAR value: Expression): BOOLEAN;
-			VAR index: SIZE; message : ARRAY 128 OF CHAR;
+			VAR message : ARRAY 128 OF CHAR;
 			BEGIN
 				IF token = "(" THEN
 					IF ~scanner.Get(token) THEN RETURN FALSE END;
@@ -2462,15 +2462,6 @@ TYPE
 
 	END Parser;
 
-
-	PROCEDURE SetAll(VAR s: Set);
-	VAR i: SIZE;
-	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO
-			s[i] := {MIN(SET)..MAX(SET)};
-		END;
-	END SetAll;
-
 	PROCEDURE SetEmpty(VAR s: Set);
 	VAR i: SIZE;
 	BEGIN
@@ -2479,57 +2470,10 @@ TYPE
 		END;
 	END SetEmpty;
 
-	PROCEDURE IsAll(CONST s: Set): BOOLEAN;
-	VAR i: SIZE;
-	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO
-			IF s[i] # {MIN(SET)..MAX(SET)} THEN RETURN FALSE END;
-		END;
-		RETURN TRUE;
-	END IsAll;
-
-	PROCEDURE IsEmpty(CONST s: Set): BOOLEAN;
-	VAR i: SIZE;
-	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO
-			IF s[i] # {} THEN RETURN FALSE END;
-		END;
-		RETURN TRUE;
-	END IsEmpty;
-
 	PROCEDURE Incl(VAR s: Set; i: SIZE);
 	BEGIN
 		INCL(s[i DIV SetSize], i MOD SetSize);
 	END Incl;
-
-	PROCEDURE Excl(VAR s: Set; i: SIZE);
-	BEGIN
-		EXCL(s[i DIV SetSize], i MOD SetSize);
-	END Excl;
-
-	PROCEDURE Complement(VAR s: Set);
-	VAR i: SIZE;
-	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO
-			s[i] := -s[i];
-		END;
-	END Complement;
-
-	PROCEDURE Union(VAR s: Set; CONST t: Set);
-	VAR i: SIZE;
-	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO
-			s[i] := s[i] + t[i];
-		END;
-	END Union;
-
-	PROCEDURE Intersection(VAR s: Set; CONST t: Set);
-	VAR i: SIZE;
-	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO
-			s[i] := s[i] * t[i];
-		END;
-	END Intersection;
 
 	PROCEDURE In(CONST s: Set; i: SIZE): BOOLEAN;
 	BEGIN

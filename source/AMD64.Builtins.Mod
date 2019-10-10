@@ -43,7 +43,7 @@ END CompareString;
 
 (* copy string from src to dest, emits trap if not 0X terminated or destination too short *)
 PROCEDURE CopyString*(VAR dest: ARRAY OF CHAR; CONST src: ARRAY OF CHAR);
-VAR i: SIZE; ch :CHAR; l1, l2: SIZE;
+VAR l1, l2: SIZE;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	(*
 	i := 0;

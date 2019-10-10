@@ -159,11 +159,6 @@ TYPE
 		(* data *)
 	END;
 
-	(* a single pointer -- required as base type TD for array of pointer
-		Don't rename this. Compiler refers to this TD by name
-	*)
-	AnyPtr = RECORD a: ANY END;
-
 TYPE
 	GCStatus* = OBJECT
 		(* the following procedures are overridden in Objects.GCStatusExt. The reason is that shared objects can only be implemented in modules Objects or higher *)

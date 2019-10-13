@@ -6362,6 +6362,9 @@ TYPE
 					procedureType.SetInterrupt(TRUE);
 					procedureType.SetCallingConvention(SyntaxTree.InterruptCallingConvention)
 				END;
+				IF HasFlag(modifiers,Global.NameTest,position) THEN 
+					procedure.SetTest(TRUE);
+				END;				
 				IF HasFlag(modifiers, Global.NameNoReturn, position) THEN
 					procedureType.SetNoReturn(TRUE);
 				END;
@@ -6415,6 +6418,21 @@ TYPE
 						Error(procedure.position, "invalid type for extern origin specification")
 					END;
 				END;
+				
+				IF procedure.isTest THEN
+					IF (procedure.access * SyntaxTree.Public = {}) THEN
+						Error(procedure.position, "forbidden non-exported test procedure");
+					END; 
+					IF ~ (procedure.scope IS SyntaxTree.ModuleScope) THEN
+						Error(procedure.position, "test procedure not in module scope");					
+					END; 
+					IF (procedureType.firstParameter # NIL) THEN
+						Error(procedure.position, "forbidden test procedure with parameters");					
+					END;
+					IF (procedureType.returnType # NIL) THEN
+						Error(procedure.position, "forbidden test procedure with return type");					
+					END;
+				END; 
 
 				procedure.SetState(SyntaxTree.Resolved);
 

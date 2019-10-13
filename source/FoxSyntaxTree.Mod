@@ -3196,7 +3196,7 @@ TYPE
 			super-: Procedure;
 			level-: SIGNED32;
 			methodNumber-: SIZE;
-			isBodyProcedure-, isConstructor-,isFinalizer-,isInline-,isOberonInline-, isOpening-, isClosing-,isFinal-,isAbstract-,isOverwritten-,isPlain-: BOOLEAN;
+			isBodyProcedure-, isConstructor-,isFinalizer-,isInline-,isOberonInline-, isOpening-, isClosing-,isFinal-,isTest-, isAbstract-,isOverwritten-,isPlain-: BOOLEAN;
 			resolving-: SIGNED32; (* for recursion detection during inlining *)
 
 		PROCEDURE & InitProcedure( position: Position;  name: Identifier; scope: ProcedureScope);
@@ -3221,6 +3221,7 @@ TYPE
 			isAbstract := FALSE;
 			isOverwritten := FALSE;
 			isPlain := FALSE;
+			isTest := FALSE;
 		END InitProcedure;
 
 		(* cycle detection during inlining *)
@@ -3272,6 +3273,10 @@ TYPE
 		PROCEDURE SetFinal*(final: BOOLEAN);
 		BEGIN SELF.isFinal := final
 		END SetFinal;
+
+		PROCEDURE SetTest*(test: BOOLEAN);
+		BEGIN isTest := test
+		END SetTest;
 
 		PROCEDURE SetOverwritten*(locallyOverwritten: BOOLEAN);
 		BEGIN SELF.isOverwritten := locallyOverwritten

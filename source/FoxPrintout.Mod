@@ -1218,6 +1218,7 @@ TYPE
 				IF (type.noReturn) THEN Flag(Global.NameNoReturn,first) END;
 				IF (x.isAbstract) THEN Flag(Global.NameAbstract,first) END;
 				IF (x.isFinal) THEN Flag(Global.NameFinal,first) END;
+				IF (x.isTest) THEN Flag(Global.NameTest,first) END;
 				IF (x.fixed) & (x.extern = NIL) THEN Value(Global.NameOffset, x.alignment,first)
 				ELSIF (x.alignment >1) THEN Value(Global.NameAligned, x.alignment, first)
 				END;

@@ -37,11 +37,12 @@ TYPE
 		symbolFile*: Formats.SymbolFileFormat;
 		objectFile*: Formats.ObjectFileFormat;
 		findPC*: SectionName;
-		documentation*: Backend.Backend;
+		documentation*,test*: Backend.Backend;
 		srcPath, destPath: Files.FileName;
 		replacements: SemanticChecker.Replacement;
 		platformCallingConvention: SyntaxTree.CallingConvention;
 		definitions: Options.Parameter;
+		testFile*: Files.FileName;
 	END;
 
 	PROCEDURE ParseReplacements(CONST filename: ARRAY OF CHAR; VAR replacement: SemanticChecker.Replacement; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
@@ -241,14 +242,15 @@ TYPE
 					ELSIF ~options.objectFile.Export(generatedModule,options.symbolFile) THEN
 						FinalMessage(TRUE, " could not be compiled (object file errors).");
 						RETURN FALSE
-					END;
-				(* PH experimental *)
-					IF TestModule#NIL THEN TestModule(module) END;
-				(*/ PH *)				
+					END;			
 				END;
 				IF options.documentation # NIL THEN
 					options.documentation.Initialize(diagnostics,log, flags,checker,system);
 					generatedModule := options.documentation.ProcessSyntaxTreeModule(module);
+				END;
+				IF options.test # NIL THEN
+					options.test.Initialize(diagnostics,log, flags,checker,system);
+					IGNORE options.test.ProcessSyntaxTreeModule(module);
 				END;
 
 				FinalMessage(FALSE, " done.");
@@ -303,6 +305,7 @@ TYPE
 		options.Add("w","warnings", Options.Flag);
 		options.Add(0X,"hardware", Options.String);
 		options.Add(0X,"documentation", Options.String);
+		options.Add(0X,"test", Options.String);
 		options.Add("S","srcPath", Options.String);
 		options.Add("D","destPath", Options.String);
 		options.Add(0X,"replacements", Options.String);
@@ -384,6 +387,15 @@ TYPE
 			compilerOptions.documentation := NIL
 		END;
 
+		IF options.GetString("test", name) THEN
+			compilerOptions.test := Backend.GetBackendByName(name);
+			IF (compilerOptions.test = NIL)  THEN
+				Error("test engine could not be installed"); result := FALSE;
+			END;
+		ELSE
+			compilerOptions.test := NIL
+		END;
+
 		IF options.GetString("replacements", name) THEN
 			IF ~ParseReplacements(name, compilerOptions.replacements, diagnostics) THEN
 				Error("replacement file could not be opened or is empty"); result := FALSE;
@@ -396,6 +408,7 @@ TYPE
 		IF compilerOptions.symbolFile # NIL THEN compilerOptions.symbolFile.DefineOptions(options); INCL(compilerOptions.flags,Check) END;
 		IF compilerOptions.objectFile # NIL THEN compilerOptions.objectFile.DefineOptions(options); INCL(compilerOptions.flags,Check) END;
 		IF compilerOptions.documentation # NIL THEN compilerOptions.documentation.DefineOptions(options) END;
+		IF compilerOptions.test # NIL THEN compilerOptions.test.DefineOptions(options) END;
 
 		IF result & ~parsed THEN
 			options.Clear;
@@ -426,6 +439,7 @@ TYPE
 			IF compilerOptions.symbolFile # NIL THEN compilerOptions.symbolFile.GetOptions(options) END;
 			IF compilerOptions.objectFile # NIL THEN compilerOptions.objectFile.GetOptions(options) END;
 			IF compilerOptions.documentation # NIL THEN compilerOptions.documentation.GetOptions(options) END;
+			IF compilerOptions.test # NIL THEN compilerOptions.test.GetOptions(options) END;
 			IF options.GetFlag("lineNumbers") THEN INCL(compilerOptions.flags, UseLineNumbers) END;
 			IF ~options.GetString("define", compilerOptions.definitions) THEN compilerOptions.definitions := "" END;
 			IF options.GetString("platformCC", name) THEN
@@ -523,7 +537,6 @@ TYPE
 	VAR
 		platforms: Options.Defaults;
 		defaultPlatform: ARRAY 32 OF CHAR;
-		TestModule*: PROCEDURE{DELEGATE}(m:SyntaxTree.Module); (*experimental feature, may be removed*)
 
 	PROCEDURE DoAddPlatform(CONST name: ARRAY OF CHAR; CONST defaults: ARRAY OF CHAR);
 	BEGIN
@@ -573,9 +586,6 @@ TYPE
 		(* infer platform from default object file extension *)
 		platforms.Find("objectFileExtension", extension, defaultPlatform);
 	END SetupDefaults;
-
-
-
 BEGIN
 	NEW(platforms);
 

@@ -21,6 +21,7 @@ CONST
 	StringAligned*="ALIGNED";
 	StringAlignStack*="ALIGNSTACK";
 	StringFinal*="FINAL";
+	StringTest*="TEST";
 	StringAbstract*="ABSTRACT";
 	StringRegister*= "REGISTER";
 	StringNoReturn*="NORETURN";
@@ -194,7 +195,7 @@ VAR
 	A2Name-,ArrayBaseName-, ComplexNumbersName-, RecordBodyName-,ModuleBodyName-,
 	NameWinAPI-,NameC-,NamePlatformCC-,NameMovable-,NameUntraced-, NameUntracked-, NameDelegate-,NameInterrupt-, NamePcOffset-, NameOpening-, NameClosing-, NameOffset-, NameAligned-,NameStackAligned-,
 	NameExclusive-,NameActive-,NamePriority-,NameSafe-,NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-
-	, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-,NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-,
+	, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-,NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameTest-, NameAbstract-,
 	NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-,NameNoReturn-,NamePlain-,NameUnsafe-,NameDisposable-,NameUnchecked-,NameUncooperative-: SyntaxTree.Identifier;
 	NameGlobal-, Nameglobal: SyntaxTree.Identifier;
 	identifiers: ARRAY 2 OF ARRAY end OF SyntaxTree.Identifier;
@@ -1796,6 +1797,7 @@ TYPE
 		NameRuntime := SyntaxTree.NewIdentifier(StringRuntime);
 		NameEngine := SyntaxTree.NewIdentifier(StringEngine);
 		NameFinal := SyntaxTree.NewIdentifier(StringFinal);
+		NameTest := SyntaxTree.NewIdentifier(StringTest);
 		NameAbstract := SyntaxTree.NewIdentifier(StringAbstract);
 		NameFrequencyDivider := SyntaxTree.NewIdentifier(StringFrequencyDivider);
 		NameRegister := SyntaxTree.NewIdentifier(StringRegister);

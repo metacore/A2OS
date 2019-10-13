@@ -33,7 +33,7 @@ Compiler.Compile --noInterfaceCheck
 	FoxInterpreterBackend.Mod FoxTranspilerBackend.Mod
 	FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod
 	FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
-
+	FoxTestBackend.Mod
 	FoxTRMTools.Mod
 	ActiveCellsRuntime.mod
 	ActiveCellsRunner.mod

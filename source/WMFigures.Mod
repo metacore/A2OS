@@ -15,7 +15,7 @@ CONST
 
 TYPE
 	Point* = POINTER TO RECORD
-		x, y : SIZE;
+		x-, y- : SIZE;
 		previous, next : Point;
 		END;
 
@@ -697,7 +697,7 @@ TYPE
 			IF Filled IN state THEN
 				IF Inside(mx, my) THEN RETURN TRUE END;
 			END;
-			FOR i:=0 TO nSegments-1 DO
+			FOR i:=0 TO nSegments-1 DO (*!tbd: better use InLineVicinity here*)
 				IF (ABS(mx-pointArray[i].x)<gravity) & (ABS(my-pointArray[i].y)<gravity) THEN RETURN TRUE END; (* here only testing segment points, can be refined*)
 			END;
 			 (*!the following code is  for line hiting above. does not work so well for spline yet*)

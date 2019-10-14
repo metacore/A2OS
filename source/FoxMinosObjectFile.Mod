@@ -6,7 +6,7 @@ IMPORT
 	Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine, FoxSemanticChecker;
 
 CONST
-	Trace=TRUE;
+	Trace=FALSE;
 
 TYPE Name=ARRAY 256 OF CHAR;
 	ByteArray = POINTER TO ARRAY OF CHAR;

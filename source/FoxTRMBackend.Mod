@@ -2449,7 +2449,6 @@ TYPE
 			ELSE
 				section := in.resolved
 			END;
-			TRACE(in.type, in.bitsPerUnit, unit, section.os.unit);
 			RETURN section
 		END ResolvedSection;
 

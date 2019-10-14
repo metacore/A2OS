@@ -1988,7 +1988,7 @@ TYPE
 		VAR list: Basic.List;
 
 		PROCEDURE & InitList;
-		BEGIN NEW( list,8 );
+		BEGIN NEW( list,8 ); list.nilAllowed := TRUE;
 		END InitList;
 
 		PROCEDURE Length*( ): SIZE;
@@ -2002,7 +2002,12 @@ TYPE
 		PROCEDURE GetExpression*( index: SIZE ): Expression;
 		VAR p: ANY;
 		BEGIN
-			p := list.Get(index); RETURN p(Expression);
+			p := list.Get(index); 
+			IF p = NIL THEN 
+				RETURN NIL 
+			ELSE
+				RETURN p(Expression);
+			END;
 		END GetExpression;
 
 		PROCEDURE SetExpression*(index: SIZE; expression: Expression);

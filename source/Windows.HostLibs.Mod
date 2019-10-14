@@ -38,6 +38,12 @@ CONST
 		Return: TRUE in case of success
 	*)
 	PROCEDURE LoadLibrary*(CONST fileName: ARRAY OF CHAR; VAR lib: LibHandle): BOOLEAN;
+	CONST
+		LoadLibraryExFlags = {LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR,
+											LOAD_LIBRARY_SEARCH_APPLICATION_DIR,
+											LOAD_LIBRARY_SEARCH_USER_DIRS,
+											LOAD_LIBRARY_SEARCH_SYSTEM32,
+											LOAD_LIBRARY_SEARCH_DEFAULT_DIRS};
 	VAR
 		err: SIGNED32;
 		fullName: Files.FileName;
@@ -49,15 +55,19 @@ CONST
 				IF fullName[i] = "/" THEN fullName[i] := "\"; END;
 				INC(i);
 			END;
-			lib := Kernel32.LoadLibraryEx(fullName, NIL, {LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR,LOAD_LIBRARY_SEARCH_APPLICATION_DIR,LOAD_LIBRARY_SEARCH_SYSTEM32,LOAD_LIBRARY_SEARCH_DEFAULT_DIRS});
-			IF lib # NilLibHandle THEN
-				RETURN TRUE;
+			lib := Kernel32.LoadLibraryEx(fullName, NIL, LoadLibraryExFlags);
+			IF lib = NilLibHandle THEN
+				err := Kernel32.GetLastError();
+				TRACE(fullName, err);
 			END;
-			err := Kernel32.GetLastError();
-			TRACE(fullName, err);
-		ELSE
-			err := 126; (* ERROR_MOD_NOT_FOUND *)
+		ELSE (*! can happen when the library path is not specified *)
+			lib := Kernel32.LoadLibraryEx(fileName, NIL, LoadLibraryExFlags);
+			IF lib = NilLibHandle THEN
+				err := Kernel32.GetLastError();
+				TRACE(fileName, err);
+			END;
 		END;
+		RETURN lib # NilLibHandle;
 	FINALLY
 		RETURN FALSE;
 	END LoadLibrary;
@@ -99,3 +109,5 @@ CONST
 	END GetProcedure;
 
 END HostLibs.
+
+System.FreeDownTo HostLibs ~

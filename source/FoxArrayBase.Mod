@@ -9623,12 +9623,14 @@ TYPE
 	BEGIN
 		IF (DIM(left) = 2) & (DIM(right)=2) THEN
 			EnsureArrayDesc(2, SYSTEM.VAL(Tensor, RESULT));
+			ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( FLOAT64 ),
+									loopMatMulAXAX, FALSE, matMulX );
 		ELSIF (DIM(left) = 2) & (DIM(right)=1) THEN
 			EnsureArrayDesc(1, SYSTEM.VAL(Tensor, RESULT));
+			ApplyMatVecMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( FLOAT64 ),
+									loopMatMulAXAX, FALSE, matMulX );
 		ELSE HALT(200);
 		END;
-		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( FLOAT64 ),
-									loopMatMulAXAX, FALSE, matMulX );
 		RETURN RESULT
 	END "*";
 
@@ -9636,13 +9638,15 @@ TYPE
 	BEGIN
 		IF (DIM(left) = 2) & (DIM(right)=2) THEN
 			EnsureArrayDesc(2, SYSTEM.VAL(Tensor, RESULT));
+			ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( FLOAT32 ),
+									loopMatMulARAR, FALSE, matMulR );
 		ELSIF (DIM(left) = 2) & (DIM(right)=1) THEN
 			EnsureArrayDesc(1, SYSTEM.VAL(Tensor, RESULT));
+			ApplyMatVecMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( FLOAT32 ),
+									loopMatMulARAR, FALSE, matMulR );
 		ELSE HALT(200);
 		END;
 
-		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( FLOAT32 ),
-									loopMatMulARAR, FALSE, matMulR );
 		RETURN RESULT
 	END "*";
 
@@ -9650,12 +9654,14 @@ TYPE
 	BEGIN
 		IF (DIM(left) = 2) & (DIM(right)=2) THEN
 			EnsureArrayDesc(2, SYSTEM.VAL(Tensor, RESULT));
+			ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right),  SIZEOF( SIGNED32 ),
+									MatMulALALLoop, FALSE, NIL );
 		ELSIF (DIM(left) = 2) & (DIM(right)=1) THEN
 			EnsureArrayDesc(1, SYSTEM.VAL(Tensor, RESULT));
+			ApplyMatVecMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right),  SIZEOF( SIGNED32 ),
+									MatMulALALLoop, FALSE, NIL );
 		ELSE HALT(200);
 		END;
-		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right),  SIZEOF( SIGNED32 ),
-									MatMulALALLoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -9663,12 +9669,14 @@ TYPE
 	BEGIN
 		IF (DIM(left) = 2) & (DIM(right)=2) THEN
 			EnsureArrayDesc(2, SYSTEM.VAL(Tensor, RESULT));
+			ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( SIGNED16 ),
+									MatMulAIAILoop, FALSE, NIL );
 		ELSIF (DIM(left) = 2) & (DIM(right)=1) THEN
 			EnsureArrayDesc(1, SYSTEM.VAL(Tensor, RESULT));
+			ApplyMatVecMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( SIGNED16 ),
+									MatMulAIAILoop, FALSE, NIL );
 		ELSE HALT(200);
 		END;
-		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( SIGNED16 ),
-									MatMulAIAILoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -9676,12 +9684,14 @@ TYPE
 	BEGIN
 		IF (DIM(left) = 2) & (DIM(right)=2) THEN
 			EnsureArrayDesc(2, SYSTEM.VAL(Tensor, RESULT));
+			ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( SIGNED8 ),
+									MatMulASASLoop, FALSE, NIL );
 		ELSIF (DIM(left) = 2) & (DIM(right)=1) THEN
 			EnsureArrayDesc(1, SYSTEM.VAL(Tensor, RESULT));
+			ApplyMatVecMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( SIGNED8 ),
+									MatMulASASLoop, FALSE, NIL );
 		ELSE HALT(200);
 		END;
-		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( SIGNED8 ),
-									MatMulASASLoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 

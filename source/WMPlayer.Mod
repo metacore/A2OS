@@ -118,7 +118,7 @@ TYPE
 
 	Control = OBJECT(WMComponents.VisualComponent)
 	VAR
-		playBtn, stepBtn, stopBtn, pauseBtn, rewBtn, ffBtn : WMStandardComponents.Button;
+		playBtn, stepBtn, stopBtn, pauseBtn, rewBtn, ffBtn, resetBtn : WMStandardComponents.Button;
 		owner : Window;
 
 		PROCEDURE ButtonHandler(sender, data : ANY);
@@ -135,6 +135,8 @@ TYPE
 				owner.ButtonHandler(owner.rewBtn, NIL);
 			ELSIF (sender = ffBtn) THEN
 				owner.ButtonHandler(owner.ffBtn, NIL);
+			ELSIF (sender = resetBtn) THEN
+				owner.ButtonHandler(owner.resetBtn, NIL);
 			END;
 		END ButtonHandler;
 
@@ -179,6 +181,12 @@ TYPE
 			ffBtn.onClick.Add(ButtonHandler);
 			panel.AddContent(ffBtn);
 
+			NEW(resetBtn); resetBtn.alignment.Set(WMComponents.AlignLeft);
+			resetBtn.caption.SetAOC("Reset");
+			resetBtn.onClick.Add(ButtonHandler);
+			panel.AddContent(resetBtn);
+
+
 		END New;
 
 	END Control;
@@ -187,7 +195,7 @@ TYPE
 
 	Window* = OBJECT (WMComponents.FormWindow)
 	VAR
-		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn, stepBtn : WMStandardComponents.Button;
+		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn, stepBtn, resetBtn : WMStandardComponents.Button;
 		search: WMStandardComponents.Scrollbar;
 		
 		toolbar* : WMStandardComponents.Panel;
@@ -241,6 +249,9 @@ TYPE
 			NEW(ffBtn); ffBtn.alignment.Set(WMComponents.AlignLeft); ffBtn.caption.SetAOC(">>");
 			toolbar.AddContent(ffBtn); ffBtn.isRepeating.Set(TRUE);
 
+			NEW(resetBtn); resetBtn.alignment.Set(WMComponents.AlignLeft); resetBtn.caption.SetAOC("Reset");
+			toolbar.AddContent(resetBtn); 
+			
 			NEW(infoBtn); infoBtn.alignment.Set(WMComponents.AlignRight); infoBtn.caption.SetAOC("Info");
 			toolbar.AddContent(infoBtn);
 
@@ -289,6 +300,7 @@ TYPE
 			stepBtn.onClick.Add(ButtonHandler);
 			ffBtn.onClick.Add(ButtonHandler);
 			rewBtn.onClick.Add(ButtonHandler);
+			resetBtn.onClick.Add(ButtonHandler);
 			infoBtn.onClick.Add(ButtonHandler);
 			search.onPositionChanged.Add(SliderSearch);
 
@@ -336,6 +348,7 @@ TYPE
 
 		PROCEDURE ButtonHandler*(sender, data : ANY);
 		VAR b : WMStandardComponents.Button; info : InfoWindow;
+			msg:ARRAY 256 OF CHAR; res:INTEGER;
 		BEGIN
 			IF ~IsCallFromSequencer() THEN
 				sequencer.ScheduleEvent(SELF.ButtonHandler, sender, data);
@@ -343,11 +356,12 @@ TYPE
 				IF (sender # NIL) & (sender IS WMStandardComponents.Button) THEN
 					b := sender (WMStandardComponents.Button);
 					IF b = playBtn THEN player.Play;
-					ELSIF b = stopBtn THEN player.Stop;
+					ELSIF b = stopBtn THEN player.Stop; 
 					ELSIF b = pauseBtn THEN player.Pause;
 					ELSIF b = stepBtn THEN player.Step;
 					ELSIF b = ffBtn THEN player.SetPos(player.GetFrame() + stepSize); (*?use time units or frame units *)
-					ELSIF b = rewBtn THEN player.SetPos(player.GetFrame() - 2*stepSize);
+					ELSIF b = rewBtn THEN player.SetPos(player.GetFrame() - 2 * stepSize);
+					ELSIF b = resetBtn THEN player.DoReset; 
 					ELSIF b = infoBtn THEN
 						IF setupData # NIL THEN
 							NEW(info, setupData);
@@ -371,7 +385,9 @@ TYPE
 
 		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
-			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN Close
+			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN 
+				IF player#NIL THEN player.Close END;
+				Close
 			ELSE Handle^(x)
 			END;
 		END Handle;
@@ -516,3 +532,5 @@ MediaPlayer.Open Filme:/test.mp3 ~
 
 MediaPlayer.Close ~
 
+
+WMPlayer.Open -f="HIGHDIM:/Data/Sperm/IMSI2.wmv" ~

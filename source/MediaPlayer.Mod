@@ -687,6 +687,15 @@ TYPE
 			RequestState(Paused, NIL);
 		END Pause;
 
+		PROCEDURE DoReset*;
+		VAR uri, msg: ARRAY 256 OF CHAR; res:INTEGER;
+		BEGIN
+			COPY(current.uri,uri);
+			Stop;
+			BEGIN {EXCLUSIVE} AWAIT(state=Stopped) END;
+			Open(uri, msg, res);
+		END DoReset;
+
 		(* Get in  1/10 sec. Returns -1 if information is not available. *)
 		PROCEDURE GetTimePos*(): SIGNED32;
 		VAR context : Context; res : INTEGER;
@@ -1232,9 +1241,9 @@ TYPE
 		BEGIN
 			FreeContext(next); next := NIL;
 			IF current # NIL THEN
-				IF current.hasVideo THEN current.filler.SeekAndGetFrame(0, img, res); END;
+				IF current.hasVideo THEN current.filler.SeekAndGetFrame(0, img, res) END;
 				IF current.hasAudio THEN current.channel.Stop; current.audio.SeekSample(0, FALSE, res); END;
-				current.pos := 0; current.oldPos := -1;
+				IF current.canSeek THEN current.pos := 0; current.oldPos := -1 END; 
 			END;
 			IF pw # NIL THEN
 				IF img # NIL THEN pw.ShowFrame(img); ELSE pw.ShowBlack; END;
@@ -1339,7 +1348,7 @@ TYPE
 				|Stopped:		IF (to = Ready) OR (to = Playing) OR (to = InTransition) THEN res := TRUE; END;
 				|Stepping:	IF	(to = Ready) OR (to = Playing) OR (to = Stepping) OR (to = Paused)   OR (to = InTransition) THEN res := TRUE; END;
 				|Finished:		IF (to = Ready) OR (to = Playing) OR (to = Stopped) OR (to = InTransition) THEN res := TRUE; END;
-				|InTransition:	IF (to = Ready) OR (to = Paused) OR (to = Stopped) OR (to = InTransition) THEN res := TRUE; END;
+				|InTransition:	IF (to = Ready) OR (to = Playing) OR (to = Paused) OR (to = Stopped) OR (to = InTransition) THEN res := TRUE; END;
 				|Error: 			(* Do not execute commands anymore *)
 				|Closed:  		(* Do not execute commands anymore *)
 			ELSE
@@ -1580,7 +1589,7 @@ END MediaPlayer.
 
 ------------------------------------------------------------
 i810Sound.Install ~
-System.Free MediaPlayer ~
+System.FreeDownTo MediaPlayer ~
 System.Free WMPlayer MediaPlayer DivXDecoder DivXHelper DivXTypes AVI~
 PC.Compile AVI.Mod DivXTypes.Mod DivXHelper.Mod DivXDecoder.Mod MediaPlayer.Mod WMPlayer.Mod~
 

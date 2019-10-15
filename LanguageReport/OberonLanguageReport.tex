@@ -1927,10 +1927,9 @@ expression(BinaryExpression).left.CompatibleTo(x)
 
 Also, in order to avoid ambiguities in the EBNF, and to allow other features such as type guards on value types (such as literal numbers), we chose to unify such expressions and call them primary expressions.
 
-
-A type guard on numbers has been introduced.
+A type guard on numbers has been introduced. 
 A guarded number is converted to the given type if and only if its value is not changed.
-If this fails, a trap is raised.
+When it fails (i.e. when the actual value of a number is not compatible to / cannot be represented by the type), a trap is raised.
 
 Complex numbers have beend added to the language.
 Therefore the literal 'IMAG' has been introduced.

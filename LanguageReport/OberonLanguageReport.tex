@@ -2450,7 +2450,7 @@ STEP(r) & r: RANGE & SIZE & return step size of range \\
 \end{longtable}
 
 The deprecated number conversion routines SHORT and LONG operate with respect to the relations
-$$FLOAT64 \supset FLOAT \mbox{ and } SIGNED46 \supset SIGNED32 \supset SIGNED16 \supset SIGNED8.$$
+$$FLOAT64 \supset FLOAT \mbox{ and } SIGNED64 \supset SIGNED32 \supset SIGNED16 \supset SIGNED8.$$
 All type names of numeric types can also be used for conversion.
 The deprecated \ENTIERH(x) can be replaced by \SIGNED64(x).
 
@@ -2846,14 +2846,16 @@ Two procedure types have a \emph{matching signature} if they both
 
 
 \subsection{Type Inclusion}
-Numeric types include (the values of) "smaller" numeric types according to the following hierarchy:
+Numeric types "include" (the values of) "smaller" numeric types according to the following hierarchy:
 \begin{align*}
-	& \FLOAT64 \supseteq \FLOAT32 \\
-	\supseteq & \UNSIGNED64 \supseteq \SIGNED64\\
-	\supseteq &\UNSIGNED32 \supseteq \SIGNED32\\
-	\supseteq &\UNSIGNED16 \supseteq \SIGNED16\\
-	\supseteq &\UNSIGNED8 \supseteq \SIGNED8
+	& \FLOAT64 \supset \FLOAT32 \\
+	\sqsupset\ & \UNSIGNED64 \sqsupset \SIGNED64
+	\supset \UNSIGNED32 \sqsupset \SIGNED32 \\
+	\supset\ & \UNSIGNED16 \sqsupset \SIGNED16
+	\supset \UNSIGNED8 \sqsupset \SIGNED8
 \end{align*}
+
+We have used $A \sqsupset B$ to express when there is assignment compatibility for $A \ni a \leftarrow b \in B$ while there is not really a superset relationship between the $A$ and $B$. 
 
 \subsection{Type Extension (Base Type)}
 Given a type declaration \lstinline"Tb = RECORD (Ta) ... END", Tb is a direct extension of Ta, and Ta is a direct base type of Tb. A type Tb is an extension of a type Ta (Ta is a base type of Tb) if

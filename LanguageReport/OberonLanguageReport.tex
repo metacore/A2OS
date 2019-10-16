@@ -426,6 +426,7 @@ Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'.
 
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example,caption=Examples of valid identifiers]
 KernelLog
 Abc013
@@ -463,6 +464,7 @@ HexDigit    =  Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'
 \end{lstlisting}
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example,caption=Examples of Number Literals in constant declarations]
 CONST
 a = 42 ;
@@ -498,6 +500,7 @@ Character = Digit {HexDigit} 'X' | "'" char "'".
 \end{lstlisting}
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example,caption= Examples of Character Literals in constant declarations]
 CONST
 a = 'A' ;
@@ -524,6 +527,7 @@ String = '"' {Character} '"' | "'" {Character} "'" | '\"' {Character} '\"'.
 \end{lstlisting}
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example, caption=Examples of string literals in constant declarations]
 CONST
 a = "Hello ETH" ;
@@ -552,6 +556,7 @@ The elements of a set literal need to be constant expressions.
 
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example, caption=Examples of set literals in constant declarations]
 CONST
 a = {1,2,16};
@@ -574,6 +579,7 @@ We write $t\leq T$.
 The type of an array literal is a static Math Array with length of $A$ and smallest possible array base type $T$ (i.e.\ $T$ must be such that there is no $T'$ with above compatibility and $T'\leq T$ and not $T \leq T'$).
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example, caption=Examples of array literals in constant declarations]
 CONST
 A = [1,2,3]; (* ARRAY [3] OF SIGNED8 *)
@@ -744,6 +750,7 @@ They are arbitrary character sequences opened by \lstinline"(*" and closed by \l
 Comments may be nested.
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example,caption=Examples of comments]
 (* This is a comment *)
 MODULE Test;
@@ -755,9 +762,7 @@ CONST a (* constant symbol a *) = 3 * (* times *) 5 (* five *);
 *)
 END Test.
 \end{lstlisting}
-\end{annotation}
 
-\begin{annotation}
 \begin{remark}
 There is a special notation within comments for documentation purposes.
 These notations do not affect the meaning of the program either but are useful for automatic generation of source code documentation.
@@ -875,7 +880,7 @@ DeclarationSequence  =  {
 The different forms of declaration are described in the sequel.
 
 \begin{annotation}
-
+\subsubsection{Examples}
 \begin{lstlisting}[style=example,caption=Example of a declaration sequence]
 CONST (* constant declarations *)
 	UARTBufLen* = 3000;
@@ -928,7 +933,7 @@ Import     = Identifier [':=' Identifier] ['(' ExpressionList ')' ]
 \end{lstlisting}
 
 \begin{annotation}
-
+\subsubsection{Examples}
 \begin{lstlisting}[style=example, caption=Example of a module (excerpt)]
 MODULE SPI; (* Raspberry Pi 2 SPI Interface -- Bitbanging *)
 IMPORT Platform, Kernel;
@@ -1021,6 +1026,7 @@ Semantically the constant expression must be an expression that can be evaluated
 Its operands are constants or predeclared functions that can be evaluated at compile time.
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 CONST
 	N = 320; (* constant name a associated to value 320 *)
@@ -1044,6 +1050,8 @@ Type = ArrayType | MathArrayType | RecordType | PointerType | ObjectType
         | CellType | CellnetType | PortType.
 \end{lstlisting}
 
+\begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example, caption=Examples of Type Declarations]
 TYPE
 	Count = UNSIGNE64;
@@ -1063,7 +1071,7 @@ TYPE
 	END
 	Function = PROCEDURE(x: INTEGER): INTEGER
 \end{lstlisting}
-
+\end{annotation}
 \subsection{Categories of Types}
 
 The Active Oberon Language features the following classes of types:
@@ -1192,7 +1200,7 @@ Where there is no implicit compatibility between types, they can be converted wi
 The type name itself can be used for a type conversion.
 
 \begin{annotation}
-
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 VAR
 	s8: SIGNED8; s16: SIGNED16; s64: SIGNED64;
@@ -1319,6 +1327,8 @@ It is initialized with dimension 0.
 Lengths and dimension of mathematical arrays can be determined with the builtin functions \lstinline"LEN" and \lstinline"DIM".
 The length and dimensions of a mathematical array can be set with the \lstinline"NEW" operation.
 
+\begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 VAR
 	x: ARRAY [*] OF REAL;
@@ -1332,6 +1342,7 @@ BEGIN
 	matrix := [x,x]; (* matrix of size 2 x 5 *)
 	tensor := FLOAT32(matrix); (* tensor has dimension 2 *)
 \end{lstlisting}
+\end{annotation}
 
 \subsection{Record Types}
 
@@ -1348,6 +1359,8 @@ RecordType = 'RECORD' ['(' QualifiedIdentifier ')']
             'END'.
 \end{lstlisting}
 
+\begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 TYPE
     Date = RECORD
@@ -1361,6 +1374,7 @@ VAR
         salary: REAL
     END
 \end{lstlisting}
+\end{annotation}
 
 Record types are extensible, i.e. a record type can be declared as an extension of another record type.
 In the example
@@ -1382,13 +1396,16 @@ Semantic rules
 
 A record can be marked with the \texttt{FINAL} modifier in which case it cannot be extended:
 
+
+\begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 TYPE
     Date = RECORD {FINAL}
         day, month, year: INTEGER;
     END
 \end{lstlisting}
-
+\end{annotation}
 
 \subsection{Pointer Types}
 Formally, pointers can be defined in the form
@@ -1420,6 +1437,9 @@ All pointer variables inherit the extension relation of the basetype \ANY\ and a
 For systems programming, the Oberon language discussed herein contains unsafe pointers.
 An unsafe pointer is assignment compatible to type \ADDRESS\ and pointer arithmetics are allowed.
 
+
+\begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 CONST
 	GPIO = 03F200000H;
@@ -1434,7 +1454,7 @@ VAR
 BEGIN
 	gpio := GPIO;
 \end{lstlisting}
-
+\end{annotation}
 
 \subsection{Procedure Types}
 
@@ -1446,12 +1466,15 @@ If \verb"P" is a type bound procedure, then \verb"T" must be flagged as delegate
 ProcedureType = 'PROCEDURE' [Flags] [FormalParameters].
 \end{lstlisting}
 
+\begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 TYPE
  Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR; ofs, len: SIZE);
 VAR
  Available*: PROCEDURE ( dev: Device ): LONGINT;
 \end{lstlisting}
+\end{annotation}
 
 \subsection{Object Types}
 
@@ -1469,6 +1492,9 @@ Objects can have a body.
 This body is executed after the initializer.
 A body of an object can be \emph{active}, in which case the body of the object is executed on a separate thread.
 
+
+\begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=ebnf]
 ObjectType = 'OBJECT'
            | 'OBJECT' [Flags] ['(' QualifiedIdentifier ')']
@@ -1476,6 +1502,7 @@ ObjectType = 'OBJECT'
              [Body]
              'END' [Identifier].
 \end{lstlisting}
+\end{annotation}
 
 \subsection{Enumeration Types}
 
@@ -1508,7 +1535,7 @@ This restriction exists because any value of the base type is always a legal val
 
 
 \begin{annotation}
-\paragraph{Examples}
+\subsection{Examples}
 
 Suppose that a variable of enumeration type is exported from a module
 
@@ -1604,7 +1631,21 @@ This address may be specified by a constant expression or a string literal refer
 Since extern variables just refer to some other data they cannot be initialized.
 
 The types of the listed variables can be omitted when initializers are present and the type should be inferred from the types.
+
+\subsubsection{Variable initialization}
+Variables with an initializer are initialized before they can be used.
+Usually, this implies that the initialization is done at the beginning of the respective code section:
+\begin{itemize}
+\item If a variable is a field in an object, it is initialized after the allocation of the object but before the initializer of the object is called.
+\item If a variable is a field in a record, it is initialized when the record is initialized.
+\item If a variable is declared in a procedure scope, it is initialized at the beginning of the procedure body. 
+\item If a variable is declared in a module scope and if the initializer is not a constant expression, it is initialized at the beginning of the module body. 
+If a variable is declared in a module scope and if the initializer is a constant expression, the variable is initialized in the object file of the module.
+This can be important for low-level system module where code (e.g. procedures with flags \lstinline"OPENING") could be executed before the module body. 
+\end{itemize}
+
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 VAR
 	a : REAL;
@@ -1613,6 +1654,8 @@ VAR
 	d EXTERN "BaseTypes.Pointer" : ADDRESS;
 	e := SomeProc(); (* type inferred *)
 \end{lstlisting}
+
+
 
 \subsubsection{Difference to original Oberon}
 The \lstinline"EXTERN" flag was not present in Original Oberon. Moreover, we have added variable initializers and type inference from the expression type.
@@ -1660,12 +1703,14 @@ Procedures can be marked as \lstinline"EXTERN" in which case their identifier is
 This address may be specified by a constant expression or a string literal referring to an entity which is defined elsewhere.
 Since extern procedures just refer to some other code they do not have a body.
 
+
+\begin{annotation}
+\subsubsection{Examples}
 In the following some examples of a procedure declaration are shown.
 The last (right most) formal parameters of a procedure can be associated with a default value.
 The procdure can then be called with less actual parameters and the remaining formal parameters take on the default values.
 If a procedure declaration specifies a receiver parameter (as in the third example below), the procedure is considered to be bound to a type (here: type Student).
 
-\begin{annotation}
 \begin{lstlisting}[style=example]
 PROCEDURE Send*(CONST data: ARRAY OF CHAR; ofs,len: SIZE;VAR res: INTEGER );
 BEGIN (* ... *)
@@ -1727,6 +1772,7 @@ If $r$ is a receiver parameter declared with type $T$, \lstinline"r.P^" denotes 
 The signature of both declarations must match (\ref{subsection: Matching Signature}).
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 PROCEDURE (t: Tree) Insert (node: Tree);
   VAR p, father: Tree;
@@ -1897,6 +1943,7 @@ The suffix operator "\verb~`~" is defined specifically for Math Arrays.
 
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example,caption=Example of Designators]
 	a[10]
 	P(3,5).GetArray[5].CallMe()
@@ -2041,6 +2088,7 @@ StatementSequence = Statement {';' Statement}.
 \end{lstlisting}
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 BEGIN{EXCLUSIVE} (* an exclusive statement block *)
   state := States.normal;
@@ -2061,6 +2109,7 @@ The assignment operator is written as \lstinline":="  and pronounced as \emph{be
 The type of the designator must be assignment compatible with the type of the expression.
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example,caption=Examples of Assignments]
   i := 0;
   x := 3.4;
@@ -2077,6 +2126,7 @@ The type of the designator must be assignment compatible with the type of the ex
 Variables can be declared within a statement sequence. A declaration statement is indicated by the \lstinline"VAR" keyword. Similar to variable declaration, the type of the variable can be omitted when an initializer is present and when the type of the initializer shall be taken for the variable type. The variable is visible within the statement sequence from the point of declaration to the end of the procedure scope. A variable can only be declared once in a procedure scope. 
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 BEGIN
 	VAR a := 20, b: SIZE; (* both, a and b are of type SIZE *)
@@ -2110,6 +2160,7 @@ The compiler can optimize.
 This is particularly handy for strings and large records.
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 PROCEDURE Test(a: SIGNED32; VAR r: REAL;
                  CONST c: Student; CONST s: ARRAY OF CHAR);
@@ -2149,6 +2200,7 @@ If no guard is satisfied, the statement sequence following the symbol \lstinline
 \end{lstlisting}
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 IF ch <= "9" THEN RETURN ORD( ch ) - ORD( "0" )
 ELSIF ch <= "F" THEN RETURN ORD( ch ) - ORD( "A" ) + 10
@@ -2176,6 +2228,7 @@ If, in this situation, there is no \lstinline"ELSE" part, a trap is raised.
 \end{lstlisting}
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 CASE ch OF
   EOT: s := EndOfText
@@ -2211,6 +2264,7 @@ If no \lstinline"ELSE" branch is present in such cases, a trap will be raised.
 If a type $T_1$ is referred to by a qualified identifier in the \WITH\ statement and a type $T_2$ is referred to by a later qualified identifier later in the same \WITH, $T_2$ may not extend $T_1$ (otherwise the branch with $T_2$ would never be reachable).
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example, caption=Example of a WITH statement]
 WITH x:
 | SyntaxTree.ResultDesignator DO result := ResolveResultDesignator(x)
@@ -2251,6 +2305,7 @@ The expression evaluation and the statement execution are repeated as long as th
 \end{lstlisting}
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 WHILE len > 0 DO
   data[length] := buf[ofs];
@@ -2270,6 +2325,7 @@ The statement sequence is thus executed one or more times.
 \end{lstlisting}
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 REPEAT
   expression := Expression();
@@ -2309,6 +2365,7 @@ END;
 \end{lstlisting}
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 FOR i := 0 TO EndOfText DO ASSERT(symbols[i] # "") END;
 \end{lstlisting}
@@ -2328,6 +2385,7 @@ Each Exit statement is contextually, although not syntactically bound to the loo
 \end{lstlisting}
 
 \begin{annotation}
+\subsubsection{Examples}
 The use of \WHILE\ and \REPEAT\ statements is recommended for the most cases.
 A loop statement can be useful to express repetition where there are several termination conditions at different points in the code.
 
@@ -2348,6 +2406,7 @@ A \RETURN\ statement is used to return from a procedure.
 If the procedure is declared to return a value of type $T$, the return statement must return an expression of assignment compatible type.
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 PROCEDURE Ten( e: SIGNED32 ): FLOAT64;
 VAR x, p: FLOAT64;
@@ -2379,6 +2438,7 @@ Code Blocks can be used in order to write inline assembly code in Oberon.
 \end{lstlisting}
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 OPERATOR -"-"*(x {REGISTER}: Vector): Vector;
 VAR res{REGISTER}: Vector;
@@ -2403,6 +2463,7 @@ The \IGNORE\ statement can be used in order to ignore the result of a procedure 
 The \IGNORE\ statement was introduced for interfacing with C libraries, where often the result of a library call is ignored.
 It was not present in the original Oberon.
 
+\subsubsection{Examples}
 \begin{lstlisting}[style=example]
 IGNORE User32.SetWindowText(root.hWnd, windowTitle);
 IGNORE User32.BringWindowToTop( root.hWnd );
@@ -2534,6 +2595,7 @@ For fine-grained access control, global procedures like as variables can be expo
 A procedure exported with a minus sign is still accessible by importing modules, but not using \texttt{GETPROCEDURE}.
 
 \begin{annotation}
+\subsubsection{Examples}
 \texttt{GETPROCEDURE} is useful for interactive programs, where the user types in or middle-clicks on commands to execute them. The following module provides an interface for executing standard Oberon commands given as a string whereas the module gets dynamically loaded if possible:
 \begin{lstlisting}[style=example]
 MODULE Commands;
@@ -2602,6 +2664,7 @@ The whole operation is executed atomically and never interrupted by any other ac
 If the second and third argument are the same, the whole operation effectively equals to an atomic read of a shared variable.
 
 \begin{annotation}
+\subsubsection{Examples}
 Other atomic operations like test-and-set can be implemented on top of the CAS procedure:
 \begin{lstlisting}[style=example]
 PROCEDURE TAS* (VAR value: BOOLEAN): BOOLEAN;
@@ -3035,6 +3098,7 @@ The usage of assignment has already been indicated in Fig.\,\ref{figure:allocati
 With the introduction of value-copies also constant arrays make sense in the language.
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example, caption=Example of constant arrays and assignment,label=figure:constarrays]
 VAR
     a: ARRAY [*,*] of REAL;
@@ -3054,6 +3118,7 @@ BEGIN
 Thereby indexing arrays with a list of ranges (and integers) results in a designator denoting a (rectangular, regular) part of the array.
 
 \begin{annotation}
+\subsubsection{Examples}
 \begin{lstlisting}[style=example, caption=Example of ranges and their application,label=figure:ranges]
 VAR
     a: ARRAY [*,*] of REAL;

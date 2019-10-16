@@ -990,7 +990,6 @@ TYPE
 
 		PROCEDURE & InitQualifiedType( position: Position; scope: Scope;  qualifiedIdentifier: QualifiedIdentifier);
 		BEGIN
-			ASSERT(qualifiedIdentifier # NIL);
 			InitType( position);
 			SELF.scope := scope;
 			SELF.qualifiedIdentifier := qualifiedIdentifier;

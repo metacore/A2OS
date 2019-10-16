@@ -1022,9 +1022,10 @@ TYPE
 						Keyword(" EXTERN " ); 
 						Expression(x.extern); 
 					END;
-
-					w.String( ": " );
-					Type(x.type);
+					IF IsProperType(x.type) THEN
+						w.String( ": " );
+						Type(x.type);
+					END;
 					Comments(x.comment,x,TRUE);
 				ELSIF mode>SourceCode THEN
 					Comments(x.comment,x,FALSE);
@@ -1078,12 +1079,14 @@ TYPE
 						w.String(", "); PrintSymbol(next); Flags(next);
 						next := next.nextVariable;
 					END;
-					IF x.access # SyntaxTree.Hidden THEN
-						w.String(": ");
-						Type(x.type);
-					ELSE
-						w.String(": ");
-						ShortType(x.type);
+					IF IsProperType(x.type) THEN
+						IF x.access # SyntaxTree.Hidden THEN
+							w.String(": ");
+							Type(x.type);
+						ELSE
+							w.String(": ");
+							ShortType(x.type);
+						END;
 					END;
 					w.String("; ");
 					Comments(x.comment,x, TRUE);
@@ -1953,6 +1956,12 @@ TYPE
 (* debugging helper *)
 VAR
 	debug: Printer;
+	
+	PROCEDURE IsProperType(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		 RETURN (type # NIL) & (~(type IS SyntaxTree.QualifiedType) OR (type(SyntaxTree.QualifiedType).qualifiedIdentifier # NIL));
+	END IsProperType;
+	
 
 	PROCEDURE NewPrinter*(w: Streams.Writer; mode: SIGNED32; info: BOOLEAN): Printer;
 	VAR p: Printer;

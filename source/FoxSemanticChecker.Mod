@@ -6189,6 +6189,7 @@ TYPE
 		**)
 		PROCEDURE ResolveVariable(variable: SyntaxTree.Variable);
 		VAR modifiers: SyntaxTree.Modifier; value: Basic.Integer; position: Position; pointerType: SyntaxTree.PointerType; string: Scanner.StringType;
+			qualifiedType: SyntaxTree.QualifiedType;
 		BEGIN
 			IF Trace THEN D.Str("ResolveVariable "); D.Str0(variable.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(variable) THEN
@@ -6196,7 +6197,9 @@ TYPE
 				CheckSymbolVisibility(variable);
 				IF variable.type = NIL THEN (* implies that initializer exists *)
 					variable.SetInitializer (ResolveExpression(variable.initializer));
-					variable.SetType(variable.initializer.type);
+					qualifiedType := SyntaxTree.NewQualifiedType(variable.position, NIL, NIL); 
+					qualifiedType.SetResolved(variable.initializer.type.resolved);
+					variable.SetType(qualifiedType);
 				ELSE
 					variable.SetType(ResolveType(variable.type));
 					IF variable.initializer # NIL THEN

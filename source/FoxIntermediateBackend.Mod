@@ -347,8 +347,10 @@ TYPE
 						END;
 				ELSE
 					IF initializer # NIL THEN
-						implementationEmitter.Evaluate(initializer, op);
-						SingleInitialize(op.op, offset);
+						IF initializer.resolved # NIL THEN (* constant expression *)
+							implementationEmitter.Evaluate(initializer, op);
+							SingleInitialize(op.op, offset);
+						END;
 					END;
 				END;
 			END Initialize;
@@ -11461,7 +11463,9 @@ TYPE
 		BEGIN
 			x := scope.firstVariable;
 			WHILE x # NIL DO
-				InitVariable(x,FALSE);
+				IF (x.initializer = NIL) OR (x.initializer.resolved = NIL) OR ~(scope IS SyntaxTree.ModuleScope) THEN (* do not reinit variables in module scope *)		
+					InitVariable(x,FALSE);
+				END;
 				x := x.nextVariable;
 			END;
 		END InitVariables;
@@ -11546,6 +11550,10 @@ TYPE
 					var := var.nextVariable;
 				END;
 				InitVariables(scope);
+				IF moduleBody THEN
+					InitVariables(moduleScope)
+				END;
+				
 				par := procedureType.firstParameter;
 				WHILE par # NIL DO
 					IF par.preferRegister THEN

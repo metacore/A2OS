@@ -714,16 +714,16 @@ END StrToSizePos;
 
 (** converts an integer value to a hex string *)
 PROCEDURE IntToHexStr*(h : SIGNED64; width: INTEGER; VAR s: ARRAY OF CHAR);
-VAR c: CHAR;
+CONST hexDigits = "0123456789ABCDEF";
 BEGIN
-	IF (width <= 0) THEN width := 8 END;
+	IF (width <= 0) THEN width := 8 END; (*! legacy?*)
 
-	DEC(width); (* opov *)
-	s[width+1] := 0X;
+	s[width] := 0X;
+	DEC(width);
 	WHILE (width >= 0) DO
-		c := CHR(h MOD 10H + ORD("0"));
-		IF (c > "9") THEN c := CHR((h MOD 10H - 10) + ORD("A")) END;
-		s[width] := c; h := h DIV 10H; DEC(width)
+		s[width] := hexDigits[h MOD 16];
+		h := LSH(h, -4);
+		DEC(width);
 	END
 END IntToHexStr;
 

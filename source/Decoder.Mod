@@ -64,7 +64,7 @@ TYPE
 		BEGIN
 			Strings.IntToStr(instr, temp);
 			Strings.Append(str, "Opcode: instr = "); Strings.Append(str, temp);
-			Strings.IntToHexStr(offset, 0, temp);
+			Strings.IntToHexStr(offset, 8, temp);
 			Strings.Append(str, ", offset = "); Strings.Append(str, temp);
 			RETURN Strings.NewString(str)
 		END ToString;

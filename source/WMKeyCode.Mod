@@ -40,11 +40,11 @@ TYPE
 				WriteString("Key: ");
 				GetFlagsString(flags, t); WriteString(t);
 				WriteString(" '"); t[0] := CHR(ucs); t[1] := 0X; WriteString(t); WriteString("' (");
-				Strings.IntToHexStr(ucs, 0, t); WriteString(t); WriteString(")");
+				Strings.IntToHexStr(ucs, 8, t); WriteString(t); WriteString(")");
 
 				x := 3; y := 14 + 14;
 				WriteString("Keysym: ");
-				Strings.IntToHexStr(keysym, 0, t);
+				Strings.IntToHexStr(keysym, 8, t);
 				WriteString(t);
 				WriteString(" ("); GetKeysymString(keysym, t); WriteString(t); WriteString(")");
 			END;

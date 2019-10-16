@@ -186,7 +186,7 @@ TYPE
 			i := 0; IF UTF8Strings.EncodeChar(curChar, charString, i) THEN characterEdit.SetAsString(charString)
 			ELSE characterEdit.SetAsString("")
 			END;
-			Strings.IntToHexStr(curChar, 0, codeStr);
+			Strings.IntToHexStr(curChar, 8, codeStr);
 			codeEdit.SetAsString(codeStr);
 			IF charInfo # NIL THEN
 				IF charInfo.pinyin # NIL THEN pinyinEdit.SetAsString(charInfo.pinyin^) ELSE pinyinEdit.SetAsString("<unknown>") END;

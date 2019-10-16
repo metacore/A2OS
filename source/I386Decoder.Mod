@@ -1232,11 +1232,11 @@ TYPE
 			str : ARRAY 255 OF CHAR;
 			temp : ARRAY 10 OF CHAR;
 		BEGIN
-			Strings.IntToHexStr(op, 0, temp);
+			Strings.IntToHexStr(op, 8, temp);
 			Strings.Append(str, "Opcode: op = "); Strings.Append(str, temp);
 			Strings.IntToStr(instr, temp);
 			Strings.Append(str, ", instr = "); Strings.Append(str, temp);
-			Strings.IntToHexStr(offset, 0, temp);
+			Strings.IntToHexStr(offset, 8, temp);
 			Strings.Append(str, ", offset = "); Strings.Append(str, temp);
 			RETURN Strings.NewString(str)
 		END ToString;

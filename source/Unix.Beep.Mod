@@ -10,6 +10,7 @@ VAR
 	PROCEDURE Beep*( hz: INTEGER );
 	BEGIN
 		Machine.Acquire(Machine.X11);
+		IF disp = NIL THEN GetDisplay END;
 		X11.Bell( disp.xdisp, 100 );
 		Machine.Release(Machine.X11);
 	END Beep;
@@ -21,6 +22,4 @@ VAR
 		disp := p(XDisplay.Display)
 	END GetDisplay;
 
-BEGIN
-	GetDisplay
 END Beep.

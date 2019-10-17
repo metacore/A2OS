@@ -1,5 +1,5 @@
 MODULE WMPlayer;
-	IMPORT Strings, Modules, Commands, Files, Texts, TextUtilities, WMGraphics, WMMessages, WMComponents, WMStandardComponents, WMWindowManager, WMTextView, WMDialogs, MediaPlayer;
+	IMPORT Strings, Modules, Commands, Files, Texts, TextUtilities, Models, WMGraphics, WMMessages, WMComponents, WMStandardComponents, WMWindowManager, WMTextView, WMDialogs, MediaPlayer;
 CONST 
 	WindowTitle = \"Media Player"\; 
 	DefaultWidth = 800; 
@@ -26,7 +26,7 @@ TYPE
 
 	Control = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
-		playBtn, stepBtn, stopBtn, pauseBtn, rewBtn, ffBtn: WMStandardComponents.Button; 
+		playBtn, stepBtn, stopBtn, pauseBtn, rewBtn, ffBtn, resetBtn: WMStandardComponents.Button; 
 		owner: Window; 
 
 		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
@@ -35,14 +35,16 @@ TYPE
 
 	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
-		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn, stepBtn: WMStandardComponents.Button; 
+		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn, stepBtn, resetBtn: WMStandardComponents.Button; 
 		search: WMStandardComponents.Scrollbar; 
+		toolbar*: WMStandardComponents.Panel; 
 		timeLbl*, totTimeLbl*, frameLbl*, maxFrameLbl*: WMStandardComponents.Label; 
 		player*: MediaPlayer.Player; 
 		stepSize: SIGNED32; 
-		filename: Files.FileName; 
+		filename-: Files.FileName; 
 		setupData*: MediaPlayer.Setup; 
 		infos*: InfoWindow; 
+		res*: INTEGER; 
 		windowInfo*: WMWindowManager.WindowInfo; 
 
 		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 

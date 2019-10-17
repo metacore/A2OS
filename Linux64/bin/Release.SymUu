@@ -306,15 +306,8 @@ TYPE
 		PROCEDURE ^  & Init(scanner: Scanner; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics); 
 	END Parser; 
 
-	PROCEDURE ^ SetAll(VAR s: Set); 
 	PROCEDURE ^ SetEmpty(VAR s: Set); 
-	PROCEDURE ^ IsAll(CONST s: Set): BOOLEAN; 
-	PROCEDURE ^ IsEmpty(CONST s: Set): BOOLEAN; 
 	PROCEDURE ^ Incl(VAR s: Set; i: SIZE); 
-	PROCEDURE ^ Excl(VAR s: Set; i: SIZE); 
-	PROCEDURE ^ Complement(VAR s: Set); 
-	PROCEDURE ^ Union(VAR s: Set; CONST t: Set); 
-	PROCEDURE ^ Intersection(VAR s: Set; CONST t: Set); 
 	PROCEDURE ^ In(CONST s: Set; i: SIZE): BOOLEAN; 
 	PROCEDURE ^ GetModuleInfo(in: Streams.Reader; VAR mi: ModuleInfo; CONST source, filename: ARRAY OF CHAR; errorPosition: Streams.Position; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ VersionToString(major, minor: INTEGER; VAR string: ARRAY OF CHAR); 

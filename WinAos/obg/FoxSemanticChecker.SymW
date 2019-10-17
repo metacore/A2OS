@@ -159,7 +159,7 @@ TYPE
 		PROCEDURE ^ CheckCharacterValue(x: SyntaxTree.Expression; VAR value: CHAR): BOOLEAN; 
 		PROCEDURE ^ CheckPositiveIntegerValue(x: SyntaxTree.Expression; VAR value: Basic.Integer; includeZero: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ CheckPortType(x: SyntaxTree.Expression; VAR portType: SyntaxTree.PortType): BOOLEAN; 
-		PROCEDURE ^ NewBuiltinCallDesignator(position: Position; original: SyntaxTree.Designator; builtin: SyntaxTree.Builtin; actualParameters: SyntaxTree.ExpressionList; left: SyntaxTree.Expression; returnType: SyntaxTree.Type): SyntaxTree.Expression; 
+		PROCEDURE ^ NewBuiltinCallDesignator(position: Position; original: SyntaxTree.Expression; builtin: SyntaxTree.Builtin; actualParameters: SyntaxTree.ExpressionList; left: SyntaxTree.Expression; returnType: SyntaxTree.Type): SyntaxTree.Expression; 
 		PROCEDURE ^ NewTypeGuardDesignator(position: Position; original: SyntaxTree.Expression; left: SyntaxTree.Expression; type: SyntaxTree.Type; typeExpression: SyntaxTree.Expression): SyntaxTree.Designator; 
 		PROCEDURE ^ ResolveParameterDesignator(designator: SyntaxTree.ParameterDesignator): SyntaxTree.Expression; 
 		PROCEDURE ^ NewDereferenceDesignator(position: Position; original: SyntaxTree.Expression; left: SyntaxTree.Expression): SyntaxTree.Designator; 

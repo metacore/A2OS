@@ -444,6 +444,7 @@ TYPE
 		PROCEDURE ^ AssignReference(left, right: SyntaxTree.Expression); 
 		PROCEDURE ^ Assign(left, right: SyntaxTree.Expression); 
 		PROCEDURE ^ EmitCooperativeSwitch; 
+		PROCEDURE ^ DeclarationStatement(x: SyntaxTree.DeclarationStatement); 
 		PROCEDURE ^ CommunicationStatement(communication: SyntaxTree.CommunicationStatement); 
 		PROCEDURE ^ IfStatement(x: SyntaxTree.IfStatement); 
 		PROCEDURE ^ BrWithPart(CONST tag: IntermediateCode.Operand; x: SyntaxTree.WithPart; VAR trueL: Label); 

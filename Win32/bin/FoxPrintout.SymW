@@ -131,6 +131,7 @@ TYPE
 		PROCEDURE ^ VisitStatement*(x: SyntaxTree.Statement); 
 		PROCEDURE ^ VisitProcedureCallStatement*(x: SyntaxTree.ProcedureCallStatement); 
 		PROCEDURE ^ VisitAssignment*(x: SyntaxTree.Assignment); 
+		PROCEDURE ^ VisitDeclarationStatement*(x: SyntaxTree.DeclarationStatement); 
 		PROCEDURE ^ VisitCommunicationStatement*(x: SyntaxTree.CommunicationStatement); 
 		PROCEDURE ^ IfPart(x: SyntaxTree.IfPart); 
 		PROCEDURE ^ VisitIfStatement*(x: SyntaxTree.IfStatement); 
@@ -160,6 +161,7 @@ TYPE
 VAR 
 	debug: Printer; 
 
+	PROCEDURE ^ IsProperType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ NewPrinter*(w: Streams.Writer; mode: SIGNED32; info: BOOLEAN): Printer; 
 	PROCEDURE ^ Info*(CONST info: ARRAY OF CHAR; a: ANY); 
 	PROCEDURE ^ Init; 

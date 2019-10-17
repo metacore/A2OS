@@ -148,10 +148,6 @@ TYPE
 		first: ADDRESS; 
 	END; 
 
-	AnyPtr = RECORD 
-		a: ANY; 
-	END; 
-
 	GCStatus* = OBJECT 
 
 		PROCEDURE ^ SetgcOngoing*(value: BOOLEAN); 

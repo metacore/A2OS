@@ -1,7 +1,7 @@
 MODULE FoxMinosObjectFile;
 	IMPORT Scanner := FoxScanner, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, Fingerprinter := FoxFingerprinter, Sections := FoxSections, Streams, D := Debugging, Files, SYSTEM, Strings, BinaryCode := FoxBinaryCode, KernelLog, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Options, Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine, FoxSemanticChecker;
 CONST 
-	Trace = TRUE; 
+	Trace = FALSE; 
 TYPE 
 	Name = ARRAY 256 OF CHAR; 
 

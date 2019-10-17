@@ -9,7 +9,7 @@ CONST
 	PointSize = 6; 
 TYPE 
 	Point* = POINTER TO RECORD 
-		x, y: SIZE; 
+		x-, y-: SIZE; 
 		previous, next: Point; 
 	END; 
 

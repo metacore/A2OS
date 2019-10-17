@@ -135,6 +135,7 @@ TYPE
 		PROCEDURE ^ VisitStatement*(x: Statement); 
 		PROCEDURE ^ VisitProcedureCallStatement*(x: ProcedureCallStatement); 
 		PROCEDURE ^ VisitAssignment*(x: Assignment); 
+		PROCEDURE ^ VisitDeclarationStatement*(x: DeclarationStatement); 
 		PROCEDURE ^ VisitCommunicationStatement*(x: CommunicationStatement); 
 		PROCEDURE ^ VisitIfStatement*(x: IfStatement); 
 		PROCEDURE ^ VisitWithStatement*(x: WithStatement); 
@@ -924,6 +925,18 @@ TYPE
 		PROCEDURE ^ Remove*(i: SIZE); 
 	END Symbols; 
 
+	Variables* = OBJECT 
+	VAR 
+		list: Basic.List; 
+
+		PROCEDURE ^  & InitList*; 
+		PROCEDURE ^ Length*(): SIZE; 
+		PROCEDURE ^ Add*(d: Variable); 
+		PROCEDURE ^ Get*(index: SIZE): Variable; 
+		PROCEDURE ^ Set*(index: SIZE; symbol: Variable); 
+		PROCEDURE ^ Remove*(i: SIZE); 
+	END Variables; 
+
 	TypeDeclaration* = OBJECT (Symbol)
 	VAR 
 		nextTypeDeclaration-: TypeDeclaration; 
@@ -1024,7 +1037,7 @@ TYPE
 		super-: Procedure; 
 		level-: SIGNED32; 
 		methodNumber-: SIZE; 
-		isBodyProcedure-, isConstructor-, isFinalizer-, isInline-, isOberonInline-, isOpening-, isClosing-, isFinal-, isAbstract-, isOverwritten-, isPlain-: BOOLEAN; 
+		isBodyProcedure-, isConstructor-, isFinalizer-, isInline-, isOberonInline-, isOpening-, isClosing-, isFinal-, isTest-, isAbstract-, isOverwritten-, isPlain-: BOOLEAN; 
 		resolving-: SIGNED32; 
 
 		PROCEDURE ^  & InitProcedure(position: Position; name: Identifier; scope: ProcedureScope); 
@@ -1039,6 +1052,7 @@ TYPE
 		PROCEDURE ^ SetClosing*(closing: BOOLEAN); 
 		PROCEDURE ^ SetPlain*(plain: BOOLEAN); 
 		PROCEDURE ^ SetFinal*(final: BOOLEAN); 
+		PROCEDURE ^ SetTest*(test: BOOLEAN); 
 		PROCEDURE ^ SetOverwritten*(locallyOverwritten: BOOLEAN); 
 		PROCEDURE ^ SetAbstract*(abstract: BOOLEAN); 
 		PROCEDURE ^ SetLevel*(level: SIGNED32); 
@@ -1122,9 +1136,12 @@ TYPE
 
 	DeclarationStatement* = OBJECT (Statement)
 	VAR 
-		variable-: Variable; 
+		variables-: Variables; 
+		initializers-: ExpressionList; 
+		type-: Type; 
 
-		PROCEDURE ^  & InitDeclarationStatement(position: Position; v: Variable; outer: Statement); 
+		PROCEDURE ^  & InitDeclarationStatement(position: Position; outer: Statement); 
+		PROCEDURE ^ SetType*(t: Type); 
 	END DeclarationStatement; 
 
 	ProcedureCallStatement* = OBJECT (Statement)
@@ -1716,7 +1733,7 @@ VAR
 	PROCEDURE ^ NewIfStatement*(position: Position; outer: Statement): IfStatement; 
 	PROCEDURE ^ NewAssignment*(position: Position; left: Expression; right: Expression; outer: Statement): Assignment; 
 	PROCEDURE ^ NewCommunicationStatement*(position: Position; op: SIGNED32; left: Expression; right: Expression; outer: Statement): CommunicationStatement; 
-	PROCEDURE ^ NewDeclarationStatement*(position: Position; variable: Variable; outer: Statement): DeclarationStatement; 
+	PROCEDURE ^ NewDeclarationStatement*(position: Position; outer: Statement): DeclarationStatement; 
 	PROCEDURE ^ NewProcedureCallStatement*(position: Position; ignore: BOOLEAN; call: Expression; outer: Statement): ProcedureCallStatement; 
 	PROCEDURE ^ NewCaseStatement*(position: Position; outer: Statement): CaseStatement; 
 	PROCEDURE ^ NewCasePart*(): CasePart; 

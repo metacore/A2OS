@@ -195,6 +195,7 @@ TYPE
 		PROCEDURE ^ DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration: SIGNED32; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Stop*; 
 		PROCEDURE ^ Pause*; 
+		PROCEDURE ^ DoReset*; 
 		PROCEDURE ^ GetTimePos*(): SIGNED32; 
 		PROCEDURE ^ GetFrame*(): SIGNED32; 
 		PROCEDURE ^ SetPos*(pos: SIGNED32); 

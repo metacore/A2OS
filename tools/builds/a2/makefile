@@ -9,10 +9,10 @@ tool = $(if $(wildcard oberon), ./oberon, ./original)
 platforms = Bios32 Bios64 Zynq Win32 Win64 Linux32 Linux64 Darwin32 Darwin64 Solaris32 Solaris64 \
 	Bios32C RPiC ZynqC Win32C Linux32C Linux64C
 
-target ?= Linux64
-pltfrm ?= Unix64
-object ?= .Gof
-symbol ?= .Sym
+target = Linux64
+pltfrm = Unix64
+object = .GofUu
+symbol = .SymUu
 
 # module dependencies
 

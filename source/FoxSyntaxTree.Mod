@@ -5193,7 +5193,7 @@ VAR
 		| TypeGuardDesignator DO
 				result := NewTypeGuardDesignator(x.position, x.original, CloneExpression(x.left), x.type);
 		| BuiltinCallDesignator DO
-				result := NewBuiltinCallDesignator(x.position, NIL, x.id, CloneExpression(x.left), CloneExpressionList(x.parameters));
+				result := NewBuiltinCallDesignator(x.position, x.original, x.id, CloneExpression(x.left), CloneExpressionList(x.parameters));
 		| ProcedureCallDesignator DO
 				result := NewProcedureCallDesignator(x.position, NIL, CloneExpression(x.left), CloneExpressionList(x.parameters));
 		| InlineCallDesignator DO

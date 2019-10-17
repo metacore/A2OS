@@ -4089,7 +4089,7 @@ TYPE
 		PROCEDURE ResolveBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator): SyntaxTree.Expression;
 		BEGIN
 			IF (x.returnType # NIL) & ExpressionList(x.parameters) THEN
-				RETURN NewBuiltinCallDesignator(x.position,NIL, NIL, x.parameters,NIL, ResolveType(x.returnType));
+				RETURN NewBuiltinCallDesignator(x.position,x.original, NIL, x.parameters,NIL, ResolveType(x.returnType));
 			ELSIF ExpressionList(x.parameters) THEN
 				RETURN x;
 			END;
@@ -4439,7 +4439,7 @@ TYPE
 				(* move to builtin procedure call statement ?
 			remove builtin procedure call designator ?
 		*)
-		PROCEDURE NewBuiltinCallDesignator(position: Position; original: SyntaxTree.Designator; builtin: SyntaxTree.Builtin; actualParameters:SyntaxTree.ExpressionList; left: SyntaxTree.Expression; returnType: SyntaxTree.Type): SyntaxTree.Expression;
+		PROCEDURE NewBuiltinCallDesignator(position: Position; original: SyntaxTree.Expression; builtin: SyntaxTree.Builtin; actualParameters:SyntaxTree.ExpressionList; left: SyntaxTree.Expression; returnType: SyntaxTree.Type): SyntaxTree.Expression;
 		VAR
 			numberActualParameters,numberFormalParameters: SIZE;
 			formalParameter: SyntaxTree.Parameter;

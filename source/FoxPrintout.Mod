@@ -747,9 +747,17 @@ TYPE
 			IF x.left # NIL THEN
 				Expression(x.left);
 			ELSE
-				w.String("BUILTIN(");
-				w.Int(x.id,1);
-				w.String(")");
+				CASE x.id OF 
+				Global.New: 
+					w.String("NEW "); 
+					IF x.type # NIL THEN
+						Type(x.type);
+					END; 
+				ELSE
+					w.String("BUILTIN(");
+					w.Int(x.id,1);
+					w.String(")");
+				END;
 			END;
 			IF info THEN
 				BeginComment;

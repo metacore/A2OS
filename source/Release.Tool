@@ -731,6 +731,7 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	FoxInterpreterBackend.Mod FoxTranspilerBackend.Mod
 	FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod
 	FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
+	FoxTestBackend.Mod
 
 	FoxProfiler.Mod
 
@@ -1258,7 +1259,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 
 	WMScreenShot.Mod
 	WMBackdrop.Mod mars.png BluebottlePic0.png	# Backdrop
-	
+
 	WMLanguageSwitcher.Mod	#	Language switcher
 
 	# Installer

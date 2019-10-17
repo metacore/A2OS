@@ -1,9 +1,9 @@
 #!/bin/sh
 
 directory="/var/tmp/libraries/"
-update () { svn checkout --non-interactive --quiet https://svn-dept.inf.ethz.ch/svn/lecturers/a2/trunk/tools/builds/a2 "$directory" && svn checkout --non-interactive --quiet --trust-server-cert-failures unknown-ca,expired https://www.ocp.inf.ethz.ch/svn/ocp/trunk/Matrix "$directory/Matrix" && (cd "$directory" && svn patch --quiet Matrix/libraries.patch) && make --directory "$directory" --quiet dependencies && version="$(svnversion "$directory/Matrix").$(svnversion "$directory/source")"; }
-check () { make --question --directory "$directory" --quiet "$target"; }
-build () { timeout 1h make --directory "$directory" --quiet "$target"; }
+update () { svn checkout --non-interactive --quiet https://svn-dept.inf.ethz.ch/svn/lecturers/a2/trunk/tools/builds/a2 "$directory" && svn checkout --non-interactive --quiet --trust-server-cert-failures unknown-ca,expired https://www.ocp.inf.ethz.ch/svn/ocp/trunk/Matrix "$directory/Matrix" && make --directory "$directory" --quiet dependencies && version="$(svnversion "$directory/Matrix").$(svnversion "$directory/source")"; }
+check () { make --question --directory "$directory" --makefile=Matrix/test --quiet "$target"; }
+build () { timeout 1h make --directory "$directory" --makefile=Matrix/test --quiet "$target"; }
 notify () { echo "$output" | sendbuild "Libraries" "$target" "$version" "$status"; }
 
 update || exit 1

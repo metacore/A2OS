@@ -10,17 +10,17 @@ CONST
 	PanelWidth = 100;
 	ButtonHeight = 20;
 	
-(*TYPE
+TYPE
 	String = Strings.String;
 	Chars = ARRAY OF CHAR;
 	
-OPERATOR "+"(CONST a1, a2: Chars): String;
-VAR str: String;
-BEGIN
-	NEW(str, Strings.Length(a1) + Strings.Length(a2) + 1);
-	Strings.Concat(a1, a2, str^);
-	RETURN str
-END "+";*)
+	OPERATOR "+"(CONST a1, a2: Chars): String;
+	VAR str: String;
+	BEGIN
+		NEW(str, Strings.Length(a1) + Strings.Length(a2) + 1);
+		Strings.Concat(a1, a2, str^);
+		RETURN str
+	END "+";
 
 TYPE
 
@@ -35,7 +35,6 @@ TYPE
 		VAR
 			panel: WMStandardComponents.Panel;
 			i: SIZE;
-			language: Localization.Language;
 		BEGIN
 			ASSERT(languages # NIL);
 			SELF.languages := languages;
@@ -47,9 +46,7 @@ TYPE
 			NEW(buttonArr, nofLanguages);
 			FOR i := 0 TO nofLanguages-1 DO
 				NEW(buttonArr[i]);
-				language := languages^[i];
-				(*buttonArr[i].caption.Set("::System:Strings:S" + language.code);*)
-				buttonArr[i].caption.SetAOC(language.code);
+				buttonArr[i].caption.Set("::System:LanguageNames:S" + languages^[i].code);
 				buttonArr[i].alignment.Set(WMComponents.AlignTop);
 				buttonArr[i].bounds.SetWidth(PanelWidth); buttonArr[i].bounds.SetHeight(ButtonHeight);
 				buttonArr[i].onClick.Add(SetLanguage);

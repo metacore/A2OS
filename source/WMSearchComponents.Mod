@@ -151,14 +151,14 @@ TYPE
 
 			NEW(searchLabel);
 			searchLabel.alignment.Set(WMComponents.AlignLeft);
-			searchLabel.bounds.SetWidth(40); searchLabel.fillColor.Set(SIGNED32(0FFFFFFFFH));
+			searchLabel.bounds.SetWidth(80); searchLabel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			searchLabel.alignH.Set(WMGraphics.AlignCenter);
-			searchLabel.SetCaption("Search");
+			searchLabel.SetCaption("::System:ButtonTitles:SSearch");
 			upperPanel.AddInternalComponent(searchLabel);
 
 			NEW(searchEdit);
 			searchEdit.alignment.Set(WMComponents.AlignLeft);
-			searchEdit.bounds.SetWidth(200); searchEdit.multiLine.Set(FALSE);
+			searchEdit.bounds.SetWidth(240); searchEdit.multiLine.Set(FALSE);
 			searchEdit.tv.borders.Set(WMRectangles.MakeRect(3, 3, 1, 1));
 			searchEdit.tv.showBorder.Set(TRUE);
 			searchEdit.fillColor.Set(SIGNED32(0FFFFFFFFH));
@@ -170,9 +170,9 @@ TYPE
 
 			NEW(replLabel);
 			replLabel.alignment.Set(WMComponents.AlignLeft);
-			replLabel.bounds.SetWidth(50); replLabel.fillColor.Set(SIGNED32(0FFFFFFFFH));
+			replLabel.bounds.SetWidth(80); replLabel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			replLabel.alignH.Set(WMGraphics.AlignCenter);
-			replLabel.SetCaption("Replace");
+			replLabel.SetCaption("::System:ButtonTitles:SReplace");
 			upperPanel.AddInternalComponent(replLabel);
 
 			NEW(replEdit);
@@ -193,28 +193,29 @@ TYPE
 
 			NEW(searchBtn);
 			searchBtn.alignment.Set(WMComponents.AlignLeft);
-			searchBtn.caption.SetAOC("Search");
+			searchBtn.caption.SetAOC("::System:ButtonTitles:SSearch");
 			searchBtn.bounds.SetWidth(80);
 			searchBtn.onClick.Add(SearchHandler);
 			lowerPanel.AddInternalComponent(searchBtn);
 
 			NEW(replBtn);
 			replBtn.alignment.Set(WMComponents.AlignLeft);
-			replBtn.caption.SetAOC("Replace");
+			replBtn.caption.SetAOC("::System:ButtonTitles:SReplace");
 			replBtn.bounds.SetWidth(80);
 			replBtn.onClick.Add(ReplaceHandler);
 			lowerPanel.AddInternalComponent(replBtn);
 
 			NEW(replAllBtn);
 			replAllBtn.alignment.Set(WMComponents.AlignLeft);
-			replAllBtn.caption.SetAOC("Replace All");
+			replAllBtn.caption.SetAOC("::System:ButtonTitles:SReplaceAll");
 			replAllBtn.bounds.SetWidth(80);
 			replAllBtn.onClick.Add(ReplaceAllHandler);
 			lowerPanel.AddInternalComponent(replAllBtn);
 
 			NEW(wrapBtn);
 			wrapBtn.alignment.Set(WMComponents.AlignLeft);
-			wrapBtn.caption.SetAOC("Wrap");
+			wrapBtn.caption.SetAOC("::System:ButtonTitles:SSearchWrap");
+			wrapBtn.bounds.SetWidth(80);
 			wrapBtn.isToggle.Set(TRUE);
 			wrapBtn.SetPressed(wrap);
 			wrapBtn.onClick.Add(WrapHandler);
@@ -222,7 +223,7 @@ TYPE
 
 			NEW(caseSensitiveBtn);
 			caseSensitiveBtn.alignment.Set(WMComponents.AlignLeft);
-			caseSensitiveBtn.caption.SetAOC("CaseSensitive");
+			caseSensitiveBtn.caption.SetAOC("::System:ButtonTitles:SCaseSensitive");
 			caseSensitiveBtn.isToggle.Set(TRUE);
 			caseSensitiveBtn.SetPressed(caseSensitive);
 			caseSensitiveBtn.bounds.SetWidth(80);
@@ -231,7 +232,7 @@ TYPE
 
 			NEW(directionBtn);
 			directionBtn.alignment.Set(WMComponents.AlignLeft);
-			directionBtn.caption.SetAOC("Backwards");
+			directionBtn.caption.SetAOC("::System:ButtonTitles:SBackwards");
 			directionBtn.isToggle.Set(TRUE);
 			directionBtn.SetPressed(backwards);
 			directionBtn.bounds.SetWidth(80);
@@ -249,7 +250,7 @@ TYPE
 
 			NEW(closeBtn);
 			closeBtn.alignment.Set(WMComponents.AlignLeft);
-			closeBtn.caption.SetAOC("Close");
+			closeBtn.caption.SetAOC("::System:ButtonTitles:SClose");
 			closeBtn.bounds.SetWidth(80);
 			closeBtn.onClick.Add(CloseHandler);
 			lowerPanel.AddInternalComponent(closeBtn);
@@ -669,7 +670,7 @@ TYPE
 			SetTextView(textView, text);
 			Init(searchPanel.bounds.GetWidth(), searchPanel.bounds.GetHeight(), FALSE);
 			SetContent(searchPanel);
-			SetTitle(Strings.NewString("Search"));
+			SetTitle(Strings.NewString("::System:ButtonTitles:SSearch"));
 			WMWindowManager.DefaultAddWindow(SELF);
 		END New;
 

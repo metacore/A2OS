@@ -345,7 +345,7 @@ TYPE
 				IF (buttons * LoadButton # {}) THEN
 					filenameEdit.onEnter.Add(LoadHandler);
 					NEW(loadBtn);
-					loadBtn.caption.SetAOC("Load"); loadBtn.alignment.Set(WMComponents.AlignLeft);
+					loadBtn.caption.SetAOC("::System:ButtonTitles:SLoad"); loadBtn.alignment.Set(WMComponents.AlignLeft);
 					loadBtn.onClick.Add(LoadHandler);
 					toolbar.AddInternalComponent(loadBtn);
 				END;
@@ -370,7 +370,7 @@ TYPE
 
 			IF (buttons * WrapButton # {}) THEN
 				NEW(wrapBtn);
-				wrapBtn.caption.SetAOC("Word Wrap"); wrapBtn.alignment.Set(WMComponents.AlignLeft);
+				wrapBtn.caption.SetAOC("::System:ButtonTitles:SWordWrap"); wrapBtn.alignment.Set(WMComponents.AlignLeft);
 				wrapBtn.isToggle.Set(TRUE); wrapBtn.SetPressed(wordWrap);
 				wrapBtn.onClick.Add(WrapHandler); wrapBtn.bounds.SetWidth(100);
 				toolbar.AddInternalComponent(wrapBtn);
@@ -378,7 +378,7 @@ TYPE
 
 			IF (buttons * ClearButton # {}) THEN
 				NEW(clearBtn);
-				clearBtn.caption.SetAOC("Clear"); clearBtn.alignment.Set(WMComponents.AlignRight);
+				clearBtn.caption.SetAOC("::System:ButtonTitles:SClear"); clearBtn.alignment.Set(WMComponents.AlignRight);
 				clearBtn.onClick.Add(ClearHandler);
 				toolbar.AddInternalComponent(clearBtn);
 			END;
@@ -386,7 +386,7 @@ TYPE
 			IF (buttons * SearchButton # {}) THEN
 				NEW(searchBtn);
 				searchBtn.alignment.Set(WMComponents.AlignRight);
-				searchBtn.SetCaption("Search");
+				searchBtn.SetCaption("::System:ButtonTitles:SSearch");
 				searchBtn.onClick.Add(SearchHandler);
 				toolbar.AddInternalComponent(searchBtn);
 			END;

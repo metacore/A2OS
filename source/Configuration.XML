@@ -82,7 +82,7 @@ To update: Configuration.Init ~
 			<Setting name="SharpenContours" value="FALSE"/>
 
 			<Section name="DefaultFont">
-				<Setting name="Name" value="Vera"/>
+				<Setting name="Name" value="IBMPlexSans"/>
 				<Setting name="Size" value="14"/>
 				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
 				<Setting name="Style" value=""/>

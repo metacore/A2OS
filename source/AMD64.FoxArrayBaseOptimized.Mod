@@ -1542,8 +1542,8 @@ VAR
 		CMP	RSI, 8	;
 		JNE	aligned	;  lad, radr and dadr already 128 bit aligned
 		;  one single element processing TO achieve 128 bt alignment
-		MOVSD	XMM1, [RBX]	;
-		MOVSD	XMM0, [RCX]	;
+		MOVSD	XMM0, [RBX]	;
+		MOVSD	XMM1, [RCX]	;
 		SUBSD	XMM0, XMM1	;
 		MOVSD	[RDX], XMM0	;
 		ADD	RBX, 8	;  now RBX IS 16 byte aligned

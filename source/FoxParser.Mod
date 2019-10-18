@@ -606,7 +606,7 @@ TYPE
 	        | 'SELF' | 'RESULT' | 'ADDRESS' | 'SIZE' 
 	        | 'SIZE' 'OF' Factor | 'ADDRESS' 'OF' Factor
 	        | 'ALIAS' OF Factor
-	        | 'NEW' QualifiedIdentifier '(' ExpressionList ')'
+	        | 'NEW' QualifiedIdentifier ['(' ExpressionList ')']
 	        | '(' Expression ')'
 	        | Identifier.
 		**)
@@ -691,8 +691,8 @@ TYPE
 				IF Symbol() # Scanner.LeftParenthesis THEN (* NEW Type () *)
 					qualifiedIdentifier := QualifiedIdentifier();
 					qualifiedType := SyntaxTree.NewQualifiedType(qualifiedIdentifier.position, currentScope, qualifiedIdentifier);
-					IF Mandatory( Scanner.LeftParenthesis ) THEN
-						expressionList := SyntaxTree.NewExpressionList();
+					expressionList := SyntaxTree.NewExpressionList();
+					IF Optional( Scanner.LeftParenthesis ) THEN
 						IF ~Optional(Scanner.RightParenthesis) THEN
 							ExpressionList( expressionList );
 							Check( Scanner.RightParenthesis )

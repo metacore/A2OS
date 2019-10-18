@@ -4634,6 +4634,9 @@ TYPE
 							type0 := type0(SyntaxTree.PointerType).pointerBase.resolved;
 						ELSIF type0 IS SyntaxTree.CellType THEN
 						ELSIF type0 IS SyntaxTree.MathArrayType THEN
+						ELSIF type0 IS SyntaxTree.RecordType THEN
+							type := SyntaxTree.NewPointerType(type0.position, type0.scope);
+							type(SyntaxTree.PointerType).SetPointerBase(type0);
 						ELSE
 							Error(position, "forbidden new on value type");
 						END;

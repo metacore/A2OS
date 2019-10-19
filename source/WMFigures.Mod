@@ -645,8 +645,8 @@ TYPE
 
 	Spline* = OBJECT(Figure)
 	VAR
-		pointArray : ARRAY 2048 OF WMGraphics.Point2d;
-		nSegments:SIGNED32;
+		pointArray- : ARRAY 2048 OF WMGraphics.Point2d; (* read-only export for re-use of functionality *)
+		nSegments-:SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN

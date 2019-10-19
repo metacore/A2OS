@@ -242,7 +242,7 @@ TYPE
 		VAR caption : ARRAY 128 OF CHAR;
 		BEGIN
 			IF (formatBtn = NIL) THEN RETURN END;
-			caption := "::System:ButtonTitles::SFormat: ";
+			caption := "::System:ButtonTitles::SFormat::SColon: ";
 			IF format = "AUTO" THEN
 				Strings.Append(caption, ":SAUTO: "); Strings.Append(caption, autoCodecFormat)
 			ELSE

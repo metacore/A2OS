@@ -214,7 +214,7 @@ TYPE
 
 			NEW(wrapBtn);
 			wrapBtn.alignment.Set(WMComponents.AlignLeft);
-			wrapBtn.caption.SetAOC("::System:ButtonTitles:SSearchWrap");
+			wrapBtn.caption.SetAOC("::System:ButtonTitles:SWrap");
 			wrapBtn.bounds.SetWidth(80);
 			wrapBtn.isToggle.Set(TRUE);
 			wrapBtn.SetPressed(wrap);
@@ -223,7 +223,7 @@ TYPE
 
 			NEW(caseSensitiveBtn);
 			caseSensitiveBtn.alignment.Set(WMComponents.AlignLeft);
-			caseSensitiveBtn.caption.SetAOC("::System:ButtonTitles:SCaseSensitive");
+			caseSensitiveBtn.caption.SetAOC("::System:ButtonTitles:SCase");
 			caseSensitiveBtn.isToggle.Set(TRUE);
 			caseSensitiveBtn.SetPressed(caseSensitive);
 			caseSensitiveBtn.bounds.SetWidth(80);
@@ -579,8 +579,8 @@ TYPE
 					END;
 				END;
 			END;
-			caption := "::System:ButtonTitles::SHighlight: (";
-			Strings.IntToStr(hitCount, nbr); Strings.Append(caption, nbr); Strings.Append(caption, ')');
+			caption := "::System:ButtonTitles::SHighlight::SColon: ";
+			Strings.IntToStr(hitCount, nbr); Strings.Append(caption, nbr);
 			markAllBtn.caption.SetAOC(caption);
 		END SearchAndHighlightAll;
 

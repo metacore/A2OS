@@ -194,7 +194,7 @@ VAR
 	res: INTEGER;
 BEGIN
 	(* Just try to open some dictionary in assumption that all dictionaries has translations for all languages *)
-	Repositories.GetDictionary("StartMenu", "ButtonTitles", dictionary, res);
+	Repositories.GetDictionary("System", "LanguageNames", dictionary, res);
 	IF res = Repositories.Ok THEN
 		RETURN dictionary.GetLanguages()
 	ELSE

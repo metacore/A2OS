@@ -242,7 +242,7 @@ TYPE
 			NEW(markAllBtn);
 			markAllBtn.alignment.Set(WMComponents.AlignLeft);
 			markAllBtn.bounds.SetWidth(80);
-			markAllBtn.caption.SetAOC("Highlight");
+			markAllBtn.caption.SetAOC("::System:ButtonTitles:SHighlight");
 			markAllBtn.isToggle.Set(TRUE);
 			markAllBtn.SetPressed(highlightAll);
 			markAllBtn.onClick.Add(HighlightAllHandler);
@@ -405,7 +405,7 @@ TYPE
 				DisableUpdate; SearchAndHighlightAll; EnableUpdate; markAllBtn.Invalidate; textView.Invalidate;
 			ELSE
 				DisableUpdate; RemoveHighlights; EnableUpdate; textView.Invalidate;
-				markAllBtn.SetCaption("Highlight");
+				markAllBtn.caption.SetAOC("::System:ButtonTitles:SHighlight");
 			END;
 		END HighlightAllHandler;
 
@@ -555,7 +555,7 @@ TYPE
 		VAR
 			searchString : SearchString;
 			ucsStr : UcsSearchString;
-			caption : ARRAY 32 OF CHAR; nbr : ARRAY 12 OF CHAR;
+			caption : ARRAY 48 OF CHAR; nbr : ARRAY 12 OF CHAR;
 			length, pos, from, idx: SIZE;
 		BEGIN
 			IF (text = NIL) OR (highlights = NIL) THEN RETURN; END;
@@ -579,8 +579,8 @@ TYPE
 					END;
 				END;
 			END;
-			caption := "Highlight:";
-			Strings.IntToStr(hitCount, nbr); Strings.Append(caption, nbr);
+			caption := "::System:ButtonTitles::SHighlight: (";
+			Strings.IntToStr(hitCount, nbr); Strings.Append(caption, nbr); Strings.Append(caption, ')');
 			markAllBtn.caption.SetAOC(caption);
 		END SearchAndHighlightAll;
 

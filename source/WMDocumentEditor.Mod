@@ -142,7 +142,7 @@ TYPE
 			editor.tv.cursor.SetPosition(0);
 			editor.tv.SetFocus;
 			modified := FALSE;
-			IF (buttons * StoreButton # {}) THEN storeBtn.caption.SetAOC("Store") END;
+			IF (buttons * StoreButton # {}) THEN storeBtn.caption.SetAOC("::System:ButtonTitles:SStore") END;
 		END Load;
 
 		PROCEDURE StoreHandler(sender, data : ANY);
@@ -225,7 +225,7 @@ TYPE
 				filenameEdit.SetAsString(fullname);
 				lastFilename := fullname;
 			END;
-			IF (buttons * StoreButton # {}) THEN storeBtn.caption.SetAOC("Store") END;
+			IF (buttons * StoreButton # {}) THEN storeBtn.caption.SetAOC("::System:ButtonTitles:SStore") END;
 		END Store;
 
 		PROCEDURE FormatHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
@@ -242,9 +242,12 @@ TYPE
 		VAR caption : ARRAY 128 OF CHAR;
 		BEGIN
 			IF (formatBtn = NIL) THEN RETURN END;
-			caption := "Format : ";
-			Strings.Append(caption, format);
-			IF format = "AUTO" THEN Strings.Append(caption, " "); Strings.Append(caption, autoCodecFormat); END;
+			caption := "::System:ButtonTitles::SFormat: ";
+			IF format = "AUTO" THEN
+				Strings.Append(caption, ":SAUTO: "); Strings.Append(caption, autoCodecFormat)
+			ELSE
+				Strings.Append(caption, format)
+			END;
 			formatBtn.caption.SetAOC(caption);
 			formatBtn.Invalidate;
 		END SetFormatCaption;
@@ -304,7 +307,7 @@ TYPE
 		PROCEDURE TextChanged(sender, data : ANY);
 		BEGIN
 			IF (buttons * StoreButton # {}) & ~modified THEN
-				storeBtn.caption.SetAOC("Store !");
+				storeBtn.caption.SetAOC("::System:ButtonTitles::SStore:!");
 				modified := TRUE
 			END
 		END TextChanged;
@@ -346,14 +349,14 @@ TYPE
 					filenameEdit.onEnter.Add(LoadHandler);
 					NEW(loadBtn);
 					loadBtn.caption.SetAOC("::System:ButtonTitles:SLoad"); loadBtn.alignment.Set(WMComponents.AlignLeft);
-					loadBtn.onClick.Add(LoadHandler);
+					loadBtn.onClick.Add(LoadHandler); loadBtn.bounds.SetWidth(80);
 					toolbar.AddInternalComponent(loadBtn);
 				END;
 
 				IF (buttons * StoreButton # {}) THEN
 					NEW(storeBtn);
-					storeBtn.caption.SetAOC("Store"); storeBtn.alignment.Set(WMComponents.AlignLeft);
-					storeBtn.onClick.Add(StoreHandler);
+					storeBtn.caption.SetAOC("::System:ButtonTitles:SStore"); storeBtn.alignment.Set(WMComponents.AlignLeft);
+					storeBtn.onClick.Add(StoreHandler); storeBtn.bounds.SetWidth(80);
 					toolbar.AddInternalComponent(storeBtn);
 				END;
 
@@ -372,14 +375,14 @@ TYPE
 				NEW(wrapBtn);
 				wrapBtn.caption.SetAOC("::System:ButtonTitles:SWordWrap"); wrapBtn.alignment.Set(WMComponents.AlignLeft);
 				wrapBtn.isToggle.Set(TRUE); wrapBtn.SetPressed(wordWrap);
-				wrapBtn.onClick.Add(WrapHandler); wrapBtn.bounds.SetWidth(100);
+				wrapBtn.onClick.Add(WrapHandler); wrapBtn.bounds.SetWidth(80);
 				toolbar.AddInternalComponent(wrapBtn);
 			END;
 
 			IF (buttons * ClearButton # {}) THEN
 				NEW(clearBtn);
 				clearBtn.caption.SetAOC("::System:ButtonTitles:SClear"); clearBtn.alignment.Set(WMComponents.AlignRight);
-				clearBtn.onClick.Add(ClearHandler);
+				clearBtn.onClick.Add(ClearHandler); clearBtn.bounds.SetWidth(80);
 				toolbar.AddInternalComponent(clearBtn);
 			END;
 
@@ -387,7 +390,7 @@ TYPE
 				NEW(searchBtn);
 				searchBtn.alignment.Set(WMComponents.AlignRight);
 				searchBtn.SetCaption("::System:ButtonTitles:SSearch");
-				searchBtn.onClick.Add(SearchHandler);
+				searchBtn.onClick.Add(SearchHandler); searchBtn.bounds.SetWidth(80);
 				toolbar.AddInternalComponent(searchBtn);
 			END;
 

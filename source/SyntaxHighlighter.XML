@@ -188,6 +188,7 @@
 					KernelLog.Bits
 					KernelLog.OpenBuffer
 					KernelLog.CloseBuffer
+					TRACE
 					Trace
 					Trace.Send
 					Trace.Ln Trace.String Trace.StringLn
@@ -362,6 +363,7 @@
 					KernelLog.Bits
 					KernelLog.OpenBuffer
 					KernelLog.CloseBuffer
+					trace
 					Trace
 					Trace.Send
 					Trace.Ln Trace.String Trace.StringLn

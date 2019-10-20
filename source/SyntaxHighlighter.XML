@@ -291,6 +291,8 @@
 				<Group style="Locking">
 					KernelLog.Enter
 					KernelLog.Exit
+					Kernel32.GlobalLock
+					Kernel32.GlobalUnlock
 					Acquire Release
 					*.Acquire *.Release
 					AcquireRead ReleaseRead

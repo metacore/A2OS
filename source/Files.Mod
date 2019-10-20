@@ -71,7 +71,7 @@ TYPE
 		eof*: BOOLEAN;	(** has end of file been passed *)
 		res*: SIZE;	(** leftover byte count for ReadBytes/WriteBytes *)
 			(** private fields for implementors *)
-		apos*: Address;
+		apos*: Position;
 		bpos*: SIZE;
 		hint*: Hint;
 		file*: File;
@@ -174,14 +174,14 @@ TYPE
 
 	Volume* = OBJECT	(** shareable *)
 		VAR
-			size*: Address;	(** size in blocks *)
+			size*: SIGNED32;	(** size in blocks *)
 			blockSize*: SIGNED32;	(** block size in bytes *)
 			flags*: SET;	(** ReadOnly, Removable, Boot *)
 			name*: ARRAY 32 OF CHAR;	(** descriptive name - e.g. for matching with Partitions.Show *)
 
 			map: POINTER TO ARRAY OF SET;	(* Block allocation table *)
-			used: Address;	(* used blocks *)
-			reserved: Address;	(* blocks reserved for system *)
+			used: SIGNED32;	(* used blocks *)
+			reserved: SIGNED32;	(* blocks reserved for system *)
 
 		PROCEDURE AllocBlock*(hint: Address; VAR adr: Address);
 		BEGIN {EXCLUSIVE}
@@ -259,15 +259,15 @@ TYPE
 			RETURN (adr MOD SetSize) IN map[adr DIV SetSize]
 		END Marked;
 
-		PROCEDURE Available*(): Address;
+		PROCEDURE Available*(): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN size-used
 		END Available;
 
-		PROCEDURE GetBlock*(adr: Address; VAR blk: ARRAY OF CHAR);
+		PROCEDURE GetBlock*(adr: SIGNED32; VAR blk: ARRAY OF CHAR);
 		BEGIN HALT(301) END GetBlock;	(* abstract *)
 
-		PROCEDURE PutBlock*(adr: Address; VAR blk: ARRAY OF CHAR);
+		PROCEDURE PutBlock*(adr: SIGNED32; VAR blk: ARRAY OF CHAR);
 		BEGIN HALT(301) END PutBlock;	(* abstract *)
 
 		(* FIX: This procedure can not be declared exclusive, because it will be overridden by an exclusive procedure in the actual implementation, from where it will be supercalled.  This could be a good example for allowing recursive locks, or an example of where an alternative for overriding methods is needed. In this case the procedure is only called from the exclusive overridden procedure, so it is not a real problem (although it is ugly). *)
@@ -278,8 +278,8 @@ TYPE
 
 		(** Init procedure for private data of above methods only.  If the above methods are not required, this procedure should not be called, and the volume fields should be initialized directly.  The flags parameter defines the volume flags, the size parameter its size, and the reserved parameter says how many blocks are reserved for the system (out of disk space trap occurs when less than this amount of blocks are present). *)
 
-		PROCEDURE Init*(flags: SET; size, reserved: Address);
-		VAR maplen: Address;
+		PROCEDURE Init*(flags: SET; size, reserved: SIGNED32);
+		VAR maplen: SIGNED32;
 		BEGIN
 			SELF.flags := flags; SELF.size := size; SELF.reserved := reserved;
 			IF ~(ReadOnly IN flags) THEN

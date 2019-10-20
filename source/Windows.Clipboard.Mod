@@ -2,14 +2,57 @@ MODULE Clipboard; (** AUTHOR "ALEX"; PURPOSE "Windows clipboard interface"; *)
 
 IMPORT SYSTEM, Kernel32, User32, KernelLog, Modules, Texts, TextUtilities, HostClipboard;
 
-CONST
-	CR = 0DX; LF = 0AX;
+CONST CR = 0x0D; LF = 0x0A;
+
+TYPE
+	StringBuilder = OBJECT
+	VAR
+		length: SIZE;
+		data: POINTER TO ARRAY OF UNSIGNED16;
+
+		PROCEDURE &Init*( initialSize: SIZE );
+		BEGIN
+			IF initialSize < 260 THEN initialSize := 260 END;
+			NEW( data, initialSize );
+			length := 0;
+		END Init;
+
+		PROCEDURE Clear*;
+		BEGIN
+			data[ 0 ] := 0;
+			length := 0
+		END Clear;
+
+		PROCEDURE AddChar*( codePoint: UNSIGNED16 );
+		VAR i, newLength: SIZE; newData: POINTER TO ARRAY OF UNSIGNED16;
+		BEGIN
+			IF length + 2 >= LEN( data ) THEN
+				newLength := length + MAX( 16, length DIV 10 );
+				NEW( newData, newLength );
+				FOR i := 0 TO length - 1 DO newData[ i ] := data[ i ]; END;
+				data := newData;
+			END;
+			data[ length ] := codePoint;
+			INC( length );
+			data[ length ] := 0;
+		END AddChar;
+
+		PROCEDURE GetLength*( ) : SIZE;
+		BEGIN
+			RETURN length
+		END GetLength;
+
+		PROCEDURE GetString*( ): POINTER TO ARRAY OF UNSIGNED16;
+		BEGIN
+			RETURN data
+		END GetString;
+
+	END StringBuilder;
 
 (** Copy text of Windows clipboard to text *)
 PROCEDURE GetFromClipboard( text : Texts.Text );
-CONST CR = 0x0D; LF = 0x0A;
 VAR
-	clipboardData: POINTER{ UNSAFE, UNTRACED } TO ARRAY OF UNSIGNED16;
+	clipboardData: POINTER { UNSAFE, UNTRACED } TO ARRAY OF UNSIGNED16;
 	textBuffer: POINTER TO ARRAY OF Texts.Char32;
 	clipboardPos := 0, textPos := 0, clipboardLen := 0: SIZE;
 	codePoint: UNSIGNED16;
@@ -50,37 +93,49 @@ END GetFromClipboard;
 (** Copy text to Windows clipboard *)
 PROCEDURE PutToClipboard(text : Texts.Text);
 VAR
-	hMem: Kernel32.HGLOBAL; adr: ADDRESS;
-	chBuff: POINTER TO ARRAY OF CHAR;
-	size,requiredSize: SIZE;
-	ind: SIZE;
+	clipboardData: POINTER { UNSAFE, UNTRACED } TO ARRAY OF UNSIGNED16;
+	textBuffer: POINTER TO ARRAY OF UNSIGNED16;
+	builder: StringBuilder;
+	r: Texts.TextReader;
+	textPos := 0, textLen: SIZE;
+	codePoint := 0: Texts.Char32;
+
 BEGIN
-	ASSERT((text # NIL) & (text.HasReadLock()));
-	IF User32.OpenClipboard(Kernel32.NULL) # Kernel32.False THEN
-		IGNORE User32.EmptyClipboard ();
-		size := text.GetLength();
-		NEW(chBuff, size + 1);
-		(* UTF-8 encoding. String is truncated in case of multi-byte encoded characters! *)
-		TextUtilities.TextToStr(text, chBuff^);
-		ind := 0; requiredSize := size + 1;
-		WHILE ind < size  DO
-			IF chBuff^[ind] = LF THEN INC(requiredSize); END; (* transform LF into CRLF *)
-			INC(ind);
-		END;
-		hMem := Kernel32.GlobalAlloc({Kernel32.GMemMoveable, Kernel32.GMemDDEShare}, requiredSize);
-		adr := Kernel32.GlobalLock(hMem);
-		ind := 0;
-		WHILE ind < size  DO
-			IF chBuff^[ind] = LF THEN (* transform LF into CRLF *)
-				SYSTEM.PUT8(adr, CR); INC(adr);
+	ASSERT(( text # NIL ) & ( text.HasReadLock( )));
+	textLen := text.GetLength( );
+	IF textLen > 0 THEN
+		NEW( builder, textLen );
+		NEW( r, text );
+		WHILE ( textPos < textLen ) DO
+			r.ReadCh( codePoint );
+			IF ( codePoint > 0 ) THEN
+				IF codePoint = LF THEN (* CRLF *)
+					builder.AddChar( CR );
+				END;
+				builder.AddChar( codePoint( UNSIGNED16 ));
 			END;
-			SYSTEM.PUT(adr, chBuff^[ind]); INC(adr); INC(ind);
+			INC( textPos );
 		END;
-		SYSTEM.PUT(adr, 0X);
-		IGNORE Kernel32.GlobalUnlock(hMem);
-		hMem := User32.SetClipboardData(User32.CFText, hMem);
+
+		textBuffer := builder.GetString( );
+		textLen := builder.GetLength( );
+
+		IF User32.OpenClipboard( Kernel32.NULL ) # Kernel32.False THEN
+			IGNORE User32.EmptyClipboard( );
+			clipboardData := Kernel32.GlobalAlloc( { Kernel32.GMemMoveable, Kernel32.GMemDDEShare }, 2 *( textLen + 1 ));
+			clipboardData := Kernel32.GlobalLock( clipboardData );
+
+			textPos := 0;
+			WHILE textPos < textLen DO
+				clipboardData[ textPos ] := textBuffer[ textPos ];
+				INC( textPos );
+			END;
+			clipboardData[ textPos ] := 0;
+			IGNORE Kernel32.GlobalUnlock( clipboardData );
+			clipboardData := User32.SetClipboardData(User32.CFUnicodeText, clipboardData );
+		END;
+		IGNORE User32.CloseClipboard( );
 	END;
-	IGNORE User32.CloseClipboard();
 END PutToClipboard;
 
 PROCEDURE ClipboardChanged(sender, data : ANY);

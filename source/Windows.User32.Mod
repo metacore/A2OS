@@ -95,7 +95,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		SWPFrameChanged* = 5; SWPShowWindow* = 6; SWPHideWindow* = 7;
 
 		(** clipboard formats *)
-		CFText* = 1; CFBitmap* = 2; CFMetafilePict* = 3; CFDIB* = 8; CFEnhMetafile* = 14; CFHDrop* = 15;
+		CFText* = 1; CFBitmap* = 2; CFMetafilePict* = 3; CFDIB* = 8; CFUnicodeText* = 13; CFEnhMetafile* = 14; CFHDrop* = 15;
 
 		(** InsertMenu uFlags values *)
 		MFByCommand* = {}; MFByPosition* = 10;

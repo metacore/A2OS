@@ -1825,10 +1825,113 @@ This ensures that the const property of a record can not be undermined by a call
 
 \end{annotation}
 
+\begin{annotation}
+\subsection{Oberon-2}
 
+The explicit receiver for type bound procedures allows to distiguish between procedures that modify the respective object and those that let it unchanged. In C++ this is solved by adding a \lstinline"const" modifier at member functions:
+\begin{lstlisting}[style=example,language=C]
+class Counter {
+private:
+  unsigned int value = 0;
+public:
+  void increment (unsigned by){
+    value += by;	
+  }
+  unsigned current() const {
+    return value;	
+  }
+}
+\end{lstlisting}
+
+With type bound procedures, the same kind of semantics can be very naturally designated with the \lstinline"var" / \lstinline"const" modifiers of the receiver parameter:
+\begin{lstlisting}[style=example]
+TYPE Counter* = RECORD value: UNSIGNED64 END;
+
+PROCEDURE (VAR c: Counter) Increment (by: UNSIGNED64);
+BEGIN
+	INC(c.value, by);
+END Increment;
+
+PROCEDURE (CONST c: Counter) Current (): UNSIGNED64;
+BEGIN
+	RETURN c.value;
+END Increment;
+
+\end{lstlisting}
+
+Moreover, the nomenclature very naturally describes what happens during a call to the methods, namely that the receiver object is passed as implicit parameter to the procedure.
+\begin{lstlisting}[style=example]
+VAR c: Counter;
+c.Increment(10); // c is passed as variable parameter
+...
+ASSERT(c.Current()>=10); // c is passed as const parameter
+\end{lstlisting}
+
+Classes in C++ are generally value types and they can be allocated on heap (with \lstinline"new") or stack (implicitly). 
+Pointer to structs / classes can point into heap or stack.
+Pointers are not protected in this sense. 
+
+In Oberon, (safe) pointers are, by definition, limited to the heap.
+It is impossible to create a pointer to a stack object.
+This implies a limitation: record types cannot be transformed to a pointer
+In order to allow to create complex data structures of objects that are implemented using an object-oriented approach, in Active Oberon the concept of an \lstinline"OBJECT" has been introduced. Objects invariantly live on the heap.
+Syntactically, methods on objects were defined in the object's scope. Very much like it is done in Java.
+We identified a strong drawback of this approach: every object needs to be allocated on the heap, even if its lifetime is very much limited.
+This, in turn, creates a high pressure on the garbage collector and makes it harder to come up with a system without garbage collection at all.
+One idea (merely on the syntactical level) was to replace \lstinline"OBJECT" by \lstinline"RECORD" and to allow to write the type bound procedures within the record. 
+Such methods would, by default, be allowed to change the object content, i.e.\ be implemented with an implicit \lstinline"VAR" receiver:
+
+The code
+\begin{lstlisting}[style=example]
+TYPE 
+Counter* = RECORD 
+  value: UNSIGNED64
+
+  PROCEDURE Increment (by: UNSIGNED64);
+  BEGIN
+    INC(value, by);
+  END Increment;
+
+  PROCEDURE Current (): UNSIGNED64;
+  BEGIN
+    RETURN value;
+  END Increment;
+END;
+\end{lstlisting}
+would be implemented, implicitly, as
+\begin{lstlisting}[style=example]
+TYPE Counter* = RECORD value: UNSIGNED64 END;
+
+PROCEDURE (VAR SELF: Counter) Increment (by: UNSIGNED64);
+BEGIN
+	INC(value, by);
+END Increment;
+
+PROCEDURE (VAR SELF: Counter) Current (): UNSIGNED64;
+BEGIN
+	RETURN value;
+END Increment;
+\end{lstlisting}
+Of course, it would be possible to add the \lstinline"CONST" keyword somewhere in the definition of the record just as it is done in C++ in order to make a distinction between modifying and non-modifying code. 
+However, there is another very important reason to stay with the elegant and natural type-bound procedures declaration of Oberon-2:
+It is possible to write type bound procedures that can act on a variable of record type (being located on heap or on stack) and to write type bound procedures that can act on a variable of pointer type (being solely located on the heap). 
+The latter allows to explicitly distinguih between code that can be called on a pointer (and might return the pointer) from code that can only be called on a record.
+
+\begin{lstlisting}[style=example]
+TYPE Expression = RECORD END;
+TYPE PExpression = POINTER TO Expression;
+
+(* every expression can be evaluated *)
+PROCEDURE (e: Expression) Evaluate(): Value; (* ... *)
+(* only pointer expressions can be registered *)
+PROCEDURE (e: PExpression) Register (); (*...*)
+\end{lstlisting}
+
+
+\end{annotation}
 \subsection{Operator Declaration}\label{subsection: Operator Declaration}
 
-Active Oberon, in the version presented here, supports operator overloading. Operators can be declared 
+Oberon, in the version presented here, supports operator overloading. Operators can be declared in the following way.
 
 \begin{lstlisting}[style=ebnf]
 OperatorDeclaration  = 'OPERATOR' [Flags] ['-'] String ['*'|'-'] FormalParameters ';'
@@ -1837,8 +1940,11 @@ OperatorDeclaration  = 'OPERATOR' [Flags] ['-'] String ['*'|'-'] FormalParameter
                        'END' String.
 \end{lstlisting}
 
-
-
+At least one of the involved parameters must be defined in the operator defining module.
+Overloaded operators are searched in all directly or indirectly loaded modules.
+In order to find the operator overloaded for an expression, for each operator a distance is computed.
+The first operator found with minimal distance is determined.
+If there are operators with the same minimal distance for an expression, the outcome is not uniquely defined.
 
 \section{Expressions}
 
@@ -1923,7 +2029,7 @@ PrimaryExpression = Number | Character | String | Set | Array
         | 'SELF' | 'RESULT' | 'ADDRESS' | 'SIZE'
         | 'SIZE' 'OF' Factor | 'ADDRESS' 'OF' Factor
         | 'ALIAS' OF Factor
-        | 'NEW' QualifiedIdentifier '(' ExpressionList ')'
+        | 'NEW' UnaryExpression
         | '(' Expression ')'
         | Identifier.
 
@@ -1995,6 +2101,30 @@ VAR
 	x: Expression;
 BEGIN
 	x := NEW BinaryExpression(left, right);
+\end{lstlisting}
+
+Moreover, it is now possible to initialize a pointer to record with a call to a procedure returning a record in the form \lstinline"NEW Procedure(parameters)". Also Pointers from record types can be allocated in the form \lstinline"NEW RecordType";
+
+\begin{lstlisting}[style=example]
+TYPE
+  Student = RECORD
+    name: ARRAY 32 OF CHAR;
+    age: INTEGER
+  END;
+
+  PROCEDURE StudentInstance(CONST name: ARRAY OF CHAR; 
+                                          age: INTEGER): Student;
+  BEGIN
+    COPY(name, RESULT.name);
+    RESULT.age := age;
+    RETURN RESULT;
+  END StudentInstance;
+  
+(* POINTER TO Student *)
+VAR student1 := NEW Student;
+VAR student2 := NEW StudentInstance("Niklas",6);
+(* Student *)
+VAR student3 := StudentInstance("Hannes",9);
 \end{lstlisting}
 
 Most of the restrictions to designators were removed.

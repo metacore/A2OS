@@ -4087,9 +4087,53 @@ TYPE
 			-> nothing to be resolved
 		**)
 		PROCEDURE ResolveBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator): SyntaxTree.Expression;
+ 		VAR left: SyntaxTree.Expression; type: SyntaxTree.Type; e: SyntaxTree.Expression;
+ 			symbol: SyntaxTree.Symbol; parameters: SyntaxTree.ExpressionList;
 		BEGIN
-			IF (x.returnType # NIL) & ExpressionList(x.parameters) THEN
-				RETURN NewBuiltinCallDesignator(x.position,x.original, NIL, x.parameters,NIL, ResolveType(x.returnType));
+			IF x.expression # NIL THEN (* new designator *)
+				type := NIL;
+				parameters := NIL;
+				(* must be identifier designator or parameter designator *)
+				e := x.expression;
+				WITH e: SyntaxTree.ParameterDesignator DO
+					left := ResolveExpression(e.left);
+					parameters := e.parameters;
+					e.SetLeft(left);
+				ELSE
+					left := ResolveExpression(e); (* must be type symbol *)
+				END;
+				IF left = SyntaxTree.invalidExpression THEN 
+					RETURN left 
+				END; 
+				WITH left: SyntaxTree.SymbolDesignator DO
+					symbol := left.symbol;
+					WITH symbol: SyntaxTree.TypeDeclaration DO
+						type := symbol(SyntaxTree.TypeDeclaration).declaredType;
+						IF (parameters # NIL) & ~ExpressionList(parameters) THEN 
+							RETURN SyntaxTree.invalidDesignator 
+						END;
+					| SyntaxTree.Procedure DO
+						e := ResolveExpression(x.expression);
+						IF e = SyntaxTree.invalidExpression THEN
+							RETURN e;
+						END;
+						x.SetExpression(e);
+						type := e.type;
+						IF (type = NIL) OR ~(type.resolved IS SyntaxTree.RecordType) THEN
+							Error(left.position,"invalid new on procedure returning non-record type"); 
+							RETURN SyntaxTree.invalidExpression;
+						END; 
+						parameters := NIL;
+					ELSE
+						Error(left.position,"invalid expression at NEW");
+						RETURN SyntaxTree.invalidExpression; 
+					END;
+				ELSE
+					Error(left.position,"invalid expression at NEW"); 
+					RETURN SyntaxTree.invalidExpression; 
+				END;
+				e := NewBuiltinCallDesignator(x.position,x.original, NIL, parameters, NIL, type, x.expression);
+				RETURN e;
 			ELSIF ExpressionList(x.parameters) THEN
 				RETURN x;
 			END;
@@ -4439,7 +4483,7 @@ TYPE
 				(* move to builtin procedure call statement ?
 			remove builtin procedure call designator ?
 		*)
-		PROCEDURE NewBuiltinCallDesignator(position: Position; original: SyntaxTree.Expression; builtin: SyntaxTree.Builtin; actualParameters:SyntaxTree.ExpressionList; left: SyntaxTree.Expression; returnType: SyntaxTree.Type): SyntaxTree.Expression;
+		PROCEDURE NewBuiltinCallDesignator(position: Position; original: SyntaxTree.Expression; builtin: SyntaxTree.Builtin; actualParameters:SyntaxTree.ExpressionList; left: SyntaxTree.Expression; returnType: SyntaxTree.Type; expression: SyntaxTree.Expression): SyntaxTree.Expression;
 		VAR
 			numberActualParameters,numberFormalParameters: SIZE;
 			formalParameter: SyntaxTree.Parameter;
@@ -4502,7 +4546,11 @@ TYPE
 		BEGIN
 			type := NIL; result := NIL;
 			type0 := NIL; type1 := NIL; type2 := NIL;
-			numberActualParameters := actualParameters.Length();
+			IF actualParameters = NIL THEN
+				numberActualParameters := 0
+			ELSE
+				numberActualParameters := actualParameters.Length();
+			END;
 			IF numberActualParameters>0 THEN
 				parameter0 := actualParameters.GetExpression(0);
 				IF parameter0.type # NIL THEN type0 := parameter0.type.resolved ELSE
@@ -4541,6 +4589,7 @@ TYPE
 			ELSIF result # NIL THEN type := result.type (* operator *)
 			ELSE
 				result := SyntaxTree.NewBuiltinCallDesignator(position,original, id,left,actualParameters);
+				result(SyntaxTree.BuiltinCallDesignator).SetExpression(expression);
 				result(SyntaxTree.Designator).SetLeft(left);
 				IF returnType # NIL THEN
 					type := returnType;
@@ -4635,9 +4684,8 @@ TYPE
 						ELSIF type0 IS SyntaxTree.CellType THEN
 						ELSIF type0 IS SyntaxTree.MathArrayType THEN
 						ELSIF (first = 0) & (type0 IS SyntaxTree.RecordType) THEN
-							type := returnType;
-							type(SyntaxTree.QualifiedType).SetResolved(SyntaxTree.NewPointerType(type0.position, type0.scope));
-							type.resolved(SyntaxTree.PointerType).SetPointerBase(type0);
+							type := SyntaxTree.NewPointerType(type0.position, type0.scope);
+							type(SyntaxTree.PointerType).SetPointerBase(type0);
 						ELSE
 							Error(position, "forbidden new on value type");
 						END;
@@ -5709,7 +5757,7 @@ TYPE
 						result := NewTypeGuardDesignator(designator.position,designator,left,typeDeclaration.declaredType, parameters.GetExpression(0))
 					ELSIF (left.type.resolved IS SyntaxTree.ProcedureType) THEN
 						IF (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Builtin) THEN
-							result := NewBuiltinCallDesignator(designator.position,designator,left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Builtin),parameters,left,NIL);
+							result := NewBuiltinCallDesignator(designator.position,designator,left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Builtin),parameters,left,NIL, NIL);
 						ELSE
 							result := NewProcedureCallDesignator(designator.position,designator,left,parameters)
 						END

@@ -7559,7 +7559,12 @@ TYPE
 			END CallBodies;
 
 		BEGIN
-			p0 := NIL; p1 := NIL; len := x.parameters.Length();
+			p0 := NIL; p1 := NIL; 
+			IF x.parameters # NIL THEN
+				len := x.parameters.Length();
+			ELSE
+				len := 0
+			END;
 			IF len > 0 THEN p0 := x.parameters.GetExpression(0); t0 := p0.type.resolved END;
 			IF len > 1 THEN p1 := x.parameters.GetExpression(1); t1 := p1.type.resolved END;
 			IF x.type # NIL THEN
@@ -7623,12 +7628,21 @@ TYPE
 
 					(* call initializer *)
 					constructor := GetConstructor(recordType);
+					IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator) THEN
+						constructor := x.expression(SyntaxTree.ProcedureCallDesignator).left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
+						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);							
+					END; 					
 					IF constructor # NIL THEN
 						(*! should be unified with ProcedureCallDesignator *)
+						IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator)  THEN
+							reg := TypeDescriptorAdr(recordType);
+							Emit(Push(position,reg));
+							ReleaseIntermediateOperand(reg);
+						END;
 						Emit(Push(position,pointer));
 						ReleaseIntermediateOperand(pointer);
 						formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
-						FOR i := firstPar TO x.parameters.Length()-1 DO
+						FOR i := firstPar TO len-1 DO
 							PushParameter(x.parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
 							formalParameter := formalParameter.nextParameter;
 						END;
@@ -7715,12 +7729,21 @@ TYPE
 
 					(* call initializer *)
 					constructor := GetConstructor(recordType);
-					IF constructor # NIL THEN
+					IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator) THEN
+						constructor := x.expression(SyntaxTree.ProcedureCallDesignator).left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
+						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);							
+					END; 
+					IF (constructor # NIL) THEN
 						(*! should be unified with ProcedureCallDesignator *)
+						IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator)  THEN
+							reg := TypeDescriptorAdr(recordType);
+							Emit(Push(position,reg));
+							ReleaseIntermediateOperand(reg);
+						END;
 						Emit(Push(position,pointer));
 						ReleaseIntermediateOperand(pointer);
 						formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
-						FOR i := firstPar TO x.parameters.Length()-1 DO
+						FOR i := firstPar TO len-1 DO
 							PushParameter(x.parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
 							formalParameter := formalParameter.nextParameter;
 						END;
@@ -7788,7 +7811,7 @@ TYPE
 
 					dim := 0;
 
-					FOR i := x.parameters.Length()-1 TO firstPar BY -1 DO
+					FOR i := len-1 TO firstPar BY -1 DO
 						type := type(SyntaxTree.ArrayType).arrayBase.resolved;
 						parameter := x.parameters.GetExpression(i);
 						Evaluate(parameter,r);
@@ -7838,7 +7861,7 @@ TYPE
 					dim := 0;
 					IntermediateCode.InitOperand(reg);
 					IF p1 # NIL THEN
-						FOR i := firstPar TO x.parameters.Length()-1 DO
+						FOR i := firstPar TO len-1 DO
 							type := type(SyntaxTree.ArrayType).arrayBase.resolved;
 							parameter := x.parameters.GetExpression(i);
 							Evaluate(parameter,r);
@@ -8096,7 +8119,7 @@ TYPE
 						isTensor := FALSE;
 					END;
 
-					FOR i := x.parameters.Length()-1 TO firstPar BY -1 DO
+					FOR i := len-1 TO firstPar BY -1 DO
 						IF ~isTensor THEN
 							type := type(SyntaxTree.MathArrayType).arrayBase.resolved;
 						END;
@@ -8249,7 +8272,7 @@ TYPE
 						ReleaseOperand(l);
 					END;
 					formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
-					FOR i := firstPar TO x.parameters.Length()-1 DO
+					FOR i := firstPar TO len-1 DO
 						PushParameter(x.parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
 						formalParameter := formalParameter.nextParameter;
 					END;
@@ -8416,7 +8439,12 @@ TYPE
 			IF Trace THEN TraceEnter("DesignateBuiltinCallDesignator") END;
 
 			dest := destination; destination := emptyOperand;
-			p0 := NIL; p1 := NIL; p2 := NIL; len := x.parameters.Length();
+			p0 := NIL; p1 := NIL; p2 := NIL; 
+			IF x.parameters # NIL THEN
+				len := x.parameters.Length();
+			ELSE
+				len := 0
+			END;
 			IF len > 0 THEN p0 := x.parameters.GetExpression(0); t0 := p0.type.resolved END;
 			IF len > 1 THEN p1 := x.parameters.GetExpression(1); t1 := p1.type.resolved END;
 			IF len > 2 THEN p2 := x.parameters.GetExpression(2); t2 := p2.type.resolved END;
@@ -9093,7 +9121,12 @@ TYPE
 			IF Trace THEN TraceEnter("EvaluateBuiltinCallDesignator") END;
 
 			dest := destination; destination := emptyOperand;
-			p0 := NIL; p1 := NIL; p2 := NIL; len := x.parameters.Length();
+			p0 := NIL; p1 := NIL; p2 := NIL; 
+			IF x.parameters # NIL THEN
+				len := x.parameters.Length();
+			ELSE
+				len := 0
+			END;
 			IF len > 0 THEN p0 := x.parameters.GetExpression(0); t0 := p0.type.resolved END;
 			IF len > 1 THEN p1 := x.parameters.GetExpression(1); t1 := p1.type.resolved END;
 			IF len > 2 THEN p2 := x.parameters.GetExpression(2); t2 := p2.type.resolved END;

@@ -606,7 +606,7 @@ TYPE
 	        | 'SELF' | 'RESULT' | 'ADDRESS' | 'SIZE' 
 	        | 'SIZE' 'OF' Factor | 'ADDRESS' 'OF' Factor
 	        | 'ALIAS' OF Factor
-	        | 'NEW' QualifiedIdentifier ['(' ExpressionList ')']
+	        | 'NEW' UnaryExpression
 	        | '(' Expression ')'
 	        | Identifier.
 		**)
@@ -619,7 +619,6 @@ TYPE
 			identifier: SyntaxTree.Identifier; 
 			position: Position;
 			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
-			qualifiedType : SyntaxTree.QualifiedType;
 		BEGIN
 			position := token.position;
 			CASE Symbol() OF
@@ -689,17 +688,9 @@ TYPE
 				expression := SyntaxTree.NewIdentifierDesignator(position,identifier);
 				NextToken;
 				IF Symbol() # Scanner.LeftParenthesis THEN (* NEW Type () *)
-					qualifiedIdentifier := QualifiedIdentifier();
-					qualifiedType := SyntaxTree.NewQualifiedType(qualifiedIdentifier.position, currentScope, qualifiedIdentifier);
-					expressionList := SyntaxTree.NewExpressionList();
-					IF Optional( Scanner.LeftParenthesis ) THEN
-						IF ~Optional(Scanner.RightParenthesis) THEN
-							ExpressionList( expressionList );
-							Check( Scanner.RightParenthesis )
-						END;
-					END;
+					factor := UnaryExpression();
 					expression := SyntaxTree.NewBuiltinCallDesignator(position, NIL, Global.New, NIL, expressionList);
-					expression(SyntaxTree.BuiltinCallDesignator).SetReturnType(qualifiedType);
+					expression(SyntaxTree.BuiltinCallDesignator).SetExpression(factor);
 				END;
 			| Scanner.LeftParenthesis:
 					NextToken;

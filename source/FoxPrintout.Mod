@@ -749,9 +749,9 @@ TYPE
 			ELSE
 				CASE x.id OF 
 				Global.New: 
-					w.String("NEW "); 
-					IF x.type # NIL THEN
-						Type(x.type);
+					w.String("NEW ");
+					IF x.expression # NIL THEN
+						Expression(x.expression);  
 					END; 
 				ELSE
 					w.String("BUILTIN(");
@@ -766,7 +766,9 @@ TYPE
 				w.String(">");
 				EndComment
 			END;
-			w.String("("); ExpressionList(x.parameters); w.String(")");
+			IF x.expression # NIL THEN 
+				w.String("("); ExpressionList(x.parameters); w.String(")");
+			END;			
 		END VisitBuiltinCallDesignator;
 
 		PROCEDURE VisitValue*(x: SyntaxTree.Value);

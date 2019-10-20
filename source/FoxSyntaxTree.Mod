@@ -2376,18 +2376,26 @@ TYPE
 			parameters-: ExpressionList;
 			builtin-: Builtin;
 			returnType-: Type;
+			expression-: Expression;
 
 		PROCEDURE & InitBuiltinCallDesignator(position: Position; orig: Expression; id: SIGNED32; left: Expression; parameters: ExpressionList);
 		BEGIN
 			InitDesignator(position);
 			SELF.parameters := parameters; SELF.id := id; SELF.left := left; returnType := NIL; original := orig;
+			expression := NIL;
 		END InitBuiltinCallDesignator;
 
 		PROCEDURE SetReturnType*(type: Type);
 		BEGIN
 			returnType := type (* used for NEW Type() expression *)
 		END SetReturnType;
-
+			
+		PROCEDURE SetExpression*(e: Expression);
+		BEGIN
+			expression := e; 
+		END SetExpression;
+				
+		
 	END BuiltinCallDesignator;
 
 	(** <<left(type)>>

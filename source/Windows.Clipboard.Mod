@@ -14,13 +14,14 @@ TYPE
 		BEGIN
 			IF initialSize < 260 THEN initialSize := 260 END;
 			NEW( data, initialSize );
+			data[ 0 ] := 0;
 			length := 0;
 		END Init;
 
 		PROCEDURE Clear*;
 		BEGIN
 			data[ 0 ] := 0;
-			length := 0
+			length := 0;
 		END Clear;
 
 		PROCEDURE AddChar*( codePoint: UNSIGNED16 );
@@ -104,7 +105,7 @@ BEGIN
 	ASSERT(( text # NIL ) & ( text.HasReadLock( )));
 	textLen := text.GetLength( );
 	IF textLen > 0 THEN
-		NEW( builder, textLen );
+		NEW( builder, textLen + 1 );
 		NEW( r, text );
 		WHILE ( textPos < textLen ) DO
 			r.ReadCh( codePoint );
@@ -122,16 +123,13 @@ BEGIN
 
 		IF User32.OpenClipboard( Kernel32.NULL ) # Kernel32.False THEN
 			IGNORE User32.EmptyClipboard( );
-			clipboardData := Kernel32.GlobalAlloc( { Kernel32.GMemMoveable, Kernel32.GMemDDEShare }, 2 *( textLen + 1 ));
-			clipboardData := Kernel32.GlobalLock( clipboardData );
+			clipboardData := Kernel32.GlobalAlloc( { Kernel32.GMemMoveable, Kernel32.GMemDDEShare }, ( textLen + 1 )*2 );
 
-			textPos := 0;
-			WHILE textPos < textLen DO
-				clipboardData[ textPos ] := textBuffer[ textPos ];
-				INC( textPos );
-			END;
-			clipboardData[ textPos ] := 0;
+			clipboardData := Kernel32.GlobalLock( clipboardData );
+			SYSTEM.MOVE( ADDRESSOF( textBuffer[ 0 ] ), clipboardData, 2 * ( textLen ));
+			clipboardData[ textLen ] := 0;
 			IGNORE Kernel32.GlobalUnlock( clipboardData );
+
 			clipboardData := User32.SetClipboardData(User32.CFUnicodeText, clipboardData );
 		END;
 		IGNORE User32.CloseClipboard( );

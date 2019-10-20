@@ -6,13 +6,13 @@ CONST
 	CR = 0DX; LF = 0AX;
 
 (** Copy text of Windows clipboard to text *)
-PROCEDURE GetFromClipboard(text : Texts.Text);
+PROCEDURE GetFromClipboard( text : Texts.Text );
 CONST CR = 0x0D; LF = 0x0A;
 VAR
 	clipboardData: POINTER{ UNSAFE, UNTRACED } TO ARRAY OF UNSIGNED16;
-	clipboardPos := 0, linePos := 0, clipboardLen := 0: SIZE;
-	ch : UNSIGNED16;
-	lineBuffer: POINTER TO ARRAY OF Texts.Char32;
+	textBuffer: POINTER TO ARRAY OF Texts.Char32;
+	clipboardPos := 0, textPos := 0, clipboardLen := 0: SIZE;
+	codePoint: UNSIGNED16;
 BEGIN
 	ASSERT((text # NIL) & (text.HasWriteLock()));
 	IF User32.OpenClipboard(Kernel32.NULL) # Kernel32.False THEN
@@ -21,30 +21,30 @@ BEGIN
 		(* copy clipboard data into internal buffer and unlock clipboard data *)
 			clipboardData := Kernel32.GlobalLock( clipboardData );
 			WHILE clipboardData[ clipboardLen ] # 0 DO INC( clipboardLen ); END;
-			NEW( lineBuffer, clipboardLen + 1 );
+			NEW( textBuffer, clipboardLen + 1 );
+
 			WHILE clipboardPos < clipboardLen DO
-				ch := clipboardData[ clipboardPos ]; INC( clipboardPos );
+				codePoint := clipboardData[ clipboardPos ]; INC( clipboardPos );
 			(* CRLF -> LF *)
-				IF ( ch = CR ) THEN
-					ch := LF;
-					IF ( clipboardPos <= clipboardLen ) & ( clipboardData[ clipboardPos ] = LF ) THEN
+				IF ( codePoint = CR ) THEN
+					codePoint := LF;
+					IF ( clipboardPos < clipboardLen ) & ( clipboardData[ clipboardPos ] = LF ) THEN
 						INC( clipboardPos );
 					END;
 				END;
 			(* accept codepoint *)
-				lineBuffer[ linePos ] := ch; INC( linePos );
+				textBuffer[ textPos ] := codePoint; INC( textPos );
 			END;
 			IGNORE Kernel32.GlobalUnlock( clipboardData );
-
-			IF linePos # 0 THEN
-				lineBuffer[ linePos ] := 0;
-				text.Delete( 0, text.GetLength( ));
-				text.InsertUCS32( text.GetLength( ), lineBuffer^ );
-			END;
 		END;
 	END;
-FINALLY
 	IGNORE User32.CloseClipboard( );
+
+	IF textPos # 0 THEN
+		textBuffer[ textPos ] := 0;
+		text.Delete( 0, text.GetLength( ));
+		text.InsertUCS32( text.GetLength( ), textBuffer^ );
+	END;
 END GetFromClipboard;
 
 (** Copy text to Windows clipboard *)

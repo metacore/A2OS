@@ -9,42 +9,44 @@ CONST
 PROCEDURE GetFromClipboard(text : Texts.Text);
 CONST CR = 0x0D; LF = 0x0A;
 VAR
-	hMem: Kernel32.HGLOBAL;
-	hostBuffer: POINTER{ UNSAFE, UNTRACED } TO ARRAY OF UNSIGNED16;
+	clipboardData: POINTER{ UNSAFE, UNTRACED } TO ARRAY OF UNSIGNED16;
+	clipboardPos := 0, linePos := 0, clipboardLen := 0: SIZE;
 	ch : UNSIGNED16;
-	pos := 0, start := 0, linePos := 0: SIZE;
-	lineBuffer: ARRAY 1024 + 1 OF Texts.Char32;
+	lineBuffer: POINTER TO ARRAY OF Texts.Char32;
+	lineBufferLen: SIZE;
 BEGIN
 	ASSERT((text # NIL) & (text.HasWriteLock()));
 	IF User32.OpenClipboard(Kernel32.NULL) # Kernel32.False THEN
-		hMem := User32.GetClipboardData(User32.CFUnicodeText);
-		IF hMem # Kernel32.NULL THEN
-			text.Delete( 0, text.GetLength() );
-			hostBuffer := Kernel32.GlobalLock(hMem);
-			ch := hostBuffer[ pos ];
-			REPEAT
-				start := pos;
-				linePos := 0;
-				WHILE ( ch # 0 ) & ( ch # LF ) & ( linePos < LEN( lineBuffer ) - 1 ) DO
-					IF ( ch = CR ) THEN ch := LF; END;
-					lineBuffer[ linePos ] := ch; INC( linePos );
-					INC( pos );
-					ch := hostBuffer[ pos ];
+		clipboardData := User32.GetClipboardData(User32.CFUnicodeText);
+		IF clipboardData # Kernel32.NULL THEN
+		(* copy clipboard data into internal buffer *)
+			clipboardData := Kernel32.GlobalLock( clipboardData );
+			WHILE clipboardData[ clipboardLen ] # 0 DO INC( clipboardLen ); END;
+			NEW( lineBuffer, clipboardLen + 1 );
+			lineBufferLen := LEN( lineBuffer );
+			WHILE clipboardPos < clipboardLen DO
+				ch := clipboardData[ clipboardPos ]; INC( clipboardPos );
+			(* CRLF -> LF *)
+				IF ( ch = CR ) THEN
+					ch := LF;
+					IF ( clipboardPos <= clipboardLen ) & ( clipboardData[ clipboardPos ] = LF ) THEN
+						INC( clipboardPos );
+					END;
 				END;
-				IF start # pos THEN
-					lineBuffer[ linePos ] := 0;
-					text.InsertUCS32( text.GetLength(), lineBuffer );
-				END;
-				IF ch = LF  THEN
-					INC( pos );
-				END;
+			(* accept codepoint *)
+				lineBuffer[ linePos ] := ch; INC( linePos );
+			END;
+			IGNORE Kernel32.GlobalUnlock( clipboardData );
 
-				ch := hostBuffer[ pos ];
-			UNTIL ch = 0;
-			IGNORE Kernel32.GlobalUnlock(hMem);
+			IF linePos # 0 THEN
+				lineBuffer[ linePos ] := 0;
+				text.Delete( 0, text.GetLength( ));
+				text.InsertUCS32( text.GetLength( ), lineBuffer^ );
+			END;
 		END;
 	END;
-	IGNORE User32.CloseClipboard();
+FINALLY
+	IGNORE User32.CloseClipboard( );
 END GetFromClipboard;
 
 (** Copy text to Windows clipboard *)

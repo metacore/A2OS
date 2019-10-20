@@ -13,17 +13,15 @@ VAR
 	clipboardPos := 0, linePos := 0, clipboardLen := 0: SIZE;
 	ch : UNSIGNED16;
 	lineBuffer: POINTER TO ARRAY OF Texts.Char32;
-	lineBufferLen: SIZE;
 BEGIN
 	ASSERT((text # NIL) & (text.HasWriteLock()));
 	IF User32.OpenClipboard(Kernel32.NULL) # Kernel32.False THEN
 		clipboardData := User32.GetClipboardData(User32.CFUnicodeText);
 		IF clipboardData # Kernel32.NULL THEN
-		(* copy clipboard data into internal buffer *)
+		(* copy clipboard data into internal buffer and unlock clipboard data *)
 			clipboardData := Kernel32.GlobalLock( clipboardData );
 			WHILE clipboardData[ clipboardLen ] # 0 DO INC( clipboardLen ); END;
 			NEW( lineBuffer, clipboardLen + 1 );
-			lineBufferLen := LEN( lineBuffer );
 			WHILE clipboardPos < clipboardLen DO
 				ch := clipboardData[ clipboardPos ]; INC( clipboardPos );
 			(* CRLF -> LF *)

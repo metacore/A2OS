@@ -17,7 +17,7 @@ process ()
 	trap notify exit
 	trap "status=Aborted" int term kill
 	status="Failed" output=$(build 2>&1)
-	test $? -eq 0 && status="Succeeded" output=""
+	test $? -eq 0 && status="Succeeded"
 	trap exit
 	notify
 }

@@ -766,7 +766,7 @@ TYPE
 				w.String(">");
 				EndComment
 			END;
-			IF x.expression # NIL THEN 
+			IF x.expression = NIL THEN 
 				w.String("("); ExpressionList(x.parameters); w.String(")");
 			END;			
 		END VisitBuiltinCallDesignator;

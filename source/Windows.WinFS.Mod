@@ -420,7 +420,7 @@ TYPE
 
 	Buffer = POINTER TO RECORD
 		data: ARRAY BufferSize OF CHAR;
-		apos, len: SIGNED32;
+		apos: Files.Position; len: SIGNED32;
 		dirty: BOOLEAN
 	END;
 
@@ -429,7 +429,7 @@ TYPE
 		tfname: PFileName;
 		hfile: Kernel32.HANDLE;
 		buffer: Buffer;
-		fsize, fpos: SIGNED32;
+		fsize, fpos: Files.Position;
 		fileSystem: WinFileSystem;
 
 		PROCEDURE & Init*( VAR name: ARRAY OF CHAR;  hfile: Kernel32.HANDLE;  key: SIGNED32 ; fs: WinFileSystem);
@@ -438,7 +438,7 @@ TYPE
 			IF TraceFile IN Trace THEN KernelLog.String( "Init: " );  KernelLog.String( name );  KernelLog.String( " (" );  KernelLog.Int( key, 1 );  KernelLog.String( ")" );  KernelLog.Ln;  END;
 			SELF.key := key;  fpos := 0;  SELF.hfile := hfile;  COPY( name, SELF.fname );  tfname := NIL;
 			IF hfile # Kernel32.InvalidHandleValue THEN
-				fsize := Kernel32.GetFileSize( hfile, NIL );  ASSERT( fsize >= 0 );  s := Kernel32.GetFileAttributes( name );
+				fsize := GetFileSize();  ASSERT( fsize >= 0 );  s := Kernel32.GetFileAttributes( name );
 				IF Kernel32.FileAttributeTemporary IN s THEN EXCL( s, Kernel32.FileAttributeTemporary );  res := Kernel32.SetFileAttributes( name, s );  ASSERT( res # 0 );  s := Kernel32.GetFileAttributes( name ) END;
 				flags := FileFlags( s )
 			ELSE flags := {Temporary};  fsize := 0
@@ -448,11 +448,24 @@ TYPE
 			fileSystem := fs
 		END Init;
 
+		PROCEDURE GetFileSize(): Files.Position;
+		VAR size: Files.Position;
+		BEGIN
+			IF SIZEOF(Files.Position) > 4 THEN (* compile-time condition, will be optimized out *)
+				VAR hSize: SIGNED32;
+				size := UNSIGNED32(Kernel32.GetFileSize(hfile, hSize));
+				INC(size, LSH(Files.Position(hSize), 32));
+				RETURN size;
+			ELSE
+				RETURN Kernel32.GetFileSize(hfile, NIL);
+			END;
+		END GetFileSize;
+
 		PROCEDURE Set*( VAR r: Files.Rider;  pos: Files.Position );
-		VAR size: SIGNED32;
+		VAR size: Files.Position;
 		BEGIN {EXCLUSIVE}
 			IF hfile # Kernel32.InvalidHandleValue THEN
-				size := Kernel32.GetFileSize( hfile, NIL );   (* maybe Windows has modified the file since last access, but we ignore file changes once the file rider is set *)
+				size := GetFileSize(); (* maybe Windows has modified the file since last access, but we ignore file changes once the file rider is set *)
 				IF size > fsize THEN fsize := size END;
 			END;
 			r.eof := FALSE;  r.res := 0;  r.file := SELF;  r.fs := fs;
@@ -466,9 +479,22 @@ TYPE
 		BEGIN
 			RETURN r.apos * BufferSize + r.bpos
 		END Pos;
+		
+		PROCEDURE SetFilePointer(pos: Files.Position): Files.Position;
+		BEGIN
+			IF SIZEOF(Files.Position) > 4 THEN (* compile-time condition, will be optimized out *)
+				VAR hPos: SIGNED32;
+				hPos := SIGNED32(LSH(pos, -32));
+				pos := UNSIGNED32(Kernel32.SetFilePointer(hfile, SIGNED32(pos), hPos, Kernel32.FileBegin));
+				INC(pos, LSH(Files.Position(hPos), 32));
+				RETURN pos;
+			ELSE
+				RETURN Kernel32.SetFilePointer(hfile, SIGNED32(pos), NIL, Kernel32.FileBegin);
+			END;
+		END SetFilePointer;
 
 		PROCEDURE WriteBuffer;
-		VAR pos, n: SIGNED32;  res: Kernel32.BOOL;
+		VAR pos: Files.Position; n: SIGNED32;  res: Kernel32.BOOL;
 		BEGIN
 			ASSERT( buffer.dirty );  ASSERT( buffer.len > 0 );  pos := buffer.apos * BufferSize;
 			IF hfile = Kernel32.InvalidHandleValue THEN
@@ -476,27 +502,27 @@ TYPE
 				hfile := Kernel32.CreateFile( tfname^, {Kernel32.GenericRead, Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL , Kernel32.CreateAlways, {Kernel32.FileAttributeTemporary}, 0 );
 				ASSERT( hfile # Kernel32.InvalidHandleValue );  fpos := 0
 			END;
-			IF fpos # pos THEN fpos := Kernel32.SetFilePointer( hfile, pos, NIL , Kernel32.FileBegin );  ASSERT( fpos = pos ) END;
+			IF fpos # pos THEN fpos := SetFilePointer(pos);  ASSERT( fpos = pos ) END;
 			res := Kernel32.WriteFile( hfile, buffer.data, buffer.len, n, NIL );
 			IF (res = 0) & ~(ReadOnly IN flags) THEN
 				res := Kernel32.CloseHandle( hfile );
 				IF TraceFile IN Trace THEN KernelLog.String( "closed handle of " );  KernelLog.String( fname );  KernelLog.Ln;  END;
 				hfile :=
 					Kernel32.CreateFile( fname, {Kernel32.GenericRead, Kernel32.GenericWrite}, {Kernel32.FileShareRead, Kernel32.FileShareWrite}, NIL , Kernel32.OpenExisting, {Kernel32.FileAttributeNormal}, 0 );
-				ASSERT( hfile # Kernel32.InvalidHandleValue );  fpos := Kernel32.SetFilePointer( hfile, pos, NIL , Kernel32.FileBegin );  ASSERT( fpos = pos );
+				ASSERT( hfile # Kernel32.InvalidHandleValue );  fpos := SetFilePointer(pos);  ASSERT( fpos = pos );
 				res := Kernel32.WriteFile( hfile, buffer.data, buffer.len, n, NIL )
 			END;
 			ASSERT( (res # 0) & (n = buffer.len) );  INC( fpos, n );  buffer.dirty := FALSE
 		END WriteBuffer;
 
-		PROCEDURE ReadBuffer( apos: SIGNED32 );
-		VAR pos, n: SIGNED32;  res: Kernel32.BOOL;
+		PROCEDURE ReadBuffer( apos: Files.Position );
+		VAR pos: Files.Position; n: SIGNED32;  res: Kernel32.BOOL;
 		BEGIN
 			IF buffer.dirty THEN WriteBuffer() END;
 			pos := apos * BufferSize;
 			IF pos >= fsize THEN buffer.apos := apos;  buffer.len := 0;  RETURN END;
 			IF fpos # pos THEN
-				fpos := Kernel32.SetFilePointer( hfile, pos, NIL , Kernel32.FileBegin );
+				fpos := SetFilePointer(pos);
 				IF (fpos # pos) THEN KernelLog.String( "failed to set buffer: " );  KernelLog.String( fname );  KernelLog.Ln END;
 				ASSERT( fpos = pos )
 			END;
@@ -508,9 +534,9 @@ TYPE
 		PROCEDURE Read*( VAR r: Files.Rider;  VAR x: CHAR );
 		VAR pos: SIZE;
 		BEGIN {EXCLUSIVE}
-			pos := SIGNED32(r.apos * BufferSize) + r.bpos;
+			pos := r.apos * BufferSize + r.bpos;
 			IF pos < fsize THEN
-				IF buffer.apos # SIGNED32(r.apos) THEN ReadBuffer( SIGNED32(r.apos) ) END;
+				IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
 				x := buffer.data[r.bpos];  INC( pos );  r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize
 			ELSE
 				x := 0X; r.eof := TRUE
@@ -518,12 +544,12 @@ TYPE
 		END Read;
 
 		PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: SIZE );
-		VAR pos, n: SIZE;
+		VAR pos: Files.Position; n: SIZE;
 		BEGIN {EXCLUSIVE}
 			ASSERT( (ofs + len) <= LEN( x ) );
-			pos := SIGNED32(r.apos * BufferSize) + r.bpos;
+			pos := r.apos * BufferSize + r.bpos;
 			WHILE (len > 0) & (pos < fsize) DO
-				IF buffer.apos # SIGNED32(r.apos) THEN ReadBuffer( SIGNED32(r.apos) ) END;
+				IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
 				n := buffer.len - r.bpos;
 				IF (n > 0) THEN
 					IF n > len THEN n := len END;
@@ -540,12 +566,12 @@ TYPE
 		PROCEDURE Write*( VAR r: Files.Rider;  x: CHAR );
 		VAR pos: SIZE;
 		BEGIN {EXCLUSIVE}
-			pos := SIGNED32(r.apos * BufferSize) + r.bpos;
-			IF buffer.apos # r.apos THEN ReadBuffer( SIGNED32(r.apos) ) END;
+			pos := r.apos * BufferSize + r.bpos;
+			IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
 			buffer.data[r.bpos] := x;  INC( pos );
 			IF (r.bpos + 1) > buffer.len THEN buffer.len := SIGNED32(r.bpos + 1) END;
 			r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize;
-			IF pos > fsize THEN fsize := SIGNED32(pos) END;
+			IF pos > fsize THEN fsize := pos END;
 			buffer.dirty := TRUE;
 		END Write;
 
@@ -553,15 +579,15 @@ TYPE
 		VAR pos, n: SIZE;
 		BEGIN {EXCLUSIVE}
 			IF len = 0 THEN RETURN END;
-			ASSERT( (len > 0) & ((ofs + len) <= LEN( x )) );  pos := SIGNED32(r.apos * BufferSize) + r.bpos;
+			ASSERT( (len > 0) & ((ofs + len) <= LEN( x )) );  pos := r.apos * BufferSize + r.bpos;
 			WHILE len > 0 DO
-				IF buffer.apos # SIGNED32(r.apos) THEN ReadBuffer( SIGNED32(r.apos) ) END;
+				IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
 				n := BufferSize - r.bpos;
 				IF n > len THEN n := len END;
 				SYSTEM.MOVE( ADDRESSOF( x[ofs] ), ADDRESSOF( buffer.data[r.bpos] ), n );
 				IF (r.bpos + n) > buffer.len THEN buffer.len := SIGNED32(r.bpos + n) END;
 				INC( pos, n );  INC( ofs, n );  DEC( len, n );  r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize;
-				IF pos > fsize THEN fsize := SIGNED32(pos) END;
+				IF pos > fsize THEN fsize := pos END;
 				buffer.dirty := TRUE
 			END
 		END WriteBytes;
@@ -632,7 +658,7 @@ TYPE
 			(*
 			IF hfile # Kernel32.InvalidHandleValue THEN
 			*)
-			ASSERT( hfile # Kernel32.InvalidHandleValue );  fsize := Kernel32.GetFileSize( hfile, NIL );  res := Kernel32.CloseHandle( hfile );  hfile := Kernel32.InvalidHandleValue;
+			ASSERT( hfile # Kernel32.InvalidHandleValue );  fsize := GetFileSize();  res := Kernel32.CloseHandle( hfile );  hfile := Kernel32.InvalidHandleValue;
 			(*
 			END;
 			*)
@@ -642,7 +668,7 @@ TYPE
 			winFS.collection.Unregister( SELF );
 			hfile := Kernel32.CreateFile( tfname^, {Kernel32.GenericRead, Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL , Kernel32.OpenExisting, {Kernel32.FileAttributeTemporary}, 0 );
 			(* IF hfile = Kernel32.InvalidHandleValue THEN RETURN FALSE END; *)
-			ASSERT( hfile # Kernel32.InvalidHandleValue );  fsize := Kernel32.GetFileSize( hfile, NIL );  ASSERT( fsize >= 0 );  SELF.tfname := tfname;  COPY( tfname^, fname );  RETURN TRUE;
+			ASSERT( hfile # Kernel32.InvalidHandleValue );  fsize := GetFileSize();  ASSERT( fsize >= 0 );  SELF.tfname := tfname;  COPY( tfname^, fname );  RETURN TRUE;
 		END ToTemp;
 
 		PROCEDURE Register0*( VAR res: INTEGER );

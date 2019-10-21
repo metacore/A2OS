@@ -14,9 +14,9 @@ CONST
 	PointSize = 6; (* size of the control points. Currently not related to Effects.gravity *)
 
 TYPE
-	Point* = POINTER TO RECORD
-		x-, y- : SIZE;
-		previous, next : Point;
+	Point* = POINTER TO RECORD(WMGraphics.Point2d)
+		(*x-, y- : SIZE;*)
+		previous-, next- : Point;
 		END;
 
 TYPE
@@ -30,7 +30,7 @@ TYPE
 		arrow-: WMProperties.BooleanProperty;
 
 		points- : Point;
-		nofPoints : SIGNED32;
+		nofPoints- : SIGNED32;
 
 		hover, selectedPoint:WMProperties.Property;
 		selectedLine:BOOLEAN;
@@ -746,7 +746,7 @@ TYPE
 				END;
 			END PropertyChanged;
 
-		PROCEDURE Normalize;
+		PROCEDURE Normalize*;
 		VAR i:SIGNED32; oldrect, rect:WMRectangles.Rectangle; p:Point;
 		BEGIN
 			oldrect:=bounds.Get();

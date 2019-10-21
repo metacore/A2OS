@@ -6661,40 +6661,49 @@ TYPE
 			END;
 		END InitFields;
 
-		PROCEDURE InitVariable(VAR variable: SyntaxTree.Variable; temporary: BOOLEAN);
+		PROCEDURE InitVariable(VAR variable: SyntaxTree.Variable; initStatic, temporary: BOOLEAN);
 		VAR type: SyntaxTree.Type; operand: Operand; tmp, mem: IntermediateCode.Operand; reference: SyntaxTree.Expression; symbol: SyntaxTree.Symbol;
 			saved: RegisterEntry;
 		BEGIN
 			type := variable.type.resolved;
 			IF (type IS SyntaxTree.MathArrayType) THEN
-				WITH type: SyntaxTree.MathArrayType DO
-					IF type.form = SyntaxTree.Open THEN
-						Symbol(variable,operand);
-						InitFields(type, operand.tag,0);
-						IF temporary THEN
-							PutMathArrayField(operand.tag, IntermediateCode.Immediate(addressType,ASH(1,StackFlag)),MathFlagsOffset);
+				IF initStatic THEN
+					WITH type: SyntaxTree.MathArrayType DO
+						IF type.form = SyntaxTree.Open THEN
+							Symbol(variable,operand);
+							InitFields(type, operand.tag,0);
+							IF temporary THEN
+								PutMathArrayField(operand.tag, IntermediateCode.Immediate(addressType,ASH(1,StackFlag)),MathFlagsOffset);
+							END;
+						ELSIF type.form = SyntaxTree.Tensor THEN
+							Symbol(variable, operand);
+							MakeMemory(tmp,operand.op,addressType,0);
+							ReleaseOperand(operand);
+							IF FALSE & temporary THEN
+									(* trick -- temporary object from array base *)
+									symbol := GetSymbol(moduleScope,"FoxArrayBase","temporary");
+									Symbol(symbol,operand);
+									MakeMemory(mem,operand.op,addressType,0);
+									ReleaseOperand(operand);
+									Emit(Mov(position,tmp, mem) );
+									ReleaseOperand(operand);
+							ELSE
+								Emit(Mov(position,tmp, nil ) );
+							END;
+							ReleaseIntermediateOperand(tmp)
 						END;
-					ELSIF type.form = SyntaxTree.Tensor THEN
-						Symbol(variable, operand);
-						MakeMemory(tmp,operand.op,addressType,0);
-						ReleaseOperand(operand);
-						IF FALSE & temporary THEN
-								(* trick -- temporary object from array base *)
-								symbol := GetSymbol(moduleScope,"FoxArrayBase","temporary");
-								Symbol(symbol,operand);
-								MakeMemory(mem,operand.op,addressType,0);
-								ReleaseOperand(operand);
-								Emit(Mov(position,tmp, mem) );
-								ReleaseOperand(operand);
-						ELSE
-							Emit(Mov(position,tmp, nil ) );
-						END;
-						ReleaseIntermediateOperand(tmp)
 					END;
+				END;
+				IF variable.initializer # NIL THEN
+					Symbol(variable,operand);
+					reference := SyntaxTree.NewSymbolDesignator(variable.initializer.position,NIL, NIL,variable);
+					reference.SetType(variable.type.resolved);
+					reference.SetAssignable(TRUE);
+					Assign(reference,variable.initializer);
 				END;
 			ELSE
 				Symbol(variable,operand);
-				IF variable.initializer # NIL THEN
+				IF (variable.initializer # NIL) & ((variable.initializer.resolved = NIL) OR (initStatic)) THEN
 					reference := SyntaxTree.NewSymbolDesignator(variable.initializer.position,NIL, NIL,variable);
 					reference.SetType(variable.type.resolved);
 					reference.SetAssignable(TRUE);
@@ -7012,7 +7021,7 @@ TYPE
 					scope.AddVariable(variable(SyntaxTree.Variable));
 					ASSERT(system.GenerateVariableOffsets(scope));
 					scope.EnterSymbol(variable, duplicate);
-					InitVariable(variable(SyntaxTree.Variable),TRUE);
+					InitVariable(variable(SyntaxTree.Variable),TRUE,TRUE);
 				ELSE
 					variable.PreferRegister(TRUE);
 					variable(SyntaxTree.Variable).SetOffset(0);
@@ -7029,7 +7038,7 @@ TYPE
 				scope.InsertVariable(variable(SyntaxTree.Variable), v);
 				scope.EnterSymbol(variable, duplicate);
 				ASSERT(~duplicate);
-				InitVariable(variable(SyntaxTree.Variable),TRUE);
+				InitVariable(variable(SyntaxTree.Variable),TRUE,TRUE);
 			END;
 			RETURN variable(SyntaxTree.Variable)
 		END GetTemporaryVariable;
@@ -11492,13 +11501,12 @@ TYPE
 		END ParameterCopies;
 
 		PROCEDURE InitVariables(scope: SyntaxTree.Scope);
-		VAR x: SyntaxTree.Variable;
+		VAR x: SyntaxTree.Variable; initStatic: BOOLEAN;
 		BEGIN
 			x := scope.firstVariable;
+			initStatic := ~(scope IS SyntaxTree.ModuleScope);
 			WHILE x # NIL DO
-				IF (x.initializer = NIL) OR (x.initializer.resolved = NIL) OR ~(scope IS SyntaxTree.ModuleScope) THEN (* do not reinit variables in module scope *)		
-					InitVariable(x,FALSE);
-				END;
+				InitVariable(x,initStatic,FALSE);
 				x := x.nextVariable;
 			END;
 		END InitVariables;

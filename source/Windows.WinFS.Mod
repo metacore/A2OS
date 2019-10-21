@@ -532,12 +532,12 @@ TYPE
 		END ReadBuffer;
 
 		PROCEDURE Read*( VAR r: Files.Rider;  VAR x: CHAR );
-		VAR pos: SIZE;
+		VAR pos: Files.Position;
 		BEGIN {EXCLUSIVE}
 			pos := r.apos * BufferSize + r.bpos;
 			IF pos < fsize THEN
 				IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
-				x := buffer.data[r.bpos];  INC( pos );  r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize
+				x := buffer.data[r.bpos];  INC( pos );  r.apos := pos DIV BufferSize;  r.bpos := SIZE(pos MOD BufferSize)
 			ELSE
 				x := 0X; r.eof := TRUE
 			END
@@ -555,7 +555,7 @@ TYPE
 					IF n > len THEN n := len END;
 					SYSTEM.MOVE( ADDRESSOF( buffer.data[r.bpos] ), ADDRESSOF( x[ofs] ), n );
 					INC( pos, n );  INC( ofs, n );  DEC( len, n );
-					r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize;
+					r.apos := pos DIV BufferSize;  r.bpos := SIZE(pos MOD BufferSize);
 				ELSE
 					pos := fsize;
 				END;
@@ -564,19 +564,19 @@ TYPE
 		END ReadBytes;
 
 		PROCEDURE Write*( VAR r: Files.Rider;  x: CHAR );
-		VAR pos: SIZE;
+		VAR pos: Files.Position;
 		BEGIN {EXCLUSIVE}
 			pos := r.apos * BufferSize + r.bpos;
 			IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
 			buffer.data[r.bpos] := x;  INC( pos );
 			IF (r.bpos + 1) > buffer.len THEN buffer.len := SIGNED32(r.bpos + 1) END;
-			r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize;
+			r.apos := pos DIV BufferSize;  r.bpos := SIZE(pos MOD BufferSize);
 			IF pos > fsize THEN fsize := pos END;
 			buffer.dirty := TRUE;
 		END Write;
 
 		PROCEDURE WriteBytes*( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: SIZE );
-		VAR pos, n: SIZE;
+		VAR pos: Files.Position; n: SIZE;
 		BEGIN {EXCLUSIVE}
 			IF len = 0 THEN RETURN END;
 			ASSERT( (len > 0) & ((ofs + len) <= LEN( x )) );  pos := r.apos * BufferSize + r.bpos;
@@ -586,7 +586,7 @@ TYPE
 				IF n > len THEN n := len END;
 				SYSTEM.MOVE( ADDRESSOF( x[ofs] ), ADDRESSOF( buffer.data[r.bpos] ), n );
 				IF (r.bpos + n) > buffer.len THEN buffer.len := SIGNED32(r.bpos + n) END;
-				INC( pos, n );  INC( ofs, n );  DEC( len, n );  r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize;
+				INC( pos, n );  INC( ofs, n );  DEC( len, n );  r.apos := pos DIV BufferSize;  r.bpos := SIZE(pos MOD BufferSize);
 				IF pos > fsize THEN fsize := pos END;
 				buffer.dirty := TRUE
 			END

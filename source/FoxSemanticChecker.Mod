@@ -6412,6 +6412,12 @@ TYPE
 					procedureType.SetCallingConvention(SyntaxTree.WinAPICallingConvention)
 				ELSIF HasFlag(modifiers, Global.NameC,position) THEN
 					procedureType.SetCallingConvention(SyntaxTree.CCallingConvention)
+				ELSIF HasFlag(modifiers,Global.NamePlatformCC, position) THEN
+					IF system.platformCallingConvention = SyntaxTree.UndefinedCallingConvention THEN
+						Error(position, "undefined platform calling convention");
+					ELSE
+						procedureType.SetCallingConvention(system.platformCallingConvention);
+					END;
 				END;
 				IF HasFlag(modifiers, Global.NameInterrupt, position) THEN
 					procedureType.SetInterrupt(TRUE);

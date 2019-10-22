@@ -315,9 +315,9 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		(** The GetClientRect function retrieves the coordinates of a window's client area. *)
 		GetClientRect-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpRect: Rect): Kernel32.BOOL;
 		(** The GetClipboardData function retrieves data from the clipboard in a specified format. *)
-		GetClipboardData-: PROCEDURE {WINAPI} (uFormat: SIGNED32): Kernel32.HANDLE;
+		GetClipboardData-: PROCEDURE {WINAPI} (uFormat: UNSIGNED32): Kernel32.HANDLE;
 		(** The GetClipboardFormatName function retrieves from the clipboard the name of the specified registered format. *)
-		GetClipboardFormatName-: PROCEDURE {WINAPI} (format: SIGNED32; VAR lpszFormatName: ARRAY   OF CHAR; cchMaxCount: SIGNED32): SIGNED32;
+		GetClipboardFormatName-: PROCEDURE {WINAPI} (format: UNSIGNED32; VAR lpszFormatName: ARRAY   OF CHAR; cchMaxCount: SIGNED32): SIGNED32;
 		(** The GetCursorPos function retrieves the cursor's position, in screen coordinates. *)
 		GetCursorPos-: PROCEDURE {WINAPI} (VAR lpPoint: Point): Kernel32.BOOL;
 		(** The GetDC function retrieves a handle to a display device context (DC) for the client area of a specified window
@@ -380,7 +380,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		(** The IsChild function tests whether a window is a child window or descendant window of a specified parent window. *)
 		IsChild-: PROCEDURE {WINAPI} (hWndParent, hWnd: HWND): Kernel32.BOOL;
 		(** Determines whether the clipboard contains data in the specified format. *)
-		IsClipboardFormatAvailable-: PROCEDURE {WINAPI} ( uFormat: UNSIGNED32 ): Kernel32.BOOL;
+		IsClipboardFormatAvailable-: PROCEDURE {WINAPI} ( format: UNSIGNED32 ): Kernel32.BOOL;
 		(** The LoadCursor function loads the specified cursor resource from the executable (.EXE) file associated with
 			an application instance. *)
 		LoadCursor-: PROCEDURE {WINAPI} (hInstance: Kernel32.HINSTANCE; VAR lpCursorName: ARRAY   OF CHAR): HCursor;
@@ -410,10 +410,10 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		(** The RegisterClassEx function registers a window class for subsequent use in calls to the CreateWindow or
 			CreateWindowEx function. *)
 		RegisterClassEx-: PROCEDURE {WINAPI} (VAR lpwcx: WndClassEx): Kernel32.ATOM;
-		(** The RegisterClipboardFormat function registers a new clipboard format. *)
+		(**The RegisterHotKey function defines a system-wide hot key *)
 		RegisterHotKey-: PROCEDURE{WINAPI} (hWnd: HWND; id: SIGNED32; fsmodifiers,vk: SIGNED32): Kernel32.BOOL;
-		(*The RegisterHotKey function defines a system-wide hot key *)
-		RegisterClipboardFormat-: PROCEDURE {WINAPI} (VAR lpszFormat: ARRAY   OF CHAR): SIGNED16;
+		(** The RegisterClipboardFormat function registers a new clipboard format. *)
+		RegisterClipboardFormat-: PROCEDURE {WINAPI} (CONST lpszFormat: ARRAY OF CHAR): UNSIGNED32;
 		(** The RegisterWindowMessage function defines a new window message that is guaranteed to be
 			unique throughout the system. *)
 		RegisterWindowMessage-: PROCEDURE {WINAPI} (VAR lpString: ARRAY   OF CHAR): SIGNED32;
@@ -431,7 +431,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		(** The SetCapture function sets the mouse capture to the specified window belonging to the current thread. *)
 		SetCapture-: PROCEDURE {WINAPI} (hWnd: HWND): HWND;
 		(** The SetClipboardData function places data on the clipboard in a specified clipboard format. *)
-		SetClipboardData-: PROCEDURE {WINAPI} (uFormat: SIGNED32; hMem: Kernel32.HANDLE): Kernel32.HANDLE;
+		SetClipboardData-: PROCEDURE {WINAPI} (uFormat: UNSIGNED32; hMem: Kernel32.HANDLE): Kernel32.HANDLE;
 		(** The SetCursor function establishes the cursor shape. *)
 		SetCursor-: PROCEDURE {WINAPI} (hCursor: HCursor): HCursor;
 		(** The SetCursorPos function moves the cursor to the specified screen coordinates. *)

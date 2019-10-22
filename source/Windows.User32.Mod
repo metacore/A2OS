@@ -274,6 +274,8 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		CallNextHookEx-: PROCEDURE {WINAPI} (hhk: HHook; nCode: SIGNED32; wParam: WParam; lParam: LParam): LResult;
 		(** The CloseClipboard function closes the clipboard. *)
 		CloseClipboard-: PROCEDURE {WINAPI} (): Kernel32.BOOL;
+		(** Retrieves the number of different data formats currently on the clipboard *)
+		CountClipboardFormats-: PROCEDURE {WINAPI} (): SIGNED32;
 		(** The CreateAcceleratorTable function creates an accelerator table. *)
 		CreateAcceleratorTable-: PROCEDURE {WINAPI} (lpaccl: ADDRESS; cEntries: SIGNED32): HAccel;
 		(** The CreateMenu function creates a menu. *)
@@ -303,6 +305,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		EnableWindow-: PROCEDURE {WINAPI} (hWnd: HWND; bEnable: Kernel32.BOOL): Kernel32.BOOL;
 		(** The EndPaint function marks the end of painting in the specified window. *)
 		EndPaint-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpPaint: PaintStruct): Kernel32.BOOL;
+		EnumClipboardFormats-: PROCEDURE {WINAPI} ( format: UNSIGNED32 ): UNSIGNED32;
 		(** The EnumWindows function enumerates all top-level windows on the screen by passing the handle to each
 			window, in turn, to an application-defined callback function. *)
 		EnumWindows-: PROCEDURE {WINAPI} (lpEnumProc: WndEnumProc; lParam: LParam): Kernel32.BOOL;
@@ -506,6 +509,7 @@ BEGIN
 	Kernel32.GetProcAddress(mod, "BringWindowToTop", SYSTEM.VAL(ADDRESS,BringWindowToTop ));
 	Kernel32.GetProcAddress(mod, "CallNextHookEx", SYSTEM.VAL(ADDRESS,CallNextHookEx ));
 	Kernel32.GetProcAddress(mod, "CloseClipboard", SYSTEM.VAL(ADDRESS,CloseClipboard ));
+	Kernel32.GetProcAddress(mod, "CountClipboardFormats", SYSTEM.VAL(ADDRESS,CountClipboardFormats ));
 	Kernel32.GetProcAddress(mod, "CreateAcceleratorTableA", SYSTEM.VAL(ADDRESS,CreateAcceleratorTable ));
 	Kernel32.GetProcAddress(mod, "CreateMenu", SYSTEM.VAL(ADDRESS,CreateMenu ));
 	Kernel32.GetProcAddress(mod, "CreateWindowExA", SYSTEM.VAL(ADDRESS,CreateWindowEx ));
@@ -518,6 +522,7 @@ BEGIN
 	Kernel32.GetProcAddress(mod, "EmptyClipboard", SYSTEM.VAL(ADDRESS,EmptyClipboard ));
 	Kernel32.GetProcAddress(mod, "EnableWindow", SYSTEM.VAL(ADDRESS,EnableWindow ));
 	Kernel32.GetProcAddress(mod, "EndPaint", SYSTEM.VAL(ADDRESS,EndPaint ));
+	Kernel32.GetProcAddress(mod, "EnumClipboardFormats", SYSTEM.VAL(ADDRESS,EnumClipboardFormats ));
 	Kernel32.GetProcAddress(mod, "EnumWindows", SYSTEM.VAL(ADDRESS,EnumWindows ));
 	Kernel32.GetProcAddress(mod, "EqualRect", SYSTEM.VAL(ADDRESS,EqualRect ));
 	Kernel32.GetProcAddress(mod, "GetAsyncKeyState", SYSTEM.VAL(ADDRESS,GetAsyncKeyState ));

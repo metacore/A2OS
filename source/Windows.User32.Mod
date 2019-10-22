@@ -379,6 +379,8 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		InvalidateRect-: PROCEDURE {WINAPI} (hWnd: HWND; lpRect: Rect; bErase: Kernel32.BOOL): Kernel32.BOOL;
 		(** The IsChild function tests whether a window is a child window or descendant window of a specified parent window. *)
 		IsChild-: PROCEDURE {WINAPI} (hWndParent, hWnd: HWND): Kernel32.BOOL;
+		(** Determines whether the clipboard contains data in the specified format. *)
+		IsClipboardFormatAvailable-: PROCEDURE {WINAPI} ( uFormat: UNSIGNED32 ): Kernel32.BOOL;
 		(** The LoadCursor function loads the specified cursor resource from the executable (.EXE) file associated with
 			an application instance. *)
 		LoadCursor-: PROCEDURE {WINAPI} (hInstance: Kernel32.HINSTANCE; VAR lpCursorName: ARRAY   OF CHAR): HCursor;
@@ -547,6 +549,7 @@ BEGIN
 	Kernel32.GetProcAddress(mod, "InsertMenuA", SYSTEM.VAL(ADDRESS,InsertMenu ));
 	Kernel32.GetProcAddress(mod, "IntersectRect", SYSTEM.VAL(ADDRESS,IntersectRect ));
 	Kernel32.GetProcAddress(mod, "IsChild", SYSTEM.VAL(ADDRESS,IsChild ));
+	Kernel32.GetProcAddress(mod, "IsClipboardFormatAvailable", SYSTEM.VAL(ADDRESS,IsClipboardFormatAvailable ));
 	Kernel32.GetProcAddress(mod, "LoadCursorA", SYSTEM.VAL(ADDRESS,LoadCursor ));
 	Kernel32.GetProcAddress(mod, "LoadCursorFromFileA", SYSTEM.VAL(ADDRESS,LoadCursorFromFile ));
 	Kernel32.GetProcAddress(mod, "LoadIconA", SYSTEM.VAL(ADDRESS,LoadIcon ));

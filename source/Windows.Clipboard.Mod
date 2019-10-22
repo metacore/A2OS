@@ -4,6 +4,7 @@ IMPORT SYSTEM, Kernel32, User32, KernelLog, Modules, Texts, HostClipboard;
 
 CONST CR = 0x0D; LF = 0x0A;
 CONST UTF16SurrogateOffset = LSH( UNSIGNED32( 0xD800 ), 10 ) + 0xDC00 - 0x10000;
+CONST ReplacementChar = UNSIGNED16( 0xFFFD );
 
 TYPE
 	StringBuilder = OBJECT
@@ -52,16 +53,16 @@ TYPE
 	END StringBuilder;
 
 (** Copy text of Windows clipboard to text *)
-PROCEDURE GetFromClipboard( text : Texts.Text );
+PROCEDURE GetFromClipboard( text: Texts.Text );
 VAR
 	clipboardData: POINTER { UNSAFE, UNTRACED } TO ARRAY OF UNSIGNED16;
 	textBuffer: POINTER TO ARRAY OF Texts.Char32;
 	clipboardPos := 0, textPos := 0, clipboardLen := 0: SIZE;
 	codePoint, lead, trail: UNSIGNED32;
 BEGIN
-	ASSERT((text # NIL) & (text.HasWriteLock()));
+	ASSERT(( text # NIL ) & ( text.HasWriteLock( )));
 	IF User32.OpenClipboard(Kernel32.NULL) # Kernel32.False THEN
-		clipboardData := User32.GetClipboardData(User32.CFUnicodeText);
+		clipboardData := User32.GetClipboardData( User32.CFUnicodeText );
 		IF clipboardData # Kernel32.NULL THEN
 		(* copy clipboard data into internal buffer and unlock clipboard data *)
 			clipboardData := Kernel32.GlobalLock( clipboardData );
@@ -69,11 +70,11 @@ BEGIN
 			NEW( textBuffer, clipboardLen + 1 );
 
 			WHILE clipboardPos < clipboardLen DO
-				codePoint := 0xFFFD;
+				codePoint := ReplacementChar;
 				lead := clipboardData[ clipboardPos ];
 
 			(* make unicode *)
-				IF ~IsSurrogate( lead ) THEN
+				IF IsSingle( lead ) THEN
 					codePoint := lead;
 					INC( clipboardPos );
 				ELSE
@@ -120,7 +121,7 @@ BEGIN
 END GetFromClipboard;
 
 (** Copy text to Windows clipboard *)
-PROCEDURE PutToClipboard(text : Texts.Text);
+PROCEDURE PutToClipboard( text: Texts.Text );
 VAR
 	clipboardData: POINTER { UNSAFE, UNTRACED } TO ARRAY OF UNSIGNED16;
 	textBuffer: POINTER TO ARRAY OF UNSIGNED16;
@@ -132,37 +133,39 @@ BEGIN
 	ASSERT(( text # NIL ) & ( text.HasReadLock( )));
 	textLen := text.GetLength( );
 	IF textLen > 0 THEN
-		NEW( builder, textLen + textLen DIV 10 );
+		NEW( builder, textLen + ( textLen DIV 8 + 1 ));
 		NEW( r, text );
 		WHILE ( textPos < textLen ) DO
 			r.ReadCh( codePoint );
 			IF ( codePoint > 0 ) THEN
-				IF codePoint = LF THEN (* CRLF *)
+				IF codePoint = LF THEN (* LF -> CRLF *)
 					builder.AddChar( CR );
 				END;
 
 				IF codePoint <= 0xFFFF THEN
 					builder.AddChar( UNSIGNED16( codePoint ));
-				ELSE
+				ELSIF codePoint <= 0x10FFFF THEN
 					builder.AddChar( UTF16Lead( codePoint ));
 					builder.AddChar( UTF16Trail( codePoint ));
+				ELSE
+					builder.AddChar( ReplacementChar );
 				END;
 			END;
 			INC( textPos );
 		END;
 
 		textBuffer := builder.GetString( );
-		textLen := builder.GetLength( );
+		textLen := builder.GetLength( ) + 1; (* include NULL *)
 
 		IF User32.OpenClipboard( Kernel32.NULL ) # Kernel32.False THEN
 			IGNORE User32.EmptyClipboard( );
-			clipboardData := Kernel32.GlobalAlloc( { Kernel32.GMemMoveable, Kernel32.GMemDDEShare }, (textLen + 1)*2 );
-
+			clipboardData := Kernel32.GlobalAlloc( { Kernel32.GMemMoveable, Kernel32.GMemDDEShare }, (textLen + 1 )*2 );
 			clipboardData := Kernel32.GlobalLock( clipboardData );
-			SYSTEM.MOVE( ADDRESSOF( textBuffer[ 0 ] ), clipboardData, 2 * ( textLen ));
-			clipboardData[ textLen ] := 0;
-			IGNORE Kernel32.GlobalUnlock( clipboardData );
 
+			SYSTEM.MOVE( ADDRESSOF( textBuffer[ 0 ] ), clipboardData, ( textLen )*2 ); (* include NULL *)
+			clipboardData[ textLen ] := 0; (* NULLNULL *)
+
+			IGNORE Kernel32.GlobalUnlock( clipboardData );
 			clipboardData := User32.SetClipboardData(User32.CFUnicodeText, clipboardData );
 		END;
 		IGNORE User32.CloseClipboard( );
@@ -188,22 +191,22 @@ BEGIN
 	KernelLog.Enter; KernelLog.String("WindowsClipboard: Unregistered clipboard at host clipboard interface."); KernelLog.Exit;
 END Cleanup;
 
-PROCEDURE - IsSurrogate*( c: UNSIGNED32 ): BOOLEAN;
+PROCEDURE - IsSingle( c: UNSIGNED32 ): BOOLEAN;
 BEGIN
-	RETURN SET32( c ) * SET32( 0xFFFFF800 ) = SET32( 0xD800 );
-END IsSurrogate;
+	RETURN SET32( c ) * SET32( 0xFFFFF800 ) # SET32( 0xD800 );
+END IsSingle;
 
 PROCEDURE - IsSurrogateLead( c: UNSIGNED32 ): BOOLEAN;
 BEGIN
 	RETURN SET32( c ) * SET32( 0x400 ) = { };
 END IsSurrogateLead;
 
-PROCEDURE - IsLead( c: UNSIGNED32 ): BOOLEAN;
+PROCEDURE - IsLead( c: UNSIGNED32 ): BOOLEAN; (* D800–DBFF *)
 BEGIN
 	RETURN SET32( c ) * SET32( 0xFFFFFC00 ) = SET32( 0xD800 );
 END IsLead;
 
-PROCEDURE - IsTrail( c: UNSIGNED32 ): BOOLEAN;
+PROCEDURE - IsTrail( c: UNSIGNED32 ): BOOLEAN; (* DC00–DFFF *)
 BEGIN
 	RETURN SET32( c ) * SET32( 0xFFFFFC00 ) = SET32( 0xDC00 );
 END IsTrail;
@@ -220,9 +223,9 @@ END UTF16Trail;
 
 BEGIN
 	(* register with AosText clipboard *)
-	Texts.clipboard.onTextChanged.Add(ClipboardChanged);
-	HostClipboard.SetHandlers(GetFromClipboard, PutToClipboard);
-	Modules.InstallTermHandler(Cleanup)
+	Texts.clipboard.onTextChanged.Add( ClipboardChanged );
+	HostClipboard.SetHandlers( GetFromClipboard, PutToClipboard );
+	Modules.InstallTermHandler( Cleanup );
 END Clipboard.
 
 Clipboard.Install ~

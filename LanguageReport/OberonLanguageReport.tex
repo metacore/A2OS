@@ -2486,11 +2486,18 @@ END;
 \end{lstlisting}
 is equivalent to
 \begin{lstlisting}[style=example]
+i := start;
 temp := end;
-is := start;
-WHILE i != end DO
-	Statements;
-	i := i + increment;
+IF increment > 0 THEN
+  WHILE i <= temp DO
+    Statements;
+    i := i + increment;
+  END;
+ELSE
+  WHILE i >= temp DO
+    Statements;
+    i := i + increment;
+  END;
 END;
 \end{lstlisting}
 

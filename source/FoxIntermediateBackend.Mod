@@ -10149,7 +10149,7 @@ TYPE
 				END;
 			(* tag for pointer type computed not here but during dereferencing *)
 			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) THEN
-				IF (x.kind = SyntaxTree.ValueParameter) OR x.selfParameter OR type(SyntaxTree.RecordType).isFinal THEN
+				IF (x.kind = SyntaxTree.ValueParameter) OR type(SyntaxTree.RecordType).isFinal THEN
 					ReleaseIntermediateOperand(result.tag);
 					result.tag := TypeDescriptorAdr(type);
 					UseIntermediateOperand(result.tag);

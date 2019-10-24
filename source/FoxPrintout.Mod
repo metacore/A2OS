@@ -747,12 +747,12 @@ TYPE
 			IF x.left # NIL THEN
 				Expression(x.left);
 			ELSE
-				CASE x.id OF 
-				Global.New: 
+				CASE x.id OF
+				Global.New:
 					w.String("NEW ");
 					IF x.expression # NIL THEN
-						Expression(x.expression);  
-					END; 
+						Expression(x.expression);
+					END;
 				ELSE
 					w.String("BUILTIN(");
 					w.Int(x.id,1);
@@ -766,9 +766,9 @@ TYPE
 				w.String(">");
 				EndComment
 			END;
-			IF x.expression = NIL THEN 
+			IF x.expression = NIL THEN
 				w.String("("); ExpressionList(x.parameters); w.String(")");
-			END;			
+			END;
 		END VisitBuiltinCallDesignator;
 
 		PROCEDURE VisitValue*(x: SyntaxTree.Value);
@@ -1029,8 +1029,8 @@ TYPE
 						w.String( " := " ); Expression (x.initializer);
 					END;
 					IF x.extern # NIL THEN
-						Keyword(" EXTERN " ); 
-						Expression(x.extern); 
+						Keyword(" EXTERN " );
+						Expression(x.extern);
 					END;
 					IF IsProperType(x.type) THEN
 						w.String( ": " );
@@ -1080,10 +1080,10 @@ TYPE
 						w.String( " := " ); Expression (x.initializer);
 					END;
 					IF x.extern # NIL THEN
-						Keyword(" EXTERN " ); 
-						Expression(x.extern); 
+						Keyword(" EXTERN " );
+						Expression(x.extern);
 					END;
-					
+
 					WHILE(next # NIL) & (next.type = x.type) & ((next.access # SyntaxTree.Hidden) OR (mode > SourceCode)) DO
 
 						w.String(", "); PrintSymbol(next); Flags(next);
@@ -1293,7 +1293,7 @@ TYPE
 						Indent;  Keyword("END " );  Identifier(x.name);
 					END;
 				ELSE
-					w.String(" EXTERN "); 
+					w.String(" EXTERN ");
 					Expression(x.extern);
 				END;
 			END;
@@ -1555,18 +1555,18 @@ TYPE
 		BEGIN
 			Keyword("VAR ");
 			FOR i := 0 TO x.variables.Length()-1 DO
-				IF i > 0 THEN 
+				IF i > 0 THEN
 					w.String(", ");
-				END; 
+				END;
 				variable := x.variables.Get(i);
 				init := x.initializers.GetExpression(i);
 				Identifier(variable.name);
 				IF init # NIL THEN
-					w.String(" := "); 
+					w.String(" := ");
 					Expression(init);
 				END;
 			END;
-			IF x.type # NIL THEN 
+			IF x.type # NIL THEN
 				w.String(": "); Type(x.type);
 			END;
 		END VisitDeclarationStatement;
@@ -1966,12 +1966,12 @@ TYPE
 (* debugging helper *)
 VAR
 	debug: Printer;
-	
+
 	PROCEDURE IsProperType(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
 		 RETURN (type # NIL) & (~(type IS SyntaxTree.QualifiedType) OR (type(SyntaxTree.QualifiedType).qualifiedIdentifier # NIL));
 	END IsProperType;
-	
+
 
 	PROCEDURE NewPrinter*(w: Streams.Writer; mode: SIGNED32; info: BOOLEAN): Printer;
 	VAR p: Printer;

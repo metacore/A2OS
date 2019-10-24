@@ -245,7 +245,7 @@ BEGIN
 			IF m > ofs+w THEN m := ofs+w END;	(* max w times *)
 			REPEAT	(* loop over bits *)
 				IF ODD(ASH(ORD(ch), -i)) THEN	(* pixel on *)
-					
+
 					SYSTEM.GET(dst, c);
 					s := SET(ORD(c));
 					SYSTEM.PUT(dst, CHR(SIGNED32( SET( col) / s)))

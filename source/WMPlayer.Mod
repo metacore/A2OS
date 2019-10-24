@@ -52,7 +52,7 @@ TYPE
 			tw.Ln;
 			tw.SetFontStyle(StyleBold); tw.String("Video"); tw.Char(Tab); tw.SetFontStyle(StyleRegular);
 			IF data.hasVideo THEN
-				tw.Int(data.width, 0); tw.String("x"); tw.Int(data.height, 0); tw.String(", "); 
+				tw.Int(data.width, 0); tw.String("x"); tw.Int(data.height, 0); tw.String(", ");
 				IF data.maxFrames>0 THEN tw.Int(data.maxFrames,0); tw.String(" frames, ") END;
 				IF data.mspf # 0 THEN
 					framerate := 1000 / data.mspf;
@@ -78,7 +78,7 @@ TYPE
 			tw.Ln;
 			tw.Update;
 		END CreateContent;
-		
+
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
 		VAR
 			panel : WMStandardComponents.Panel;
@@ -103,7 +103,7 @@ TYPE
 			ASSERT(setupData # NIL);
 			data := setupData;
 			CreateContent;
-			vc := CreateForm(); 
+			vc := CreateForm();
 			Init(vc.bounds.GetWidth(), vc.bounds.GetHeight(), FALSE);
 			SetContent(vc);
 			SetTitle(Strings.NewString("Content Info"));
@@ -197,7 +197,7 @@ TYPE
 	VAR
 		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn, stepBtn, resetBtn : WMStandardComponents.Button;
 		search: WMStandardComponents.Scrollbar;
-		
+
 		toolbar* : WMStandardComponents.Panel;
 		timeLbl*, totTimeLbl*, frameLbl*, maxFrameLbl*: WMStandardComponents.Label;
 
@@ -208,8 +208,8 @@ TYPE
 		filename- : Files.FileName;
 		setupData* : MediaPlayer.Setup;
 		infos* : InfoWindow;
-		
-		res* : INTEGER; 
+
+		res* : INTEGER;
 		windowInfo* : WMWindowManager.WindowInfo;
 
 		PROCEDURE CreateForm*(): WMComponents.VisualComponent;
@@ -236,7 +236,7 @@ TYPE
 
 			NEW(pauseBtn); pauseBtn.alignment.Set(WMComponents.AlignLeft); pauseBtn.caption.SetAOC("Pause");
 			toolbar.AddContent(pauseBtn);
-			
+
 			NEW(stepBtn); stepBtn.alignment.Set(WMComponents.AlignLeft); stepBtn.caption.SetAOC("Step");
 			toolbar.AddContent(stepBtn);
 
@@ -250,8 +250,8 @@ TYPE
 			toolbar.AddContent(ffBtn); ffBtn.isRepeating.Set(TRUE);
 
 			NEW(resetBtn); resetBtn.alignment.Set(WMComponents.AlignLeft); resetBtn.caption.SetAOC("Reset");
-			toolbar.AddContent(resetBtn); 
-			
+			toolbar.AddContent(resetBtn);
+
 			NEW(infoBtn); infoBtn.alignment.Set(WMComponents.AlignRight); infoBtn.caption.SetAOC("Info");
 			toolbar.AddContent(infoBtn);
 
@@ -356,12 +356,12 @@ TYPE
 				IF (sender # NIL) & (sender IS WMStandardComponents.Button) THEN
 					b := sender (WMStandardComponents.Button);
 					IF b = playBtn THEN player.Play;
-					ELSIF b = stopBtn THEN player.Stop; 
+					ELSIF b = stopBtn THEN player.Stop;
 					ELSIF b = pauseBtn THEN player.Pause;
 					ELSIF b = stepBtn THEN player.Step;
 					ELSIF b = ffBtn THEN player.SetPos(player.GetFrame() + stepSize); (*?use time units or frame units *)
 					ELSIF b = rewBtn THEN player.SetPos(player.GetFrame() - 2 * stepSize);
-					ELSIF b = resetBtn THEN player.DoReset; 
+					ELSIF b = resetBtn THEN player.DoReset;
 					ELSIF b = infoBtn THEN
 						IF setupData # NIL THEN
 							NEW(info, setupData);
@@ -385,7 +385,7 @@ TYPE
 
 		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
-			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN 
+			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN
 				IF player#NIL THEN player.Close END;
 				Close
 			ELSE Handle^(x)
@@ -405,7 +405,7 @@ TYPE
 		BEGIN
 			ConvertTimeToStr(time * 100, temp);
 			timeLbl.caption.SetAOC(temp);
-			IF displayTime>0 THEN 
+			IF displayTime>0 THEN
 				ConvertTimeToStr(displayTime * 100, temp);totTimeLbl.caption.SetAOC(temp);
 			END;
 			frameLbl.model.Get()(Models.Integer).Set(pos);
@@ -435,11 +435,11 @@ TYPE
 			ELSE
 			search.visible.Set(FALSE)
 			END;
-			IF setup.maxTime>0 THEN 
+			IF setup.maxTime>0 THEN
 				ConvertTimeToStr(setup.maxTime * 100, temp);totTimeLbl.caption.SetAOC(temp);
 			END;
 
-			IF setup.maxFrames>0 THEN 
+			IF setup.maxFrames>0 THEN
 				Strings.IntToStr(setup.maxFrames, temp); maxFrameLbl.caption.SetAOC(temp);
 			END;
 		END SetUpController;

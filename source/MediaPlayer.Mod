@@ -177,7 +177,7 @@ TYPE
 			END;
 			fullscreen := FALSE;
 		END New;
-		
+
 		(** Toggle between fullscreen and window mode *)
 		PROCEDURE ToggleFullscreen*;
 		VAR view : WMWindowManager.ViewPort; width, height : SIZE;
@@ -271,9 +271,9 @@ TYPE
 			IF PointerInvisibleAfter > 0 THEN
 				lastTimestamp := Kernel.GetTicks();
 				SetPointerVisible(TRUE);
-				IF keys = {0} THEN ToggleFullscreen; 
-				ELSIF (keys = {2}) & (extContextMenuHandler#NIL) THEN extContextMenuHandler(SELF(*.img*),x,y) 
-				ELSIF extPointerDownHandler # NIL THEN extPointerDownHandler(x, y, keys); 
+				IF keys = {0} THEN ToggleFullscreen;
+				ELSIF (keys = {2}) & (extContextMenuHandler#NIL) THEN extContextMenuHandler(SELF(*.img*),x,y)
+				ELSIF extPointerDownHandler # NIL THEN extPointerDownHandler(x, y, keys);
 				END;
 			END;
 		END PointerDown;
@@ -839,14 +839,14 @@ TYPE
 		BEGIN {EXCLUSIVE}
 			RETURN state;
 		END GetState;
-		
+
 		PROCEDURE CanSeek*():BOOLEAN;
 		BEGIN
 			IF current#NIL THEN RETURN current.canSeek
 			ELSE RETURN FALSE
 			END;
 		END CanSeek;
-		
+
 		PROCEDURE GetCurrentFrame*() : VideoBuffer;
 		BEGIN {EXCLUSIVE}
 			RETURN current.vBuffer;
@@ -944,7 +944,7 @@ TYPE
 						RETURN NIL;
 					END;
 				END;
-				IF (audioDecoder=NIL)&(videoDecoder=NIL) THEN res := NoDecoders; END; 
+				IF (audioDecoder=NIL)&(videoDecoder=NIL) THEN res := NoDecoders; END;
 			ELSE
 				IF Trace * TraceOpen # {} THEN KernelLog.String("MediaPlayer: Demux found: "); KernelLog.String(ext); KernelLog.Ln; END;
 				demux.Open(in, res);
@@ -1090,7 +1090,7 @@ TYPE
 		BEGIN
 			IF Trace * TraceEof # {} THEN KernelLog.String("MediaPlayer: EOF Reset."); KernelLog.Ln; END;
 			Stop;
-			IF ~ current.canSeek THEN 
+			IF ~ current.canSeek THEN
 				Open(current.uri, msg, res);
 			END;
 		END Reset;
@@ -1099,8 +1099,8 @@ TYPE
 		VAR msg: ARRAY 256 OF CHAR; res:INTEGER;
 		BEGIN
 			IF Trace * TraceEof # {} THEN KernelLog.String("MediaPlayer: EOF Loop."); KernelLog.Ln; END;
-			Stop; 
-			IF current.canSeek THEN 
+			Stop;
+			IF current.canSeek THEN
 				Play
 			ELSE
 				Open(current.uri, msg, res);
@@ -1243,7 +1243,7 @@ TYPE
 			IF current # NIL THEN
 				IF current.hasVideo THEN current.filler.SeekAndGetFrame(0, img, res) END;
 				IF current.hasAudio THEN current.channel.Stop; current.audio.SeekSample(0, FALSE, res); END;
-				IF current.canSeek THEN current.pos := 0; current.oldPos := -1 END; 
+				IF current.canSeek THEN current.pos := 0; current.oldPos := -1 END;
 			END;
 			IF pw # NIL THEN
 				IF img # NIL THEN pw.ShowFrame(img); ELSE pw.ShowBlack; END;
@@ -1506,7 +1506,7 @@ PROCEDURE Pause*(context : Commands.Context); (** <filename> ~ *)
 VAR filename: ARRAY 256 OF CHAR;
 BEGIN {EXCLUSIVE}
 	context.arg.String(filename);
-	IF mplayer # NIL THEN 
+	IF mplayer # NIL THEN
 		(*mplayer.SetState(Paused);*)
 		mplayer.RequestState(Paused, NIL);
 	ELSE
@@ -1516,7 +1516,7 @@ END Pause;
 
 PROCEDURE Step*(context : Commands.Context); (** <filename> ~ *)
 BEGIN {EXCLUSIVE}
-	IF mplayer # NIL THEN 
+	IF mplayer # NIL THEN
 		mplayer.Step;
 	ELSE
 		context.error.String("MediaPlayer: no player open "); context.error.Ln; context.error.Update;

@@ -926,9 +926,9 @@ VAR
 		VAR scope, last, fld: Object;  btyp: Struct;  n: SIGNED32;  flags: SET;  conval: Const;
 		BEGIN
 			NEW( scope );  scope.mode := Head;  scope.mnolev := -typ.mno;  last := NIL;  btyp := typ.BaseTyp;  conval := NewConst();
-			typ.strobj.conval := conval;  
+			typ.strobj.conval := conval;
 			Files.ReadNum( R, n );
-			flags := SET(n); 
+			flags := SET(n);
 			IF 0 IN flags THEN INCL( conval.setval, protectedObj ) END;
 			IF 1 IN flags THEN INCL( conval.setval, activeObj ) END;
 			IF 2 IN flags THEN INCL( conval.setval, safe ) END;
@@ -1064,8 +1064,8 @@ VAR
 			| SFtypBool, SFtypChar, SFtypSInt..SFtypLInt:
 					Files.ReadNum( R, conval.intval )
 			| SFtypSet:
-					Files.ReadNum( R, int); 
-					conval.setval := SET(int); 
+					Files.ReadNum( R, int);
+					conval.setval := SET(int);
 			| SFtypReal:
 					Files.ReadReal( R, r );  conval.realval := r;  conval.intval := OPM.ConstNotAlloc
 			| SFtypLReal:

@@ -528,7 +528,7 @@ TYPE
 			IF Trace THEN E( "IndexList" ) END;
 		END IndexList;
 
-		(** 
+		(**
 			RangeExpression = SimpleExpression
            | [SimpleExpression] '..' [SimpleExpression]['by' SimpleExpression]
            | '*' .
@@ -603,7 +603,7 @@ TYPE
 		(**
 			PrimaryExpression = Number | Character | String | Set | Array
 	        | 'NIL' | 'IMAG' | 'TRUE' | 'FALSE' |
-	        | 'SELF' | 'RESULT' | 'ADDRESS' | 'SIZE' 
+	        | 'SELF' | 'RESULT' | 'ADDRESS' | 'SIZE'
 	        | 'SIZE' 'OF' Factor | 'ADDRESS' 'OF' Factor
 	        | 'ALIAS' OF Factor
 	        | 'NEW' UnaryExpression
@@ -616,7 +616,7 @@ TYPE
 			factor: SyntaxTree.Expression;
 			operator: Operator;
 			expressionList: SyntaxTree.ExpressionList;
-			identifier: SyntaxTree.Identifier; 
+			identifier: SyntaxTree.Identifier;
 			position: Position;
 			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 		BEGIN
@@ -661,10 +661,10 @@ TYPE
 			| Scanner.False:
 					expression := SyntaxTree.NewBooleanValue( position, FALSE );
 					NextToken;
-        | Scanner.Self: 
+        | Scanner.Self:
 					expression := SyntaxTree.NewSelfDesignator(position, NIL);
 					NextToken;
-       	| Scanner.Result: 
+       	| Scanner.Result:
 					expression := SyntaxTree.NewResultDesignator(position);
 					NextToken;
 			| Scanner.Address, Scanner.Size:
@@ -703,8 +703,8 @@ TYPE
 			expression.End(token.position);
 			RETURN expression;
 		END PrimaryExpression;
-		
-		(** 
+
+		(**
 			UnaryExpression = PrimaryExpression [DesignatorOperations] [Flags].
 		**)
 		PROCEDURE UnaryExpression( ): SyntaxTree.Expression;
@@ -717,7 +717,7 @@ TYPE
 			END;
 			RETURN expression;
 		END UnaryExpression;
-		
+
 		(**
 			Factor = UnaryExpression | UnaryOperation Factor.
 			UnaryOperation = '~' | '+' | '-'.
@@ -747,9 +747,9 @@ TYPE
 				factor := UnaryExpression( )
 			END;
 			RETURN factor
-		END Factor; 
+		END Factor;
 
-		(** 
+		(**
 			DesignatorOperations = { "(" [ExpressionList] ")"
 			                       | "." Identifier
 			                       | '[' IndexList ']'
@@ -796,8 +796,8 @@ TYPE
 			END;
 		END DesignatorOperations;
 
-		(** 
-			Set = '{' [ RangeExpression {',' RangeExpression} ] '}'. 
+		(**
+			Set = '{' [ RangeExpression {',' RangeExpression} ] '}'.
 		**)
 		PROCEDURE Set( ): SyntaxTree.Expression;
 		VAR
@@ -835,26 +835,26 @@ TYPE
 			RETURN array
 		END ArrayLiteral;
 
-		(** 
+		(**
 			Term  = Factor {MulOp Factor}.
 			MulOp = '*' | '/' | 'DIV' | 'MOD' | '&'
 			        | '.*' | './' | '\' | '**' | '+*' .
 		**)
 		PROCEDURE Term( ): SyntaxTree.Expression;
-		VAR term, factor: SyntaxTree.Expression;  operator: Operator; position: Position; warning: BOOLEAN; 
+		VAR term, factor: SyntaxTree.Expression;  operator: Operator; position: Position; warning: BOOLEAN;
 		BEGIN
 			IF Trace THEN S( "Term" ) END;
 			position := token.position;
-			warning := TokenB() = Scanner.Minus; 
-			
+			warning := TokenB() = Scanner.Minus;
+
 			term := Factor();
 			WHILE (TokenB() >= Scanner.Times) & (TokenB() <= Scanner.And)  DO
 				operator := Symbol();
 				IF (operator = Scanner.Div) OR (operator = Scanner.Mod) THEN
 					IF warning THEN
 						Basic.Warning(diagnostics, scanner.source^, token.position, "changed syntax: negation has precedence now !");
-					END; 
-				END; 
+					END;
+				END;
 				NextToken;
 				factor := Factor();
 				term := SyntaxTree.NewBinaryExpression( position, term, factor, operator );
@@ -931,10 +931,10 @@ TYPE
 			IF Trace THEN E( "Case" ) END;
 		END Case;
 
-		(**		
+		(**
 			Statement = [
-			  UnaryExpression 
-			    [':=' Expression 
+			  UnaryExpression
+			    [':=' Expression
 			    | '!' Expression | '?' Expression | '<<' Expresssion | '>>' Expression
 			    ]
 			  | 'IF' Expression 'THEN' StatementSequence
@@ -945,26 +945,26 @@ TYPE
 			    {'|' QualifiedIdentifier 'DO' StatementSequence}
 			    [ELSE StatementSequence]
 			    'END'
-			  | 'CASE' Expression 'OF' ['|'] Case 
-			    {'|' Case} 
-			    ['ELSE' StatementSequence] 
+			  | 'CASE' Expression 'OF' ['|'] Case
+			    {'|' Case}
+			    ['ELSE' StatementSequence]
 			    'END'
-			  | 'WHILE' Expression 'DO' 
-			      StatementSequence 
+			  | 'WHILE' Expression 'DO'
+			      StatementSequence
 			    'END'
-			  | 'REPEAT' 
-			      StatementSequence 
+			  | 'REPEAT'
+			      StatementSequence
 			    'UNTIL' Expression
 			  | 'FOR' Identifier ':=' Expression 'TO' Expression ['BY' Expression] 'DO'
-			      StatementSequence 
+			      StatementSequence
 			    'END'
 			  | 'LOOP' StatementSequence 'END'
 			  | 'EXIT'
 			  | 'RETURN' [Expression]
 			  | 'AWAIT' Expression
-			  | StatementBlock 
+			  | StatementBlock
 			  | 'CODE' {any} 'END'
-			  | 'IGNORE' Expression  
+			  | 'IGNORE' Expression
 			].
 		**)
 		PROCEDURE Statement*( statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN;
@@ -998,7 +998,7 @@ TYPE
 						CommentStatement(statement);
 					END;
 					statement.End(prevPosition);
-					statements.AddStatement( statement );					
+					statements.AddStatement( statement );
 					(*IF OptionalB(Scanner.Escape) THEN END;*)
 					result := TRUE
 			| Scanner.Var:
@@ -1022,9 +1022,9 @@ TYPE
 				IF needsType & Mandatory(Scanner.Colon) OR Optional(Scanner.Colon) THEN
 					type := Type(SyntaxTree.invalidIdentifier, NIL);
 					declarationStatement.SetType(type);
-				END;				
+				END;
 				statements.AddStatement(declarationStatement);
-				result := TRUE; 
+				result := TRUE;
 			| Scanner.If:
 					NextToken;
 					ifStatement := SyntaxTree.NewIfStatement( token.position ,outer);
@@ -2009,7 +2009,7 @@ TYPE
 			procedure.SetType(procedureType);
 			IF Optional(Scanner.LeftParenthesis) THEN FormalParameters( procedureType, procedureScope) END;
 
-			IF Optional(Scanner.Extern)  THEN 
+			IF Optional(Scanner.Extern)  THEN
 				procedure.SetExtern(Expression());
 			ELSIF ~forwardDeclaration THEN
 				IF Lax THEN Ignore(Scanner.Semicolon) ELSE Check( Scanner.Semicolon ) END;
@@ -2122,7 +2122,7 @@ TYPE
 			IF Trace THEN S( "VariableDeclaration" ) END;
 			firstVariable := parentScope.lastVariable;
 			VariableNameList( parentScope );
-			
+
 			variable := firstVariable;
 			IF firstVariable #  NIL THEN variable := firstVariable.nextVariable ELSE variable := parentScope.firstVariable END;
 
@@ -2130,10 +2130,10 @@ TYPE
 			WHILE (variable # NIL) DO
 				IF variable.initializer = NIL THEN
 					needsType := TRUE
-				END; 
-				variable := variable.nextVariable;				
+				END;
+				variable := variable.nextVariable;
 			END;
-			
+
 			IF needsType & Mandatory(Scanner.Colon) OR Optional(Scanner.Colon) THEN
 				type := Type( SyntaxTree.invalidIdentifier, parentScope );
 				variable := firstVariable;

@@ -89,7 +89,7 @@ PROCEDURE CopyPattern* (P:Picture;col:SIGNED16;pat:Display.Pattern;X,Y,mode: SIG
 VAR w, h: SIGNED16; c: CHAR;
 BEGIN
 	IF InBoundaries(X, Y, P.width, P.height) THEN
-		w := 0;  h := 0;  
+		w := 0;  h := 0;
 		SYSTEM.GET(pat, c);
 		w := ORD(c);
 		SYSTEM.GET(pat+1, c);

@@ -602,7 +602,7 @@ TYPE
 		END IsFloat;
 
 		PROCEDURE Generate*(VAR instruction: IntermediateCode.Instruction);
-		VAR opcode: SIGNED8; 
+		VAR opcode: SIGNED8;
 		BEGIN
 			CheckFixups;
 
@@ -756,7 +756,7 @@ TYPE
 		END AllocateStack;
 
 		PROCEDURE EmitEnter(CONST instr: IntermediateCode.Instruction);
-		VAR cc: SIGNED32; 
+		VAR cc: SIGNED32;
 		BEGIN
 			stackSize := 0;
 			(*
@@ -2179,7 +2179,7 @@ TYPE
 			myInstructionSet:=defaultInstructionSet;
 			SetHasLinkRegister;
 			SetName("TRM");
-			SetCodeUnit(18); 
+			SetCodeUnit(18);
 		END InitBackendTRM;
 
 		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
@@ -2192,10 +2192,10 @@ TYPE
 
 		PROCEDURE SetInstructionWidth* (instructionWidth: SIZE);  (*override*)
 		BEGIN
-			IF myInstructionSet.instructionW # instructionWidth THEN 
+			IF myInstructionSet.instructionW # instructionWidth THEN
 				NEW(myInstructionSet,instructionWidth(SIGNED32));
-				cg.SetInstructionSet(myInstructionSet);				
-			END; 
+				cg.SetInstructionSet(myInstructionSet);
+			END;
 		END SetInstructionWidth;
 
 		PROCEDURE GetSystem*(): Global.System;

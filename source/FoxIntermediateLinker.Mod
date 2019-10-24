@@ -32,7 +32,7 @@ TYPE
 		originalRestrictions: POINTER TO ARRAY OF ArrangementRestriction;
 		objectFile-: IRObjectFile.ObjectFileFormat;
 		codeUnit: Backend.SizeInBits;
-		
+
 		PROCEDURE & Init*(diagnostics: Diagnostics.Diagnostics; defaultBackend: Backend.Backend);
 		BEGIN
 			IF diagnostics = NIL THEN
@@ -48,15 +48,15 @@ TYPE
 			NEW(loadedModules, 128);
 			NEW(objectFile); objectFile.Initialize(diagnostics);
 			isSorted := FALSE;
-			codeUnit := defaultBackend.system.codeUnit; 
+			codeUnit := defaultBackend.system.codeUnit;
 		END Init;
-		
+
 		PROCEDURE SetInstructionWidth*(unit: Backend.SizeInBits);
 		BEGIN
 			codeUnit := unit;
 		END SetInstructionWidth;
-		
-		
+
+
 
 		PROCEDURE PatchStackSize*(CONST typeName: SectionName; size: SIZE);
 		VAR sectionName: SectionName; section: Sections.Section; pooledName: Basic.SegmentedName; op1, op2, op3: IntermediateCode.Operand; instruction: IntermediateCode.Instruction;

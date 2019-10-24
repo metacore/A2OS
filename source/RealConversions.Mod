@@ -89,12 +89,12 @@ VAR
 		IF neg THEN y := -y END;
 		r := y
 	END StringToReal;
-	
+
 	(**	Convert FLOAT64 x using at least n character positions. *)
 	PROCEDURE RealToString*( x: FLOAT64; n: INTEGER; VAR buf: ARRAY OF CHAR );
 	(* BM 1993.4.22. Do not simplify rounding! *)
 	VAR
-		e, h, l, i, pos: SIGNED32;  z: FLOAT64;  d: ARRAY 16 OF CHAR; m: INTEGER; 
+		e, h, l, i, pos: SIGNED32;  z: FLOAT64;  d: ARRAY 16 OF CHAR; m: INTEGER;
 
 		PROCEDURE Char( c: CHAR );
 		BEGIN
@@ -118,9 +118,9 @@ VAR
 			ELSE  String("+INF" )
 			END
 		ELSE
-			IF (e # 0) & (x < 0) THEN 
-				Char( "-" );  
-				x := -x  
+			IF (e # 0) & (x < 0) THEN
+				Char( "-" );
+				x := -x
 			END;
 			IF e = 0 THEN
 				h := 0;  l := 0 (* no denormals *)
@@ -138,19 +138,19 @@ VAR
 			i := 15;
 			WHILE i > 7 DO  d[i] := CHR( l MOD 10 + ORD( "0" ) );  l := l DIV 10;  DEC( i )  END;
 			WHILE i >= 0 DO d[i] := CHR( h MOD 10 + ORD( "0" ) );  h := h DIV 10;  DEC( i )  END;
-			
+
 			Char( d[0] ); Char( "." );
-			m := 15; 
-			WHILE (m>0) & (d[m] = '0') DO 
-				DEC(m) 
+			m := 15;
+			WHILE (m>0) & (d[m] = '0') DO
+				DEC(m)
 			END;
-			FOR i := 1 TO m DO 
-				Char( d[i] ); 
+			FOR i := 1 TO m DO
+				Char( d[i] );
 			END;
 			IF e # 0 THEN
-				IF e < 0 THEN  
-					String( "E-" );  e := -e  
-				ELSE  
+				IF e < 0 THEN
+					String( "E-" );  e := -e
+				ELSE
 					String( "E+" )
 				END;
 				IF e >= 100 THEN Char( CHR( e DIV 100 + ORD( "0" ))) END;
@@ -163,8 +163,8 @@ VAR
 		IF n > pos THEN
 			WHILE(pos >= 0) DO
 				buf[n] := buf[pos];
-				DEC(pos); 
-				DEC(n); 
+				DEC(pos);
+				DEC(n);
 			END;
 			WHILE (n>=0) DO
 				buf[n] := " ";

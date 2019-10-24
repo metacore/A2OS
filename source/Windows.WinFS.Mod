@@ -479,7 +479,7 @@ TYPE
 		BEGIN
 			RETURN r.apos * BufferSize + r.bpos
 		END Pos;
-		
+
 		PROCEDURE SetFilePointer(pos: Files.Position): Files.Position;
 		BEGIN
 			IF SIZEOF(Files.Position) > 4 THEN (* compile-time condition, will be optimized out *)

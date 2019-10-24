@@ -451,7 +451,7 @@ VAR
 		END;
 		IF bitsToCheck # 0 THEN
 			diffSet := {0..bitsToCheck};
-			IF (S.VAL( SET8, adr.ipv6Adr[bytesToCheck] ) - diffSet) # (S.VAL( SET8, prefix.ipv6Adr[bytesToCheck] ) - diffSet) THEN  
+			IF (S.VAL( SET8, adr.ipv6Adr[bytesToCheck] ) - diffSet) # (S.VAL( SET8, prefix.ipv6Adr[bytesToCheck] ) - diffSet) THEN
 				matches := FALSE
 			END
 		END;

@@ -663,7 +663,7 @@ END Init;
 
 PROCEDURE Code(opcode: SET);
 TYPE Bytes= ARRAY 4 OF CHAR;
-VAR b: Bytes; i: SIGNED16; c32: SET32; 
+VAR b: Bytes; i: SIGNED16; c32: SET32;
 BEGIN
 	ASSERT(codelen MOD 4 = 0); (* in case PutChar did not write 4x characters *)
 	(*Trace IF Trace & dcd THEN

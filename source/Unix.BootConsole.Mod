@@ -17,7 +17,7 @@ TYPE
 			Trace.String( "could not load module " );  Trace.String( name );  Trace.Ln
 		END
 	END LoadModule;
-	
+
 
 	PROCEDURE Command( CONST cmd: Modules.Name );
 	VAR
@@ -43,7 +43,7 @@ TYPE
 			RETURN NIL
 		END
 	END ThisCommand;
-	
+
 
 	PROCEDURE Execute( CONST modName, procName: Modules.Name );
 	VAR m: Module;  cmd: PROCEDURE;  res: INTEGER;
@@ -120,10 +120,10 @@ TYPE
 BEGIN
 	Machine.VerboseLog;
 (*	InitializeCoreModules;	*)
-	
+
 	(* make current Frame the last one in FindRoots() *)
 	S.PUT( S.GetFramePointer(), ADDRESS( 0 ) );
-	
+
 	InitSignalHandling;
 	StartSystem;
 	#IF ~COOP THEN

@@ -283,7 +283,7 @@ TYPE
 							IF desc # NIL THEN
 								a0 := ADDRESSOF( desc.offsets );
 								a1 :=  SYSTEM.VAL( ADDRESS, desc.offsets );
-								ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );	
+								ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
 								FOR i := 0 TO LEN( desc.offsets ) - 1 DO
 									adr := bp + desc.offsets[i]; (* pointer at offset *)
 									SYSTEM.GET( adr, p ); (* load pointer *)

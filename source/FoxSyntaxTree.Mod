@@ -2001,9 +2001,9 @@ TYPE
 		PROCEDURE GetExpression*( index: SIZE ): Expression;
 		VAR p: ANY;
 		BEGIN
-			p := list.Get(index); 
-			IF p = NIL THEN 
-				RETURN NIL 
+			p := list.Get(index);
+			IF p = NIL THEN
+				RETURN NIL
 			ELSE
 				RETURN p(Expression);
 			END;
@@ -2389,13 +2389,13 @@ TYPE
 		BEGIN
 			returnType := type (* used for NEW Type() expression *)
 		END SetReturnType;
-			
+
 		PROCEDURE SetExpression*(e: Expression);
 		BEGIN
-			expression := e; 
+			expression := e;
 		END SetExpression;
-				
-		
+
+
 	END BuiltinCallDesignator;
 
 	(** <<left(type)>>

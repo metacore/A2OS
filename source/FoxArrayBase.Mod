@@ -8518,12 +8518,12 @@ TYPE
 	BEGIN
 		adr := GetAdr(dest);
 		size := GetSize(dest);
-		dim := GetDim(dest); 
+		dim := GetDim(dest);
 		(* reset dimensions, array might have been transposed *)
 		WHILE (dim > 0) DO
-			DEC( dim );  
+			DEC( dim );
 			len := GetLen( dest, dim );
-			PutInc( dest, dim, size ); 
+			PutInc( dest, dim, size );
 			size := size * len;
 		END;
 		INC(size, (-size) MOD 4);
@@ -8559,7 +8559,7 @@ TYPE
 		(* check geometric restriction *)
 		IF colsL # rowsR THEN Halt( GeometryMismatch, left, right, 0 );  END;
 
-		IF GetAdr( dest ) = 0 THEN 
+		IF GetAdr( dest ) = 0 THEN
 			p := AllocateMatrix( dest, rowsL, colsR, Size );
 			increment := TRUE;
 		ELSIF (GetLen( dest, 0 ) # rowsL) OR (GetLen( dest, 1 ) # colsR) THEN
@@ -8574,7 +8574,7 @@ TYPE
 		IF overlap THEN
 			destOld := dest;  destNew := NIL;
 			IF AllocateSameT( destNew, destOld, Size ) THEN END;
-			IF increment THEN 
+			IF increment THEN
 				CopyContent( destNew, destOld, Size );   (* for INCMUL ! *)
 			END;
 			dest := destNew;
@@ -8644,7 +8644,7 @@ TYPE
 
 		l1 := GetLen( left, 0 );   (* number of destination's rows *)
 		l2 := GetLen( left, 1 );   (* inner loop len *)
-		IF GetAdr( dest ) = 0 THEN AllocateVector( dest, l1, Size ); increment := TRUE; 
+		IF GetAdr( dest ) = 0 THEN AllocateVector( dest, l1, Size ); increment := TRUE;
 		ELSIF (GetLen( dest, 0 ) # l1) THEN
 			IF RangeFlag IN GetFlags( dest ) THEN
 				Halt( GeometryMismatch, left, right, dest );

@@ -122,7 +122,7 @@ BEGIN	(* only the destination block is clipped *)
 END CopyBlock;
 
 PROCEDURE CopyPattern0(ofs: SIGNED32; src, dst: ADDRESS; w, col, mode: SIGNED32);
-VAR ch: CHAR;  m, i: SIGNED32;  s: SET; 
+VAR ch: CHAR;  m, i: SIGNED32;  s: SET;
 BEGIN
 	IF mode = Display.invert THEN
 		REPEAT	(* loop over w pixels *)

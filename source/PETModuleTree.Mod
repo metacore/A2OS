@@ -1097,7 +1097,7 @@ BEGIN
 	StrCONSTPostfix := Strings.NewString(" (CONST)");
 	StrTYPEPostfix := Strings.NewString(" (TYPE)");
 	StrUNDEFPostfix := Strings.NewString(" (<???>)");
-	
+
 	StrParenthesis := Strings.NewString("(...)");
 END InitStrings;
 

@@ -1522,9 +1522,9 @@ TYPE
 							Assembler.InitMem(espm, sizeInBytes,SP,0);
 							MakeOperand(vdest, Low, dest, NIL);
 							Move(dest, espm, vdest.type);
-							ModifyStackPointer(-stackSize);					
+							ModifyStackPointer(-stackSize);
 						ELSE
-							MakeRegister(vsrc,Low,src); 
+							MakeRegister(vsrc,Low,src);
 							MakeOperand(vdest, Low, dest, NIL);
 							emitter.Emit2(InstructionSet.opMOVD,dest,src);
 						END;
@@ -2424,7 +2424,7 @@ TYPE
 				IF instruction.op1.type.form = IntermediateCode.SignedInteger THEN
 					emitter.Emit0(InstructionSet.opCQO);
 				ELSE
-					emitter.Emit2(InstructionSet.opXOR,opRD,opRD);					
+					emitter.Emit2(InstructionSet.opXOR,opRD,opRD);
 				END;
 			END;
 			(* registers might have been changed, so we make the operands now *)
@@ -2443,8 +2443,8 @@ TYPE
 				emitter.Emit1(InstructionSet.opDIV,op3);
 			ELSE
 				emitter.Emit1(InstructionSet.opIDIV,op3);
-			END; 
-			
+			END;
+
 			IF instruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
 				IF instruction.opcode = IntermediateCode.mod THEN
 					emitter.Emit2(InstructionSet.opMOV, op1, remainder);

@@ -1746,12 +1746,12 @@ TYPE
 						Emit2(opFCVTSD, a, b)
 					ELSIF IsRegisterForType(b.register, IntermediateCode.UnsignedIntegerType(32)) THEN
 						IF part = Low THEN
-							Emit2(opFMDLR, a, b); 
+							Emit2(opFMDLR, a, b);
 						ELSE
-							Emit2(opFMDHR, a, b); 
-						END;						
+							Emit2(opFMDHR, a, b);
+						END;
 					ELSE
-						InstructionSet.DumpOperand(D.Log, a); D.Ln; 
+						InstructionSet.DumpOperand(D.Log, a); D.Ln;
 						HALT(200);
 					END
 				ELSIF IsRegisterForType(a.register, IntermediateCode.FloatType(32)) THEN
@@ -1771,10 +1771,10 @@ TYPE
 						Emit2(opFMRS, a, b)
 					ELSIF IsRegisterForType(b.register, IntermediateCode.FloatType(64)) THEN
 						IF part = Low THEN
-							Emit2(opFMRDL, a, b); 
+							Emit2(opFMRDL, a, b);
 						ELSE
-							Emit2(opFMRDH, a, b); 
-						END;						
+							Emit2(opFMRDH, a, b);
+						END;
 					ELSE
 						(* mov int, int: *)
 						Emit2(opMOV, a, b)
@@ -2035,7 +2035,7 @@ TYPE
 
 			MovIfDifferent(destinationRegister, sourceOperand, Low);
 
-			IF IsComplex(irInstruction.op1) & IsComplex(irInstruction.op2) THEN 
+			IF IsComplex(irInstruction.op1) & IsComplex(irInstruction.op2) THEN
 				WriteBack(irInstruction.op1, Low, destinationRegister);
 				IF irInstruction.op1.mode # IntermediateCode.ModeRegister THEN
 					(* optimization: mov [?], r? it is more optimal to determine the source operand first *)
@@ -2071,7 +2071,7 @@ TYPE
 			ELSE
 				WriteBack(irInstruction.op1, Low, destinationRegister);
 			END;
-						
+
 		END EmitMov;
 
 		(* BITWISE LOGICAL OPERATIONS *)
@@ -3544,7 +3544,7 @@ TYPE
 				parameter.SetAutoConvert(TRUE);
 				parameter.SetType(system.sizeType); procedureType.AddParameter(parameter)
 			END SizePar;
-						
+
 			PROCEDURE AddressPar;
 			BEGIN
 				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.ValueParameter);
@@ -3556,14 +3556,14 @@ TYPE
 				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);
 				parameter.SetType(Global.Signed32); procedureType.AddParameter(parameter)
 			END IntVarPar;
-			
+
 			PROCEDURE SizeVarPar;
 			BEGIN
 				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);
 				parameter.SetAutoConvert(TRUE);
 				parameter.SetType(system.sizeType); procedureType.AddParameter(parameter)
 			END SizeVarPar;
-			
+
 			PROCEDURE RealVarPar;
 			BEGIN
 				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);

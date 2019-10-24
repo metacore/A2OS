@@ -95,8 +95,8 @@ TYPE
 			RETURN text
 		END GetText;
 
-	END CP1250Decoder;	
-	
+	END CP1250Decoder;
+
 	CP1250Encoder = OBJECT(Codecs.TextEncoder)
 	VAR out: Streams.Writer;
 
@@ -922,7 +922,7 @@ VAR
 		END
 
 	END koi8uInit;
-	
+
 	PROCEDURE cp1250Init;
 	VAR
 		i: SIGNED16; b: BOOLEAN;
@@ -1492,7 +1492,7 @@ VAR
 
 		END
 	END iso88595Init;
-	
+
 (* CP1250 File Format *)
 PROCEDURE CP1250DecoderFactory*(): Codecs.TextDecoder;
 VAR p: CP1250Decoder;

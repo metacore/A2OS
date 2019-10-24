@@ -7,7 +7,7 @@
 MODULE FoxTestBackend;
 
 IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats, Backend := FoxBackend, Options, Files;
-		
+
 TYPE
 
 	TestBackend= OBJECT (Backend.Backend)
@@ -16,23 +16,23 @@ TYPE
 
 		PROCEDURE ProcessSyntaxTreeModule*(module: SyntaxTree.Module): Formats.GeneratedModule;
 		VAR procedure: SyntaxTree.Procedure; procedureName, moduleName: Basic.SectionName; file: Files.File; writer: Files.Writer;
-		BEGIN	
+		BEGIN
 			file := Files.Old(fileName);
 			NEW(writer,file, file.Length());
 			Basic.GetString(module.name, moduleName);
 			procedure:=module.moduleScope.firstProcedure;
 			WHILE procedure#NIL DO
-				IF procedure.isTest THEN 
-					Basic.GetString(procedure.name, procedureName); 
+				IF procedure.isTest THEN
+					Basic.GetString(procedure.name, procedureName);
 					writer.String("positive: "); writer.String(moduleName); writer.String("."); writer.String(procedureName); writer.Ln;
-					writer.Ln; 
+					writer.Ln;
 					writer.String(\"\tMODULE Test42;\n"\);
 					writer.String(\"\tIMPORT "\); writer.String(moduleName); writer.String(\";\n"\);
-					writer.String(\"\tBEGIN "\); 
+					writer.String(\"\tBEGIN "\);
 					writer.String(moduleName); writer.String("."); writer.String(procedureName);
 					writer.String(" END Test42."); writer.Ln;
-					writer.Ln; 
-					writer.Update; 
+					writer.Ln;
+					writer.Update;
 				END;
 				procedure:=procedure.nextProcedure;
 			END;
@@ -42,7 +42,7 @@ TYPE
 		PROCEDURE DefineOptions*(options: Options.Options);
 		BEGIN
 			DefineOptions^(options);
-			options.Add(0X,"testFile",Options.String);	
+			options.Add(0X,"testFile",Options.String);
 		END DefineOptions;
 
 		PROCEDURE GetOptions*(options: Options.Options);
@@ -70,4 +70,4 @@ TYPE
 END FoxTestBackend.
 
 
-System.FreeDownTo FoxTestBackend ~ 
+System.FreeDownTo FoxTestBackend ~

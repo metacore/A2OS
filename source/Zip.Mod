@@ -29,7 +29,7 @@ CONST
 	DefaultStrategy* = ZlibWriters.DefaultStrategy;
 	Filtered* = ZlibWriters.Filtered;
 	HuffmanOnly* = ZlibWriters.HuffmanOnly;
-	
+
 	EntryNameSize = 256;
 
 	(* support *)
@@ -77,7 +77,7 @@ TYPE
 		offset: SIGNED32;	(* offset of end of central dir record *)
 		firstEntry, lastEntry: Entry	(* first and last Entry of Archive *)
 	END;
-	
+
 
 	Reader* = POINTER TO ReaderDesc;
 	ReaderDesc* = RECORD	(** structure for reading from a zip-file into a buffer **)
@@ -96,7 +96,7 @@ TYPE
 	DefReaderDesc = RECORD (ReaderDesc)	(* structure for reading from a deflated entry *)
 		zr: ZlibReaders.Reader
 	END;
-	
+
 	(* for internal use only. lets read a specified amount of data *)
 	SizeReader = OBJECT
 	VAR
@@ -119,19 +119,19 @@ TYPE
 			IF size > max THEN size := max END;
 
 			ReadBytes(r, buf, ofs, size, len);
-			
+
 			DEC(max, len);
-			
+
 			IF len > 0 THEN
 				res := Streams.Ok
 			ELSE
 				res := Streams.EOF
 			END
-			
+
 		END Receive;
 
 	END SizeReader;
-	
+
 	EntryInfo* = OBJECT(Archives.EntryInfo)
 	VAR
 		name : ARRAY EntryNameSize OF CHAR;
@@ -169,7 +169,7 @@ TYPE
 		END GetInfoString;
 
 	END EntryInfo;
-	
+
 	ArchiveObj* = OBJECT(Archives.Archive)
 	VAR
 		arc: Archive;

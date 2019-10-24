@@ -6633,7 +6633,7 @@ TYPE
 			ELSIF type IS SyntaxTree.MathArrayType THEN
 				WITH type: SyntaxTree.MathArrayType DO
 					IF type.form = SyntaxTree.Open THEN
-						
+
 						dim := DynamicDim(type);
 						imm := IntermediateCode.Immediate(addressType,dim);
 						PutMathArrayFieldOffset(adr,imm,MathDimOffset,offset);
@@ -7568,7 +7568,7 @@ TYPE
 			END CallBodies;
 
 		BEGIN
-			p0 := NIL; p1 := NIL; 
+			p0 := NIL; p1 := NIL;
 			IF x.parameters # NIL THEN
 				len := x.parameters.Length();
 			ELSE
@@ -7639,8 +7639,8 @@ TYPE
 					constructor := GetConstructor(recordType);
 					IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator) THEN
 						constructor := x.expression(SyntaxTree.ProcedureCallDesignator).left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
-						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);							
-					END; 					
+						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);
+					END;
 					IF constructor # NIL THEN
 						(*! should be unified with ProcedureCallDesignator *)
 						IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator)  THEN
@@ -7740,8 +7740,8 @@ TYPE
 					constructor := GetConstructor(recordType);
 					IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator) THEN
 						constructor := x.expression(SyntaxTree.ProcedureCallDesignator).left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
-						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);							
-					END; 
+						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);
+					END;
 					IF (constructor # NIL) THEN
 						(*! should be unified with ProcedureCallDesignator *)
 						IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator)  THEN
@@ -8448,7 +8448,7 @@ TYPE
 			IF Trace THEN TraceEnter("DesignateBuiltinCallDesignator") END;
 
 			dest := destination; destination := emptyOperand;
-			p0 := NIL; p1 := NIL; p2 := NIL; 
+			p0 := NIL; p1 := NIL; p2 := NIL;
 			IF x.parameters # NIL THEN
 				len := x.parameters.Length();
 			ELSE
@@ -9130,7 +9130,7 @@ TYPE
 			IF Trace THEN TraceEnter("EvaluateBuiltinCallDesignator") END;
 
 			dest := destination; destination := emptyOperand;
-			p0 := NIL; p1 := NIL; p2 := NIL; 
+			p0 := NIL; p1 := NIL; p2 := NIL;
 			IF x.parameters # NIL THEN
 				len := x.parameters.Length();
 			ELSE
@@ -10680,7 +10680,7 @@ TYPE
 		PROCEDURE DeclarationStatement(x: SyntaxTree.DeclarationStatement);
 		VAR i: SIZE; init: SyntaxTree.Expression; variable: SyntaxTree.Variable; reference: SyntaxTree.Expression;
 		BEGIN
-			FOR i := 0 TO x.variables.Length()-1 DO 
+			FOR i := 0 TO x.variables.Length()-1 DO
 				variable := x.variables.Get(i);
 				init := x.initializers.GetExpression(i);
 				IF init # NIL THEN
@@ -11594,7 +11594,7 @@ TYPE
 				IF moduleBody THEN
 					InitVariables(moduleScope)
 				END;
-				
+
 				par := procedureType.firstParameter;
 				WHILE par # NIL DO
 					IF par.preferRegister THEN

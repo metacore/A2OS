@@ -3,17 +3,17 @@ MODULE WMLanguageSwitcher; (** AUTHOR "Yaroslav Romanchenko rapturize@gmail.com"
 IMPORT
 	Commands, Options, Localization, Repositories, Strings, Modules,
 	WMComponents, WMMessages, WMWindowManager, WMStandardComponents;
-	
+
 CONST
 	Toleft = 300;
 	Fromtop = 400;
 	PanelWidth = 100;
 	ButtonHeight = 20;
-	
+
 TYPE
 	String = Strings.String;
 	Chars = ARRAY OF CHAR;
-	
+
 	OPERATOR "+"(CONST a1, a2: Chars): String;
 	VAR str: String;
 	BEGIN
@@ -59,7 +59,7 @@ TYPE
 			WMWindowManager.AddWindow (SELF, Toleft, Fromtop);
 			manager := WMWindowManager.GetDefaultManager();
 			manager.SetFocus(SELF);
-			
+
 			(*SetTitle(Strings.NewString("::StartMenu:ButtonTitles:SLanguage"));*)
 			SetTitle(Strings.NewString("Language"));
 
@@ -120,7 +120,7 @@ END FreeWindow;
 PROCEDURE Open*(context: Commands.Context);
 VAR
 	winstance: Window;
-	languages: Localization.Languages;	
+	languages: Localization.Languages;
 BEGIN
 	languages := GetLanguages();
 	IF (languages # NIL) THEN
@@ -153,7 +153,7 @@ BEGIN
 	manager := WMWindowManager.GetDefaultManager();
 	manager.Broadcast(message)
 END SetLanguageInternal;
-		
+
 PROCEDURE SetLanguage*(ctx: Commands.Context);
 VAR
 	options: Options.Options;

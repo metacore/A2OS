@@ -2660,7 +2660,7 @@ CONST
 		ASSERT(foundIndex # None);
 		w.String(registerEntries[foundIndex].name);
 	END DumpRegisterName;
-	
+
 	PROCEDURE DumpImmediate(w: Streams.Writer; value: SIGNED32);
 	BEGIN
 		IF (value < 256) & (value > -256) THEN
@@ -2669,7 +2669,7 @@ CONST
 			w.String("0x");w.Hex(value,0)
 		END;
 	END DumpImmediate;
-	
+
 
 	PROCEDURE DumpOperand*(w: Streams.Writer; CONST operand: Operand);
 	VAR i: SIGNED32; first: BOOLEAN; mode: SIGNED32;
@@ -2679,7 +2679,7 @@ CONST
 			| None: w.String("NONE!")
 			| modeCoprocessor: w.String("P"); w.Int(operand.coprocessor, 1)
 
-			| modeImmediate: w.String("#"); 
+			| modeImmediate: w.String("#");
 				DumpImmediate(w,operand.immediate);
 			| modeMemory: w.String("[");
 				IF operand.register # None THEN

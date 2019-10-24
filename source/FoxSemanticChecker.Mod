@@ -4102,15 +4102,15 @@ TYPE
 				ELSE
 					left := ResolveExpression(e); (* must be type symbol *)
 				END;
-				IF left = SyntaxTree.invalidExpression THEN 
-					RETURN left 
-				END; 
+				IF left = SyntaxTree.invalidExpression THEN
+					RETURN left
+				END;
 				WITH left: SyntaxTree.SymbolDesignator DO
 					symbol := left.symbol;
 					WITH symbol: SyntaxTree.TypeDeclaration DO
 						type := symbol(SyntaxTree.TypeDeclaration).declaredType;
-						IF (parameters # NIL) & ~ExpressionList(parameters) THEN 
-							RETURN SyntaxTree.invalidDesignator 
+						IF (parameters # NIL) & ~ExpressionList(parameters) THEN
+							RETURN SyntaxTree.invalidDesignator
 						END;
 					| SyntaxTree.Procedure DO
 						e := ResolveExpression(x.expression);
@@ -4120,17 +4120,17 @@ TYPE
 						x.SetExpression(e);
 						type := e.type;
 						IF (type = NIL) OR ~(type.resolved IS SyntaxTree.RecordType) THEN
-							Error(left.position,"invalid new on procedure returning non-record type"); 
+							Error(left.position,"invalid new on procedure returning non-record type");
 							RETURN SyntaxTree.invalidExpression;
-						END; 
+						END;
 						parameters := NIL;
 					ELSE
 						Error(left.position,"invalid expression at NEW");
-						RETURN SyntaxTree.invalidExpression; 
+						RETURN SyntaxTree.invalidExpression;
 					END;
 				ELSE
-					Error(left.position,"invalid expression at NEW"); 
-					RETURN SyntaxTree.invalidExpression; 
+					Error(left.position,"invalid expression at NEW");
+					RETURN SyntaxTree.invalidExpression;
 				END;
 				e := NewBuiltinCallDesignator(x.position,x.original, NIL, parameters, NIL, type, x.expression);
 				RETURN e;
@@ -6249,7 +6249,7 @@ TYPE
 				CheckSymbolVisibility(variable);
 				IF variable.type = NIL THEN (* implies that initializer exists *)
 					variable.SetInitializer (ResolveExpression(variable.initializer));
-					qualifiedType := SyntaxTree.NewQualifiedType(variable.position, NIL, NIL); 
+					qualifiedType := SyntaxTree.NewQualifiedType(variable.position, NIL, NIL);
 					qualifiedType.SetResolved(variable.initializer.type.resolved);
 					variable.SetType(qualifiedType);
 				ELSE
@@ -6423,9 +6423,9 @@ TYPE
 					procedureType.SetInterrupt(TRUE);
 					procedureType.SetCallingConvention(SyntaxTree.InterruptCallingConvention)
 				END;
-				IF HasFlag(modifiers,Global.NameTest,position) THEN 
+				IF HasFlag(modifiers,Global.NameTest,position) THEN
 					procedure.SetTest(TRUE);
-				END;				
+				END;
 				IF HasFlag(modifiers, Global.NameNoReturn, position) THEN
 					procedureType.SetNoReturn(TRUE);
 				END;
@@ -6479,21 +6479,21 @@ TYPE
 						Error(procedure.position, "invalid type for extern origin specification")
 					END;
 				END;
-				
+
 				IF procedure.isTest THEN
 					IF (procedure.access * SyntaxTree.Public = {}) THEN
 						Error(procedure.position, "forbidden non-exported test procedure");
-					END; 
+					END;
 					IF ~ (procedure.scope IS SyntaxTree.ModuleScope) THEN
-						Error(procedure.position, "test procedure not in module scope");					
-					END; 
+						Error(procedure.position, "test procedure not in module scope");
+					END;
 					IF (procedureType.firstParameter # NIL) THEN
-						Error(procedure.position, "forbidden test procedure with parameters");					
+						Error(procedure.position, "forbidden test procedure with parameters");
 					END;
 					IF (procedureType.returnType # NIL) THEN
-						Error(procedure.position, "forbidden test procedure with return type");					
+						Error(procedure.position, "forbidden test procedure with return type");
 					END;
-				END; 
+				END;
 
 				procedure.SetState(SyntaxTree.Resolved);
 

@@ -128,13 +128,13 @@ TYPE
 		ASSERT(divisor > 0);
 		IF dividend >= 0 THEN
 			DivModU32(dividend, divisor, uquotient, uremainder);
-			quotient := SIGNED32(uquotient); 
+			quotient := SIGNED32(uquotient);
 			remainder := SIGNED32(uremainder);
 		ELSE
 			dividend := -dividend;
 			DivModU32(dividend, divisor, uquotient, uremainder);
 			quotient := -SIGNED32(quotient);
-			remainder := SIGNED32(remainder); 
+			remainder := SIGNED32(remainder);
 			IF remainder # 0 THEN
 				DEC(quotient);
 				remainder := divisor - remainder
@@ -196,8 +196,8 @@ TYPE
 		ASSERT(divisor > 0);
 		IF dividend >= 0 THEN
 			DivModU64(dividend, divisor, uquotient, uremainder);
-			quotient := SIGNED64(uquotient); 
-			remainder := SIGNED64(uremainder); 
+			quotient := SIGNED64(uquotient);
+			remainder := SIGNED64(uremainder);
 		ELSE
 			dividend := -dividend;
 			DivModU64(dividend, divisor, uquotient, uremainder);

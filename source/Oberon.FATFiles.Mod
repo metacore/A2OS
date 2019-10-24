@@ -202,7 +202,7 @@ END Check;
 (* GetUWord - get unsigned word from array of bytes. *)
 
 PROCEDURE GetUWord(VAR buf : ARRAY OF SYSTEM.BYTE; idx : SIGNED32): SIGNED32;
-VAR val: SIGNED32; i: SIGNED16; 
+VAR val: SIGNED32; i: SIGNED16;
 BEGIN
 	val := 0;
 	SYSTEM.GET(ADDRESSOF(buf[idx]), i);
@@ -288,7 +288,7 @@ END FlushDrive;
 PROCEDURE ReadFAT12(d: Drive; VAR res: INTEGER);
 VAR
 	b: ARRAY 1000H*3 DIV 2 OF CHAR; i, j, val: SIGNED32;
-	even: BOOLEAN; int: SIGNED16; 
+	even: BOOLEAN; int: SIGNED16;
 BEGIN
 	ReadSectors(d, d.fatsec, d.spf, b, res);
 	IF res = 0 THEN

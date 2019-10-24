@@ -1808,6 +1808,6 @@ There may be references like this: [[Get|FoxDocumentationBackend.Get]]
 
 *)
 
-PET.Open FoxDocumentationTemplate.txt ~ 
+PET.Open FoxDocumentationTemplate.txt ~
 System.FreeDownTo FoxDocumentationBackend  ~
 Compiler.Compile --documentation=*.html -i  FoxDocumentationBackend.Mod ~

@@ -330,14 +330,14 @@ END RandomV;
 			c := -((-max2) MOD top) + 1;
 		ELSE
 			c := max2 MOD top + 1;
-		END; 
+		END;
 		IF c = top THEN m2 := max2 ELSE m2 := max2 - c END;
-		max3 := max1 - m1 + max2 - m2 - 1;  
+		max3 := max1 - m1 + max2 - m2 - 1;
 		IF max3 < 0 THEN
 			c := -((-max3) MOD top) + 1;
 		ELSE
 			c := max3 MOD top + 1;
-		END; 
+		END;
 		IF c = top THEN m3 := max3 ELSE m3 := max3 - c END;
 
 		nTry := 1;

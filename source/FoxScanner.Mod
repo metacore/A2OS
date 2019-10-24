@@ -640,12 +640,12 @@ TYPE
 			BEGIN
 				RETURN (ch >= "0") & (ch <= "1")
 			END IsBinaryDigit;
-			
+
 			PROCEDURE IsDecimalDigit(ch: CHAR): BOOLEAN;
 			BEGIN
 				RETURN (ch >= "0") & (ch <= '9');
 			END IsDecimalDigit;
-			
+
 
 		BEGIN  (* ("0" <= ch) & (ch <= "9") *)
 			result := Number;
@@ -775,7 +775,7 @@ TYPE
 				END;
 				DEC( e, i - d - m );   (* decimal point shift *)
 				token.numberType := Real;
-				IF e > MaxRealExponent THEN 
+				IF e > MaxRealExponent THEN
 					token.numberType := Longreal;
 				END;
 				IF (1 - MaxLongrealExponent < e) & (e <= MaxLongrealExponent) THEN

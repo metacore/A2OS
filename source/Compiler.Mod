@@ -101,7 +101,7 @@ TYPE
 		sectionOffset: SIGNED32;
 		flags: SET;
 		backendName: ARRAY 32 OF CHAR;
-		
+
 		PROCEDURE FinalMessage(error: BOOLEAN; CONST msg: ARRAY OF CHAR);
 		VAR message: ARRAY 256 OF CHAR;
 		BEGIN
@@ -242,7 +242,7 @@ TYPE
 					ELSIF ~options.objectFile.Export(generatedModule,options.symbolFile) THEN
 						FinalMessage(TRUE, " could not be compiled (object file errors).");
 						RETURN FALSE
-					END;			
+					END;
 				END;
 				IF options.documentation # NIL THEN
 					options.documentation.Initialize(diagnostics,log, flags,checker,system);

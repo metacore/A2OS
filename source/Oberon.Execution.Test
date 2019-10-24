@@ -7891,3 +7891,16 @@ positive: hugeint comparison with positive 32-bit value out of signed 32-bit int
 		ASSERT(~(x > MAX(SIGNED32)));
 		ASSERT(0C0000000H > MAX(SIGNED32));
 	END Test.
+
+positive: type guard in Oberon-2 method
+	MODULE Test;
+	TYPE String=RECORD END;
+	TYPE StringEx = RECORD(String) END;
+	PROCEDURE (CONST s: String) Test;
+	BEGIN ASSERT(s IS StringEx)
+	END Test;
+	VAR s: StringEx;
+	BEGIN
+		s.Test();
+	END Test.
+	

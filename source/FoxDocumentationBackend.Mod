@@ -148,7 +148,7 @@ CONST
 	SecondVisibleConstant*=4;
 	Third*=4;
 
-	DefaultTemplateFile="oc/DocuTemplate.txt";
+	DefaultTemplateFile="FoxDocumentationTemplate.txt";
 
 	KeywordElementType = ElementType.Bold;
 	QualifiedIdentifierElementType = ElementType.Bold;
@@ -1383,7 +1383,7 @@ TYPE
 			name, extension: Files.FileName; checker: Checker;
 		BEGIN
 			Files.SplitExtension(fileName, name, extension);
-
+			TRACE(name, extension);
 			IF (name = "*") OR (generator = NIL) THEN
 				NEW(generator,diagnostics);
 				generator.case := syntaxTreeModule.case;
@@ -1444,7 +1444,7 @@ TYPE
 		BEGIN
 			GetOptions^(options);
 			trace := options.GetFlag("dtrace");
-			IF ~options.GetString("d", fileName) THEN fileName := "" END;
+			IF ~options.GetString("documentation", fileName) THEN fileName := "documentationOutput.txt" END;
 			IF ~options.GetString("docuTemplate", templateFile) THEN COPY(DefaultTemplateFile, templateFile) END;
 			internals := options.GetFlag("internals");
 		END GetOptions;
@@ -1808,5 +1808,6 @@ There may be references like this: [[Get|FoxDocumentationBackend.Get]]
 
 *)
 
-System.Free FoxDocumentationHtml FoxDocumentationBackend FoxDocumentationParser FoxDocumentationPrinter FoxDocumentationTree FoxDocumentationScanner ~
-Compiler.Compile --documentation=*.html -i  oc/FoxDocumentationBackend.Mod ~
+PET.Open FoxDocumentationTemplate.txt ~ 
+System.FreeDownTo FoxDocumentationBackend  ~
+Compiler.Compile --documentation=*.html -i  FoxDocumentationBackend.Mod ~

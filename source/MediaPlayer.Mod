@@ -137,7 +137,7 @@ TYPE
 		videoWidth, videoHeight : SIZE;
 
 		(* Fullscreen functionality related *)
-		fullscreen- : BOOLEAN;
+		fullscreenEnabled*, fullscreen- : BOOLEAN;
 		lastFrame- : WMGraphics.Image;
 		posX, posY : SIZE; (* Last window position in windowed-mode *)
 
@@ -176,6 +176,7 @@ TYPE
 				SetPointerVisible(FALSE);
 			END;
 			fullscreen := FALSE;
+			fullscreenEnabled:=TRUE;
 		END New;
 
 		(** Toggle between fullscreen and window mode *)
@@ -271,10 +272,10 @@ TYPE
 			IF PointerInvisibleAfter > 0 THEN
 				lastTimestamp := Kernel.GetTicks();
 				SetPointerVisible(TRUE);
-				IF keys = {0} THEN ToggleFullscreen;
-				ELSIF (keys = {2}) & (extContextMenuHandler#NIL) THEN extContextMenuHandler(SELF(*.img*),x,y)
-				ELSIF extPointerDownHandler # NIL THEN extPointerDownHandler(x, y, keys);
-				END;
+			END;
+			IF (keys = {0}) & fullscreenEnabled THEN ToggleFullscreen;
+			ELSIF (keys = {2}) & (extContextMenuHandler#NIL) THEN extContextMenuHandler(SELF(*.img*),x,y)
+			ELSIF extPointerDownHandler # NIL THEN extPointerDownHandler(x, y, keys);
 			END;
 		END PointerDown;
 

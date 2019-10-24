@@ -11092,16 +11092,6 @@ TYPE
 						END;
 					ELSE
 						HALT(200);
-						(*
-						map := currentMapper.Get(NIL);
-						IF map # NIL THEN
-							Assign(map.to, expression);
-						ELSE
-							Evaluate(expression,res);
-							Emit(Return(position,res.op));
-							ReleaseOperand(res);
-						END;
-						*)
 					END;
 				END;
 				BrL(currentInlineExit);
@@ -11114,17 +11104,10 @@ TYPE
 
 			IF expression # NIL THEN
 				type := expression.type.resolved;
-				IF (expression IS SyntaxTree.ResultDesignator) THEN
+				IF (expression IS SyntaxTree.ResultDesignator) THEN (* RETURN RESULT *)
 					IF locked THEN Lock(FALSE) END;
-
 					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
-					(* "RETURN RESULT" -> no assignment, it is assumed that result has been written to return parameter via structured return type *)
 				ELSIF ~SemanticChecker.StructuredReturnType(system,procedureType) THEN
-				(*
-				(type IS SyntaxTree.BasicType) & ~(type IS SyntaxTree.RangeType) & ~(type IS SyntaxTree.ComplexType) OR returnType.IsPointer() & ~returnType.NeedsTrace() OR (type IS SyntaxTree.EnumerationType) OR (procedureType.callingConvention # SyntaxTree.OberonCallingConvention)
-						OR (type IS SyntaxTree.MathArrayType) & SemanticChecker.CanPassInRegister(system,type) THEN
-				*)
-					(* return without structured return parameter *)
 					Evaluate(expression,res);
 					ASSERT(~((type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate)));
 					IF locked OR profile THEN
@@ -11142,26 +11125,9 @@ TYPE
 						ReleaseOperand(res);
 					END;
 				ELSE
-					(* return using structured return parameter *)
-					ASSERT((type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) 
-					OR (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Static)
-						OR (type IS SyntaxTree.StringType)
-						OR SemanticChecker.IsPointerType(returnType)
-						OR (type IS SyntaxTree.ProcedureType)
-						OR (type IS SyntaxTree.NilType)
-						);
-					(* parameter := currentScope(SyntaxTree.ProcedureScope).FindParameter(Global.ReturnParameterName); *)
 					parameter :=procedureType.returnParameter;
 					ASSERT(parameter # NIL);
 					returnTypeOffset := parameter.offsetInBits;
-					(*
-					IF parameter# NIL THEN
-						returnTypeOffset := parameter.offsetInBits + system.SizeOfParameter(parameter);
-						INC(returnTypeOffset,(-returnTypeOffset) MOD system.AlignmentOf(system.parameterAlignment,parameter.type));
-					ELSE
-						returnTypeOffset := system.offsetFirstParameter
-					END;
-					*)
 					left := IntermediateCode.Memory(addressType,fp,ToMemoryUnits(system,returnTypeOffset));
 
 					IF type IS SyntaxTree.RangeType THEN

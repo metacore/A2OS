@@ -9898,8 +9898,14 @@ TYPE
 		IF type = NIL THEN RETURN FALSE
 		ELSE
 			type := type.resolved;
-			RETURN (type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) OR (type IS SyntaxTree.ProcedureType) OR IsPointerType(type)
-				OR (type IS SyntaxTree.ArrayType) OR (type IS SyntaxTree.MathArrayType) & ~CanPassInRegister(system,type);
+			RETURN 
+			(type IS SyntaxTree.RecordType) 
+			OR (type IS SyntaxTree.RangeType) 
+			OR (type IS SyntaxTree.ComplexType) 
+			OR (type IS SyntaxTree.ProcedureType) 
+			OR IsPointerType(type) & type.NeedsTrace()
+			OR (type IS SyntaxTree.ArrayType) 
+			OR (type IS SyntaxTree.MathArrayType) & ~CanPassInRegister(system,type);
 		END
 	END ReturnedAsParameter;
 

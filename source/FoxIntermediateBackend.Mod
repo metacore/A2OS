@@ -11075,8 +11075,8 @@ TYPE
 			parameter: SyntaxTree.Parameter;
 			procedure: SyntaxTree.Procedure;
 			procedureType: SyntaxTree.ProcedureType;
+			returnType: SyntaxTree.Type;
 			returnTypeOffset: SIZE;
-			delegate: BOOLEAN;
 			callingConvention, parametersSize: SIGNED32;
 			symbol: SyntaxTree.Symbol;
 		BEGIN
@@ -11110,6 +11110,7 @@ TYPE
 
 			procedure := currentScope(SyntaxTree.ProcedureScope).ownerProcedure;
 			procedureType := procedure.type(SyntaxTree.ProcedureType);
+			returnType := procedureType.returnType;
 
 			IF expression # NIL THEN
 				type := expression.type.resolved;
@@ -11118,14 +11119,16 @@ TYPE
 
 					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
 					(* "RETURN RESULT" -> no assignment, it is assumed that result has been written to return parameter via structured return type *)
-				ELSIF (type IS SyntaxTree.BasicType) & ~(type IS SyntaxTree.RangeType) & ~(type IS SyntaxTree.ComplexType) & ~type.IsPointer() OR (type IS SyntaxTree.EnumerationType) OR (procedureType.callingConvention # SyntaxTree.OberonCallingConvention)
+				ELSIF ~SemanticChecker.StructuredReturnType(system,procedureType) THEN
+				(*
+				(type IS SyntaxTree.BasicType) & ~(type IS SyntaxTree.RangeType) & ~(type IS SyntaxTree.ComplexType) OR returnType.IsPointer() & ~returnType.NeedsTrace() OR (type IS SyntaxTree.EnumerationType) OR (procedureType.callingConvention # SyntaxTree.OberonCallingConvention)
 						OR (type IS SyntaxTree.MathArrayType) & SemanticChecker.CanPassInRegister(system,type) THEN
+				*)
 					(* return without structured return parameter *)
 					Evaluate(expression,res);
-					delegate := (type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate);
+					ASSERT(~((type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate)));
 					IF locked OR profile THEN
 						Emit(Push(position,res.op));
-						IF delegate THEN HALT(200) END;
 						ReleaseOperand(res);
 						IF locked THEN Lock(FALSE) END;
 						IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
@@ -11138,12 +11141,15 @@ TYPE
 						Emit(Return(position,res.op));
 						ReleaseOperand(res);
 					END;
-				ELSIF (type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.ArrayType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) OR (type IS SyntaxTree.StringType) OR type.IsPointer()
-				THEN
+				ELSE
 					(* return using structured return parameter *)
-					ASSERT((type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) OR (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Static)
+					ASSERT((type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) 
+					OR (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Static)
 						OR (type IS SyntaxTree.StringType)
-						OR SemanticChecker.IsPointerType(type));
+						OR SemanticChecker.IsPointerType(returnType)
+						OR (type IS SyntaxTree.ProcedureType)
+						OR (type IS SyntaxTree.NilType)
+						);
 					(* parameter := currentScope(SyntaxTree.ProcedureScope).FindParameter(Global.ReturnParameterName); *)
 					parameter :=procedureType.returnParameter;
 					ASSERT(parameter # NIL);
@@ -11192,27 +11198,16 @@ TYPE
 						parameter := procedureType.returnParameter;
 						checker.SetCurrentScope(currentScope);
 						ASSERT(parameter # NIL);
-						parameterDesignator := checker.NewSymbolDesignator(expression.position,NIL,NIL, parameter);
-						Assign(parameterDesignator,expression);
+						IF parameter = NIL THEN
+							Error(procedure.position, "structured return of parameter of procedure not found");
+						ELSE
+							parameterDesignator := checker.NewSymbolDesignator(expression.position,NIL,NIL, parameter);
+							Assign(parameterDesignator,expression);
+						END;
 					END;
 					ReleaseIntermediateOperand(left);
 					IF locked THEN Lock(FALSE) END;
 					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
-				ELSIF (type IS SyntaxTree.MathArrayType) OR (type IS SyntaxTree.ProcedureType) THEN
-					parameter := procedureType.returnParameter;
-					checker.SetCurrentScope(currentScope);
-
-					IF parameter = NIL THEN
-						Error(procedure.position, "structured return of parameter of procedure not found");
-					ELSE
-						parameterDesignator := checker.NewSymbolDesignator(expression.position,NIL,NIL, parameter);
-						Assign(parameterDesignator,expression);
-					END;
-					IF locked THEN Lock(FALSE) END;
-
-					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
-				ELSE
-					HALT(200);
 				END;
 			ELSE
 				IF locked THEN Lock(FALSE) END;

@@ -691,8 +691,10 @@ TYPE
 		VAR uri, msg: ARRAY 256 OF CHAR; res:INTEGER;
 		BEGIN
 			COPY(current.uri,uri);
-			Stop;
-			BEGIN {EXCLUSIVE} AWAIT(state=Stopped) END;
+			IF ~ (state IN {NotReady, Ready, Stopped, Closed}) THEN
+				Stop;
+				BEGIN {EXCLUSIVE} AWAIT(state IN {Stopped}) END;
+			END;
 			Open(uri, msg, res);
 		END DoReset;
 
@@ -716,12 +718,25 @@ TYPE
 			res := -1;
 			context := current;
 			IF context # NIL THEN
-				IF context.hasVideo THEN res := 10*current.filler.GetFrame();
+				IF context.hasVideo THEN res := current.filler.GetFrame();
 				ELSIF current.hasAudio THEN res := current.audio.GetCurrentTime();
 				END;
 			END;
 			RETURN res;
 		END GetFrame;
+
+		PROCEDURE GetPos*(): SIGNED32;
+		VAR context : Context; res : INTEGER;
+		BEGIN {EXCLUSIVE}
+			res := -1;
+			context := current;
+			IF context # NIL THEN
+				IF context.hasVideo THEN res := current.pos;
+				ELSIF current.hasAudio THEN res := current.audio.GetCurrentTime();
+				END;
+			END;
+			RETURN res;
+		END GetPos;
 
 		(* Set position *)
 		PROCEDURE SetPos*(pos: SIGNED32);

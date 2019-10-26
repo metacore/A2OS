@@ -195,7 +195,7 @@ TYPE
 
 	Window* = OBJECT (WMComponents.FormWindow)
 	VAR
-		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn, stepBtn, resetBtn : WMStandardComponents.Button;
+		playBtn-, stopBtn-, pauseBtn-, ffBtn-, rewBtn-, infoBtn-, stepBtn-, resetBtn- : WMStandardComponents.Button;
 		search: WMStandardComponents.Scrollbar;
 
 		toolbar* : WMStandardComponents.Panel;
@@ -345,7 +345,7 @@ TYPE
 			END;
 			SetInfo(windowInfo);
 		END Open;
-
+		
 		PROCEDURE ButtonHandler*(sender, data : ANY);
 		VAR b : WMStandardComponents.Button; info : InfoWindow;
 			msg:ARRAY 256 OF CHAR; res:INTEGER;

@@ -14,8 +14,8 @@ CONST
 	PointSize = 6; (* size of the control points. Currently not related to Effects.gravity *)
 
 TYPE
-	Point* = POINTER TO RECORD(WMGraphics.Point2d)
-		(*x-, y- : SIZE;*)
+	Point* = POINTER TO RECORD
+		x-, y- : SIZE;
 		previous-, next- : Point;
 		END;
 

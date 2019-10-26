@@ -197,7 +197,11 @@ VAR
 		Registers( mc, w );
 		w.Ln;
 
+		
 		process := Objects.CurrentProcess( );
+		w.String( "Process:" );  Reflection.WriteProcess( w, process );  w.Ln; w.Ln;
+
+		w.String( "StackTraceBack:" );  w.Ln;
 		sp := mc.r_sp;  pc := mc.r_pc;  bp := mc.r_bp;
 		IF pc = 0 THEN
 			(* assume call of procedure variable with value NIL *)

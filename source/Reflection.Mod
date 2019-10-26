@@ -335,8 +335,8 @@ CONST
 			ELSE
 				w.String("procedure not found in module "); w.String(mod.name);
 			END;
-			w.String(" pc="); w.Int(pc,1); w.String(" ["); w.Address (pc); w.String("H]");
-			w.String(" = "); w.Int(startpc,1);  w.String(" + "); w.Int(pc-startpc,1);
+			w.String(" pc="); w.Address (pc);
+			w.String(" fp="); w.Address (fp);
 			w.String(" crc="); w.Hex(mod.crc,-8);
 			(*Wait(w);*)
 		END
@@ -453,7 +453,7 @@ CONST
 			SYSTEM.GET(adr, a); Unsigned(a, SIZEOF(ADDRESS));
 		| sfTypeSIZE:
 			size := SIZEOF(SIZE);
-			SYSTEM.GET(adr, sz); Signed(sz); w.String("["); Unsigned(sz, SIZEOF(SIZE)); w.String("]");
+			SYSTEM.GET(adr, sz); Signed(sz); IF (sz < -16) OR (sz > 16) THEN w.String("["); Unsigned(sz, SIZEOF(SIZE)); w.String("]") END;
 		| sfTypeENUM:
 			SYSTEM.GET(adr, word); Signed(word);
 		| sfTypePORT:
@@ -632,19 +632,22 @@ CONST
 		w.String(Sep); w.String(name); w.Char("=");
 		c := GetChar(refs, offset);
 		IF c = sfRelative THEN
-			adr := base + GetSize(refs, offset)
+			adr := base + GetSize(refs, offset);
+			w.String(" [@");w.Int(adr-base,1); w.String("] ");
 		ELSIF c = sfIndirect THEN
 			adr := base + GetSize(refs, offset);
-			w.Address(adr); w.String("->");
+			w.String(" [@");w.Int(adr-base,1); w.String("] ");
 			IF ~OnHeapOrStack(adr,low,high) THEN w.String(" (INVALID)");
 				SkipType(refs,offset);
 				RETURN;
 			END;
 			SYSTEM.GET(adr, adr);
+			w.String("->");
+			w.String(" [@");w.Address(adr); w.String("] ");
 		ELSE (* absolute *)
 			adr := GetAddress(refs, offset);
+			w.String(" [@");w.Address(adr); w.String("] ");
 		END;
-		w.String(" [@");w.Int(adr-base,1); w.String("] ");
 		WriteValue(w, refs, offset, adr, low, high);
 	END WriteVariable;
 

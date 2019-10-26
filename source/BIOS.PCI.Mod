@@ -314,11 +314,11 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	PROCEDURE GetAdr1(pciBus, pciDev, pciFn, reg, len: SIGNED32; VAR adr, dataAdr: SIGNED32);
 	BEGIN
 		adr := SIGNED32(80000000H) + ASH(pciBus,16) + ASH(pciDev, 11) + ASH(pciFn, 8);
-		adr := adr + SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,0FCH));
-		adr := adr + ASH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,0F00H)), 16);
+		adr := adr + SIGNED32(SET(reg) * SET(0FCH));
+		adr := adr + ASH(SIGNED32(SET(reg) * SET(0F00H)), 16);
 		CASE len OF
-			8: dataAdr := PciDataReg + SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,3));
-			|16: dataAdr := PciDataReg + SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,2));
+			8: dataAdr := PciDataReg + SIGNED32( SET(reg) * SET(3));
+			|16: dataAdr := PciDataReg + SIGNED32( SET(reg) *SET(2));
 			|32: dataAdr := PciDataReg;
 		END;
 	END GetAdr1;

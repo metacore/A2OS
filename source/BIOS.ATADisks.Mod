@@ -217,19 +217,19 @@ TYPE
 
 		PROCEDURE ExecuteCommand*(command: Command; ms: SIGNED32; VAR status: SET): INTEGER;
 		CONST
-			PIO = SYSTEM.VAL(SIGNED32, Protocol_PIO);
-			DMA = SYSTEM.VAL(SIGNED32, Protocol_DMA);
-			PacketPIO = SYSTEM.VAL(SIGNED32, Protocol_PacketPIO);
-			PacketDMA = SYSTEM.VAL(SIGNED32, Protocol_PacketDMA);
-			DeviceReset = SYSTEM.VAL(SIGNED32, Protocol_DeviceReset);
-			NonData = SYSTEM.VAL(SIGNED32, Protocol_NonData);
+			PIO = SIGNED32(Protocol_PIO);
+			DMA = SIGNED32(Protocol_DMA);
+			PacketPIO = SIGNED32(Protocol_PacketPIO);
+			PacketDMA = SIGNED32(Protocol_PacketDMA);
+			DeviceReset = SIGNED32(Protocol_DeviceReset);
+			NonData = SIGNED32(Protocol_NonData);
 		VAR
 			res: INTEGER;
 			ch: CHAR;
 			dma: BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			IF state = 1 THEN
-				Machine.Portin8(cmdbase+Ofs_Status, ch); status := SYSTEM.VAL(SET, ORD(ch));
+				Machine.Portin8(cmdbase+Ofs_Status, ch); status := SET(ORD(ch));
 				IF ~(Status_BSY IN status) THEN
 					state := 0;
 				ELSE
@@ -255,7 +255,7 @@ TYPE
 				(*IF dma THEN
 					StopDMA();
 				END;*)
-				Machine.Portin8(cmdbase+Ofs_Status, ch); status := SYSTEM.VAL(SET, ORD(ch));
+				Machine.Portin8(cmdbase+Ofs_Status, ch); status := SET(ORD(ch));
 				IF TraceVerbose & (trace * TraceErrors # {}) THEN
 					KernelLog.String(Name); KernelLog.Int(ctrlID*MaxDevicesC + command.dev, 1);
 					KernelLog.String(" Error (issue): Command "); KernelLog.Hex(command.cmd, -2);
@@ -274,7 +274,7 @@ TYPE
 				IF res # Res_OK THEN RETURN res; END;
 				StartDMA();
 			END;
-			CASE SYSTEM.VAL(SIGNED32, command.protocol) OF
+			CASE SIGNED32(command.protocol) OF
 			| NonData:		res := ProtNonData(ms, status);
 			| PIO:			IF command.read THEN res := ProtPIOIn(command.bufAdr, command.count, ms, status);
 							ELSE res := ProtPIOOut(command.bufAdr, command.count, ms, status); END;
@@ -293,7 +293,7 @@ TYPE
 				HALT(Disks.Unsupported);
 			END;
 			IF res # Res_OK THEN
-				Machine.Portin8(cmdbase+Ofs_Status, ch); status := SYSTEM.VAL(SET, ORD(ch));
+				Machine.Portin8(cmdbase+Ofs_Status, ch); status := SET(ORD(ch));
 				IF TraceVerbose & (trace * TraceErrors # {}) THEN
 					KernelLog.String(Name); KernelLog.Int(ctrlID*MaxDevicesC + command.dev, 1);
 					KernelLog.String(" Error (protocol): Command "); KernelLog.Hex(command.cmd, -2);
@@ -393,9 +393,9 @@ TYPE
 			res: INTEGER;
 		BEGIN
 			(* Clear Interrupt & Errror *)
-			Machine.Portin8(bmbase + Ofs_BMStatus, ch); s := SYSTEM.VAL(SET, ORD(ch));
+			Machine.Portin8(bmbase + Ofs_BMStatus, ch); s := SET(ORD(ch));
 			s := s * {1..7};
-			Machine.Portout8(bmbase + Ofs_BMStatus, CHR(SYSTEM.VAL(SIGNED32, s)));
+			Machine.Portout8(bmbase + Ofs_BMStatus, CHR(SIGNED32(s)));
 
 			res := SetupPRD(command);
 			IF res # Res_OK THEN RETURN res; END;
@@ -418,9 +418,9 @@ TYPE
 		BEGIN
 			(* START DMA *)
 			Machine.Portin8(bmbase + Ofs_BMCmd, ch);
-			s := SYSTEM.VAL(SET, ORD(ch));
+			s := SET(ORD(ch));
 			INCL(s, DMA_Start);
-			Machine.Portout8(bmbase + Ofs_BMCmd, CHR(SYSTEM.VAL(SIGNED32, s)));
+			Machine.Portout8(bmbase + Ofs_BMCmd, CHR(SIGNED32(s)));
 		END StartDMA;
 
 		PROCEDURE StopDMA;
@@ -428,14 +428,14 @@ TYPE
 		BEGIN
 			(* Stop DMA *)
 			Machine.Portin8(bmbase + Ofs_BMCmd, ch);
-			s := SYSTEM.VAL(SET, ORD(ch));
+			s := SET(ORD(ch));
 			EXCL(s, DMA_Start);
-			Machine.Portout8(bmbase + Ofs_BMCmd, CHR(SYSTEM.VAL(SIGNED32, s)));
+			Machine.Portout8(bmbase + Ofs_BMCmd, CHR(SIGNED32(s)));
 
 			(* Clear Interrupt & Errror *)
-			Machine.Portin8(bmbase + Ofs_BMStatus, ch); s := SYSTEM.VAL(SET, ORD(ch));
+			Machine.Portin8(bmbase + Ofs_BMStatus, ch); s := SET(ORD(ch));
 			s := s * {1..7};
-			Machine.Portout8(bmbase + Ofs_BMStatus, CHR(SYSTEM.VAL(SIGNED32, s)));
+			Machine.Portout8(bmbase + Ofs_BMStatus, CHR(SIGNED32(s)));
 		END StopDMA;
 
 		PROCEDURE WaitStatus(mask, expect, bad: SET; ms: SIGNED32; VAR status: SET): SIGNED32;
@@ -444,7 +444,7 @@ TYPE
 			ASSERT(Status_BSY IN mask);
 			Kernel.SetTimer(t, ms);
 			LOOP
-				Machine.Portin8(cmdbase+Ofs_Status, ch); status := SYSTEM.VAL(SET, ORD(ch));
+				Machine.Portin8(cmdbase+Ofs_Status, ch); status := SET(ORD(ch));
 				IF ~(Status_BSY IN status) THEN
 					IF status * mask = expect THEN EXIT; END;
 				END;
@@ -495,7 +495,7 @@ TYPE
 			IF cmd.dev = 1 THEN devReg := {Device_DEV} ELSE devReg := {}; END;
 			Machine.Portin8(cmdbase+Ofs_Device, ch);
 			(* Change device? *)
-			IF ((SYSTEM.VAL(SET, ORD(ch)) * {Device_DEV}) # devReg)
+			IF (SET(ORD(ch)) * {Device_DEV}) # devReg
 			(* OR (Status_BSY IN status)*) THEN
 				IF TraceVerbose & (trace * TraceCommands # {}) THEN
 					KernelLog.String(Name); KernelLog.Int(ctrlID*MaxDevicesC + cmd.dev, 1);
@@ -606,7 +606,7 @@ TYPE
 						RepInWord(cmdbase, bufAdr, BS DIV 2);
 						INC(bufAdr, BS); DEC(num);
 						IF num <= 0 THEN
-							Machine.Portin8(cmdbase+Ofs_Status, ch); status := SYSTEM.VAL(SET, ORD(ch));
+							Machine.Portin8(cmdbase+Ofs_Status, ch); status := SET(ORD(ch));
 							IF Status_ERR IN status THEN res := Res_Err; END;
 							state := -1;
 						ELSIF nIEN = 0 THEN
@@ -679,13 +679,13 @@ TYPE
 				IF nIEN = 0 THEN
 					IF ~interrupt.Wait(ms) THEN (*RETURN Res_Timeout;*) END;
 				END;
-				Machine.Portin8(bmbase + Ofs_BMStatus, ch); s := SYSTEM.VAL(SET, ORD(ch));
+				Machine.Portin8(bmbase + Ofs_BMStatus, ch); s := SET(ORD(ch));
 			(*UNTIL (s * {DMA_ERR, DMA_IRQ} # {}) OR Kernel.Expired(t);*)
 			UNTIL ~(DMA_Busy IN s) OR Kernel.Expired(t);
 			IF DMA_ERR IN s THEN RETURN Res_Err; END;
 			(*IF Kernel.Expired(t) THEN RETURN Res_Timeout; END;*)
 			REPEAT
-				Machine.Portin8(cmdbase+Ofs_Status, ch); status := SYSTEM.VAL(SET, ORD(ch));
+				Machine.Portin8(cmdbase+Ofs_Status, ch); status := SET(ORD(ch));
 				IF ~(Status_BSY IN status) THEN
 					IF Status_ERR IN status THEN RETURN Res_Err; END;
 					IF ~(Status_DRQ IN status) THEN RETURN Res_OK; END;
@@ -766,7 +766,7 @@ TYPE
 				Kernel.SetTimer(t, ms+2);
 				REPEAT
 					IF ~interrupt.Wait(ms) THEN (*KernelLog.String("***");*) (*RETURN Res_Timeout;*) END;
-					Machine.Portin8(bmbase + Ofs_BMStatus, ch); s := SYSTEM.VAL(SET, ORD(ch));
+					Machine.Portin8(bmbase + Ofs_BMStatus, ch); s := SET(ORD(ch));
 				UNTIL (s * {DMA_ERR, DMA_IRQ} # {}) OR Kernel.Expired(t);
 				(* UNTIL ~(DMA_Busy IN s) OR Kernel.Expired(t); *)
 				IF DMA_ERR IN s THEN RETURN Res_Err; END;
@@ -1253,7 +1253,7 @@ TYPE
 
 			IF IdentifyMajorVersion(buf, id) # Res_OK THEN RETURN Res_Err; END;
 			(* LBA *)
-			IF 9 IN SYSTEM.VAL(SET, buf[49]) THEN
+			IF 9 IN SET(buf[49]) THEN
 				size1 := ASH(LONG(buf[61]) MOD 10000H, 16) + LONG(buf[60]) MOD 10000H;
 				IF size < size1 THEN size := size1 END;
 				INCL(id.type, LBABit);
@@ -1261,7 +1261,7 @@ TYPE
 				KernelLog.String(", LBA not supported");
 			END;
 			(* LBA 48 *)
-			IF 10 IN SYSTEM.VAL(SET, buf[83]) THEN
+			IF 10 IN SET(buf[83]) THEN
 				hsize := ASH(LONG(buf[103]) MOD 10000H, 16) + LONG(buf[102]) MOD 10000H;
 				size1 := ASH(LONG(buf[101]) MOD 10000H, 16) + LONG(buf[100]) MOD 10000H;
 				IF hsize > 0 THEN res := 2826; END; (* size only 32-bit *)
@@ -1275,7 +1275,7 @@ TYPE
 			END;
 
 			(* DMA support mandatory since ATA 4 except for CF *)
-			IF ~ataForcePio & (8 IN SYSTEM.VAL(SET, buf[49])) THEN
+			IF ~ataForcePio & (8 IN SET(buf[49])) THEN
 				INCL(id.type, DMABit);
 				res := IdentifyDMA(buf, id);
 			ELSE
@@ -1287,7 +1287,7 @@ TYPE
 				IF (4 IN SYSTEM.VAL(SET, LONG(buf[83]))) OR (0 IN SYSTEM.VAL(SET, LONG(buf[127]))) THEN INCL(id.type, RMSNBit) END;
 			END;
 			(* flush cache *)
-			IF 12 IN SYSTEM.VAL(SET, buf[83]) THEN
+			IF 12 IN SET(buf[83]) THEN
 				INCL(id.type, FlushBit);
 			END;
 			IF LONG(buf[0]) MOD 10000H = CompactFlashSignature THEN  (*CF*)
@@ -1819,7 +1819,7 @@ TYPE
 			END;
 
 			(* flush cache *)
-			IF 12 IN SYSTEM.VAL(SET, buf[83]) THEN
+			IF 12 IN SET(buf[83]) THEN
 				INCL(id.type, FlushBit);
 			END;
 			IF LONG(buf[0]) MOD 10000H = CompactFlashSignature THEN INCL(id.type, CompactFlash) END; (*CF*)
@@ -2046,7 +2046,7 @@ BEGIN
 	IF buf[80] # -1 THEN
 		i := 3;
 		WHILE i < 15 DO
-			IF i IN SYSTEM.VAL(SET, buf[80]) THEN a := i; END;
+			IF i IN SET(buf[80]) THEN a := i; END;
 			INC(i);
 		END;
 	END;
@@ -2060,7 +2060,7 @@ BEGIN
 	(* Determine the maximum Multiword DMA mode supported *)
 	a := -1; i := 0;
 	WHILE i < 3 DO
-		IF i IN SYSTEM.VAL(SET, buf[63]) THEN INC(a); END;
+		IF i IN SET(buf[63]) THEN INC(a); END;
 		INC(i);
 	END;
 	id.maxdmamode := a;
@@ -2068,17 +2068,17 @@ BEGIN
 	(* Determine the currently selected Multiword DMA mode *)
 	a:= -1; i := 8;
 	WHILE i < 11 DO
-		IF i IN SYSTEM.VAL(SET, buf[63]) THEN a := i-8; END;
+		IF i IN SET(buf[63]) THEN a := i-8; END;
 		INC(i);
 	END;
 	id.dmamode := a;
 
 	(* Are the fields reported in word 88 valid? *)
-	IF 2 IN SYSTEM.VAL(SET, buf[53]) THEN
+	IF 2 IN SET(buf[53]) THEN
 		(* Determine the maximum Ultra DMA mode supported *)
 		a := -1; i := 0;
 		WHILE i < 8 DO
-			IF i IN SYSTEM.VAL(SET, buf[88]) THEN INC(a); END;
+			IF i IN SET(buf[88]) THEN INC(a); END;
 			INC(i);
 		END;
 		IF a >= 0 THEN
@@ -2088,7 +2088,7 @@ BEGIN
 		(* Determine the currntly seleccted Ultra DMA mode *)
 		a:= -1; i := 8;
 		WHILE i < 16 DO
-			IF i IN SYSTEM.VAL(SET, buf[88]) THEN a := i-8; END;
+			IF i IN SET(buf[88]) THEN a := i-8; END;
 			INC(i);
 		END;
 		IF a >= 0 THEN

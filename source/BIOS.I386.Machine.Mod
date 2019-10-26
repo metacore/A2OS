@@ -748,7 +748,7 @@ BEGIN
 				IF (vendor = "GenuineIntel") THEN
 					IF (largestFunction >= 4) THEN
 						(* CPUID standard function 4 returns: number of processor cores -1 on this die eax[26.31] *)
-						ecx := SYSTEM.VAL(SET, 0); (* input parameter - must be set to 0 *)
+						ecx := SET(0); (* input parameter - must be set to 0 *)
 						CPUID(4, eax, ebx, ecx, edx);
 						coresPerProcessor := SYSTEM.VAL(SIGNED32, LSH(eax * {26..31}, -26)) + 1;
 						threadsPerCore := logicalProcessorCount DIV coresPerProcessor;
@@ -1000,10 +1000,11 @@ END SearchMem;
 
 (* Search for MP spec info. *)
 PROCEDURE SearchMP;
-VAR adr: ADDRESS;
+VAR adr: ADDRESS; adr16: UNSIGNED16;
 BEGIN
 	adr := 0;
-	SYSTEM.GET (040EH, SYSTEM.VAL (SIGNED16, adr));	(* EBDA address *)
+	SYSTEM.GET (040EH, adr16);	(* EBDA address *)
+	adr := adr16;
 	adr := adr*16;
 	IF adr < 100000H THEN adr := SearchMem(adr, 1024)	(* 1. look in EBDA *)
 	ELSE adr := NilAdr
@@ -1835,9 +1836,9 @@ BEGIN
 	END;
 	(* initialize empty free page stack *)
 	NewDirectPage(pageStackAdr); ASSERT(pageStackAdr # NilAdr);
-	SYSTEM.PUT (pageStackAdr+NodeSP, SYSTEM.VAL (ADDRESS, MinSP));
-	SYSTEM.PUT (pageStackAdr+NodeNext, SYSTEM.VAL (ADDRESS, NilAdr));
-	SYSTEM.PUT (pageStackAdr+NodePrev, SYSTEM.VAL (ADDRESS, NilAdr));
+	SYSTEM.PUT (pageStackAdr+NodeSP, ADDRESS(MinSP));
+	SYSTEM.PUT (pageStackAdr+NodeNext, NIL);
+	SYSTEM.PUT (pageStackAdr+NodePrev, NIL);
 	(* free low pages *)
 	freeLowPage := NilAdr; freeLowPages := 0;
 	i := lTop DIV PS; j := LowAdr DIV PS;
@@ -2594,7 +2595,7 @@ END LoadIDT;
 *)
 
 PROCEDURE InitInterrupts*;
-VAR a: ADDRESS; o, i: SIGNED32; p: PROCEDURE; mask: SET;
+VAR a: ADDRESS; o, i: SIGNED32; p: PROCEDURE; mask: SET; char: CHAR;
 BEGIN
 	stateTag := SYSTEM.TYPECODE(State);
 	(* initialise 8259 interrupt controller chips *)
@@ -2603,9 +2604,10 @@ BEGIN
 	Portout8 (IntB0, 11X); Portout8 (IntB1, CHR(IRQ8));
 	Portout8 (IntB1, 2X); Portout8 (IntB1, 1X); Portout8 (IntB1, 0FFX);
 	(* enable interrupts from second interrupt controller, chained to line 2 of controller 1 *)
-	Portin8(IntA1, SYSTEM.VAL (CHAR, mask));
+	Portin8(IntA1, char);
+	mask := SET(ORD(char));
 	EXCL(mask, IRQ2-IRQ0);
-	Portout8 (IntA1, SYSTEM.VAL (CHAR, mask));
+	Portout8 (IntA1, CHR(INTEGER(mask)));
 
 (*
 	NEW(default); default.next := NIL; default.handler := Unexpected;
@@ -2962,7 +2964,7 @@ BEGIN
 	ipcFrontBarrier := ipcBusy; ipcBackBarrier := ipcBusy;
 	ipcHandler := h; ipcMessage := msg; ipcFlags := flags;
 	IF numProcessors > 1 THEN	(* ICR: Fixed, Physical, Edge, All Excl. Self, INT IPC *)
-		ApicPut(300H, {18..19} + SYSTEM.VAL (SET, MPIPC));
+		ApicPut(300H, {18..19} + SET(MPIPC));
 		(*REPEAT UNTIL ~(12 IN ApicGet(300H))*)	(* wait for send to finish *)
 	END;
 	IF Self IN flags THEN CallLocalIPC END;	(* "send" to self also *)
@@ -3244,13 +3246,13 @@ VAR rate: SIGNED32;
 BEGIN
 	IF timerRate > 0 THEN
 		ApicPut(3E0H, {0,1,3});	(* divide by 1 *)
-		ApicPut(320H, {16} + SYSTEM.VAL (SET, MPTMR));	(* masked, one-shot *)
+		ApicPut(320H, {16} + SET(MPTMR));	(* masked, one-shot *)
 		rate := GetBusClockRate();
 		busHz0[ID()] := rate;
 		rate := (rate+500000) DIV 1000000 * 1000000;	(* round to nearest MHz *)
 		busHz1[ID()] := rate;
-		ApicPut(320H, {17} + SYSTEM.VAL (SET, MPTMR));	(* unmasked, periodic *)
-		ApicPut(380H, SYSTEM.VAL (SET, rate DIV timerRate))	(* initial count *)
+		ApicPut(320H, {17} + SET(MPTMR));	(* unmasked, periodic *)
+		ApicPut(380H, SET(rate DIV timerRate))	(* initial count *)
 	END
 END InitMPTimer;
 
@@ -3285,9 +3287,9 @@ PROCEDURE InitAPIC;
 BEGIN
 	(* enable APIC, set focus checking & set spurious interrupt handler *)
 	ASSERT(MPSPU MOD 16 = 15);	(* low 4 bits set, p. 7-29 *)
-	ApicPut(0F0H, {8} + SYSTEM.VAL (SET, MPSPU));
+	ApicPut(0F0H, {8} + SET(MPSPU));
 	(* set error interrupt handler *)
-	ApicPut(370H, SYSTEM.VAL (SET, MPERR));
+	ApicPut(370H, SET(MPERR));
 	InitMPTimer
 END InitAPIC;
 
@@ -3398,7 +3400,7 @@ BEGIN
 		Trace.Ln;
 		Release(TraceOutput);
 	END;
-	SYSTEM.PUT (page0Adr + 467H, SYSTEM.VAL (SIGNED32, 0));
+	SYSTEM.PUT (page0Adr + 467H, SIGNED32(0));
 	UnmapPhysical(page0Adr, 4096);
 	PutNVByte(15, 0X)	(* restore shutdown status *)
 END BootMP;

@@ -103,7 +103,7 @@ VAR
 				Val("LCK", SYSTEM.VAL(SIGNED32, exc.locks));
 				Val("BP", int.BP); Val("FS", exc.FS); Val("GS", exc.GS); Val("ERR", int.ERR); Val("CR4", exc.CR[4]);
 				Val("TMR", Kernel.GetTicks()); w.Ln;
-				IF SYSTEM.VAL(CHAR, exc.DR[7]) # 0X THEN	(* some breakpoints enabled *)
+				IF CHR(exc.DR[7]) # 0X THEN	(* some breakpoints enabled *)
 					Val("DR0", exc.DR[0]); Val("DR1", exc.DR[1]); Val("DR2", exc.DR[2]); Val("DR3", exc.DR[3]);
 					Val("DR6", exc.DR[6]); Val("DR7", exc.DR[7]); w.Ln
 				END;

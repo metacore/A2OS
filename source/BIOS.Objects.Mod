@@ -54,7 +54,7 @@ TYPE
 		handler: EventHandler
 	END;
 
-	ProtectedObject = POINTER TO RECORD END; (* protected object *)
+	ProtectedObject = OBJECT END ProtectedObject; (* protected object *)
 
 	ProcessQueue = Heaps.ProcessQueue;
 

@@ -513,6 +513,7 @@ TYPE
 		numberParameters-: SIGNED32; 
 		returnParameter-: Parameter; 
 		selfParameter-: Parameter; 
+		selfParameterInObject-: Parameter; 
 		isDelegate-, isInterrupt-, noReturn-, isNested-: BOOLEAN; 
 		pcOffset-: SIZE; 
 		callingConvention-: CallingConvention; 
@@ -532,6 +533,7 @@ TYPE
 		PROCEDURE ^ SetParametersOffset*(ofs: SIGNED32); 
 		PROCEDURE ^ SetReturnParameter*(parameter: Parameter); 
 		PROCEDURE ^ SetSelfParameter*(parameter: Parameter); 
+		PROCEDURE ^ SetSelfParameterInObject*(parameter: Parameter); 
 		PROCEDURE ^ SetCallingConvention*(cc: CallingConvention); 
 		PROCEDURE ^ AddParameter*(p: Parameter); 
 		PROCEDURE ^ RevertParameters*; 

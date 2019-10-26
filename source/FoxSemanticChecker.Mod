@@ -527,7 +527,7 @@ TYPE
 			- if error then set base type to invalid type
 		**)
 		PROCEDURE FixPointerType(type: SyntaxTree.PointerType);
-		VAR resolved, base: SyntaxTree.Type; position: Position; recordType: SyntaxTree.RecordType;
+		VAR resolved: SyntaxTree.Type; position: Position; recordType: SyntaxTree.RecordType;
 		BEGIN
 			ASSERT(type.pointerBase # NIL);
 			position := type.pointerBase.position;
@@ -551,12 +551,8 @@ TYPE
 					Error(position, "realtime object contains references to non-realtime objects");
 				END;
 				IF type.isUnsafe & (resolved.resolved IS SyntaxTree.ArrayType) THEN
-					(*IF ~IsOpenArray(resolved.resolved, base) THEN
-						Error(position, "forbidden unsafe at static array");
-					ELS
-					*)
-					IF IsOpenArray(resolved.resolved(SyntaxTree.ArrayType).arrayBase, base) THEN
-						Error(position, "forbidden unsafe at multidimensional array");
+					IF IsOpenArrayRecursive(resolved) THEN
+						Error(position, "forbidden unsafe pointer to open array");
 					END;
 				END;
 			ELSE
@@ -9283,6 +9279,19 @@ TYPE
 		END;
 		RETURN FALSE;
 	END IsOpenArray;
+	
+	PROCEDURE IsOpenArrayRecursive*(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		type := type.resolved;
+		WITH type: SyntaxTree.ArrayType DO
+			IF type.form = SyntaxTree.Open THEN RETURN TRUE
+			ELSE RETURN IsOpenArrayRecursive(type.arrayBase)
+			END;
+		ELSE
+			RETURN FALSE
+		END;
+	END IsOpenArrayRecursive;
+	
 
 	PROCEDURE IsStaticArray*(type: SyntaxTree.Type; VAR base: SyntaxTree.Type; VAR dim :SIGNED32): BOOLEAN;
 	BEGIN

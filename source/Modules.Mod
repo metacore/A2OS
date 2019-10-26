@@ -58,7 +58,7 @@ TYPE
 		exports*: SIZE; (* number of exports referenced by ExportArray *)
 		dsc* {UNTRACED}: ExportArray; (* pointer to memory containing a raw array with "exports" entries *)
 	END;
-	ExportArray* = POINTER {UNSAFE,UNTRACED} TO ARRAY OF ExportDesc;
+	ExportArray* = POINTER {UNSAFE,UNTRACED} TO ARRAY MAX(SIZE) OF ExportDesc;
 
 	Bytes* = POINTER TO ARRAY OF CHAR;
 

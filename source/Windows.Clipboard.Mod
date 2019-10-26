@@ -55,7 +55,7 @@ TYPE
 (** Copy text of Windows clipboard to text *)
 PROCEDURE GetFromClipboard( text: Texts.Text );
 VAR
-	clipboardData: POINTER { UNSAFE, UNTRACED } TO ARRAY OF UNSIGNED16;
+	clipboardData: POINTER { UNSAFE, UNTRACED } TO ARRAY MAX(SIZE) OF UNSIGNED16;
 	textBuffer: POINTER TO ARRAY OF Texts.Char32;
 	clipboardPos := 0, textPos := 0, clipboardLen := 0: SIZE;
 	codePoint, lead, trail: UNSIGNED32;
@@ -123,7 +123,7 @@ END GetFromClipboard;
 (** Copy text to Windows clipboard *)
 PROCEDURE PutToClipboard( text: Texts.Text );
 VAR
-	clipboardData: POINTER { UNSAFE, UNTRACED } TO ARRAY OF UNSIGNED16;
+	clipboardData: POINTER { UNSAFE, UNTRACED } TO ARRAY MAX(SIZE) OF UNSIGNED16;
 	textBuffer: POINTER TO ARRAY OF UNSIGNED16;
 	builder: StringBuilder;
 	r: Texts.TextReader;

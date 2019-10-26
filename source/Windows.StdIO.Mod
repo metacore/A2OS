@@ -17,7 +17,7 @@ VAR
 
 PROCEDURE Args(): String;
 VAR size, pos: SIZE; i,j: SIGNED32; str: String;
-	cmdLine {UNTRACED}: POINTER {UNSAFE} TO ARRAY OF CHAR;
+	cmdLine {UNTRACED}: POINTER {UNSAFE} TO ARRAY MAX(SIZE) OF CHAR;
 BEGIN
 	cmdLine := Kernel32.GetCommandLine();
 	pos := 0;

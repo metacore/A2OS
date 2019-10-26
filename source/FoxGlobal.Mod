@@ -544,6 +544,11 @@ TYPE
 					IF size < 0 THEN RETURN FALSE END;
 					INC(offset,size);
 				END;
+				parameter := procedureType.selfParameterInObject;
+				IF parameter # NIL THEN
+					Basic.Align(offset,addressSize);
+					parameter.SetOffset(offset);
+				END;
 			ELSE
 				parameter := procedureType.firstParameter;
 				WHILE (parameter # NIL) DO

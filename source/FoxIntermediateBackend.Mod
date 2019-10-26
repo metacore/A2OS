@@ -12825,6 +12825,8 @@ TYPE
 					END;
 					IF procedureType.selfParameter # NIL THEN
 						NParameter(procedureType.selfParameter, pos);
+					ELSIF procedureType.selfParameterInObject # NIL THEN
+						NParameter(procedureType.selfParameterInObject, pos);
 					END;
 					IF RefInfo THEN Info(section, "ReturnType") END;
 					NType(procedureType.returnType);

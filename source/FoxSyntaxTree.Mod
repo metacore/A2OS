@@ -1744,6 +1744,7 @@ TYPE
 			firstParameter-,lastParameter-: Parameter; numberParameters-: SIGNED32;  (* parameters *)
 			returnParameter-: Parameter; (* not really necessary in syntax tree but very handy for backends *)
 			selfParameter-: Parameter;
+			selfParameterInObject-: Parameter;
 
 			isDelegate-,isInterrupt-,noReturn-,isNested-: BOOLEAN;
 			pcOffset-: SIZE; (* PC offset: used for ARM interrupt procedures *)
@@ -1767,6 +1768,7 @@ TYPE
 			returnTypeModifiers := NIL;
 			selfParameter := NIL;
 			isNested := FALSE;
+			selfParameterInObject := NIL;
 		END InitProcedureType;
 
 		PROCEDURE SetNoReturn*(noReturn: BOOLEAN);
@@ -1819,6 +1821,11 @@ TYPE
 		PROCEDURE SetSelfParameter*(parameter: Parameter);
 		BEGIN selfParameter := parameter
 		END SetSelfParameter;
+
+
+		PROCEDURE SetSelfParameterInObject*(parameter: Parameter);
+		BEGIN selfParameterInObject := parameter
+		END SetSelfParameterInObject;
 
 		PROCEDURE SetCallingConvention*(cc: CallingConvention);
 		BEGIN callingConvention := cc

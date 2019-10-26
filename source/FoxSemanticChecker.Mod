@@ -6518,6 +6518,7 @@ TYPE
 							selfParameter.SetType(qualifiedType);
 						END;
 						selfParameter.SetAccess(SyntaxTree.Hidden);
+						procedureType.SetSelfParameterInObject(selfParameter);
 					ELSIF (procedureType.selfParameter = NIL) THEN
 						selfParameter := SyntaxTree.NewParameter(procedure.position,procedureType,Global.SelfParameterName,SyntaxTree.VarParameter);
 						IF (record.typeDeclaration = NIL) THEN

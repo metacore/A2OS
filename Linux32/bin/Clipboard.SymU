@@ -1,7 +1,7 @@
 MODULE Clipboard;
 	IMPORT SYSTEM, Unix, Machine, X11, Displays, XDisplay, Plugins, Log := KernelLog, Modules, Texts, TextUtilities, Strings, HostClipboard, Objects, Commands, Options;
 CONST 
-	BufferSize = 8192; 
+	BufferSize = 65536; 
 TYPE 
 	Buffer = POINTER TO ARRAY BufferSize OF CHAR; 
 
@@ -27,6 +27,8 @@ VAR
 	primary: X11.Window; 
 	secondary: X11.Window; 
 	clipboard: X11.Atom; 
+	TARGETS: X11.Atom; 
+	supportedTargets: ARRAY 2 OF X11.Atom; 
 
 	PROCEDURE ^ A2ToUnix; 
 	PROCEDURE ^ UnixToA2; 

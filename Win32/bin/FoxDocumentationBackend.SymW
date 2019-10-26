@@ -8,7 +8,7 @@ CONST
 	VisibleConstant* = 3; 
 	SecondVisibleConstant* = 4; 
 	Third* = 4; 
-	DefaultTemplateFile = \"oc/DocuTemplate.txt"\; 
+	DefaultTemplateFile = \"FoxDocumentationTemplate.txt"\; 
 	KeywordElementType = ElementType.Bold; 
 	QualifiedIdentifierElementType = ElementType.Bold; 
 TYPE 

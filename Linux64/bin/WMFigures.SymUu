@@ -8,9 +8,8 @@ CONST
 	Arrow* = 4; 
 	PointSize = 6; 
 TYPE 
-	Point* = POINTER TO RECORD 
-		x-, y-: SIZE; 
-		previous, next: Point; 
+	Point* = POINTER TO RECORD (WMGraphics.Point2d)
+		previous-, next-: Point; 
 	END; 
 
 	Figure* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -22,7 +21,7 @@ TYPE
 		reshape-: WMProperties.BooleanProperty; 
 		arrow-: WMProperties.BooleanProperty; 
 		points-: Point; 
-		nofPoints: SIGNED32; 
+		nofPoints-: SIGNED32; 
 		hover, selectedPoint: WMProperties.Property; 
 		selectedLine: BOOLEAN; 
 		mouseOver: BOOLEAN; 
@@ -88,15 +87,15 @@ TYPE
 
 	Spline* = OBJECT {EXCLUSIVE} (Figure)
 	VAR 
-		pointArray: ARRAY 2048 OF WMGraphics.Point2d; 
-		nSegments: SIGNED32; 
+		pointArray-: ARRAY 2048 OF WMGraphics.Point2d; 
+		nSegments-: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ Inside*(X, Y: SIZE): BOOLEAN; 
 		PROCEDURE ^ IsHit*(mx, my: SIZE): BOOLEAN; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
-		PROCEDURE ^ Normalize; 
+		PROCEDURE ^ Normalize*; 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Spline; 
 VAR 

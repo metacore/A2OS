@@ -93,7 +93,8 @@ TYPE
 
 	Buffer = POINTER TO RECORD 
 		data: ARRAY BufferSize OF CHAR; 
-		apos, len: SIGNED32; 
+		apos: Files.Position; 
+		len: SIGNED32; 
 		dirty: BOOLEAN; 
 	END; 
 
@@ -103,14 +104,16 @@ TYPE
 		tfname: PFileName; 
 		hfile: Kernel32.HANDLE; 
 		buffer: Buffer; 
-		fsize, fpos: SIGNED32; 
+		fsize, fpos: Files.Position; 
 		fileSystem: WinFileSystem; 
 
 		PROCEDURE ^  & Init*(VAR name: ARRAY OF CHAR; hfile: Kernel32.HANDLE; key: SIGNED32; fs: WinFileSystem); 
+		PROCEDURE ^ GetFileSize(): Files.Position; 
 		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: Files.Position); 
 		PROCEDURE ^ Pos*(VAR r: Files.Rider): Files.Position; 
+		PROCEDURE ^ SetFilePointer(pos: Files.Position): Files.Position; 
 		PROCEDURE ^ WriteBuffer; 
-		PROCEDURE ^ ReadBuffer(apos: SIGNED32); 
+		PROCEDURE ^ ReadBuffer(apos: Files.Position); 
 		PROCEDURE ^ Read*(VAR r: Files.Rider; VAR x: CHAR); 
 		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Write*(VAR r: Files.Rider; x: CHAR); 

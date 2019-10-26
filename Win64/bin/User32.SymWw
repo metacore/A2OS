@@ -157,6 +157,7 @@ CONST
 	CFBitmap* = 2; 
 	CFMetafilePict* = 3; 
 	CFDIB* = 8; 
+	CFUnicodeText* = 13; 
 	CFEnhMetafile* = 14; 
 	CFHDrop* = 15; 
 	MFByCommand* = {}; 
@@ -345,6 +346,7 @@ VAR
 	BringWindowToTop-: PROCEDURE {WINAPI}(hWnd: HWND):Kernel32.BOOL; 
 	CallNextHookEx-: PROCEDURE {WINAPI}(hhk: HHook; nCode: SIGNED32; wParam: WParam; lParam: LParam):LResult; 
 	CloseClipboard-: PROCEDURE {WINAPI}():Kernel32.BOOL; 
+	CountClipboardFormats-: PROCEDURE {WINAPI}():SIGNED32; 
 	CreateAcceleratorTable-: PROCEDURE {WINAPI}(lpaccl: ADDRESS; cEntries: SIGNED32):HAccel; 
 	CreateMenu-: PROCEDURE {WINAPI}():HMenu; 
 	CreateWindowEx-: PROCEDURE {WINAPI}(dwExStyle: SIGNED32; VAR lpClassName, lpWindowName: ARRAY OF CHAR; dwStyle: INTEGERSET; x, y, nWidth, nHeight: SIGNED32; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LParam):HWND; 
@@ -359,12 +361,13 @@ VAR
 	EmptyClipboard-: PROCEDURE {WINAPI}():Kernel32.BOOL; 
 	EnableWindow-: PROCEDURE {WINAPI}(hWnd: HWND; bEnable: Kernel32.BOOL):Kernel32.BOOL; 
 	EndPaint-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpPaint: PaintStruct):Kernel32.BOOL; 
+	EnumClipboardFormats-: PROCEDURE {WINAPI}(format: UNSIGNED32):UNSIGNED32; 
 	EnumWindows-: PROCEDURE {WINAPI}(lpEnumProc: WndEnumProc; lParam: LParam):Kernel32.BOOL; 
 	EqualRect-: PROCEDURE {WINAPI}(lprc1, lprc2: Rect):Kernel32.BOOL; 
 	GetAsyncKeyState-: PROCEDURE {WINAPI}(vKey: SIGNED32):SIGNED16; 
 	GetClientRect-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpRect: Rect):Kernel32.BOOL; 
-	GetClipboardData-: PROCEDURE {WINAPI}(uFormat: SIGNED32):Kernel32.HANDLE; 
-	GetClipboardFormatName-: PROCEDURE {WINAPI}(format: SIGNED32; VAR lpszFormatName: ARRAY OF CHAR; cchMaxCount: SIGNED32):SIGNED32; 
+	GetClipboardData-: PROCEDURE {WINAPI}(uFormat: UNSIGNED32):Kernel32.HANDLE; 
+	GetClipboardFormatName-: PROCEDURE {WINAPI}(format: UNSIGNED32; VAR lpszFormatName: ARRAY OF CHAR; cchMaxCount: SIGNED32):SIGNED32; 
 	GetCursorPos-: PROCEDURE {WINAPI}(VAR lpPoint: Point):Kernel32.BOOL; 
 	GetDC-: PROCEDURE {WINAPI}(hWnd: HWND):HDC; 
 	GetFocus-: PROCEDURE {WINAPI}():HWND; 
@@ -390,6 +393,7 @@ VAR
 	IntersectRect-: PROCEDURE {WINAPI}(VAR lprcDst: Rect; lprcSrc1, lprcSrc2: Rect):Kernel32.BOOL; 
 	InvalidateRect-: PROCEDURE {WINAPI}(hWnd: HWND; lpRect: Rect; bErase: Kernel32.BOOL):Kernel32.BOOL; 
 	IsChild-: PROCEDURE {WINAPI}(hWndParent, hWnd: HWND):Kernel32.BOOL; 
+	IsClipboardFormatAvailable-: PROCEDURE {WINAPI}(format: UNSIGNED32):Kernel32.BOOL; 
 	LoadCursor-: PROCEDURE {WINAPI}(hInstance: Kernel32.HINSTANCE; VAR lpCursorName: ARRAY OF CHAR):HCursor; 
 	LoadCursorFromFile-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):HCursor; 
 	LoadIcon-: PROCEDURE {WINAPI}(hInstance: Kernel32.HINSTANCE; VAR lpIconName: ARRAY OF CHAR):HIcon; 
@@ -403,7 +407,7 @@ VAR
 	PostQuitMessage-: PROCEDURE {WINAPI}(nExitCode: SIGNED32); 
 	RegisterClassEx-: PROCEDURE {WINAPI}(VAR lpwcx: WndClassEx):Kernel32.ATOM; 
 	RegisterHotKey-: PROCEDURE {WINAPI}(hWnd: HWND; id: SIGNED32; fsmodifiers, vk: SIGNED32):Kernel32.BOOL; 
-	RegisterClipboardFormat-: PROCEDURE {WINAPI}(VAR lpszFormat: ARRAY OF CHAR):SIGNED16; 
+	RegisterClipboardFormat-: PROCEDURE {WINAPI}(CONST lpszFormat: ARRAY OF CHAR):UNSIGNED32; 
 	RegisterWindowMessage-: PROCEDURE {WINAPI}(VAR lpString: ARRAY OF CHAR):SIGNED32; 
 	ReleaseCapture-: PROCEDURE {WINAPI}():Kernel32.BOOL; 
 	ReleaseDC-: PROCEDURE {WINAPI}(hWnd: HWND; hDC: HDC):SIGNED32; 
@@ -411,7 +415,7 @@ VAR
 	ScreenToClient-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpPoint: Point):Kernel32.BOOL; 
 	SendMessage-: PROCEDURE {WINAPI}(hWnd: HWND; Msg: SIGNED32; wParam: WParam; lParam: LParam):LResult; 
 	SetCapture-: PROCEDURE {WINAPI}(hWnd: HWND):HWND; 
-	SetClipboardData-: PROCEDURE {WINAPI}(uFormat: SIGNED32; hMem: Kernel32.HANDLE):Kernel32.HANDLE; 
+	SetClipboardData-: PROCEDURE {WINAPI}(uFormat: UNSIGNED32; hMem: Kernel32.HANDLE):Kernel32.HANDLE; 
 	SetCursor-: PROCEDURE {WINAPI}(hCursor: HCursor):HCursor; 
 	SetCursorPos-: PROCEDURE {WINAPI}(X, Y: SIGNED32):Kernel32.BOOL; 
 	SetFocus-: PROCEDURE {WINAPI}(hWnd: HWND):HWND; 

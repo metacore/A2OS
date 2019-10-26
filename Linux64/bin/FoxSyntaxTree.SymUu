@@ -729,9 +729,11 @@ TYPE
 		parameters-: ExpressionList; 
 		builtin-: Builtin; 
 		returnType-: Type; 
+		expression-: Expression; 
 
 		PROCEDURE ^  & InitBuiltinCallDesignator(position: Position; orig: Expression; id: SIGNED32; left: Expression; parameters: ExpressionList); 
 		PROCEDURE ^ SetReturnType*(type: Type); 
+		PROCEDURE ^ SetExpression*(e: Expression); 
 	END BuiltinCallDesignator; 
 
 	TypeGuardDesignator* = OBJECT (Designator)

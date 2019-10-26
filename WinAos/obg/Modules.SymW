@@ -37,7 +37,7 @@ TYPE
 		dsc*{UNTRACED} : ExportArray; 
 	END; 
 
-	ExportArray* = POINTER {UNSAFE, UNTRACED} TO ARRAY OF ExportDesc; 
+	ExportArray* = POINTER {UNSAFE, UNTRACED} TO ARRAY MAX(SIZE) OF ExportDesc; 
 
 	Bytes* = POINTER TO ARRAY OF CHAR; 
 

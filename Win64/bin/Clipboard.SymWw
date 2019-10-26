@@ -1,13 +1,51 @@
 MODULE Clipboard;
-	IMPORT SYSTEM, Kernel32, User32, KernelLog, Modules, Texts, TextUtilities, HostClipboard;
+	IMPORT SYSTEM, Kernel32, User32, KernelLog, Modules, Texts, HostClipboard;
 CONST 
-	CR = 0DX; 
-	LF = 0AX; 
+	CR = 13; 
+	LF = 10; 
+	UTF16SurrogateOffset = ((LSH(UNSIGNED32(55296), 10) + 56320) - 65536); 
+	ReplacementChar = 65533; 
+TYPE 
+	StringBuilder = OBJECT 
+	VAR 
+		length: SIZE; 
+		data: POINTER TO ARRAY OF UNSIGNED16; 
+
+		PROCEDURE ^  & Init*(initialSize: SIZE); 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ AddChar*(codePoint: UNSIGNED16); 
+		PROCEDURE ^ GetLength*(): SIZE; 
+		PROCEDURE ^ GetString*(): POINTER TO ARRAY OF UNSIGNED16; 
+	END StringBuilder; 
 
 	PROCEDURE ^ GetFromClipboard(text: Texts.Text); 
 	PROCEDURE ^ PutToClipboard(text: Texts.Text); 
 	PROCEDURE ^ ClipboardChanged(sender, data: ANY); 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ Cleanup; 
+	PROCEDURE  - IsSingle(c: UNSIGNED32): BOOLEAN;
+	BEGIN
+		RETURN ((SET32(c) * SET32(4294965248)) # SET32(55296))
+	END IsSingle; 
+	PROCEDURE  - IsSurrogateLead(c: UNSIGNED32): BOOLEAN;
+	BEGIN
+		RETURN ((SET32(c) * SET32(1024)) = {})
+	END IsSurrogateLead; 
+	PROCEDURE  - IsLead(c: UNSIGNED32): BOOLEAN;
+	BEGIN
+		RETURN ((SET32(c) * SET32(4294966272)) = SET32(55296))
+	END IsLead; 
+	PROCEDURE  - IsTrail(c: UNSIGNED32): BOOLEAN;
+	BEGIN
+		RETURN ((SET32(c) * SET32(4294966272)) = SET32(56320))
+	END IsTrail; 
+	PROCEDURE  - UTF16Lead(supplementary: UNSIGNED32): UNSIGNED16;
+	BEGIN
+		RETURN UNSIGNED16((LSH(supplementary,  -10) + 55232))
+	END UTF16Lead; 
+	PROCEDURE  - UTF16Trail(supplementary: UNSIGNED32): UNSIGNED16;
+	BEGIN
+		RETURN UNSIGNED16(((SET32(supplementary) * SET32(1023)) + SET32(56320)))
+	END UTF16Trail; 
 BEGIN
 END Clipboard.

@@ -3,7 +3,7 @@ MODULE Clipboard IN Oberon;
 CONST 
 VAR 
 	W: Texts.Writer; 
-	CFOberon: SIGNED16; 
+	CFOberon: UNSIGNED32; 
 
 	PROCEDURE ^ PutToClipboard*(T: Texts.Text; beg, end: SIGNED32); 
 	PROCEDURE ^ GetFromClipboard*(VAR T: Texts.Text); 

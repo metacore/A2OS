@@ -381,7 +381,7 @@ TYPE
 		PROCEDURE ^ RegisterDynamicOperator(operator: SyntaxTree.Operator); 
 		PROCEDURE ^ SystemTrace(x: SyntaxTree.ExpressionList; pos: Position); 
 		PROCEDURE ^ InitFields(type: SyntaxTree.Type; CONST adr: IntermediateCode.Operand; offset: SIZE); 
-		PROCEDURE ^ InitVariable(VAR variable: SyntaxTree.Variable; temporary: BOOLEAN); 
+		PROCEDURE ^ InitVariable(VAR variable: SyntaxTree.Variable; initStatic, temporary: BOOLEAN); 
 		PROCEDURE ^ MathArrayDim(type: SyntaxTree.MathArrayType; CONST base: IntermediateCode.Operand; VAR result: Operand); 
 		PROCEDURE ^ PutMathArrayField(base, value: IntermediateCode.Operand; fieldOffset: SIZE); 
 		PROCEDURE ^ PutMathArrayFieldOffset(base, value: IntermediateCode.Operand; fieldOffset, offset: SIZE); 

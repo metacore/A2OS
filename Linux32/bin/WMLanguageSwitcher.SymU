@@ -6,6 +6,10 @@ CONST
 	PanelWidth = 100; 
 	ButtonHeight = 20; 
 TYPE 
+	String = Strings.String; 
+
+	Chars = ARRAY OF CHAR; 
+
 	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
 		nofLanguages: SIZE; 
@@ -21,6 +25,7 @@ TYPE
 VAR 
 	windows: Window; 
 
+	OPERATOR ^ "+"(CONST a1, a2: Chars): String; 
 	PROCEDURE ^ FreeWindow(free: Window); 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 

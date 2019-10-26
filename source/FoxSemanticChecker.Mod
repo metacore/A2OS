@@ -79,7 +79,7 @@ TYPE
 		cooperative: BOOLEAN;
 		error-: BOOLEAN;
 		VerboseErrorMessage: BOOLEAN;
-		typeFixes, pointerFixes: LateFixList;
+		typeFixes: LateFixList;
 		importCache-: SyntaxTree.ModuleScope; (* contains global imports, did not take ImportList as it was much slower, for whatever reasons *)
 		arrayBaseImported: BOOLEAN;
 		complexNumbersImported: BOOLEAN;
@@ -118,7 +118,6 @@ TYPE
 			SELF.symbolFileFormat := symbolFileFormat;
 			error := FALSE;
 			NEW(typeFixes);
-			NEW(pointerFixes);
 			currentScope := NIL;
 			IF importCache = NIL THEN importCache := SyntaxTree.NewModuleScope() END;
 			SELF.importCache := importCache;
@@ -534,11 +533,6 @@ TYPE
 			position := type.pointerBase.position;
 			IF (type.pointerBase IS SyntaxTree.RecordType) THEN (* direct POINTER TO RECORD *)
 				type.pointerBase(SyntaxTree.RecordType).SetPointerType(type);
-				(* not for pointers, a type is needed for the records only
-				IF type.typeDeclaration = NIL THEN
-					AnonymousTypeDeclaration(type);
-				END;
-				*)
 			END;
 			resolved := ResolveType(type.pointerBase);
 			IF (resolved.resolved IS SyntaxTree.RecordType) OR (resolved.resolved IS SyntaxTree.ArrayType) OR (resolved.resolved IS SyntaxTree.CellType) THEN
@@ -7133,6 +7127,7 @@ TYPE
 						x.initializers.SetExpression(i, CompatibleConversion (initializer.position, initializer, type));
 					END;
 				END;
+				FixTypes(); (* in implementation phase, late fixes do not work *)
 				currentScope.AddVariable(variable);
 				currentScope.EnterSymbol(variable, duplicate);
 				IF duplicate THEN
@@ -8282,9 +8277,6 @@ TYPE
 				symbol := scope.firstSymbol;
 				WHILE symbol # NIL DO
 					IF (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) THEN
-						IF (symbol.type IS SyntaxTree.PointerType) OR (symbol.type IS SyntaxTree.QualifiedType) THEN
-							pointerFixes.Add(symbol, currentScope);
-						END;
 						IF ~symbol.type.resolved.isRealtime THEN
 							Error(symbol.position,"symbol has no realtime type");
 						END;

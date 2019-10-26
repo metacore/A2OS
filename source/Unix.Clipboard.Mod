@@ -1,11 +1,12 @@
-
 MODULE Clipboard;	(** AUTHOR "G.F."; PUROSE "X11 clipboard interface";  *)
+
+(* useful source of information: Inter-Client Communication Conventions Manual, X Consortium Standard, Rosenthal / Marks *)
 
 IMPORT	SYSTEM, Unix, Machine, X11, Displays, XDisplay, Plugins, Log := KernelLog,
 		Modules, Texts, TextUtilities, Strings, HostClipboard, Objects, Commands, Options;
 
 CONST
-	BufferSize = 2000H;
+	BufferSize = 10000H;
 
 TYPE
 	Buffer = POINTER TO ARRAY BufferSize OF CHAR;
@@ -70,6 +71,9 @@ VAR
 	primary		: X11.Window;
 	secondary	: X11.Window;
 	clipboard: X11.Atom;
+	
+	TARGETS: X11.Atom;
+	supportedTargets: ARRAY 2 OF X11.Atom;
 
 	PROCEDURE A2ToUnix;	(* UTF-8 to XA_STRING *)
 	VAR i, newlen: SIZE; unicode: UNSIGNED32;
@@ -159,7 +163,7 @@ VAR
 		TextUtilities.TextToStr( text, sendBuffer^ );  slen := Strings.Length( sendBuffer^ );
 		A2ToUnix;
 		Machine.Acquire( Machine.X11 );
-		X11.SetSelectionOwner( xdisp, clipboard (* X11.XAPRIMARY *), primary, X11.lastEventTime );
+		X11.SetSelectionOwner( xdisp, clipboard (* X11.XAPRIMARY *), primary, X11.CurrentTime);
 		Machine.Release( Machine.X11 );
 	END PutToClipboard;
 
@@ -171,12 +175,23 @@ VAR
 		ev.selection := event.selection;
 		ev.target := event.target;
 		ev.time := event.time;
-		IF (event.selection = clipboard) & (event.target = X11.XASTRING) THEN
-			ev.property := event.property;
-			Machine.Acquire( Machine.X11 );
-			X11.ChangeProperty( xdisp, ev.requestor, ev.property, ev.target, 8, X11.PropModeReplace,
-								ADDRESSOF( sendBuffer[0] ), INTEGER (slen) );
-			Machine.Release( Machine.X11 );
+		IF (event.selection = clipboard) THEN
+			IF (event.target = TARGETS) THEN
+				(* the manual says that at least "TARGETS" needs to be supported *)
+				ev.property := event.property;
+				Machine.Acquire( Machine.X11 );
+					X11.ChangeProperty( xdisp, ev.requestor, ev.property, X11.XA_ATOM, 32, X11.PropModeReplace,
+									ADDRESSOF(supportedTargets[0]), LEN(supportedTargets));
+				Machine.Release( Machine.X11 );
+			ELSIF (event.target = X11.XASTRING) THEN
+				ev.property := event.property;
+				Machine.Acquire( Machine.X11 );
+				X11.ChangeProperty( xdisp, ev.requestor, ev.property, ev.target, 8, X11.PropModeReplace,
+									ADDRESSOF( sendBuffer[0] ), INTEGER (slen) );
+				Machine.Release( Machine.X11 );
+			ELSE
+				ev.property := X11.None
+			END;
 		ELSE
 			ev.property := X11.None
 		END;
@@ -227,7 +242,7 @@ VAR
 	END ReceiveSelection;
 
 	PROCEDURE GetXDisplay;
-	VAR p: Plugins.Plugin;  disp: XDisplay.Display; name: ARRAY 16 OF CHAR;
+	VAR p: Plugins.Plugin;  disp: XDisplay.Display;
 	BEGIN
 		p := Displays.registry.Await("XDisplay");
 		disp := p(XDisplay.Display);
@@ -269,6 +284,9 @@ VAR
 				Machine.Acquire( Machine.X11 );
 				myProperty := X11.InternAtom( xdisp, "UNICODE", X11.False );
 				clipboard := X11.InternAtom(xdisp,"CLIPBOARD",1);
+				TARGETS := X11.InternAtom(xdisp,"TARGETS",1);
+				supportedTargets[0] := TARGETS;
+				supportedTargets[1] := X11.XA_STRING;				
 				Machine.Release( Machine.X11 );
 
 				IF options.GetFlag("primary") THEN clipboard := X11.XAPRIMARY END;

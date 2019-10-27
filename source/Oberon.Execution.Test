@@ -7903,4 +7903,63 @@ positive: type guard in Oberon-2 method
 	BEGIN
 		s.Test();
 	END Test.
+
+positive: variable initializations
+	MODULE Test;
+
+	PROCEDURE Test;
+	VAR p := 300; q := k;
+	BEGIN
+		ASSERT(p=300);
+		ASSERT(q = 4);
+	END Test; 
+
+	VAR i* := 4, j := 8;
+	VAR k* := i, l* : SIZE;
+
+	BEGIN
+		Test;
+		VAR x := 10;
+		VAR y := x: SIZE;
+		ASSERT(i = 4);
+		ASSERT(j = 8);
+		ASSERT(k = 4);
+		ASSERT(x = 10);
+		ASSERT(y = 10);
+	END Test.
+
+positive: variable initializations with record and pointer to record types
+	MODULE Test;
+
+	TYPE R= RECORD x,y: SIZE END;
+
+	PROCEDURE GetR(a,b: SIZE): R;
+	BEGIN
+		RESULT.x := a;
+		RESULT.y := b;
+		RETURN RESULT;
+	END GetR;
+
+
+	BEGIN
+
+	VAR q :=  NEW GetR(10,20);
+		ASSERT(q.x = 10); 
+		ASSERT(q.y = 20);
+
+	VAR 	r: R; 
+		r := GetR(10,20);
+		ASSERT(r.x = 10); 
+		ASSERT(r.y = 20); 
+
+	VAR 	s := GetR(10,20);
+		ASSERT(s.x = 10); 
+		ASSERT(s.y = 20); 
+
+	VAR	 p: POINTER TO R;
+		p := NEW GetR(10,20);
+		ASSERT(p.x = 10); 
+		ASSERT(p.y = 20);
+
+	END Test.
 	

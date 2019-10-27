@@ -1364,8 +1364,9 @@ TYPE
 				IF (x.access # SyntaxTree.Hidden) & ~(x.isBodyProcedure) OR (mode > SourceCode)
 				THEN
 					type := x.type(SyntaxTree.ProcedureType);
-					IF (type.selfParameter = NIL) OR (type.selfParameter.name = "@Self") & (currentScope IS SyntaxTree.RecordScope)
-						OR ~ (type.selfParameter.name = "@Self") & ~(currentScope IS SyntaxTree.RecordScope)
+					IF (type.selfParameter = NIL) & (type.scope = currentScope) OR 
+						(type.selfParameter # NIL) & (type.selfParameter.name = "@Self") & (currentScope IS SyntaxTree.RecordScope)
+						OR (type.selfParameter # NIL) & ~(type.selfParameter.name = "@Self") & ~(currentScope IS SyntaxTree.RecordScope)
 					THEN
 						Symbol(x);
 						w.String( "; " );

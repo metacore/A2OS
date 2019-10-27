@@ -6255,9 +6255,7 @@ TYPE
 						IF ~CompatibleTo(system, initializer.type, variable.type) THEN
 							expression := NewSymbolDesignator(variable.position, NIL, NIL, variable);
 							expression := NewOperatorCall(variable.position, NIL, Scanner.Becomes, expression, initializer, NIL);	
-							Printout.Info("expression",expression);
 						END;
-						ASSERT(expression = NIL);
 						IF expression # NIL THEN 
 							variable.SetInitializer(expression);
 						ELSE

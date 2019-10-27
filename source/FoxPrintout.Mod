@@ -738,8 +738,12 @@ TYPE
 
 		PROCEDURE VisitInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator);
 		BEGIN
-			Scope(x.block.scope);
-			VisitStatementBlock(x.block);
+			IF mode = SymbolFile THEN
+				Expression(x.original);
+			ELSE
+				Scope(x.block.scope);
+				VisitStatementBlock(x.block);
+			END;
 		END VisitInlineCallDesignator;
 
 		PROCEDURE VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator);

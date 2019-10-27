@@ -1551,23 +1551,25 @@ TYPE
 		END VisitAssignment;
 
 		PROCEDURE VisitDeclarationStatement*(x: SyntaxTree.DeclarationStatement);
-		VAR variable: SyntaxTree.Variable; init: SyntaxTree.Expression; i: SIZE;
+		VAR variable: SyntaxTree.Variable; i: SIZE; type: SyntaxTree.Type;
 		BEGIN
 			Keyword("VAR ");
 			FOR i := 0 TO x.variables.Length()-1 DO
+				variable := x.variables.Get(i);
 				IF i > 0 THEN
 					w.String(", ");
+					ASSERT(type = variable.type);
+				ELSE
+					type := variable.type;
 				END;
-				variable := x.variables.Get(i);
-				init := x.initializers.GetExpression(i);
 				Identifier(variable.name);
-				IF init # NIL THEN
+				IF variable.initializer # NIL THEN
 					w.String(" := ");
-					Expression(init);
+					Expression(variable.initializer);
 				END;
 			END;
-			IF x.type # NIL THEN
-				w.String(": "); Type(x.type);
+			IF IsProperType(type) THEN
+				w.String(": "); Type(type);
 			END;
 		END VisitDeclarationStatement;
 

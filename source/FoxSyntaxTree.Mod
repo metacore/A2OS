@@ -3520,17 +3520,11 @@ TYPE
 	DeclarationStatement*= OBJECT(Statement)
 	VAR
 		variables-: Variables;
-		initializers-: ExpressionList;
-		type-: Type;
+		initializers-: ExpressionList; (* should not be stored in variable, because this variable initialization should only happen during declaration statement *)
 
 		PROCEDURE & InitDeclarationStatement(position: Position; outer: Statement);
 		BEGIN	InitStatement(position,outer); NEW(variables); NEW(initializers);
 		END InitDeclarationStatement;
-
-		PROCEDURE SetType*(t: Type);
-		BEGIN
-			type := t;
-		END SetType;
 
 	END DeclarationStatement;
 

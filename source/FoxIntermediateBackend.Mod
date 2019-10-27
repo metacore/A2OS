@@ -6588,14 +6588,18 @@ TYPE
 					END;
 					variable := type.recordScope.firstVariable;
 					WHILE variable # NIL DO
-						IF variable.initializer # NIL THEN
-							Evaluate(variable.initializer,initializerOp);
-							MakeMemory(mem,adr,IntermediateCode.GetType(system,variable.type),offset+ ToMemoryUnits(system,variable.offsetInBits));
-							Emit(Mov(position,mem,initializerOp.op));
-							ReleaseOperand(initializerOp);
-							ReleaseIntermediateOperand(mem);
-						END;
 						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits));
+						IF variable.initializer # NIL THEN
+							IF variable.initializer.type = NIL THEN
+								Designate(variable.initializer,initializerOp);
+							ELSE
+								Evaluate(variable.initializer,initializerOp);
+								MakeMemory(mem,adr,IntermediateCode.GetType(system,variable.type),offset+ ToMemoryUnits(system,variable.offsetInBits));
+								Emit(Mov(position,mem,initializerOp.op));
+								ReleaseOperand(initializerOp);
+								ReleaseIntermediateOperand(mem);
+							END;
+						END;
 						variable := variable.nextVariable
 					END;
 				END;
@@ -6609,6 +6613,7 @@ TYPE
 					END;
 					variable := type.cellScope.firstVariable;
 					WHILE variable # NIL DO
+						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits));
 						IF variable.initializer # NIL THEN
 							Evaluate(variable.initializer,initializerOp);
 							MakeMemory(mem,adr,IntermediateCode.GetType(system,variable.type),offset+ ToMemoryUnits(system,variable.offsetInBits));
@@ -6616,7 +6621,6 @@ TYPE
 							ReleaseOperand(initializerOp);
 							ReleaseIntermediateOperand(mem);
 						END;
-						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits));
 						variable := variable.nextVariable
 					END;
 				END;
@@ -6662,7 +6666,7 @@ TYPE
 		END InitFields;
 
 		PROCEDURE InitVariable(VAR variable: SyntaxTree.Variable; initStatic, temporary: BOOLEAN);
-		VAR type: SyntaxTree.Type; operand: Operand; tmp, mem: IntermediateCode.Operand; reference: SyntaxTree.Expression; symbol: SyntaxTree.Symbol;
+		VAR type: SyntaxTree.Type; operand, ignore: Operand; tmp: IntermediateCode.Operand; reference: SyntaxTree.Expression;
 			saved: RegisterEntry;
 		BEGIN
 			type := variable.type.resolved;
@@ -6679,17 +6683,7 @@ TYPE
 							Symbol(variable, operand);
 							MakeMemory(tmp,operand.op,addressType,0);
 							ReleaseOperand(operand);
-							IF FALSE & temporary THEN
-									(* trick -- temporary object from array base *)
-									symbol := GetSymbol(moduleScope,"FoxArrayBase","temporary");
-									Symbol(symbol,operand);
-									MakeMemory(mem,operand.op,addressType,0);
-									ReleaseOperand(operand);
-									Emit(Mov(position,tmp, mem) );
-									ReleaseOperand(operand);
-							ELSE
-								Emit(Mov(position,tmp, nil ) );
-							END;
+							Emit(Mov(position,tmp, nil ) );
 							ReleaseIntermediateOperand(tmp)
 						END;
 					END;
@@ -6703,11 +6697,17 @@ TYPE
 				END;
 			ELSE
 				Symbol(variable,operand);
+				InitFields(type, operand.op,0);
 				IF (variable.initializer # NIL) & ((variable.initializer.resolved = NIL) OR (initStatic)) THEN
-					reference := SyntaxTree.NewSymbolDesignator(variable.initializer.position,NIL, NIL,variable);
-					reference.SetType(variable.type.resolved);
-					reference.SetAssignable(TRUE);
-					Assign(reference,variable.initializer);
+					IF variable.initializer.type = NIL THEN
+						Designate(variable.initializer, ignore);
+					ELSE
+						Symbol(variable,operand);
+						reference := SyntaxTree.NewSymbolDesignator(variable.initializer.position,NIL, NIL,variable);
+						reference.SetType(variable.type.resolved);
+						reference.SetAssignable(TRUE);
+						Assign(reference,variable.initializer);
+					END;
 				ELSIF temporary THEN
 					IF SemanticChecker.IsPointerType(variable.type) THEN
 						IF backend.cooperative THEN
@@ -6725,7 +6725,6 @@ TYPE
 						END;
 					END;
 				END;
-				InitFields(type, operand.op,0);
 				ReleaseOperand(operand);
 			END;
 		END InitVariable;
@@ -7500,7 +7499,9 @@ TYPE
 			recordType: SyntaxTree.RecordType; parameter: SyntaxTree.Expression;
 			l,r: Operand; res,adr,reg: IntermediateCode.Operand; type: SyntaxTree.Type;
 			constructor: SyntaxTree.Procedure; s0,s1: Operand;
-			i, len: SIZE; formalParameter: SyntaxTree.Parameter;
+			i, len: SIZE; 
+			formalParameter: SyntaxTree.Parameter;
+			parameters: SyntaxTree.ExpressionList;
 			tmp:IntermediateCode.Operand;
 			size: SIGNED32; dim,openDim: SIGNED32; pointer: IntermediateCode.Operand; t0,t1: SyntaxTree.Type;
 			exit,else,end: Label; procedureType: SyntaxTree.ProcedureType;
@@ -7639,7 +7640,11 @@ TYPE
 					constructor := GetConstructor(recordType);
 					IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator) THEN
 						constructor := x.expression(SyntaxTree.ProcedureCallDesignator).left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
+						parameters := x.expression(SyntaxTree.ProcedureCallDesignator).parameters;
+						len := parameters.Length();
 						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);
+					ELSE
+						parameters := x.parameters;
 					END;
 					IF constructor # NIL THEN
 						(*! should be unified with ProcedureCallDesignator *)
@@ -7652,7 +7657,7 @@ TYPE
 						ReleaseIntermediateOperand(pointer);
 						formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
 						FOR i := firstPar TO len-1 DO
-							PushParameter(x.parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
+							PushParameter(parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
 							formalParameter := formalParameter.nextParameter;
 						END;
 
@@ -7740,7 +7745,11 @@ TYPE
 					constructor := GetConstructor(recordType);
 					IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator) THEN
 						constructor := x.expression(SyntaxTree.ProcedureCallDesignator).left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
+						parameters := x.expression(SyntaxTree.ProcedureCallDesignator).parameters;
+						len := parameters.Length();
 						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);
+					ELSE
+						parameters := x.parameters;
 					END;
 					IF (constructor # NIL) THEN
 						(*! should be unified with ProcedureCallDesignator *)
@@ -7753,7 +7762,7 @@ TYPE
 						ReleaseIntermediateOperand(pointer);
 						formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
 						FOR i := firstPar TO len-1 DO
-							PushParameter(x.parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
+							PushParameter(parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
 							formalParameter := formalParameter.nextParameter;
 						END;
 						(* static call of the constructor *)
@@ -10013,6 +10022,7 @@ TYPE
 					IntermediateCode.MakeMemory(result.op,addressType);
 				END;
 			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType = NIL) THEN
+				
 				IF (x.kind = SyntaxTree.ValueParameter) OR type(SyntaxTree.RecordType).isFinal THEN
 					ReleaseIntermediateOperand(result.tag);
 					result.tag := TypeDescriptorAdr(type);
@@ -10025,6 +10035,8 @@ TYPE
 					UseIntermediateOperand(result.tag);
 				END;
 			END;
+
+			
 			IF Trace THEN TraceExit("DesignateVariable") END;
 		END DesignateVariable;
 
@@ -10678,16 +10690,21 @@ TYPE
 		END EmitCooperativeSwitch;
 
 		PROCEDURE DeclarationStatement(x: SyntaxTree.DeclarationStatement);
-		VAR i: SIZE; init: SyntaxTree.Expression; variable: SyntaxTree.Variable; reference: SyntaxTree.Expression;
+		VAR i: SIZE; init: SyntaxTree.Expression; variable: SyntaxTree.Variable; reference: SyntaxTree.Expression; result: Operand;
 		BEGIN
 			FOR i := 0 TO x.variables.Length()-1 DO
 				variable := x.variables.Get(i);
 				init := x.initializers.GetExpression(i);
 				IF init # NIL THEN
-					reference := SyntaxTree.NewSymbolDesignator(init.position,NIL, NIL,variable);
-					reference.SetType(variable.type.resolved);
-					reference.SetAssignable(TRUE);
-					Assign(reference,init);
+					IF init.type = NIL THEN (* assignment operator *)
+						Designate(init, result);
+					ELSE
+						Symbol(variable, result);
+						reference := SyntaxTree.NewSymbolDesignator(init.position,NIL, NIL,variable);
+						reference.SetType(variable.type.resolved);
+						reference.SetAssignable(TRUE);
+						Assign(reference,init);
+					END;
 				END;
 			END;
 		END DeclarationStatement;

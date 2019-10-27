@@ -4491,6 +4491,7 @@ TYPE
 			id: SIGNED32;
 			b: BOOLEAN;
 			first: SIGNED32;
+			qualifiedType: SyntaxTree.QualifiedType;
 
 			mathArrayType: SyntaxTree.MathArrayType;
 			customBuiltin: SyntaxTree.CustomBuiltin;
@@ -4674,8 +4675,12 @@ TYPE
 						ELSIF type0 IS SyntaxTree.CellType THEN
 						ELSIF type0 IS SyntaxTree.MathArrayType THEN
 						ELSIF (first = 0) & (type0 IS SyntaxTree.RecordType) THEN
+							(* need an indirection *)
+							qualifiedType := SyntaxTree.NewQualifiedType(position, NIL, NIL);
+							qualifiedType.SetResolved(type0);
+							qualifiedType.SetState(SyntaxTree.Resolved);
 							type := SyntaxTree.NewPointerType(type0.position, type0.scope);
-							type(SyntaxTree.PointerType).SetPointerBase(type0);
+							type(SyntaxTree.PointerType).SetPointerBase(qualifiedType);
 						ELSE
 							Error(position, "forbidden new on value type");
 						END;
@@ -6231,7 +6236,7 @@ TYPE
 		**)
 		PROCEDURE ResolveVariable(variable: SyntaxTree.Variable);
 		VAR modifiers: SyntaxTree.Modifier; value: Basic.Integer; position: Position; pointerType: SyntaxTree.PointerType; string: Scanner.StringType;
-			qualifiedType: SyntaxTree.QualifiedType;
+			qualifiedType: SyntaxTree.QualifiedType; expression, initializer: SyntaxTree.Expression;
 		BEGIN
 			IF Trace THEN D.Str("ResolveVariable "); D.Str0(variable.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(variable) THEN
@@ -6241,11 +6246,23 @@ TYPE
 					variable.SetInitializer (ResolveExpression(variable.initializer));
 					qualifiedType := SyntaxTree.NewQualifiedType(variable.position, NIL, NIL);
 					qualifiedType.SetResolved(variable.initializer.type.resolved);
+					qualifiedType.SetState(SyntaxTree.Resolved);
 					variable.SetType(qualifiedType);
 				ELSE
 					variable.SetType(ResolveType(variable.type));
 					IF variable.initializer # NIL THEN
-						variable.SetInitializer (CompatibleConversion (variable.initializer.position, ResolveExpression(variable.initializer), variable.type));
+						initializer := ResolveExpression(variable.initializer);
+						IF ~CompatibleTo(system, initializer.type, variable.type) THEN
+							expression := NewSymbolDesignator(variable.position, NIL, NIL, variable);
+							expression := NewOperatorCall(variable.position, NIL, Scanner.Becomes, expression, initializer, NIL);	
+							Printout.Info("expression",expression);
+						END;
+						ASSERT(expression = NIL);
+						IF expression # NIL THEN 
+							variable.SetInitializer(expression);
+						ELSE
+							variable.SetInitializer(CompatibleConversion(variable.initializer.position, initializer, variable.type));
+						END;
 					END
 				END;
 				IF variable.type.resolved IS SyntaxTree.ArrayType THEN
@@ -7108,25 +7125,36 @@ TYPE
 		END StatementSequence;
 
 		PROCEDURE ResolveDeclarationStatement(x: SyntaxTree.DeclarationStatement): SyntaxTree.Statement;
-		VAR duplicate: BOOLEAN; variable: SyntaxTree.Variable; i: SIZE; type: SyntaxTree.Type; initializer: SyntaxTree.Expression;
+		VAR duplicate: BOOLEAN; variable: SyntaxTree.Variable; i: SIZE; type: SyntaxTree.Type; initializer, expression: SyntaxTree.Expression; qualifiedType: SyntaxTree.QualifiedType;
 		BEGIN
-			type := ResolveType(x.type);
-			x.SetType(type);
 			FOR i := 0 TO x.variables.Length()-1 DO
 				variable := x.variables.Get(i);
-				initializer := ResolveExpression(x.initializers.GetExpression(i));
-				IF type = NIL THEN
-					x.initializers.SetExpression(i, initializer);
-					variable.SetType(initializer.type);
-				ELSE
-					variable.SetType(type);
-					IF initializer # NIL THEN
-						x.initializers.SetExpression(i, CompatibleConversion (initializer.position, initializer, type));
-					END;
-				END;
-				FixTypes(); (* in implementation phase, late fixes do not work *)
+				initializer := x.initializers.GetExpression(i);
 				currentScope.AddVariable(variable);
 				currentScope.EnterSymbol(variable, duplicate);
+				IF variable.type = NIL THEN (* implies that initializer exists *)
+					initializer := ResolveExpression(initializer);
+					x.initializers.SetExpression(i,initializer);
+					qualifiedType := SyntaxTree.NewQualifiedType(variable.position, NIL, NIL);
+					qualifiedType.SetResolved(initializer.type.resolved);
+					qualifiedType.SetState(SyntaxTree.Resolved);
+					variable.SetType(qualifiedType);
+				ELSE
+					variable.SetType(ResolveType(variable.type));
+					IF initializer # NIL THEN
+						initializer := ResolveExpression(initializer);
+						IF ~CompatibleTo(system, initializer.type, variable.type) THEN
+							expression := NewSymbolDesignator(variable.position, NIL, NIL, variable);
+							expression := NewOperatorCall(variable.position, NIL, Scanner.Becomes, expression, initializer, NIL);	
+						END;
+						IF expression # NIL THEN 
+							x.initializers.SetExpression(i,expression);
+						ELSE
+							x.initializers.SetExpression(i,CompatibleConversion(initializer.position, initializer, variable.type));
+						END;
+					END
+				END;
+				FixTypes(); (* in implementation phase, late fixes do not work *)
 				IF duplicate THEN
 					Error(variable.position, "duplicate variable");
 				END;

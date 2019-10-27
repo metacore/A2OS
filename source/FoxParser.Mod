@@ -618,7 +618,6 @@ TYPE
 			expressionList: SyntaxTree.ExpressionList;
 			identifier: SyntaxTree.Identifier;
 			position: Position;
-			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 		BEGIN
 			position := token.position;
 			CASE Symbol() OF
@@ -975,7 +974,7 @@ TYPE
 			identifier: SyntaxTree.Identifier;  loopStatement: SyntaxTree.LoopStatement;  returnStatement: SyntaxTree.ReturnStatement;  awaitStatement: SyntaxTree.AwaitStatement;
 			qualifiedType: SyntaxTree.QualifiedType; code : SyntaxTree.Code; position: Position; result: BOOLEAN;
 			commToken: Scanner.Symbol; variable: SyntaxTree.Variable; type: SyntaxTree.Type; declarationStatement: SyntaxTree.DeclarationStatement;
-			needsType: BOOLEAN;
+			needsType: BOOLEAN; i: SIZE;
 		BEGIN
 			IF Trace THEN S( "Statement" ) END;
 			CASE Symbol() OF
@@ -1016,12 +1015,15 @@ TYPE
 						needsType := TRUE;
 					END;
 					declarationStatement.variables.Add(variable);
-					declarationStatement.initializers.AddExpression(expression);
-				UNTIL ~Optional(Scanner.Comma);
+					declarationStatement.initializers.AddExpression(expression); 
+				UNTIL ~Optional(Scanner.Comma);				
 				type := NIL;
 				IF needsType & Mandatory(Scanner.Colon) OR Optional(Scanner.Colon) THEN
 					type := Type(SyntaxTree.invalidIdentifier, NIL);
-					declarationStatement.SetType(type);
+					FOR i := 0 TO declarationStatement.variables.Length()-1 DO
+						variable := declarationStatement.variables.Get(i);
+						variable.SetType(type); 
+					END; 
 				END;
 				statements.AddStatement(declarationStatement);
 				result := TRUE;

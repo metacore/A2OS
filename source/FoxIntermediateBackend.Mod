@@ -10426,6 +10426,8 @@ TYPE
 			procedure: SyntaxTree.Procedure;
 			call: SyntaxTree.ProcedureCallDesignator;
 			designator, prevResult: SyntaxTree.Designator;
+			temporaryVariable: SyntaxTree.Variable;
+			temporaryVariableDesignator: SyntaxTree.Designator;
 
 			PROCEDURE CanPassAsResultParameter(right: SyntaxTree.Expression): BOOLEAN;
 			VAR procedureType: SyntaxTree.ProcedureType;
@@ -10495,8 +10497,18 @@ TYPE
 				ModifyAssignments(false);
 				RETURN;
 			END; (* cooperative *)
+			
+			
 
-			IF CanPassAsResultParameter(right) THEN
+			IF CanPassAsResultParameter(right) THEN	
+				IF SemanticChecker.IsTensor(left.type) & ~SemanticChecker.IsTensor(right.type) THEN
+					temporaryVariable := GetTemporaryVariable(right.type.resolved, FALSE, FALSE);
+					temporaryVariableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, NIL, temporaryVariable);
+					temporaryVariableDesignator.SetType(right.type.resolved);
+					Assign(temporaryVariableDesignator, right);
+					Assign(left, temporaryVariableDesignator);
+					RETURN;
+				END;
 				prevResult := procedureResultDesignator;
 				procedureResultDesignator := left(SyntaxTree.Designator);
 				Designate(right, rightO);

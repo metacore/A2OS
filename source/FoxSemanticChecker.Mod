@@ -9832,7 +9832,7 @@ TYPE
 	END IsStaticRange;
 
 	(** whether a type is a math array of tensor form **)
-	PROCEDURE IsTensor(type: SyntaxTree.Type): BOOLEAN;
+	PROCEDURE IsTensor*(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN RETURN (type.resolved IS SyntaxTree.MathArrayType) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor)
 	END IsTensor;
 

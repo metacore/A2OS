@@ -39585,3 +39585,50 @@ negative: nested procedure as parameter
 	END Q;
 
 	END Test.
+
+positive: compile code containing inline code twice
+	MODULE Test;
+
+	IMPORT
+	    SYSTEM;
+
+	    PROCEDURE -OR64(CONST x, y: UNSIGNED64; VAR z: UNSIGNED64);
+	    BEGIN
+	        z := SYSTEM.VAL(UNSIGNED64, SYSTEM.VAL(SET64,x) + SYSTEM.VAL(SET64,y));
+	    END OR64;
+
+	    PROCEDURE -ROTL36(CONST x: UNSIGNED64; VAR y: UNSIGNED64);
+	    BEGIN
+	        OR64( LSH(x, 36) , LSH(x , 36 - 64), y );
+	    END ROTL36;
+
+	    PROCEDURE -ROTL55(CONST x: UNSIGNED64; VAR y: UNSIGNED64);
+	    BEGIN
+	        OR64( LSH(x, 55) , LSH(x , 55 - 64), y );
+	    END ROTL55;
+
+	END Test.
+	
+positive: compile code containing inline code twice (second iteration)
+	MODULE Test;
+
+	IMPORT
+	    SYSTEM;
+
+	    PROCEDURE -OR64(CONST x, y: UNSIGNED64; VAR z: UNSIGNED64);
+	    BEGIN
+	        z := SYSTEM.VAL(UNSIGNED64, SYSTEM.VAL(SET64,x) + SYSTEM.VAL(SET64,y));
+	    END OR64;
+
+	    PROCEDURE -ROTL36(CONST x: UNSIGNED64; VAR y: UNSIGNED64);
+	    BEGIN
+	        OR64( LSH(x, 36) , LSH(x , 36 - 64), y );
+	    END ROTL36;
+
+	    PROCEDURE -ROTL55(CONST x: UNSIGNED64; VAR y: UNSIGNED64);
+	    BEGIN
+	        OR64( LSH(x, 55) , LSH(x , 55 - 64), y );
+	    END ROTL55;
+
+	END Test.
+	

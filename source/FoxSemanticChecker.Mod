@@ -1260,9 +1260,6 @@ TYPE
 					IF result & (formalType(SyntaxTree.MathArrayType).form = SyntaxTree.Static) & (actualType(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
 						Error(actual.position,"incompatible non-static actual type");
 					END;
-					IF result & (actualType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) & (formalType(SyntaxTree.MathArrayType).form # SyntaxTree.Tensor) THEN
-						Error(actual.position,"incompatible tensor (use a range expression)");
-					END;
 				ELSE
 					result := SameType(actualType,formalType)
 				END

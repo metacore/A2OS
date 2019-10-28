@@ -8077,7 +8077,7 @@ TYPE
 	VAR dim,i: SIZE;
 	BEGIN
 		dim := GetDim( left );
-		IF (DIM(RESULT)#1) OR (LEN(RESULT,0) # dim) THEN NEW(RESULT,dim) END;
+		IF (LEN(RESULT,0) # dim) THEN NEW(RESULT,dim) END;
 		FOR i := 0 TO dim-1 DO RESULT[i] := LenType(GetLen(left,i)) END;
 		RETURN RESULT
 	END "LEN";

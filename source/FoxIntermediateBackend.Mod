@@ -3979,11 +3979,17 @@ TYPE
 			END;
 		END BoundCheck;
 
-		PROCEDURE DimensionCheck(base,dim: IntermediateCode.Operand; op: ConditionalBranch );
-		VAR d: IntermediateCode.Operand;
+		PROCEDURE DimensionCheck(type: SyntaxTree.MathArrayType; base,dim: IntermediateCode.Operand; op: ConditionalBranch );
+		VAR d,zero: IntermediateCode.Operand; end: Label;
 		BEGIN
-			IF isUnchecked THEN RETURN END;
-			MakeMemory(d,base,dim.type,ToMemoryUnits(system,MathDimOffset * addressType.sizeInBits));
+			IntermediateCode.InitImmediate(zero,sizeType,0);
+			IF isUnchecked THEN RETURN END;			
+			end := NewLabel();
+			d := NewRegisterOperand(sizeType);
+			Emit(Mov(position,d,zero));
+			BreqL(end,base,nil);
+			Emit(MovReplace(position,d,IntermediateCode.Memory(addressType,base,ToMemoryUnits(system,MathDimOffset*addressType.sizeInBits))));
+			SetLabel(end);
 			TrapC(op,dim,d,ArraySizeTrap);
 			ReleaseIntermediateOperand(d);
 		END DimensionCheck;
@@ -4055,7 +4061,7 @@ TYPE
 			IF leftType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 				Dereference(array, leftType,FALSE);
 				IF ~tensorFound THEN
-					DimensionCheck(array.tag, IntermediateCode.Immediate(sizeType, prefixRanges + prefixIndices), BreqL)
+					DimensionCheck(leftType(SyntaxTree.MathArrayType),array.tag, IntermediateCode.Immediate(sizeType, prefixRanges + prefixIndices), BreqL)
 				END
 			END;
 
@@ -4829,7 +4835,7 @@ TYPE
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
 						Dereference(operand,type.resolved,FALSE);
-						DimensionCheck(operand.tag, IntermediateCode.Immediate(sizeType,dim),BreqL);
+						DimensionCheck(type.resolved(SyntaxTree.MathArrayType),operand.tag, IntermediateCode.Immediate(sizeType,dim),BreqL);
 						Emit(Copy(position,sp(*arrayDestinationTag*),operand.tag,IntermediateCode.Immediate(addressType,size)));
 						PutMathArrayField(arrayDestinationTag,nil,MathFlagsOffset);
 
@@ -4951,7 +4957,7 @@ TYPE
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
 						Dereference(operand,type.resolved,FALSE);
-						DimensionCheck(operand.tag, IntermediateCode.Immediate(sizeType,dim),BreqL);
+						DimensionCheck(type.resolved(SyntaxTree.MathArrayType),operand.tag, IntermediateCode.Immediate(sizeType,dim),BreqL);
 						Pass((operand.tag));
 					(* case 2f
 						P(...,S,...) pre: allocate array descriptor on stack and memorize stack position
@@ -6842,7 +6848,7 @@ TYPE
 			(* static dimension *)
 			IF  dim.mode = IntermediateCode.ModeImmediate THEN
 				IF check & (type.form = SyntaxTree.Tensor) THEN
-					DimensionCheck(operand.tag,dim,BrltL);
+					DimensionCheck(type,operand.tag,dim,BrltL);
 				END;
 				val := dim.intValue;
 				IF type.form # SyntaxTree.Tensor THEN
@@ -6867,18 +6873,18 @@ TYPE
 				InitOperand(result,ModeValue);
 				result.op := res;
 			ELSE
-				Convert(dim,addressType);
+				Convert(dim,sizeType);
 				IF check THEN
 					IF type.form = SyntaxTree.Tensor THEN
-						DimensionCheck(operand.tag,dim,BrltL);
+						DimensionCheck(type,operand.tag,dim,BrltL);
 					ELSIF isUnchecked THEN (* do nothing *)
 					ELSE
-						TrapC(BrltL,dim,IntermediateCode.Immediate(addressType,SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static})), IndexCheckTrap);
+						TrapC(BrltL,dim,IntermediateCode.Immediate(sizeType,SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static})), IndexCheckTrap);
 					END;
 				END;
 				end := NewLabel(); next := NIL;
 
-				IntermediateCode.InitRegister(res,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+				IntermediateCode.InitRegister(res,sizeType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 				Emit(Mov(position,res,dim));
 				Convert(res,sizeType);
 
@@ -6940,9 +6946,9 @@ TYPE
 				InitOperand(result,ModeValue);
 				result.op := res;
 			ELSE
-				Convert(dim,addressType);
+				Convert(dim,sizeType);
 				IF ~isUnchecked THEN
-					TrapC(BrltL,dim,IntermediateCode.Immediate(addressType,SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static})), IndexCheckTrap);
+					TrapC(BrltL,dim,IntermediateCode.Immediate(sizeType,SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static})), IndexCheckTrap);
 				END;
 
 				end := NewLabel(); next := NIL;
@@ -10426,8 +10432,6 @@ TYPE
 			procedure: SyntaxTree.Procedure;
 			call: SyntaxTree.ProcedureCallDesignator;
 			designator, prevResult: SyntaxTree.Designator;
-			temporaryVariable: SyntaxTree.Variable;
-			temporaryVariableDesignator: SyntaxTree.Designator;
 
 			PROCEDURE CanPassAsResultParameter(right: SyntaxTree.Expression): BOOLEAN;
 			VAR procedureType: SyntaxTree.ProcedureType;
@@ -10497,18 +10501,8 @@ TYPE
 				ModifyAssignments(false);
 				RETURN;
 			END; (* cooperative *)
-			
-			
 
 			IF CanPassAsResultParameter(right) THEN	
-				IF SemanticChecker.IsTensor(left.type) & ~SemanticChecker.IsTensor(right.type) THEN
-					temporaryVariable := GetTemporaryVariable(right.type.resolved, FALSE, FALSE);
-					temporaryVariableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, NIL, temporaryVariable);
-					temporaryVariableDesignator.SetType(right.type.resolved);
-					Assign(temporaryVariableDesignator, right);
-					Assign(left, temporaryVariableDesignator);
-					RETURN;
-				END;
 				prevResult := procedureResultDesignator;
 				procedureResultDesignator := left(SyntaxTree.Designator);
 				Designate(right, rightO);

@@ -1145,8 +1145,10 @@ TYPE
 		BEGIN
 			Acquire;
 			defaultTabStops := ts;
-			layout.FullLayout(TRUE);
-			CheckNumberOfLines;
+			IF text#NIL THEN
+				layout.FullLayout(TRUE);
+				CheckNumberOfLines;
+			END;
 			Release;
 		END SetTabStops;
 

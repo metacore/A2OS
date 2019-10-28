@@ -373,3 +373,36 @@ SearchTools.Replace E:/WinaosNewCommands/source/*.Mod AosCommands Commands ~
 SearchTools.Replace E:/WinaosNewCommands/winaos/src/*.Mod AosCommands Commands ~
 
 System.FreeDownTo SearchTools ~
+
+# rename platform-dependent types
+System.DoCommands 
+SearchTools.Replace "../Directory/*.Mod" SHORTINT SIGNED8 ~
+SearchTools.Replace "../Directory/*.Mod" INTEGER SIGNED16 ~
+SearchTools.Replace "../Directory/*.Mod" LONGINT SIGNED32 ~
+SearchTools.Replace "../Directory/*.Mod" HUGEINT SIGNED64 ~
+SearchTools.Replace "../Directory/*.Mod" LONGREAL FLOAT64 ~
+SearchTools.Replace "../Directory/*.Mod" REAL FLOAT32 ~
+SearchTools.Replace "../Directory/*.Mod" LONGCOMPLEX COMPLEX64 ~
+SearchTools.Replace "../Directory/*.Mod" COMPLEX COMPLEX32 ~
+
+SearchTools.Replace "../Directory/*.Mod" LONGWORD LONGINTEGER ~
+SearchTools.Replace "../Directory/*.Mod" WORDSET INTEGERSET ~
+SearchTools.Replace "../Directory/*.Mod" WORD INTEGER ~
+~
+
+
+
+sed -i "s/\bSHORTINT\b/SIGNED8/g" $(grep "\bSHORTINT\b" -Irl)
+sed -i "s/\bINTEGER\b/SIGNED16/g" $(grep "\bINTEGER\b" -Irl)
+sed -i "s/\bLONGINT\b/SIGNED32/g" $(grep "\bLONGINT\b" -Irl)
+sed -i "s/\bHUGEINT\b/SIGNED64/g" $(grep "\bHUGEINT\b" -Irl)
+sed -i "s/\bREAL\b/FLOAT32/g" $(grep "\bREAL\b" -Irl)
+sed -i "s/\bLONGREAL\b/FLOAT64/g" $(grep "\bLONGREAL\b" -Irl)
+sed -i "s/\bCOMPLEX\b/COMPLEX32/g" $(grep "\bCOMPLEX\b" -Irl)
+sed -i "s/\bLONGCOMPLEX\b/COMPLEX64/g" $(grep "\bLONGCOMPLEX\b" -Irl)
+
+# rename platform-independent types
+sed -i "s/\bWORD\b/INTEGER/g" $(grep "\bWORD\b" -Irl)
+sed -i "s/\bLONGWORD\b/LONGINTEGER/g" $(grep "\bLONGWORD\b" -Irl)
+sed -i "s/\bWORDSET\b/INTEGERSET/g" $(grep "\bWORDSET\b" -Irl)
+

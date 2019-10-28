@@ -114,6 +114,16 @@ TYPE
 			DEC(num);
 			RETURN x
 		END Remove;
+		
+		PROCEDURE Preview(delta:SIZE): VideoBuffer;
+		VAR x: VideoBuffer;
+		BEGIN {EXCLUSIVE}
+			IF num>=delta THEN
+				x:=buffer[(head+1) MOD LEN(buffer)];
+				RETURN x
+			ELSE RETURN NIL
+			END;
+		END Preview;		
 
 		PROCEDURE NofBuffers(): SIZE;
 		BEGIN {EXCLUSIVE}
@@ -725,6 +735,14 @@ TYPE
 			END;
 			RETURN res;
 		END GetFrame;
+		
+		(*preview preloaded frame [current+delta] if already done by filler process*)
+		PROCEDURE PreviewFrame*(delta: SIZE): VideoBuffer; 
+		BEGIN {EXCLUSIVE}
+			IF (current#NIL)&(current.filler#NIL)&(current.filler.NofFullBuffers()>=delta) THEN
+				RETURN current.filler.readyBufferPool.Preview(delta);
+			END;
+		END PreviewFrame;
 
 		PROCEDURE GetPos*(): SIGNED32;
 		VAR context : Context; res : INTEGER;

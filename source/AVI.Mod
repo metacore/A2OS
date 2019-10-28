@@ -849,7 +849,7 @@ IMPORT
 
 		(* Write AVI video index to Kernel Log *)
 		PROCEDURE DumpVideoIndex*;
-		VAR i : SIGNED32;
+		VAR i : SIZE;
 		BEGIN
 			KernelLog.String("AviDemux: Dump of Video-Index: "); KernelLog.Ln();
 			IF videoIndex = NIL THEN KernelLog.String("no index in AVI"); KernelLog.Ln; RETURN END;
@@ -874,7 +874,7 @@ IMPORT
 			KernelLog.String("AviDemux: Dump of Audio-Index: "); KernelLog.Ln();
 			IF audioIndex = NIL THEN KernelLog.String("no index in AVI"); KernelLog.Ln; RETURN END;
 
-			FOR i := 0 TO LEN(audioIndex)-1 DO
+			FOR i := 0 TO INTEGER(LEN(audioIndex))-1 DO
 				KernelLog.String("Index: "); KernelLog.Int(i, 0);
 				KernelLog.String(" ckid= "); KernelLog.Int(audioIndex[i].ckid, 0);
 				KernelLog.String(" flags= "); KernelLog.Int(audioIndex[i].flags, 0);

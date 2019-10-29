@@ -3,7 +3,7 @@ MODULE ObjectFile;	(* AUTHOR "negelef"; PURPOSE "Generic Object File Representat
 IMPORT Streams, BitSets, StringPool, Strings;
 
 CONST
-	Version* = 7;
+	Version* = 8;
 
 	(* Fixup modes *)
 	Absolute* = 0;

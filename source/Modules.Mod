@@ -37,7 +37,7 @@ CONST
 
 TYPE
 	(* definitions for object-model loader support *)
-	Name* = ARRAY 32 OF CHAR;
+	Name* = ARRAY 96 OF CHAR;
 
 	(* the correponding name array is protected from being GCed via module's internal pointer arrray
 		compiler generated!

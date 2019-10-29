@@ -12419,16 +12419,18 @@ TYPE
 			END ExceptionArray;
 
 			PROCEDURE Name(section: IntermediateCode.Section; CONST name: ARRAY OF CHAR);
-			VAR i: SIGNED32; ch: CHAR;
+			CONST Length = 96;
+			VAR i: SIZE; ch: CHAR;
 			BEGIN
 				i := 0;
 				REPEAT
 					ch := name[i]; INC(i);
 					Char( section, ch);
 				UNTIL ch = 0X;
-				WHILE i < 32 DO
+				WHILE i < Length DO
 					Char( section, 0X); INC(i);
 				END;
+				ASSERT (i = Length);
 			END Name;
 
 			PROCEDURE References(section: IntermediateCode.Section);

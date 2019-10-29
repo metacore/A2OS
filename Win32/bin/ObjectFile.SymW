@@ -1,7 +1,7 @@
 MODULE ObjectFile;
 	IMPORT Streams, BitSets, StringPool, Strings;
 CONST 
-	Version* = 7; 
+	Version* = 8; 
 	Absolute* = 0; 
 	Relative* = 1; 
 	EntryCode* = 0; 

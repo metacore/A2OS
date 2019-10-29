@@ -35,7 +35,7 @@ TYPE
 
 	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
-		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn, stepBtn, resetBtn: WMStandardComponents.Button; 
+		playBtn-, stopBtn-, pauseBtn-, ffBtn-, rewBtn-, infoBtn-, stepBtn-, resetBtn-: WMStandardComponents.Button; 
 		search: WMStandardComponents.Scrollbar; 
 		toolbar*: WMStandardComponents.Panel; 
 		timeLbl*, totTimeLbl*, frameLbl*, maxFrameLbl*: WMStandardComponents.Label; 

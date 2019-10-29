@@ -359,7 +359,7 @@ TYPE
 		PROCEDURE ^ DesignateConversion(x: SyntaxTree.Conversion; VAR result: Operand); 
 		PROCEDURE ^ DesignateSymbolDesignator(x: SyntaxTree.SymbolDesignator; VAR result: Operand); 
 		PROCEDURE ^ BoundCheck(index, length: IntermediateCode.Operand); 
-		PROCEDURE ^ DimensionCheck(base, dim: IntermediateCode.Operand; op: ConditionalBranch); 
+		PROCEDURE ^ DimensionCheck(type: SyntaxTree.MathArrayType; base, dim: IntermediateCode.Operand; op: ConditionalBranch); 
 		PROCEDURE ^ MathIndexDesignator(x: SyntaxTree.IndexDesignator; VAR result: Operand); 
 		PROCEDURE ^ ArrayLength(type: SyntaxTree.Type; dim: SIZE; tag: IntermediateCode.Operand): IntermediateCode.Operand; 
 		PROCEDURE ^ CopyInt(VAR res: IntermediateCode.Operand; x: IntermediateCode.Operand); 

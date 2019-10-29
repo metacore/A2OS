@@ -8,7 +8,8 @@ CONST
 	Arrow* = 4; 
 	PointSize = 6; 
 TYPE 
-	Point* = POINTER TO RECORD (WMGraphics.Point2d)
+	Point* = POINTER TO RECORD 
+		x-, y-: SIZE; 
 		previous-, next-: Point; 
 	END; 
 

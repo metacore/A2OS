@@ -313,7 +313,7 @@ TYPE
 	PROCEDURE ^ IsArrayType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsComplexType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStaticRange(x: SyntaxTree.Expression; VAR firstValue, lastValue, stepValue: Basic.Integer): BOOLEAN; 
-	PROCEDURE ^ IsTensor(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsTensor*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStaticMathArray*(type: SyntaxTree.Type; VAR length: SIGNED32; VAR baseType: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ SymbolHasAddress*(system: Global.System; CONST symbol: SyntaxTree.Symbol): BOOLEAN; 
 	PROCEDURE ^ HasAddress*(system: Global.System; CONST expression: SyntaxTree.Expression): BOOLEAN; 

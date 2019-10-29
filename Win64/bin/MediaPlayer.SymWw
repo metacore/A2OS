@@ -51,6 +51,7 @@ TYPE
 		PROCEDURE ^  & Init*(n: SIZE); 
 		PROCEDURE ^ Add(x: VideoBuffer); 
 		PROCEDURE ^ Remove(): VideoBuffer; 
+		PROCEDURE ^ Preview(delta: SIZE): VideoBuffer; 
 		PROCEDURE ^ NofBuffers(): SIZE; 
 	END VideoBufferPool; 
 
@@ -65,7 +66,7 @@ TYPE
 		player: Player; 
 		rect: WMRectangles.Rectangle; 
 		videoWidth, videoHeight: SIZE; 
-		fullscreen-: BOOLEAN; 
+		fullscreenEnabled*, fullscreen-: BOOLEAN; 
 		lastFrame-: WMGraphics.Image; 
 		posX, posY: SIZE; 
 		timer: Kernel.Timer; 
@@ -198,6 +199,8 @@ TYPE
 		PROCEDURE ^ DoReset*; 
 		PROCEDURE ^ GetTimePos*(): SIGNED32; 
 		PROCEDURE ^ GetFrame*(): SIGNED32; 
+		PROCEDURE ^ PreviewFrame*(delta: SIZE): VideoBuffer; 
+		PROCEDURE ^ GetPos*(): SIGNED32; 
 		PROCEDURE ^ SetPos*(pos: SIGNED32); 
 		PROCEDURE ^ SetEofAction*(proc: EofProc); 
 		PROCEDURE ^  & New*; 

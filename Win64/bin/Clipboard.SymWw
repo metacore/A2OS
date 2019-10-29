@@ -3,20 +3,20 @@ MODULE Clipboard;
 CONST 
 	CR = 13; 
 	LF = 10; 
-	UTF16SurrogateOffset = ((LSH(UNSIGNED32(55296), 10) + 56320) - 65536); 
+	SurrogateOffset = ((LSH(UNSIGNED32(55296), 10) + 56320) - 65536); 
 	ReplacementChar = 65533; 
+	PortionSize = 1024; 
 TYPE 
-	StringBuilder = OBJECT 
-	VAR 
+	TextPortion = ARRAY (PortionSize + 1) OF Texts.Char32; 
+
+	UTF16Builder = RECORD 
 		length: SIZE; 
 		data: POINTER TO ARRAY OF UNSIGNED16; 
 
-		PROCEDURE ^  & Init*(initialSize: SIZE); 
-		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ AddChar*(codePoint: UNSIGNED16); 
-		PROCEDURE ^ GetLength*(): SIZE; 
-		PROCEDURE ^ GetString*(): POINTER TO ARRAY OF UNSIGNED16; 
-	END StringBuilder; 
+		PROCEDURE ^ {FINAL} New(len: SIZE); 
+		PROCEDURE ^ {FINAL} Add(codePoint: UNSIGNED16); 
+	END
+	; 
 
 	PROCEDURE ^ GetFromClipboard(text: Texts.Text); 
 	PROCEDURE ^ PutToClipboard(text: Texts.Text); 
@@ -39,13 +39,13 @@ TYPE
 	BEGIN
 		RETURN ((SET32(c) * SET32(4294966272)) = SET32(56320))
 	END IsTrail; 
-	PROCEDURE  - UTF16Lead(supplementary: UNSIGNED32): UNSIGNED16;
+	PROCEDURE  - UTF16Lead(c: UNSIGNED32): UNSIGNED16;
 	BEGIN
-		RETURN UNSIGNED16((LSH(supplementary,  -10) + 55232))
+		RETURN UNSIGNED16((LSH(c,  -10) + 55232))
 	END UTF16Lead; 
-	PROCEDURE  - UTF16Trail(supplementary: UNSIGNED32): UNSIGNED16;
+	PROCEDURE  - UTF16Trail(c: UNSIGNED32): UNSIGNED16;
 	BEGIN
-		RETURN UNSIGNED16(((SET32(supplementary) * SET32(1023)) + SET32(56320)))
+		RETURN UNSIGNED16(((SET32(c) * SET32(1023)) + SET32(56320)))
 	END UTF16Trail; 
 BEGIN
 END Clipboard.

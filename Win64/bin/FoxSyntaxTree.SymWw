@@ -1142,10 +1142,8 @@ TYPE
 	VAR 
 		variables-: Variables; 
 		initializers-: ExpressionList; 
-		type-: Type; 
 
 		PROCEDURE ^  & InitDeclarationStatement(position: Position; outer: Statement); 
-		PROCEDURE ^ SetType*(t: Type); 
 	END DeclarationStatement; 
 
 	ProcedureCallStatement* = OBJECT (Statement)

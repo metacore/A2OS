@@ -2262,9 +2262,9 @@ TYPE
 					import := SyntaxTree.NewImport( position, alias, name, TRUE );
 					IF Optional(Scanner.LeftParenthesis) THEN
 						expressions := SyntaxTree.NewExpressionList();
-						expressions.AddExpression(Factor());
+						expressions.AddExpression(Expression());
 						WHILE Optional(Scanner.Comma) DO
-							expressions.AddExpression(Factor());
+							expressions.AddExpression(Expression());
 						END;
 						import.SetParameters(expressions);
 						Check(Scanner.RightParenthesis);

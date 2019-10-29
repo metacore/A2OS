@@ -904,8 +904,10 @@ TYPE
 		END VisitEnumerationValue;
 
 		PROCEDURE VisitProcedureValue*(x: SyntaxTree.ProcedureValue);
+		VAR name: Basic.SectionName;
 		BEGIN
-			Symbol(x.value);
+			Global.GetSymbolName(x.value, name);
+			w.String(name);
 		END VisitProcedureValue;
 
 		(**** symbols ****)
@@ -1364,7 +1366,7 @@ TYPE
 				IF (x.access # SyntaxTree.Hidden) & ~(x.isBodyProcedure) OR (mode > SourceCode)
 				THEN
 					type := x.type(SyntaxTree.ProcedureType);
-					IF (type.selfParameter = NIL) & (type.scope = currentScope) OR 
+					IF (type.selfParameter = NIL) & (type.scope = currentScope) OR
 						(type.selfParameter # NIL) & (type.selfParameter.name = "@Self") & (currentScope IS SyntaxTree.RecordScope)
 						OR (type.selfParameter # NIL) & ~(type.selfParameter.name = "@Self") & ~(currentScope IS SyntaxTree.RecordScope)
 					THEN

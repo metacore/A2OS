@@ -6837,42 +6837,37 @@ TYPE
 			symbol: SyntaxTree.Symbol;
 			typeDeclaration: SyntaxTree.TypeDeclaration;
 		BEGIN
-		    IF x.module # NIL THEN
-		        RETURN x.module.name;
-		    ELSE
-					NEW(stringWriter, LEN(name));
-					NEW(printer, stringWriter, Printout.SymbolFile, FALSE);
-
-		       	Basic.GetString(x.moduleName, name);
-					stringWriter.String(name);
-					stringWriter.String("(");
-		        FOR i := 0 TO x.parameters.Length()-1 DO
-		            IF i > 0 THEN stringWriter.String(",") END;
-		            expression := x.parameters.GetExpression(i);
-		            WITH expression: SyntaxTree.SymbolDesignator DO
-		                symbol := expression.symbol;
-		                WITH symbol: SyntaxTree.TypeDeclaration DO
-		                    typeDeclaration := symbol.declaredType.resolved.typeDeclaration;
-		                    IF typeDeclaration = NIL THEN
-		                        printer.Type(symbol.declaredType.resolved);
-		                    ELSE
-		                        Global.GetSymbolName(typeDeclaration, name);
-		                        ReplaceCharacter(name,".","_");
-		                        stringWriter.String(name);
-		                    END
-		                | SyntaxTree.Constant DO Error(expression.position,"not yet implemented");
-		                | SyntaxTree.Procedure DO
-		                    Global.GetSymbolName(symbol, name);
-		                    stringWriter.String(name);
-		                END;
-		            ELSE
-		            END;
-		        END;
-		        stringWriter.String(")");
-		        stringWriter.Get(name);
-		        ReplaceCharacter(name,".","_");
-		    END;
-		    RETURN SyntaxTree.NewIdentifier(name);
+			IF x.module # NIL THEN
+				RETURN x.module.name;
+			ELSE
+				NEW(stringWriter, LEN(name));
+				NEW(printer, stringWriter, Printout.SymbolFile, FALSE);
+				Basic.GetString(x.moduleName, name);
+				stringWriter.String(name);
+				stringWriter.String("(");
+				FOR i := 0 TO x.parameters.Length()-1 DO
+					IF i > 0 THEN stringWriter.String(",") END;
+					expression := x.parameters.GetExpression(i);
+					IF (expression IS SyntaxTree.SymbolDesignator) & (expression(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.TypeDeclaration) THEN
+						symbol := expression(SyntaxTree.SymbolDesignator).symbol;
+						typeDeclaration := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved.typeDeclaration;
+						IF typeDeclaration = NIL THEN
+							printer.Type(symbol(SyntaxTree.TypeDeclaration).declaredType.resolved);
+						ELSE
+							Global.GetSymbolName(typeDeclaration, name);
+							stringWriter.String(name);
+						END
+					ELSIF expression.resolved # NIL THEN
+						printer.Expression (expression.resolved);
+					ELSE
+						Error(expression.position,"template parameter not constant");
+					END;
+				END;
+				stringWriter.String(")");
+				stringWriter.Get(name);
+				ReplaceCharacter(name,".","_");
+			END;
+			RETURN SyntaxTree.NewIdentifier(name);
 		END GetImportModuleName;
 
 		PROCEDURE ResolveTemplateImport(x: SyntaxTree.Import);

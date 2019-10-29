@@ -480,7 +480,6 @@ VAR
 				FOR i := 0 TO LEN(linker.offers)-1 DO
 					sname := linker.offers[i];
 					module := Modules.ModuleByName(sname);
-					TRACE(sname, module);
 					IF module # NIL THEN
 						linker.RemovePrefixed(linker.offers[i]);
 					END;

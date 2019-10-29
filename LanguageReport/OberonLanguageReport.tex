@@ -368,6 +368,7 @@ frame=lines
 % NEW as expression: x := NEW(Type, parameters)
 
 % Templates
+% automatically exported template arguments
 % DISPOSE
 % Coop: COOPERATIVE, UNCOOPERATIVE
 % Array Literals
@@ -1638,10 +1639,10 @@ Usually, this implies that the initialization is done at the beginning of the re
 \begin{itemize}
 \item If a variable is a field in an object, it is initialized after the allocation of the object but before the initializer of the object is called.
 \item If a variable is a field in a record, it is initialized when the record is initialized.
-\item If a variable is declared in a procedure scope, it is initialized at the beginning of the procedure body. 
-\item If a variable is declared in a module scope and if the initializer is not a constant expression, it is initialized at the beginning of the module body. 
+\item If a variable is declared in a procedure scope, it is initialized at the beginning of the procedure body.
+\item If a variable is declared in a module scope and if the initializer is not a constant expression, it is initialized at the beginning of the module body.
 If a variable is declared in a module scope and if the initializer is a constant expression, the variable is initialized in the object file of the module.
-This can be important for low-level system module where code (e.g. procedures with flags \lstinline"OPENING") could be executed before the module body. 
+This can be important for low-level system module where code (e.g. procedures with flags \lstinline"OPENING") could be executed before the module body.
 \end{itemize}
 
 \begin{annotation}
@@ -1835,10 +1836,10 @@ private:
   unsigned int value = 0;
 public:
   void increment (unsigned by){
-    value += by;	
+    value += by;
   }
   unsigned current() const {
-    return value;	
+    return value;
   }
 }
 \end{lstlisting}
@@ -1867,9 +1868,9 @@ c.Increment(10); // c is passed as variable parameter
 ASSERT(c.Current()>=10); // c is passed as const parameter
 \end{lstlisting}
 
-Classes in C++ are generally value types and they can be allocated on heap (with \lstinline"new") or stack (implicitly). 
+Classes in C++ are generally value types and they can be allocated on heap (with \lstinline"new") or stack (implicitly).
 Pointer to structs / classes can point into heap or stack.
-Pointers are not protected in this sense. 
+Pointers are not protected in this sense.
 
 In Oberon, (safe) pointers are, by definition, limited to the heap.
 It is impossible to create a pointer to a stack object.
@@ -1878,13 +1879,13 @@ In order to allow to create complex data structures of objects that are implemen
 Syntactically, methods on objects were defined in the object's scope. Very much like it is done in Java.
 We identified a strong drawback of this approach: every object needs to be allocated on the heap, even if its lifetime is very much limited.
 This, in turn, creates a high pressure on the garbage collector and makes it harder to come up with a system without garbage collection at all.
-One idea (merely on the syntactical level) was to replace \lstinline"OBJECT" by \lstinline"RECORD" and to allow to write the type bound procedures within the record. 
+One idea (merely on the syntactical level) was to replace \lstinline"OBJECT" by \lstinline"RECORD" and to allow to write the type bound procedures within the record.
 Such methods would, by default, be allowed to change the object content, i.e.\ be implemented with an implicit \lstinline"VAR" receiver:
 
 The code
 \begin{lstlisting}[style=example]
-TYPE 
-Counter* = RECORD 
+TYPE
+Counter* = RECORD
   value: UNSIGNED64
 
   PROCEDURE Increment (by: UNSIGNED64);
@@ -1912,9 +1913,9 @@ BEGIN
 	RETURN value;
 END Increment;
 \end{lstlisting}
-Of course, it would be possible to add the \lstinline"CONST" keyword somewhere in the definition of the record just as it is done in C++ in order to make a distinction between modifying and non-modifying code. 
+Of course, it would be possible to add the \lstinline"CONST" keyword somewhere in the definition of the record just as it is done in C++ in order to make a distinction between modifying and non-modifying code.
 However, there is another very important reason to stay with the elegant and natural type-bound procedures declaration of Oberon-2:
-It is possible to write type bound procedures that can act on a variable of record type (being located on heap or on stack) and to write type bound procedures that can act on a variable of pointer type (being solely located on the heap). 
+It is possible to write type bound procedures that can act on a variable of record type (being located on heap or on stack) and to write type bound procedures that can act on a variable of pointer type (being solely located on the heap).
 The latter allows to explicitly distinguih between code that can be called on a pointer (and might return the pointer) from code that can only be called on a record.
 
 \begin{lstlisting}[style=example]
@@ -2080,7 +2081,7 @@ expression(BinaryExpression).left.CompatibleTo(x)
 
 Also, in order to avoid ambiguities in the EBNF, and to allow other features such as type guards on value types (such as literal numbers), we chose to unify such expressions and call them primary expressions.
 
-A type guard on numbers has been introduced. 
+A type guard on numbers has been introduced.
 A guarded number is converted to the given type if and only if its value is not changed.
 When it fails (i.e. when the actual value of a number is not compatible to / cannot be represented by the type), a trap is raised.
 
@@ -2112,14 +2113,14 @@ TYPE
     age: INTEGER
   END;
 
-  PROCEDURE StudentInstance(CONST name: ARRAY OF CHAR; 
+  PROCEDURE StudentInstance(CONST name: ARRAY OF CHAR;
                                           age: INTEGER): Student;
   BEGIN
     COPY(name, RESULT.name);
     RESULT.age := age;
     RETURN RESULT;
   END StudentInstance;
-  
+
 (* POINTER TO Student *)
 VAR student1 := NEW Student;
 VAR student2 := NEW StudentInstance("Niklas",6);
@@ -2167,7 +2168,7 @@ Statement = [
     [':=' Expression
     | '!' Expression | '?' Expression | '<<' Expresssion | '>>' Expression
     ]
-  | 'VAR' Identifier [':=' Expression] 
+  | 'VAR' Identifier [':=' Expression]
           {',' Identifier [':=' Expression]} [':' Type]
   | 'IF' Expression 'THEN' StatementSequence
     {'ELSIF' Expression 'THEN' StatementSequence}
@@ -2249,11 +2250,11 @@ The type of the designator must be assignment compatible with the type of the ex
 
 \subsection{Declaration Statement}
 \begin{lstlisting}[style=ebnf]
-'VAR' Identifier [':=' Expression] 
+'VAR' Identifier [':=' Expression]
       {',' Identifier [':=' Expression]} [':' Type];
 \end{lstlisting}
 
-Variables can be declared within a statement sequence. A declaration statement is indicated by the \lstinline"VAR" keyword. Similar to variable declaration, the type of the variable can be omitted when an initializer is present and when the type of the initializer shall be taken for the variable type. The variable is visible within the statement sequence from the point of declaration to the end of the procedure scope. A variable can only be declared once in a procedure scope. 
+Variables can be declared within a statement sequence. A declaration statement is indicated by the \lstinline"VAR" keyword. Similar to variable declaration, the type of the variable can be omitted when an initializer is present and when the type of the initializer shall be taken for the variable type. The variable is visible within the statement sequence from the point of declaration to the end of the procedure scope. A variable can only be declared once in a procedure scope.
 
 \begin{annotation}
 \subsubsection{Examples}
@@ -3054,7 +3055,7 @@ Numeric types "include" (the values of) "smaller" numeric types according to the
 	\supset \UNSIGNED8 \sqsupset \SIGNED8
 \end{align*}
 
-We have used $A \sqsupset B$ to express when there is assignment compatibility for $A \ni a \leftarrow b \in B$ while there is not really a superset relationship between the $A$ and $B$. 
+We have used $A \sqsupset B$ to express when there is assignment compatibility for $A \ni a \leftarrow b \in B$ while there is not really a superset relationship between the $A$ and $B$.
 
 \subsection{Type Extension (Base Type)}
 Given a type declaration \lstinline"Tb = RECORD (Ta) ... END", Tb is a direct extension of Ta, and Ta is a direct base type of Tb. A type Tb is an extension of a type Ta (Ta is a base type of Tb) if
@@ -3837,7 +3838,7 @@ ImportList = 'IMPORT' Import { ',' Import } ';'.
 
 Import = Identifier [':=' Identifier] ['(' ExpressionList ')' ] ['IN' Identifier].
 
-DeclarationSequence  =  { 
+DeclarationSequence  =  {
 					'CONST' [ConstDeclaration] {';' [ConstDeclaration]}
 					|'TYPE'  [TypeDeclaration] {';' [TypeDeclaration]}
 					|'VAR'   [VariableDeclaration] {';' [VariableDeclaration]}
@@ -3852,7 +3853,7 @@ ConstantExpression = Expression.
 
 VariableDeclaration = VariableNameList ':' Type.
 
-VariableNameList = VariableName {"," VariableName}. 
+VariableNameList = VariableName {"," VariableName}.
 
 VariableName = IdentifierDefinition [Flags]
                 [':=' Expression | 'EXTERN' String].
@@ -3861,30 +3862,30 @@ Flags = '{' [ Flag {',' Flag} ] '}'.
 
 Flag = Identifier ['(' Expression ')' | '=' Expression].
 
-ProcedureDeclaration = 'PROCEDURE' ['^'|'&'|'~'|'-'|Flags ['-']] 
+ProcedureDeclaration = 'PROCEDURE' ['^'|'&'|'~'|'-'|Flags ['-']]
                          ['(' ParameterDeclaration ')']
                          IdentifierDefinition [FormalParameters] ';'
-                         DeclarationSequence  [Body] 
+                         DeclarationSequence  [Body]
                        'END' Identifier.
 
 OperatorDeclaration  = 'OPERATOR' [Flags] ['-'] String ['*'|'-'] FormalParameters ';'
-                         DeclarationSequence 
-                         [Body] 
+                         DeclarationSequence
+                         [Body]
                        'END' String.
 
-FormalParameters = '(' [ParameterDeclaration {';' ParameterDeclaration}] ')' 
+FormalParameters = '(' [ParameterDeclaration {';' ParameterDeclaration}] ')'
                         [':' [Flags] Type].
 
-ParameterDeclaration = ['VAR'|'CONST'] Identifier [Flags] ['=' Expression] 
+ParameterDeclaration = ['VAR'|'CONST'] Identifier [Flags] ['=' Expression]
 						{',' Identifier [Flags] ['=' Expression]} ':' Type.
 
-						
+
 Body = 'BEGIN' [Flags] StatementSequence ['FINALLY' StatementSequence]
 						| 'CODE' Code.
-						
+
 TypeDeclaration = IdentifierDefinition '=' Type ';'.
 
-Type = ArrayType | MathArrayType | RecordType | PointerType | ObjectType 
+Type = ArrayType | MathArrayType | RecordType | PointerType | ObjectType
         | ProcedureType | EnumerationType | QualifiedIdentifier
         | CellType | CellnetType | PortType.
 
@@ -3895,7 +3896,7 @@ MathArrayType  = 'ARRAY' '[' MathArraySize {',' MathArraySize} ']' 'OF' Type.
 MathArraySize  = Expression | '*' | '?'.
 
 RecordType = 'RECORD' ['(' QualifiedIdentifier ')']
-            [VariableDeclaration {';' VariableDeclaration}] 
+            [VariableDeclaration {';' VariableDeclaration}]
             {ProcedureDeclaration [';']| OperatorDeclaration [';']}
             'END'.
 
@@ -3903,21 +3904,21 @@ PointerType = 'POINTER' [Flags] 'TO' Type.
 
 ProcedureType = 'PROCEDURE' [Flags] [FormalParameters].
 
-ObjectType = 'OBJECT' 
-           | 'OBJECT' [Flags] ['(' QualifiedIdentifier ')'] 
-               DeclarationSequence 
-               [Body] 
+ObjectType = 'OBJECT'
+           | 'OBJECT' [Flags] ['(' QualifiedIdentifier ')']
+               DeclarationSequence
+               [Body]
              'END' [Identifier].
 
-EnumerationType = 'ENUM' ['('QualifiedIdentifier')'] 
+EnumerationType = 'ENUM' ['('QualifiedIdentifier')']
                     IdentifierDefinition ['=' Expression]
-                    {',' IdentifierDefinition ['=' Expression]} 
+                    {',' IdentifierDefinition ['=' Expression]}
                   'END'.
 
-CellType = ('CELL' | 'CELLNET') [Flags] ['(' PortList ')'] [';'] {ImportList} 
-             DeclarationSequence 
-           [Body] 'END' [Identifier].           
-                  
+CellType = ('CELL' | 'CELLNET') [Flags] ['(' PortList ')'] [';'] {ImportList}
+             DeclarationSequence
+           [Body] 'END' [Identifier].
+
 
 PortList = [PortDeclaration {';' PortDeclaration}].
 
@@ -3930,8 +3931,8 @@ QualifiedIdentifier  = Identifier ['.' Identifier].
 IdentifierDefinition = Identifier [ '*' | '-' ].
 
 Statement = [
-  UnaryExpression 
-    [':=' Expression 
+  UnaryExpression
+    [':=' Expression
     | '!' Expression | '?' Expression | '<<' Expresssion | '>>' Expression
     ]
   | 'IF' Expression 'THEN' StatementSequence
@@ -3942,29 +3943,29 @@ Statement = [
     {'|' QualifiedIdentifier 'DO' StatementSequence}
     [ELSE StatementSequence]
     'END'
-  | 'CASE' Expression 'OF' ['|'] Case 
-    {'|' Case} 
-    ['ELSE' StatementSequence] 
+  | 'CASE' Expression 'OF' ['|'] Case
+    {'|' Case}
+    ['ELSE' StatementSequence]
     'END'
-  | 'WHILE' Expression 'DO' 
-      StatementSequence 
+  | 'WHILE' Expression 'DO'
+      StatementSequence
     'END'
-  | 'REPEAT' 
-      StatementSequence 
+  | 'REPEAT'
+      StatementSequence
     'UNTIL' Expression
   | 'FOR' Identifier ':=' Expression 'TO' Expression ['BY' Expression] 'DO'
-      StatementSequence 
+      StatementSequence
     'END'
   | 'LOOP' StatementSequence 'END'
   | 'EXIT'
   | 'RETURN' [Expression]
   | 'AWAIT' Expression
-  | StatementBlock 
+  | StatementBlock
   | 'CODE' {any} 'END'
-  | 'IGNORE' Expression  
+  | 'IGNORE' Expression
 ].
 
-Case = RangeExpression {',' RangeExpression} ':' StatementSequence.	
+Case = RangeExpression {',' RangeExpression} ':' StatementSequence.
 
 StatementBlock = 'BEGIN' [Flags] StatementSequence 'END'.
 
@@ -3997,7 +3998,7 @@ UnaryExpression = PrimaryExpression [DesignatorOperations] [Flags].
 
 PrimaryExpression = Number | Character | String | Set | Array
         | 'NIL' | 'IMAG' | 'TRUE' | 'FALSE' |
-        | 'SELF' | 'RESULT' | 'ADDRESS' | 'SIZE' 
+        | 'SELF' | 'RESULT' | 'ADDRESS' | 'SIZE'
         | 'SIZE' 'OF' Factor | 'ADDRESS' 'OF' Factor
         | 'ALIAS' OF Factor
         | 'NEW' QualifiedIdentifier '(' ExpressionList ')'
@@ -4010,7 +4011,7 @@ DesignatorOperations = { "(" [ExpressionList] ")"
                        | '^'
                        | '`'
                     } .
-                    
+
 ExpressionList = Expression { ',' Expression }.
 
 IndexList = '?' [',' ExpressionList]
@@ -4024,14 +4025,14 @@ String = '"' {Character} '"' | "'" {Character} "'" | '\"' {Character} '\"'.
 
 Number      =  Integer | Real.
 
-Integer     =  Digit {["'"]Digit} | Digit {["'"]HexDigit} 'H' 
+Integer     =  Digit {["'"]Digit} | Digit {["'"]HexDigit} 'H'
                | '0x' {["'"]HexDigit} | '0b' {["'"]BinaryDigit}.
 
 Real        =  Digit {["'"]Digit} '.' {Digit} [ScaleFactor].
 
 ScaleFactor =  ('E' | 'D') ['+' | '-'] digit {digit}.
 
-HexDigit    =  Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' 
+HexDigit    =  Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'
                | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' .
 
 Identifier = Letter {Letter | Digit | '_' }.

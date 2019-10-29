@@ -6925,6 +6925,7 @@ TYPE
 						expression := x.parameters.GetExpression(i);
 						IF expression.resolved # NIL THEN
 							constDeclaration := SyntaxTree.NewConstant(expression.position, parameter.identifier);
+							constDeclaration.SetAccess(SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal);
 							constDeclaration.SetValue(expression.resolved);
 							module.moduleScope.AddConstant(constDeclaration);
 							IF parameter.type # SyntaxTree.TemplateType.Const THEN
@@ -6934,6 +6935,7 @@ TYPE
 							symbol := expression(SyntaxTree.SymbolDesignator).symbol;
 							IF symbol IS SyntaxTree.TypeDeclaration THEN
 								typeDeclaration := SyntaxTree.NewTypeDeclaration(expression.position,parameter.identifier);
+								typeDeclaration.SetAccess(SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal);
 								typeDeclaration.SetDeclaredType(symbol(SyntaxTree.TypeDeclaration).declaredType);
 								module.moduleScope.AddTypeDeclaration(typeDeclaration);
 								IF parameter.type # SyntaxTree.TemplateType.Type THEN

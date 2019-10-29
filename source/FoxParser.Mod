@@ -2274,7 +2274,7 @@ TYPE
 						position := token.position;
 						context := Identifier(idPosition);
 						IF context # SyntaxTree.invalidIdentifier THEN  import.SetContext(context) END;
-					ELSIF aliased & (name = alias) THEN
+					ELSIF aliased & (name = alias) & (import.parameters = NIL) THEN
 						Basic.Warning(diagnostics, scanner.source^, position, "duplicated import alias");
 					END;
 					WITH scope:

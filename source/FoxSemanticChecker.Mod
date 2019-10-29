@@ -6964,7 +6964,6 @@ TYPE
 					ELSE
 						x.SetModule(module);
 					END;
-					Printout.Info("symbol file imported",module);
 				END;
 			END
 		END ResolveTemplateImport;

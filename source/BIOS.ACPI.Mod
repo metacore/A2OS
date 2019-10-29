@@ -52,7 +52,7 @@ END;
 VAR rdsp- {UNTRACED} := NIL: POINTER {UNSAFE} TO RDSP;
 
 PROCEDURE Checksum (address: ADDRESS; size: SIZE): SIGNED8;
-VAR checksum := 0: SIGNED8; block {UNTRACED}: POINTER {UNSAFE} TO ARRAY OF SIGNED8;
+VAR checksum := 0: SIGNED8; block {UNTRACED}: POINTER {UNSAFE} TO ARRAY MAX (SIZE) OF SIGNED8;
 BEGIN {UNCOOPERATIVE, UNCHECKED} block := address; WHILE size # 0 DO DEC (size); INC (checksum, block[size]) END; RETURN checksum;
 END Checksum;
 

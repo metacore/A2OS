@@ -109,6 +109,7 @@ TYPE
 		variableAccessed: BOOLEAN;
 		inAwait: BOOLEAN;
 		inReturn: BOOLEAN;
+		initializingVariable: SyntaxTree.Variable;
 
 		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR);
 		BEGIN
@@ -137,6 +138,7 @@ TYPE
 			inConversion := 0;
 			inAwait := FALSE;
 			inReturn := FALSE;
+			initializingVariable := NIL;
 		END InitChecker;
 
 		(*------------ service -------------*)
@@ -6225,7 +6227,7 @@ TYPE
 				procedure.type(SyntaxTree.ProcedureType).SetStackAlignment(alignment);
 			END;
 		END AdaptStackAlignment;
-
+		
 		(** check and resolve a variable / field
 			- check and set type
 			- negative check on open array type
@@ -6233,32 +6235,25 @@ TYPE
 		**)
 		PROCEDURE ResolveVariable(variable: SyntaxTree.Variable);
 		VAR modifiers: SyntaxTree.Modifier; value: Basic.Integer; position: Position; pointerType: SyntaxTree.PointerType; string: Scanner.StringType;
-			qualifiedType: SyntaxTree.QualifiedType; expression, initializer: SyntaxTree.Expression;
+			qualifiedType: SyntaxTree.QualifiedType;
 		BEGIN
 			IF Trace THEN D.Str("ResolveVariable "); D.Str0(variable.name);  D.Ln;  END;
+			IF initializingVariable # NIL THEN
+				IF ~(SyntaxTree.Initialized IN variable.state) THEN 
+					Error(initializingVariable.position,"forbidden dependence on yet uninitialized variable");
+				END
+			END;
 			IF SymbolNeedsResolution(variable) THEN
-
 				CheckSymbolVisibility(variable);
 				IF variable.type = NIL THEN (* implies that initializer exists *)
-					variable.SetInitializer (ResolveExpression(variable.initializer));
 					qualifiedType := SyntaxTree.NewQualifiedType(variable.position, NIL, NIL);
-					qualifiedType.SetResolved(variable.initializer.type.resolved);
 					qualifiedType.SetState(SyntaxTree.Resolved);
 					variable.SetType(qualifiedType);
+					qualifiedType.SetResolved(SyntaxTree.invalidType); (* for cycle detection *)
+					variable.SetInitializer (ResolveExpression(variable.initializer));
+					qualifiedType.SetResolved(variable.initializer.type.resolved);
 				ELSE
 					variable.SetType(ResolveType(variable.type));
-					IF variable.initializer # NIL THEN
-						initializer := ResolveExpression(variable.initializer);
-						IF ~CompatibleTo(system, initializer.type, variable.type) THEN
-							expression := NewSymbolDesignator(variable.position, NIL, NIL, variable);
-							expression := NewOperatorCall(variable.position, NIL, Scanner.Becomes, expression, initializer, NIL);	
-						END;
-						IF expression # NIL THEN 
-							variable.SetInitializer(expression);
-						ELSE
-							variable.SetInitializer(CompatibleConversion(variable.initializer.position, initializer, variable.type));
-						END;
-					END
 				END;
 				IF variable.type.resolved IS SyntaxTree.ArrayType THEN
 					IF variable.type.resolved(SyntaxTree.ArrayType).length = NIL THEN
@@ -7116,7 +7111,7 @@ TYPE
 		END StatementSequence;
 
 		PROCEDURE ResolveDeclarationStatement(x: SyntaxTree.DeclarationStatement): SyntaxTree.Statement;
-		VAR duplicate: BOOLEAN; variable: SyntaxTree.Variable; i: SIZE; type: SyntaxTree.Type; initializer, expression: SyntaxTree.Expression; qualifiedType: SyntaxTree.QualifiedType;
+		VAR duplicate: BOOLEAN; variable: SyntaxTree.Variable; i: SIZE; initializer, expression: SyntaxTree.Expression; qualifiedType: SyntaxTree.QualifiedType;
 		BEGIN
 			FOR i := 0 TO x.variables.Length()-1 DO
 				variable := x.variables.Get(i);
@@ -8112,40 +8107,16 @@ TYPE
 					IF baseType IS SyntaxTree.PointerType THEN
 						baseType := baseType(SyntaxTree.PointerType).pointerBase.resolved;
 					END;
-					(*
-					IF baseType IS SyntaxTree.CellType THEN
-						DeclareCell(baseType(SyntaxTree.CellType));
-					END;
-					*)
 				END;
 
 				parameter := type.firstParameter;
 				WHILE(parameter # NIL) DO (* duplicates forbidden *)
-					(*
-					variable := SyntaxTree.NewVariable(parameter.position, parameter.name);
-					variable.SetType(parameter.type);
-					variable.SetAccess(SyntaxTree.Hidden);
-					variable.SetModifiers(parameter.modifiers);
-					currentScope.PushVariable(variable);
-					*)
 					Register(parameter,scope, FALSE);
 					parameter := parameter.nextParameter;
 				END;
 
 				property := type.firstProperty;
 				WHILE (property # NIL) DO (* duplicates allowed : overwrite *)
-					(*
-					variable := currentScope.FindVariable(property.name);
-					IF (variable # NIL) & (variable IS SyntaxTree.Property) THEN (* overwrite *)
-						prop := variable(SyntaxTree.Property);
-					ELSE (* add, duplicate symbols detection later *)
-						prop := SyntaxTree.NewProperty(property.position, property.name);
-						currentScope.PushVariable(prop);
-					END;
-					prop.SetType(property.type);
-					prop.SetValue(property.value);
-					prop.SetAccess(SyntaxTree.Hidden);
-					*)
 					Register(property, scope, FALSE);
 					property := property.nextProperty;
 				END;
@@ -8314,6 +8285,42 @@ TYPE
 			currentScope := prevScope;
 			error := error OR prevError;
 		END Declarations;
+		
+		PROCEDURE Initializer(variable: SyntaxTree.Variable);
+		VAR initializer, expression: SyntaxTree.Expression;
+		BEGIN
+			initializingVariable := variable;
+			IF variable.initializer # NIL THEN
+				initializer := ResolveExpression(variable.initializer);
+				IF ~CompatibleTo(system, initializer.type, variable.type) THEN
+					expression := NewSymbolDesignator(variable.position, NIL, NIL, variable);
+					expression := NewOperatorCall(variable.position, NIL, Scanner.Becomes, expression, initializer, NIL);	
+				END;
+				IF expression # NIL THEN 
+					variable.SetInitializer(expression);
+				ELSE
+					variable.SetInitializer(CompatibleConversion(variable.initializer.position, initializer, variable.type));
+				END;
+				variable.SetState(SyntaxTree.Initialized);
+			END;
+			initializingVariable := NIL;
+		END Initializer;
+		
+		PROCEDURE Initializers(scope: SyntaxTree.Scope);
+		VAR variable: SyntaxTree.Variable;
+		BEGIN
+			scope := scope.firstScope;
+			WHILE (scope # NIL) DO
+				currentScope := scope;
+				variable := scope.firstVariable;
+				WHILE variable # NIL DO
+					Initializer(variable);
+					variable := variable.nextVariable;
+				END;
+				scope := scope.nextScope;
+			END;	
+		END Initializers;
+		
 
 		(* nopov *)
 		(** check if all operators from one module are compatible to the ones in the other module
@@ -8422,7 +8429,8 @@ TYPE
 			RemoveModuleFromCache(importCache,x);
 			Declarations(x.moduleScope, FALSE, {0,1});
 			FixTypes();
-
+			Initializers(x.moduleScope);			
+			
 			IF module.isCellNet THEN
 				currentIsCellNet := TRUE;
 				modifier := x.modifiers;

@@ -49,7 +49,7 @@ CONST
 	SemiDynamic*=4;
 
 	(** node states, important for checker to avoid cycles *)
-	Undefined*={}; BeingResolved*=1; Resolved*=2; Fingerprinted*=3; Warned*=4;
+	Undefined*={}; BeingResolved*=1; Resolved*=2; Fingerprinted*=3; Warned*=4; Initialized*=5;
 
 	(* context in which a range expression is used *)
 	ArrayIndex* = 0;

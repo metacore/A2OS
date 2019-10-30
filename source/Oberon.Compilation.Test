@@ -39632,3 +39632,36 @@ positive: compile code containing inline code twice (second iteration)
 
 	END Test.
 	
+positive: initializing variables in correct order
+	MODULE Test;
+
+	VAR a := 0 : INTEGER; 
+		b := a : INTEGER;
+
+	END Test.
+
+negative: cyclic initializer dependency
+	MODULE Test;
+
+	VAR 	b := a; a := b;
+	END Test.
+
+negative: initializers in wrong order
+	MODULE Test;
+
+	VAR 	b := a : INTEGER;
+		a := 0 : INTEGER; 
+
+	END Test.
+
+positive: variable with initializer and correctly declared as of type pointer to record
+	MODULE Test;
+	TYPE
+	    T = RECORD END;
+
+	PROCEDURE P*;
+	    VAR p := NEW T( ): POINTER TO T;
+	END P;
+
+	END Test.
+	

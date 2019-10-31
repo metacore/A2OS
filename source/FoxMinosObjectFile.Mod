@@ -267,6 +267,7 @@ TYPE
 			VAR t: SyntaxTree.Type;
 			BEGIN
 				t := type.declaredType.resolved;
+				IF type # t.typeDeclaration THEN RETURN FALSE END;
 				WITH t:
 				| SyntaxTree.RecordType DO RETURN TRUE
 				| SyntaxTree.PointerType DO

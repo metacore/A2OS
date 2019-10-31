@@ -336,7 +336,8 @@ TYPE
 		model- : StringGridModel;
 		cellColor, hoverColor, selectedColor, fixedColor, textHoverColor, textColor, textSelectedColor : WMGraphics.Color;
 		clCell-, clFixed-, clHover-, clSelected-, clTextDefault-, clTextHover-, clTextSelected- : WMProperties.ColorProperty;
-
+		showImgOnlyCells-: WMProperties.BooleanProperty; 
+		
 		PROCEDURE &Init*;
 		BEGIN
 			Init^;
@@ -350,6 +351,7 @@ TYPE
 			NEW(clTextDefault, PrototypeTclTextDefault, NIL, NIL); properties.Add(clTextDefault);
 			NEW(clTextHover, PrototypeTclTextHover, NIL, NIL); properties.Add(clTextHover);
 			NEW(clTextSelected, PrototypeTclTextSelected,  NIL, NIL); properties.Add(clTextSelected);
+			NEW(showImgOnlyCells, PrototypeShowImgOnlyCells, NIL, NIL); properties.Add(showImgOnlyCells);
 		(*	NEW(fontHeight, PrototypeTfontHeight, NIL, NIL); properties.Add(fontHeight);	*)
 			takesFocus.Set(TRUE);
 			NEW(model);
@@ -438,7 +440,7 @@ TYPE
 			left := 1; img := model.GetCellImage(x, y);
 			IF img # NIL THEN INC(left, img.width + 1) END;
 
-			IF s # NIL THEN
+			IF (s # NIL) OR showImgOnlyCells.Get() THEN
 				IF img # NIL THEN
 					dispW := img.width;
 					dispH := img.height;
@@ -450,8 +452,10 @@ TYPE
 						canvas.DrawImage(1, 1, img, WMGraphics.ModeSrcOverDst);
 					END
 				END;
-				WMGraphics.DrawStringInRect(canvas, WMRectangles.MakeRect(left, 1, w - 2, h - 2), FALSE,
-					model.GetTextAlign(x, y), WMGraphics.AlignCenter, s^)
+				IF s#NIL THEN
+					WMGraphics.DrawStringInRect(canvas, WMRectangles.MakeRect(left, 1, w - 2, h - 2), FALSE,
+						model.GetTextAlign(x, y), WMGraphics.AlignCenter, s^)
+				END;
 			END;
 			IF WMGrids.CellSelected IN state THEN
 				WMGraphicUtilities.ExtRectGlassShade(canvas, WMRectangles.MakeRect(0, 0, w, h), {1, 3}, 5, FALSE);
@@ -465,7 +469,7 @@ VAR
 	 PrototypeTclCell*, PrototypeTclHover*, PrototypeTclSelected*, PrototypeTclTextDefault*,
 	 PrototypeTclTextHover*, PrototypeTclTextSelected*, PrototypeTclFixed* : WMProperties.ColorProperty;
 	 PrototypeTfontHeight* : WMProperties.Int32Property;
-
+	 PrototypeShowImgOnlyCells*: WMProperties.BooleanProperty;
 	 StrStringGrid : Strings.String;
 
 PROCEDURE GenStringGrid*() : XML.Element;
@@ -499,6 +503,9 @@ BEGIN
 	plStringGrid.Add(PrototypeTclTextSelected);
 	NEW(PrototypeTfontHeight, NIL, Strings.NewString("FontHeight"), Strings.NewString("height of the tree item text"));
 	plStringGrid.Add(PrototypeTfontHeight);
+	NEW(PrototypeShowImgOnlyCells, NIL, Strings.NewString("showImageOnlyCells"), Strings.NewString("show cells that have no text, only img"));
+	plStringGrid.Add(PrototypeShowImgOnlyCells);
+
 	PrototypeTclCell.Set(SIGNED32(0FFFFFFFFH));
 	PrototypeTclFixed.Set(SIGNED32(0CCCCCCFFH));
 	PrototypeTclHover.Set(SIGNED32(0FFFF00FFH));
@@ -508,6 +515,7 @@ BEGIN
 	PrototypeTclTextSelected.Set(SIGNED32(0FFFFFFFFH));
 
 	PrototypeTfontHeight.Set(12);
+	PrototypeShowImgOnlyCells.Set(FALSE);
 	WMComponents.propertyListList.Add("StringGrid", plStringGrid);
 	WMComponents.propertyListList.UpdateStyle;
 END InitPrototypes;
@@ -548,7 +556,7 @@ BEGIN
 	p:=WMStandardComponents.GenPanel()(WMStandardComponents.Panel); p.fillColor.Set(0FF0000FFH);
 	g.model.SetCellData(0,0,p);
 	img:=WMGraphics.LoadImage("Yellow_Duck.jpg",FALSE);
-	g.model.SetCellTextAOC(0,1,12,"yellow duck");
+	(*g.model.SetCellTextAOC(0,1,12,"yellow duck");*)
 	rowSp[1]:=100; g.SetRowSpacings(rowSp);
 	colSp[0]:=100; g.SetColSpacings(colSp);
 	g.model.SetCellImage(0,1,img);
@@ -565,7 +573,7 @@ END ShowGrid.
 
 ShowGrid.Do ~
 
-System.FreeDownTo ShowGrid~
+System.FreeDownTo WMStringGrids ShowGrid~
 
 ComponentViewer.Open WMStringGrids.GenStringGrid ~
 

@@ -517,5 +517,55 @@ BEGIN
 	InitPrototypes;
 END WMStringGrids.
 
-System.Free WMStringGrids ~
+MODULE ShowGrid; (** AUTHOR ""; PURPOSE ""; *)
+IMPORT WMGrids, WMStringGrids, WMComponents, WMStandardComponents, WMGraphics, WMWindowManager;
+VAR g:WMStringGrids.StringGrid;
+
+PROCEDURE Cast(CONST a:ARRAY[*] OF SIZE):POINTER TO ARRAY OF SIZE;
+VAR i:SIZE;
+BEGIN
+	NEW(RESULT,LEN(a,0));
+	FOR i:=0 TO LEN(a,0)-1 DO RESULT[i]:=a[i]
+	END;
+	RETURN RESULT
+END Cast;
+
+
+PROCEDURE Do*;
+VAR 
+	p:WMStandardComponents.Panel; 
+	img: WMGraphics.Image;
+	win:WMComponents.FormWindow;
+	rowSp,colSp: WMGrids.Spacings;
+BEGIN
+	g:=WMStringGrids.GenStringGrid()(WMStringGrids.StringGrid);
+	rowSp:=Cast([20,20,20,20,20,20,20,20,20,20]); g.SetRowSpacings(rowSp);
+	colSp:=Cast([20,20,20,20,20,20,20,20,20,20]); g.SetColSpacings(colSp);
+	g.model.Acquire;
+	g.alignment.Set(WMComponents.AlignClient);
+	g.model.SetNofRows(10);
+	g.model.SetNofCols(3);
+	p:=WMStandardComponents.GenPanel()(WMStandardComponents.Panel); p.fillColor.Set(0FF0000FFH);
+	g.model.SetCellData(0,0,p);
+	img:=WMGraphics.LoadImage("Yellow_Duck.jpg",FALSE);
+	g.model.SetCellTextAOC(0,1,12,"yellow duck");
+	rowSp[1]:=100; g.SetRowSpacings(rowSp);
+	colSp[0]:=100; g.SetColSpacings(colSp);
+	g.model.SetCellImage(0,1,img);
+	p:=WMStandardComponents.GenPanel()(WMStandardComponents.Panel); p.fillColor.Set(000FF00FFH);
+	g.model.SetCellData(1,0,p);
+	p:=WMStandardComponents.GenPanel()(WMStandardComponents.Panel); p.fillColor.Set(000FFFFH);
+	g.model.SetCellData(2,1,p);
+	NEW(win,200,400, FALSE); win.SetContent(g);
+	g.model.Release;
+	WMWindowManager.DefaultAddWindow(win);
+END Do;
+
+END ShowGrid.
+
+ShowGrid.Do ~
+
+System.FreeDownTo ShowGrid~
+
+ComponentViewer.Open WMStringGrids.GenStringGrid ~
 

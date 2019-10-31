@@ -2685,6 +2685,7 @@ SHL(x,y) & x: Integer or Set,\newline  y: Integer & Integer or Set & return shif
 SHR(x,y) & x: Integer or Set,\newline  y: Integer & Integer or Set & return shift right of x by y bits. Type of x determines if this is logical or artihmetic shift\\
 \hline
 \end{longtable}
+The result of a shift is unpredictable if a too large or too small shift amount, out of the bit-width of the argument, is provided.
 
 \subsubsection{Arrays and Math Arrays}
 \begin{longtable}{|p{0.25\linewidth}|p{0.2\linewidth}|p{0.15\linewidth}|p{0.25\linewidth}|}

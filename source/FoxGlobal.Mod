@@ -125,7 +125,9 @@ CONST
 	Shl*= systemSpecial+1; Shr*= Shl+1;
 	Rol*= Shr+1; Ror*= Rol+1;
 
-	Flt*= Ror+1; Conversion*= Flt+1; DotTimesPlus*= Conversion+1; AtMulDec*= DotTimesPlus+1; AtMulInc*= AtMulDec+1; DecMul*= AtMulInc+1; IncMul*= DecMul+1; endFox*= IncMul+1;
+	Flt*= Ror+1; Conversion*= Flt+1; DotTimesPlus*= Conversion+1; AtMulDec*= DotTimesPlus+1; AtMulInc*= AtMulDec+1; DecMul*= AtMulInc+1; IncMul*= DecMul+1; 
+	Indexer*= IncMul+1;
+	endFox*= Indexer+1;
 
 	VectorCapability* = 0;
 	FloatingPointCapability*= 1;
@@ -1013,6 +1015,7 @@ TYPE
 		OperatorDefined(system, AtMulInc, TRUE);
 		OperatorDefined(system, DecMul, TRUE);
 		OperatorDefined(system, IncMul, TRUE);
+		OperatorDefined(system, Indexer, TRUE);
 
 		OperatorDefined(system,Scanner.Transpose,TRUE);
 		OperatorDefined(system,Scanner.Becomes,TRUE);
@@ -1729,6 +1732,7 @@ TYPE
 		NewBuiltinIdentifier(Im,"IM");
 		NewBuiltinIdentifier(IncMul,"INCMUL");
 		NewBuiltinIdentifier(DecMul,"DECMUL");
+		NewBuiltinIdentifier(Indexer,"[]");
 
 		(* TODO: check if ok. The operators defined in FoxArrayBase require the following identifiers *)
 		(* TODO: ".*+" should preferably be added as a new token in the scanner *)
@@ -1745,6 +1749,9 @@ TYPE
 
 		identifiers[Scanner.Lowercase,Conversion] := SyntaxTree.NewIdentifier("@Convert");
 		identifiers[Scanner.Uppercase,Conversion] := SyntaxTree.NewIdentifier("@Convert");
+
+		identifiers[Scanner.Lowercase,Indexer] := SyntaxTree.NewIdentifier("[]");
+		identifiers[Scanner.Uppercase,Indexer] := SyntaxTree.NewIdentifier("[]");
 
 	END InitIdentifiers;
 

@@ -1611,7 +1611,7 @@ TYPE
 				RETURN SyntaxTree.invalidExpression;
 			END;
 			IF  ~(left.type.resolved IS SyntaxTree.BasicType) OR (left.type.resolved IS SyntaxTree.ComplexType) THEN
-				operatorCall := NewOperatorCall(unaryExpression.position, unaryExpression, operator,left,NIL,NIL);
+				operatorCall := NewBinaryOperatorCall(unaryExpression.position, unaryExpression, operator,left,NIL,NIL);
 			END;
 			IF operatorCall # NIL THEN
 				result := operatorCall;
@@ -1791,7 +1791,7 @@ TYPE
 				result := value;
 				IF ~isValue THEN Error(position, "incompatible array conversion") END;
 			ELSE (* should the search for operators be restricted to the ArrayBase module here ? *)
-				result := NewOperatorCall(position,expression, Global.Conversion,expression,NIL,type);
+				result := NewBinaryOperatorCall(position,expression, Global.Conversion,expression,NIL,type);
 				IF result = NIL THEN
 					result := SyntaxTree.invalidExpression;
 					Error(position, "incompatible conversion");
@@ -2092,7 +2092,7 @@ TYPE
 			- search current module scope and all (directly or indirectly) imported modules for matching operator
 			- take operator with smalles distance, where signature distance is computed in procedure Distance
 		**)
-		PROCEDURE FindOperator(system: Global.System; operator: SIGNED32; actualParameters: SyntaxTree.ExpressionList; returnType: SyntaxTree.Type): SyntaxTree.Operator;
+		PROCEDURE FindOperator(op: SIGNED32; actualParameters: SyntaxTree.ExpressionList; returnType: SyntaxTree.Type): SyntaxTree.Operator;
 		VAR bestOperator: SyntaxTree.Operator; bestDistance: SIZE; import: SyntaxTree.Import; numberParameters: SIZE; procedureType: SyntaxTree.ProcedureType;
 			identifier: SyntaxTree.Identifier;
 
@@ -2114,16 +2114,6 @@ TYPE
 								END;
 							END;
 						END;
-
-						(*
-						IF distance < Infinity THEN
-							TRACE(distance, operator);
-							Printout.Info("potential operator",operator);
-						ELSE
-							Printout.Info("operator not possible",operator);
-						END;
-						*)
-
 						IF distance < bestDistance THEN
 							bestDistance := distance;
 							bestOperator := operator;
@@ -2131,19 +2121,16 @@ TYPE
 					END;
 					operator := operator.nextOperator;
 				END;
-				(*
-				Printout.Info("taken operator",bestOperator);
-				*)
 			END FindInScope;
 
 		BEGIN
 			bestDistance := Infinity; bestOperator := NIL; numberParameters := actualParameters.Length();
-			identifier := Global.GetIdentifier(operator,currentScope.ownerModule.case);
+			identifier := Global.GetIdentifier(op,currentScope.ownerModule.case);
 			FindInScope(currentScope.ownerModule.moduleScope,SyntaxTree.ReadOnly);
 			import := currentScope.ownerModule.moduleScope.firstImport;
 			WHILE (bestDistance > 0) & (import # NIL) DO
 				IF import.module # NIL THEN
-					identifier := Global.GetIdentifier(operator,import.module.case);
+					identifier := Global.GetIdentifier(op,import.module.case);
 					FindInScope(import.module.moduleScope,SyntaxTree.Public);
 				END;
 				import := import.nextImport;
@@ -2156,6 +2143,38 @@ TYPE
 			currentScope := scope;
 		END SetCurrentScope;
 
+		PROCEDURE NewOperatorCall*(position: SyntaxTree.Position; original: SyntaxTree.Expression; op: SIGNED32; parameter: SyntaxTree.ExpressionList; resultType: SyntaxTree.Type): SyntaxTree.Expression;
+		VAR operator: SyntaxTree.Operator;
+			expression, result: SyntaxTree.Expression;
+			designator: SyntaxTree.Designator;
+			import: SyntaxTree.Import;
+			castReturnType : SyntaxTree.MathArrayType;
+		BEGIN
+			operator := FindOperator(op,parameter,resultType);
+			IF operator # NIL THEN
+				designator := NIL;
+				IF operator.scope.ownerModule # currentScope.ownerModule THEN
+					import := currentScope.ownerModule.moduleScope.firstImport;
+					WHILE(import # NIL) & (import.module # operator.scope.ownerModule)  DO
+						import := import.nextImport;
+					END;
+					expression := NewSymbolDesignator(position,NIL,NIL,import);
+					designator := expression(SyntaxTree.Designator);
+				END;
+				expression := NewSymbolDesignator(position,NIL,designator,operator);
+				designator := expression(SyntaxTree.Designator);
+				result := NewProcedureCallDesignator(position, original, designator,parameter);
+				IF op = Scanner.Alias THEN (* hard type cast to same type *)
+					castReturnType := SyntaxTree.NewMathArrayType(Basic.invalidPosition, expression.type.scope,SyntaxTree.Tensor);
+					castReturnType.SetArrayBase(ArrayBase(parameter.GetExpression(0).type.resolved,Infinity));
+					result.SetType(castReturnType);
+				END;
+			ELSE
+				result := NIL;
+			END;
+			RETURN result;
+		END NewOperatorCall;
+
 		(**
 			return a procedure call designator for the best matching operator procedure of the form "op"(leftExpression,rightExpression) (if any)
 			- handle LEN and DIM operator for array-structured object types
@@ -2164,14 +2183,10 @@ TYPE
 				- create symbol designator for operator
 			- if error then return invalidExpression, if no operator then return NIL
 		**)
-		PROCEDURE NewOperatorCall*(position: Position; original: SyntaxTree.Expression; op: SIGNED32; leftExpression, rightExpression: SyntaxTree.Expression; resultType: SyntaxTree.Type): SyntaxTree.Expression;
+		PROCEDURE NewBinaryOperatorCall*(position: Position; original: SyntaxTree.Expression; op: SIGNED32; leftExpression, rightExpression: SyntaxTree.Expression; resultType: SyntaxTree.Type): SyntaxTree.Expression;
 		VAR
-			operator: SyntaxTree.Operator;
-			import: SyntaxTree.Import;
-			expression, result: SyntaxTree.Expression;
-			designator: SyntaxTree.Designator;
 			actualParameters: SyntaxTree.ExpressionList;
-			castReturnType : SyntaxTree.MathArrayType;
+			result: SyntaxTree.Expression;
 		BEGIN
 			IF (leftExpression = SyntaxTree.invalidExpression) OR (rightExpression = SyntaxTree.invalidExpression)  THEN
 				result := SyntaxTree.invalidExpression
@@ -2214,31 +2229,12 @@ TYPE
 				IF rightExpression # NIL THEN
 					actualParameters.AddExpression(rightExpression)
 				END;
-				operator := FindOperator(system,op,actualParameters,resultType);
-				IF operator # NIL THEN
-					designator := NIL;
-					IF operator.scope.ownerModule # currentScope.ownerModule THEN
-						import := currentScope.ownerModule.moduleScope.firstImport;
-						WHILE(import # NIL) & (import.module # operator.scope.ownerModule)  DO
-							import := import.nextImport;
-						END;
-						expression := NewSymbolDesignator(position,NIL,NIL,import);
-						designator := expression(SyntaxTree.Designator);
-					END;
-					expression := NewSymbolDesignator(position,NIL,designator,operator);
-					designator := expression(SyntaxTree.Designator);
-					result := NewProcedureCallDesignator(position, original, designator,actualParameters);
-					IF op = Scanner.Alias THEN (* hard type cast to same type *)
-						castReturnType := SyntaxTree.NewMathArrayType(Basic.invalidPosition, expression.type.scope,SyntaxTree.Tensor);
-						castReturnType.SetArrayBase(ArrayBase(leftExpression.type.resolved,Infinity));
-						result.SetType(castReturnType);
-					END;
-				ELSE
-					result := NIL;
-				END;
+				
+				result := NewOperatorCall(position, original, op, actualParameters, resultType); 
+				
 			END;
 			RETURN result
-		END NewOperatorCall;
+		END NewBinaryOperatorCall;
 
 		(** check and resolve binary expression **)
 		PROCEDURE ResolveBinaryExpression(binaryExpression: SyntaxTree.BinaryExpression): SyntaxTree.Expression;
@@ -2321,7 +2317,7 @@ TYPE
 			END;
 			leftType := left.type.resolved; rightType := right.type.resolved;
 			IF ~(leftType IS SyntaxTree.BasicType) OR ~(rightType IS SyntaxTree.BasicType) OR (leftType IS SyntaxTree.ComplexType) OR (rightType IS SyntaxTree.ComplexType) THEN
-				operatorCall := NewOperatorCall(binaryExpression.position,binaryExpression, operator,left,right,NIL);
+				operatorCall := NewBinaryOperatorCall(binaryExpression.position,binaryExpression, operator,left,right,NIL);
 			END;
 
 			IF (operatorCall = NIL) & IsPointerToObject(left.type) THEN
@@ -3413,11 +3409,7 @@ TYPE
 
 			BEGIN
 				bestDistance := Infinity; bestOperator := NIL; numberParameters := actualParameters.Length();
-				IF oper = 0 THEN  (* index *)
-					identifier := SyntaxTree.NewIdentifier("[]");
-				ELSE
-					identifier := Global.GetIdentifier(oper,currentScope.ownerModule.case);
-				END;
+				identifier := Global.GetIdentifier(oper,currentScope.ownerModule.case);
 
 				WHILE (recordType # NIL) DO
 					FindInScope(recordType.recordScope,SyntaxTree.ReadOnly);
@@ -3513,6 +3505,7 @@ TYPE
 			expression: SyntaxTree.Expression;
 			i: SIZE;
 			result: SyntaxTree.Expression;
+			parameters: SyntaxTree.ExpressionList;
 
 			PROCEDURE FinalizeIndexDesignator;
 			BEGIN
@@ -3549,11 +3542,23 @@ TYPE
 				type := designator.type.resolved;
 				indexDesignator := NIL;
 
+				parameters := SyntaxTree.NewExpressionList(); 
+				parameters.AddExpression(designator); 
+				FOR i := 0 TO bracketDesignator.parameters.Length()-1 DO
+					expression := ResolveExpression(bracketDesignator.parameters.GetExpression(i));
+					bracketDesignator.parameters.SetExpression(i, expression);
+					parameters.AddExpression(expression);
+				END; 
+				result := NewOperatorCall(bracketDesignator.position, bracketDesignator, Global.Indexer, parameters, NIL);
+				IF result # NIL THEN
+					RETURN result;
+				END; 
+				
 				(*!!! clean up *)
 				IF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType)
 					OR (type IS SyntaxTree.RecordType)
 				THEN
-					result := NewObjectOperatorCall(bracketDesignator.position, designator, 0, bracketDesignator.parameters,bracketDesignator.relatedRhs);
+					result := NewObjectOperatorCall(bracketDesignator.position, designator, Global.Indexer, bracketDesignator.parameters,bracketDesignator.relatedRhs);
 					IF result = NIL THEN
 						Error(bracketDesignator.position,"undefined operator");
 						result := SyntaxTree.invalidDesignator
@@ -3886,7 +3891,7 @@ TYPE
 							symbol := Find(import.module.moduleScope, name, FALSE);
 							IF symbol # NIL THEN
 								symbolDesignator := NewSymbolDesignator(position, NIL, NIL, symbol);
-								operator := NewOperatorCall(position, NIL, Global.All, parameter0, symbolDesignator, NIL);
+								operator := NewBinaryOperatorCall(position, NIL, Global.All, parameter0, symbolDesignator, NIL);
 								RETURN TRUE;
 							ELSE
 								Printout.Info("symbol",symbol);
@@ -3897,7 +3902,7 @@ TYPE
 							Error(position,"MAP could not be generated (import failed)");
 						END;
 					ELSE
-						operator := NewOperatorCall(position, NIL, Global.All, parameter0, left, NIL);
+						operator := NewBinaryOperatorCall(position, NIL, Global.All, parameter0, left, NIL);
 						RETURN TRUE;
 					END;
 				END;
@@ -4572,7 +4577,7 @@ TYPE
 			ELSE
 				id := builtin.id;
 				IF system.operatorDefined[id] THEN (* try to find overloaded operator *)
-					result := NewOperatorCall(position,original, builtin.id,parameter[0],parameter[1],NIL);
+					result := NewBinaryOperatorCall(position,original, builtin.id,parameter[0],parameter[1],NIL);
 				END;
 			END;
 
@@ -6688,10 +6693,10 @@ TYPE
 			IF operator.scope IS SyntaxTree.RecordScope THEN
 			ELSIF operator.scope IS SyntaxTree.ModuleScope THEN
 				identifierNumber := Global.GetSymbol(operator.scope.ownerModule.case, operator.name);
-
+	
 				IF identifierNumber = -1 THEN
 					Error(operator.position, "operator with unknown identifier")
-				ELSIF ~system.operatorDefined[identifierNumber] THEN
+				ELSIF (identifierNumber # 0) & ~system.operatorDefined[identifierNumber] THEN
 					Error(operator.position, "identifier may not be used for operator")
 				ELSE
 					IF procedureType.numberParameters < 1 THEN
@@ -6773,6 +6778,7 @@ TYPE
 							mustBeBinary := TRUE; hasReturnType := FALSE;
 						| Scanner.GreaterGreaterQ, Scanner.LessLessQ:
 							mustBeBinary := TRUE; mustReturnBoolean := TRUE;
+						| Global.Indexer:
 						END;
 
 						(* check parameter count *)
@@ -7139,7 +7145,7 @@ TYPE
 						initializer := ResolveExpression(initializer);
 						IF ~CompatibleTo(system, initializer.type, variable.type) THEN
 							expression := NewSymbolDesignator(variable.position, NIL, NIL, variable);
-							expression := NewOperatorCall(variable.position, NIL, Scanner.Becomes, expression, initializer, NIL);	
+							expression := NewBinaryOperatorCall(variable.position, NIL, Scanner.Becomes, expression, initializer, NIL);	
 						END;
 						IF expression # NIL THEN 
 							x.initializers.SetExpression(i,expression);
@@ -7215,7 +7221,7 @@ TYPE
 				procedureCallDesignator :=  left(SyntaxTree.ProcedureCallDesignator);
 				RETURN SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);
 			ELSIF CheckVariable(left) THEN
-				expression := NewOperatorCall(assignment.position, NIL, Scanner.Becomes, left, right, NIL);
+				expression := NewBinaryOperatorCall(assignment.position, NIL, Scanner.Becomes, left, right, NIL);
 				IF (expression # NIL) & (expression IS SyntaxTree.ProcedureCallDesignator) THEN
 					procedureCallDesignator := expression(SyntaxTree.ProcedureCallDesignator);
 					RETURN SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);
@@ -7241,7 +7247,7 @@ TYPE
 			communication.SetLeft(left);
 			communication.SetRight(right);
 
-			expression := NewOperatorCall(communication.position, NIL, communication.op, left, right, NIL);
+			expression := NewBinaryOperatorCall(communication.position, NIL, communication.op, left, right, NIL);
 			IF (expression # NIL) & (expression IS SyntaxTree.ProcedureCallDesignator) THEN
 				procedureCallDesignator := expression(SyntaxTree.ProcedureCallDesignator);
 				RETURN SyntaxTree.NewProcedureCallStatement(communication.position, FALSE, procedureCallDesignator, communication.outer);
@@ -8302,7 +8308,7 @@ TYPE
 				initializer := ResolveExpression(variable.initializer);
 				IF ~CompatibleTo(system, initializer.type, variable.type) THEN
 					expression := NewSymbolDesignator(variable.position, NIL, NIL, variable);
-					expression := NewOperatorCall(variable.position, NIL, Scanner.Becomes, expression, initializer, NIL);	
+					expression := NewBinaryOperatorCall(variable.position, NIL, Scanner.Becomes, expression, initializer, NIL);	
 				END;
 				IF expression # NIL THEN 
 					variable.SetInitializer(expression);
@@ -8379,6 +8385,10 @@ TYPE
 										(* go through all parameters *)
 										FOR i := 1 TO thisProcedureType.numberParameters DO
 											ASSERT(thatParameter # NIL);
+											IF (thisParameter.kind=SyntaxTree.VarParameter) # (thatParameter.kind = SyntaxTree.VarParameter) THEN
+												operandsAreEqual := FALSE;
+												operandsAreCompatible := FALSE;
+											END;
 											IF ~SameType(thisParameter.type, thatParameter.type) THEN
 												operandsAreEqual := FALSE;
 												IF TypeDistance(system, thisParameter.type, thatParameter.type, thisParameter.kind = SyntaxTree.VarParameter) =Infinity THEN
@@ -8979,6 +8989,7 @@ TYPE
 			WHILE (formalParameter # NIL) & (result # Infinity) DO
 				actualParameter := actualParameters.GetExpression(i);
 
+
 				ASSERT(formalParameter.type # NIL);
 				IF (actualParameter.type = NIL) THEN distance := Infinity
 				ELSE
@@ -8991,17 +9002,6 @@ TYPE
 					IF (formalParameter.kind = SyntaxTree.VarParameter) & (distance # 0) THEN
 						IF (to IS SyntaxTree.MathArrayType) & (actualParameter.type.resolved IS SyntaxTree.MathArrayType) THEN
 							(* already handled varpar *)
-							(*
-							baseActual := actualParameter.type.resolved(SyntaxTree.MathArrayType).arrayBase.resolved;
-							baseFormal := to(SyntaxTree.MathArrayType).arrayBase.resolved;
-							WHILE(baseActual IS SyntaxTree.MathArrayType) & (baseFormal IS SyntaxTree.MathArrayType) DO
-								baseActual := baseActual(SyntaxTree.MathArrayType).arrayBase.resolved;
-								baseFormal := baseFormal(SyntaxTree.MathArrayType).arrayBase.resolved;
-							END;
-							IF TypeDistance(system,baseActual,baseFormal,FALSE) # 0 THEN
-								result := Infinity
-							END;
-							*)
 							INC(result, distance);
 						ELSIF (to IS SyntaxTree.ArrayType) & (to(SyntaxTree.ArrayType).length = NIL) & (to(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType) THEN
 							INC(result, distance);
@@ -9027,6 +9027,13 @@ TYPE
 				Printout.Info("formal=", formalParameter);
 				TRACE(result);
 				*)
+
+				IF ~actualParameter.assignable & (formalParameter.kind = SyntaxTree.VarParameter) THEN
+					result := Infinity;
+				ELSIF (distance < Infinity) & actualParameter.assignable & (formalParameter.kind = SyntaxTree.ConstParameter) THEN
+					INC(result);
+				END;
+
 				formalParameter := formalParameter.nextParameter; INC(i);
 			END;
 		END;

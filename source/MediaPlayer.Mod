@@ -79,7 +79,7 @@ CONST
 	TraceRendering = {6}; 	(* Per frame rendering stats 	*)
 	TraceEof = {7};			(* Trace calls to end of file handlers *)
 
-	Trace = {2,4,5};
+	Trace = {2,4};
 
 	Debug = TRUE;
 
@@ -119,7 +119,8 @@ TYPE
 		VAR x: VideoBuffer;
 		BEGIN {EXCLUSIVE}
 			IF num>=delta THEN
-				x:=buffer[(head+1) MOD LEN(buffer)];
+				x:=buffer[(head+delta) MOD LEN(buffer)];
+				(*TRACE(num);*)
 				RETURN x
 			ELSE RETURN NIL
 			END;

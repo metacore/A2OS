@@ -4478,7 +4478,8 @@ TYPE
 			formalParameter: SyntaxTree.Parameter;
 			actualParameter: SyntaxTree.Expression;
 			procedureType: SyntaxTree.ProcedureType;
-			parameter0, parameter1, parameter2, result: SyntaxTree.Expression;
+			parameter : ARRAY 3 OF SyntaxTree.Expression;
+			result: SyntaxTree.Expression;
 			inPort, outPort: SyntaxTree.PortType;
 			constructor: SyntaxTree.Procedure;
 			type0,type1,type2: SyntaxTree.Type;
@@ -4542,25 +4543,25 @@ TYPE
 				numberActualParameters := actualParameters.Length();
 			END;
 			IF numberActualParameters>0 THEN
-				parameter0 := actualParameters.GetExpression(0);
-				IF parameter0.type # NIL THEN type0 := parameter0.type.resolved ELSE
-					Error(parameter0.position,"forbidden type-less argument");
+				parameter[0]:= actualParameters.GetExpression(0);
+				IF parameter[0].type # NIL THEN type0 := parameter[0].type.resolved ELSE
+					Error(parameter[0].position,"forbidden type-less argument");
 					result := SyntaxTree.invalidExpression
 				END
 			END;
 			IF numberActualParameters >1 THEN
-				parameter1 := actualParameters.GetExpression(1);
-				IF parameter1.type # NIL THEN type1 := parameter1.type.resolved
+				parameter[1] := actualParameters.GetExpression(1);
+				IF parameter[1].type # NIL THEN type1 := parameter[1].type.resolved
 				ELSE
-					Error(parameter1.position,"forbidden type-less argument");
+					Error(parameter[1].position,"forbidden type-less argument");
 					result := SyntaxTree.invalidExpression
 				END
 			END;
 			IF numberActualParameters >2 THEN
-				parameter2 := actualParameters.GetExpression(2);
-				IF parameter2.type # NIL THEN type2 := parameter2.type.resolved
+				parameter[2] := actualParameters.GetExpression(2);
+				IF parameter[2].type # NIL THEN type2 := parameter[2].type.resolved
 				ELSE
-					Error(parameter2.position,"forbidden type-less argument");
+					Error(parameter[2].position,"forbidden type-less argument");
 					result := SyntaxTree.invalidExpression
 				END
 			END;
@@ -4571,7 +4572,7 @@ TYPE
 			ELSE
 				id := builtin.id;
 				IF system.operatorDefined[id] THEN (* try to find overloaded operator *)
-					result := NewOperatorCall(position,original, builtin.id,parameter0,parameter1,NIL);
+					result := NewOperatorCall(position,original, builtin.id,parameter[0],parameter[1],NIL);
 				END;
 			END;
 
@@ -4586,15 +4587,15 @@ TYPE
 				END;
 				(* ---- ASSERT ----- *)
 				IF (id = Global.Assert) & CheckArity(1,2)  THEN
-					IF CheckBooleanType(parameter0) THEN
+					IF CheckBooleanType(parameter[0]) THEN
 	(*					mk: Commented this out because Oberon 07 uses Assert(FALSE, trap) instead of HALT
 						fof: commented in again as ASSERT is crucial for compilation tests, Oberon07 obviously needs a HALT statement
 							misusing ASSERT does not make the language clearer nor odes it make the compiler simpler!
 	*)
-						IF IsBooleanValue(parameter0,b) & ~b & ~(currentIsUnreachable)  THEN
+						IF IsBooleanValue(parameter[0],b) & ~b & ~(currentIsUnreachable)  THEN
 							Error(position, "static assertion failed");
 						END;
-						IF (numberActualParameters > 1) & CheckIntegerValue(parameter1,i1) THEN
+						IF (numberActualParameters > 1) & CheckIntegerValue(parameter[1],i1) THEN
 							(* modified: any integer parameter value is allowed, it is in the responsibility of the programmer to adhere to
 								rules imposed by the architecture / current runtime
 							*)
@@ -4603,11 +4604,11 @@ TYPE
 				(* ---- COPY ----- *)
 				ELSIF (id = Global.Copy) & CheckArity(2,2) THEN
 					IF~IsStringType(type0) THEN
-						Error(parameter0.position,"no string type");
+						Error(parameter[0].position,"no string type");
 					END;
 					IF ~IsStringType(type1) THEN
-						Error(parameter1.position,"no string type");
-					ELSIF CheckVariable(parameter1) THEN
+						Error(parameter[1].position,"no string type");
+					ELSIF CheckVariable(parameter[1]) THEN
 						IF (type0 IS SyntaxTree.StringType) THEN
 							arrayType := type1(SyntaxTree.ArrayType);
 							IF arrayType.form = SyntaxTree.Static THEN
@@ -4620,38 +4621,38 @@ TYPE
 				(* ---- INC, DEC----- *)
 				ELSIF ((id = Global.Dec) OR (id = Global.Inc)) & CheckArity(1,2) THEN
 					IF numberActualParameters = 1 THEN
-						parameter1 :=Global.NewIntegerValue(system,position,1);
-						actualParameters.AddExpression(parameter1);
+						parameter[1] :=Global.NewIntegerValue(system,position,1);
+						actualParameters.AddExpression(parameter[1]);
 					END;
-					IF CheckVariable(parameter0) & CheckIntegerType(parameter0) & CheckIntegerType(parameter1) THEN
-						IF ~CompatibleTo(system,parameter1.type,parameter0.type) THEN
+					IF CheckVariable(parameter[0]) & CheckIntegerType(parameter[0]) & CheckIntegerType(parameter[1]) THEN
+						IF ~CompatibleTo(system,parameter[1].type,parameter[0].type) THEN
 							Error(position, "incompatible increment");
 						ELSE
-							parameter1 := NewConversion(Basic.invalidPosition,parameter1,parameter0.type,NIL);
-							actualParameters.SetExpression(1,parameter1);
+							parameter[1] := NewConversion(Basic.invalidPosition,parameter[1],parameter[0].type,NIL);
+							actualParameters.SetExpression(1,parameter[1]);
 						END;
 					END;
 				(* ---- EXCL, INCL----- *)
 				ELSIF ((id = Global.Excl) OR (id = Global.Incl)) & CheckArity(2,2) THEN
-					IF CheckVariable(parameter0) & CheckSetType(parameter0) & CheckIntegerType(parameter1) THEN
-						IF IsIntegerValue(parameter1,i0) THEN
+					IF CheckVariable(parameter[0]) & CheckSetType(parameter[0]) & CheckIntegerType(parameter[1]) THEN
+						IF IsIntegerValue(parameter[1],i0) THEN
 							IF (i0 < 0) OR (i0>= system.setType.sizeInBits) THEN
 								Error(position, "parameter out of SET range")
 							END;
 						END;
-						parameter1 := NewConversion(Basic.invalidPosition,parameter1,Global.Signed32,NIL);
-						actualParameters.SetExpression(1,parameter1);
+						parameter[1] := NewConversion(Basic.invalidPosition,parameter[1],Global.Signed32,NIL);
+						actualParameters.SetExpression(1,parameter[1]);
 					END;
 				(* ---- HALT, SYSTEM.HALT ----- *)
 				ELSIF ((id = Global.Halt) OR (id = Global.systemHalt)) & CheckArity(1,1) THEN
-					IF CheckPositiveIntegerValue(parameter0,i0,FALSE) THEN
+					IF CheckPositiveIntegerValue(parameter[0],i0,FALSE) THEN
 						(* modified: any integer parameter value is allowed, it is in the responsibility of the programmer to adhere to
 							rules imposed by the architecture / current runtime
 						*)
 					END;
 				(* ---- WAIT ----- *)
 				ELSIF cooperative & (id = Global.Wait) & CheckArity(1,1) THEN
-					IF CheckObjectType(parameter0) THEN
+					IF CheckObjectType(parameter[0]) THEN
 					END;
 				(* ---- NEW ----- *)
 				ELSIF (id = Global.New)  THEN
@@ -4668,7 +4669,7 @@ TYPE
 						Error(position, "forbidden new on unsafe pointer");
 					END;
 					(* check constructor *)
-					IF (first =0) OR CheckVariable(parameter0) THEN
+					IF (first =0) OR CheckVariable(parameter[0]) THEN
 						IF type0 IS SyntaxTree.PointerType THEN
 							type0 := type0(SyntaxTree.PointerType).pointerBase.resolved;
 						ELSIF type0 IS SyntaxTree.CellType THEN
@@ -4756,24 +4757,31 @@ TYPE
 								IF type1 IS SyntaxTree.MathArrayType THEN (* NEW(a, array) *)
 
 									(* use type checking facilities of procedure calls: artificially build parameters here and call checker *)
-									base := ArrayBase(type0,Infinity);
+									base := NonStaticArrayBase(type0);
+									IF base IS SyntaxTree.MathArrayType THEN
+										Error(parameter[0].position,"forbidden allocation with size vector on array containing static part");
+									END;
+									
 
-									parameterType := SyntaxTree.NewMathArrayType(Basic.invalidPosition,currentScope,SyntaxTree.Tensor);
-									parameterType(SyntaxTree.MathArrayType).SetArrayBase(base);
-									IF ~CompatibleTo(system,type0,parameterType) THEN
-										Error(parameter0.position,"incompatible parameter in new");
-										result := SyntaxTree.invalidExpression;
-									ELSE
-										parameter0 := NewConversion(Basic.invalidPosition,parameter0,parameterType,NIL); actualParameters.SetExpression(0,parameter0);
+									IF first # 0 THEN
+										parameterType := SyntaxTree.NewMathArrayType(Basic.invalidPosition,currentScope,SyntaxTree.Tensor);
+										parameterType(SyntaxTree.MathArrayType).SetArrayBase(base);
+										IF ~CompatibleTo(system,type0,parameterType) THEN
+											Error(parameter[0].position,"incompatible parameter in new");
+											result := SyntaxTree.invalidExpression;
+										ELSE
+											parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],parameterType,NIL); actualParameters.SetExpression(0,parameter[0]);
+										END;
 									END;
 
 									parameterType := SyntaxTree.NewMathArrayType(Basic.invalidPosition,currentScope,SyntaxTree.Open);
 									parameterType(SyntaxTree.MathArrayType).SetArrayBase(system.sizeType);
 									IF ~CompatibleTo(system,type1,parameterType) THEN
-										Error(parameter1.position,"parameter incompatible to math array len type");
+										Error(parameter[first].position,"parameter incompatible to math array len type");
 										result := SyntaxTree.invalidExpression;
 									ELSE
-										parameter1 := NewConversion(Basic.invalidPosition,parameter1,parameterType,NIL); actualParameters.SetExpression(1,parameter1);
+										parameter[first] := NewConversion(Basic.invalidPosition,parameter[first],parameterType,NIL); 
+										actualParameters.SetExpression(first,parameter[first]);
 									END;
 								ELSE
 									IF CheckArity(i0,i1) & (numberActualParameters >first) THEN
@@ -4830,7 +4838,7 @@ TYPE
 								END;
 							END;
 
-							CheckModifiers(type0(SyntaxTree.CellType), parameter0(SyntaxTree.Designator).modifiers);
+							CheckModifiers(type0(SyntaxTree.CellType), parameter[0](SyntaxTree.Designator).modifiers);
 
 							activeCellsStatement := TRUE;
 						ELSE
@@ -4840,30 +4848,30 @@ TYPE
 					END;
 				(* ---- DISPOSE ----- *)
 				ELSIF (id = Global.Dispose) & CheckArity(1,1) THEN
-					IF ~IsPointerType(parameter0.type) THEN
-						Error(parameter0.position,"is not a pointer")
-					ELSIF ~IsDisposable(parameter0.type) THEN
-						Error(parameter0.position,"is not disposable")
-					ELSIF CheckVariable(parameter0) THEN (* ok *)
+					IF ~IsPointerType(parameter[0].type) THEN
+						Error(parameter[0].position,"is not a pointer")
+					ELSIF ~IsDisposable(parameter[0].type) THEN
+						Error(parameter[0].position,"is not disposable")
+					ELSIF CheckVariable(parameter[0]) THEN (* ok *)
 					END
 				(* ---- GETPROCEDURE ----- *)
 				ELSIF (id = Global.GetProcedure) & CheckArity(3,3) THEN
-					IF CheckStringType(parameter0) & CheckStringType(parameter1) THEN
-						IF CheckVariable(parameter2) THEN
-							IF ~GetProcedureAllowed(parameter2.type) THEN
-								Error(parameter2.position,"GETPROCEDURE not allowed on this type");
+					IF CheckStringType(parameter[0]) & CheckStringType(parameter[1]) THEN
+						IF CheckVariable(parameter[2]) THEN
+							IF ~GetProcedureAllowed(parameter[2].type) THEN
+								Error(parameter[2].position,"GETPROCEDURE not allowed on this type");
 							END;
 						END;
 					END;
 				(* ---- ABS ----- *)
 				ELSIF (id = Global.Abs) & CheckArity(1,1) THEN
 					(* note: ABS on complex numbers is done using overloading *)
-					IF CheckNonComplexNumberSizeType(parameter0) THEN
+					IF CheckNonComplexNumberSizeType(parameter[0]) THEN
 						type := type0;
-						IF IsIntegerValue(parameter0,i0) THEN
+						IF IsIntegerValue(parameter[0],i0) THEN
 							result.SetResolved(SyntaxTree.NewIntegerValue(position,ABS(i0)));
 							type := Global.GetIntegerType(system,ABS(i0));
-						ELSIF IsRealValue(parameter0,r) THEN
+						ELSIF IsRealValue(parameter[0],r) THEN
 							result.SetResolved(SyntaxTree.NewRealValue(position,ABS(r),Scanner.None));
 						END;
 					ELSE
@@ -4872,10 +4880,10 @@ TYPE
 				(* ---- CAP ----- *)
 				ELSIF (id = Global.Cap) & CheckArity(1,1) THEN
 					type := system.characterType;
-						IF CheckCharacterType (parameter0) THEN
-						parameter0 := NewConversion(parameter0.position,parameter0,type,NIL);
-						actualParameters.SetExpression(0,parameter0);
-						IF IsCharacterValue(parameter0,c) THEN
+						IF CheckCharacterType (parameter[0]) THEN
+						parameter[0] := NewConversion(parameter[0].position,parameter[0],type,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
+						IF IsCharacterValue(parameter[0],c) THEN
 							IF (c <= "z") & (c >= "a") THEN
 								result.SetResolved(SyntaxTree.NewCharacterValue(position,CAP(c)))
 							ELSE
@@ -4886,21 +4894,21 @@ TYPE
 				(* ---- CHR ----- *)
 				ELSIF (id = Global.Chr) & CheckArity(1,1) THEN
 					type := system.characterType;
-					IF CheckIntegerType(parameter0) THEN
-						IF IsIntegerValue(parameter0,i0)  THEN
+					IF CheckIntegerType(parameter[0]) THEN
+						IF IsIntegerValue(parameter[0],i0)  THEN
 							result.SetResolved(SyntaxTree.NewCharacterValue(position,CHR(i0)));
 							result := ResolveExpression(result);
 						ELSE
 							(*
-							result := NewConversion(parameter0.position,parameter0,type);
+							result := NewConversion(parameter[0].position,parameter[0],type);
 							*)
 						END;
 					END
 				(* ---- ENTIER ----- *)
 				ELSIF (id = Global.Entier) & CheckArity(1,1) THEN
 					type := Global.Signed32;
-					IF CheckRealType(parameter0) THEN
-						IF IsRealValue(parameter0,r) THEN
+					IF CheckRealType(parameter[0]) THEN
+						IF IsRealValue(parameter[0],r) THEN
 							result.SetResolved(SyntaxTree.NewIntegerValue(position,ENTIER(r)));
 							type := Global.GetIntegerType(system,ENTIER(r));
 						END
@@ -4908,8 +4916,8 @@ TYPE
 				(* ---- ENTIERH ----- *)
 				ELSIF (id = Global.EntierH) & CheckArity(1,1) THEN
 					type := Global.Signed64;
-					IF CheckRealType(parameter0) THEN
-						IF IsRealValue(parameter0,r) THEN
+					IF CheckRealType(parameter[0]) THEN
+						IF IsRealValue(parameter[0],r) THEN
 							result.SetResolved(SyntaxTree.NewIntegerValue(position,ENTIERH(r)));
 						END
 					END;
@@ -4918,7 +4926,7 @@ TYPE
 					type := system.sizeType;
 					base := type0;
 
-					IF (base IS SyntaxTree.PointerType) & (parameter0 IS SyntaxTree.Designator) THEN
+					IF (base IS SyntaxTree.PointerType) & (parameter[0] IS SyntaxTree.Designator) THEN
 						IF base(SyntaxTree.PointerType).isUnsafe THEN
 							base := base(SyntaxTree.PointerType).pointerBase.resolved;
 							IF~(base IS SyntaxTree.ArrayType) OR (base(SyntaxTree.ArrayType).form # SyntaxTree.Static) THEN
@@ -4926,15 +4934,15 @@ TYPE
 							END;
 							type0 := base;
 						ELSE
-							parameter0 := NewDereferenceDesignator(position,parameter0(SyntaxTree.Designator),parameter0(SyntaxTree.Designator));
-							type0 := parameter0.type.resolved;
-							actualParameters.SetExpression(0,parameter0);
+							parameter[0] := NewDereferenceDesignator(position,parameter[0](SyntaxTree.Designator),parameter[0](SyntaxTree.Designator));
+							type0 := parameter[0].type.resolved;
+							actualParameters.SetExpression(0,parameter[0]);
 							base := type0;
 						END;
 					END;
 
-					IF (numberActualParameters=1) OR (numberActualParameters =2) & CheckIntegerType(parameter1) THEN
-						IF ~(numberActualParameters=2) OR ~IsIntegerValue(parameter1,i1) THEN i1 := 0 END;
+					IF (numberActualParameters=1) OR (numberActualParameters =2) & CheckIntegerType(parameter[1]) THEN
+						IF ~(numberActualParameters=2) OR ~IsIntegerValue(parameter[1],i1) THEN i1 := 0 END;
 						IF i1 < 0 THEN
 							Error(position, "invalid dimension");
 							base := SyntaxTree.invalidType;
@@ -4950,12 +4958,12 @@ TYPE
 							END;
 						END;
 						IF numberActualParameters=2 THEN
-							parameter1 := NewConversion(parameter1.position,parameter1,system.sizeType,NIL);
-							actualParameters.SetExpression(1,parameter1);
+							parameter[1] := NewConversion(parameter[1].position,parameter[1],system.sizeType,NIL);
+							actualParameters.SetExpression(1,parameter[1]);
 						ELSIF base IS SyntaxTree.MathArrayType THEN
 							Error(position, "missing dimension specification");
 						END;
-						IF (numberActualParameters=1) OR (numberActualParameters =2) & IsIntegerValue(parameter1,i1) THEN
+						IF (numberActualParameters=1) OR (numberActualParameters =2) & IsIntegerValue(parameter[1],i1) THEN
 							IF base IS SyntaxTree.ArrayType THEN
 								arrayType := base(SyntaxTree.ArrayType);
 								IF (arrayType.length # NIL) & (arrayType.length.resolved # NIL) & IsIntegerValue(arrayType.length,value) THEN
@@ -4982,53 +4990,53 @@ TYPE
 				(* ---- FIRST ---- *)
 				ELSIF (id = Global.First) & CheckArity(1,1) THEN
 					type := system.sizeType;
-					IF CheckRangeType(parameter0) THEN END;
-					result.SetAssignable(parameter0.assignable)
+					IF CheckRangeType(parameter[0]) THEN END;
+					result.SetAssignable(parameter[0].assignable)
 
 				(* ---- LAST ---- *)
 				ELSIF (id = Global.Last) & CheckArity(1,1) THEN
 					type := system.sizeType;
-					IF CheckRangeType(parameter0) THEN END;
-					result.SetAssignable(parameter0.assignable)
+					IF CheckRangeType(parameter[0]) THEN END;
+					result.SetAssignable(parameter[0].assignable)
 
 				(* ---- STEP ---- *)
 				ELSIF (id = Global.Step) & CheckArity(1,1) THEN
 					type := system.sizeType;
-					IF CheckRangeType(parameter0) THEN END;
-					result.SetAssignable(parameter0.assignable)
+					IF CheckRangeType(parameter[0]) THEN END;
+					result.SetAssignable(parameter[0].assignable)
 
 				(* ---- RE ---- *)
 				ELSIF (id = Global.Re) & CheckArity(1,1) THEN
-					IF CheckNumberType(parameter0) THEN
-						IF parameter0.type.resolved IS SyntaxTree.ComplexType THEN
-							type := parameter0.type.resolved(SyntaxTree.ComplexType).componentType;
-							IF IsComplexValue(parameter0, r, im) THEN result.SetResolved(SyntaxTree.NewRealValue(parameter0.position, r, Scanner.None)) END
-						ELSIF parameter0.type.resolved IS SyntaxTree.FloatType THEN
-							type := parameter0.type
+					IF CheckNumberType(parameter[0]) THEN
+						IF parameter[0].type.resolved IS SyntaxTree.ComplexType THEN
+							type := parameter[0].type.resolved(SyntaxTree.ComplexType).componentType;
+							IF IsComplexValue(parameter[0], r, im) THEN result.SetResolved(SyntaxTree.NewRealValue(parameter[0].position, r, Scanner.None)) END
+						ELSIF parameter[0].type.resolved IS SyntaxTree.FloatType THEN
+							type := parameter[0].type
 						ELSE
 							type := Global.Float32
 						END
 					END;
-					result.SetAssignable(parameter0.assignable)
+					result.SetAssignable(parameter[0].assignable)
 
 				(* ---- IM ---- *)
 				ELSIF (id = Global.Im) & CheckArity(1,1) THEN
-					IF CheckNumberType(parameter0) THEN
-						IF parameter0.type.resolved IS SyntaxTree.ComplexType THEN
-							type := parameter0.type.resolved(SyntaxTree.ComplexType).componentType;
-							IF IsComplexValue(parameter0, r, im) THEN result.SetResolved(SyntaxTree.NewRealValue(parameter0.position, im, Scanner.None)) END
+					IF CheckNumberType(parameter[0]) THEN
+						IF parameter[0].type.resolved IS SyntaxTree.ComplexType THEN
+							type := parameter[0].type.resolved(SyntaxTree.ComplexType).componentType;
+							IF IsComplexValue(parameter[0], r, im) THEN result.SetResolved(SyntaxTree.NewRealValue(parameter[0].position, im, Scanner.None)) END
 						ELSE
 							type := Global.Float32;
-							result.SetResolved(SyntaxTree.NewRealValue(parameter0.position, 0, Scanner.None))
+							result.SetResolved(SyntaxTree.NewRealValue(parameter[0].position, 0, Scanner.None))
 						END
 					END;
-					result.SetAssignable(parameter0.assignable)
+					result.SetAssignable(parameter[0].assignable)
 
 				(* ---- MAX ----- *)
 				ELSIF (id = Global.Max) & CheckArity(1,2) THEN
 					IF numberActualParameters = 1 THEN
-						IF parameter0.type = SyntaxTree.typeDeclarationType THEN
-							type := parameter0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
+						IF parameter[0].type = SyntaxTree.typeDeclarationType THEN
+							type := parameter[0](SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
 							IF type IS SyntaxTree.CharacterType THEN result.SetResolved(SyntaxTree.NewCharacterValue(position,MAX(CHAR)));
 							(*!! ELSIF type = Global.Char16 THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,0FFFFH));
 							ELSIF type = Global.Char32 THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,0FFFFFFFFH));
@@ -5038,64 +5046,64 @@ TYPE
 							ELSIF type IS SyntaxTree.SetType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,system.SizeOf(type)-1)); type := Global.Signed8;
 							ELSIF type IS SyntaxTree.SizeType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,Global.MaxInteger(system,type(SyntaxTree.BasicType),TRUE)));
 							ELSIF type IS SyntaxTree.AddressType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,Global.MaxInteger(system,type(SyntaxTree.BasicType),FALSE)));
-							ELSE Error(parameter0.position, "builtin function not applicable to this type");
+							ELSE Error(parameter[0].position, "builtin function not applicable to this type");
 							END;
 						ELSE
-							Error(parameter0.position,"is not a type symbol");
+							Error(parameter[0].position,"is not a type symbol");
 						END
-					ELSIF CheckNonComplexNumberSizeType(parameter0) & CheckNonComplexNumberSizeType(parameter1) THEN
-						ConvertOperands(parameter0,parameter1);
-						actualParameters.SetExpression(0,parameter0);
-						actualParameters.SetExpression(1,parameter1);
-						IF IsRealValue(parameter0,r0) & IsRealValue(parameter1,r1) THEN
-							IF r0 > r1 THEN result.SetResolved(parameter0.resolved)
-							ELSE result.SetResolved(parameter0.resolved)
+					ELSIF CheckNonComplexNumberSizeType(parameter[0]) & CheckNonComplexNumberSizeType(parameter[1]) THEN
+						ConvertOperands(parameter[0],parameter[1]);
+						actualParameters.SetExpression(0,parameter[0]);
+						actualParameters.SetExpression(1,parameter[1]);
+						IF IsRealValue(parameter[0],r0) & IsRealValue(parameter[1],r1) THEN
+							IF r0 > r1 THEN result.SetResolved(parameter[0].resolved)
+							ELSE result.SetResolved(parameter[0].resolved)
 							END;
-						ELSIF IsIntegerValue(parameter0,i0) & IsIntegerValue(parameter1,i1) THEN
-							IF i0 > i1 THEN result.SetResolved(parameter0.resolved)
-							ELSE result.SetResolved(parameter1.resolved)
+						ELSIF IsIntegerValue(parameter[0],i0) & IsIntegerValue(parameter[1],i1) THEN
+							IF i0 > i1 THEN result.SetResolved(parameter[0].resolved)
+							ELSE result.SetResolved(parameter[1].resolved)
 							END;
 						END;
-						type := parameter0.type;
+						type := parameter[0].type;
 					ELSE type := SyntaxTree.invalidType;
 					END;
 				(* ---- MIN ----- *)
 				ELSIF (id = Global.Min) & CheckArity(1,2) THEN
 					IF numberActualParameters = 1 THEN
-						IF parameter0.type = SyntaxTree.typeDeclarationType THEN
-							type := parameter0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
+						IF parameter[0].type = SyntaxTree.typeDeclarationType THEN
+							type := parameter[0](SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
 							IF type IS SyntaxTree.CharacterType THEN result.SetResolved(SyntaxTree.NewCharacterValue(position,MIN(CHAR)));
 							ELSIF type IS SyntaxTree.IntegerType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,Global.MinInteger(system,type(SyntaxTree.IntegerType),type(SyntaxTree.IntegerType).signed)));
 							ELSIF type IS SyntaxTree.FloatType THEN result.SetResolved(SyntaxTree.NewRealValue(position,Global.MinFloat(system,type(SyntaxTree.FloatType)), Scanner.None));
 							ELSIF type IS SyntaxTree.SetType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,0)); type := Global.Signed8;
 							ELSIF type IS SyntaxTree.SizeType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position, Global.MinInteger(system,type(SyntaxTree.BasicType),TRUE)));
 							ELSIF type IS SyntaxTree.AddressType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position, Global.MinInteger(system,type(SyntaxTree.BasicType),FALSE)));
-							ELSE Error(parameter0.position,"builtin function not applicable to this type");
+							ELSE Error(parameter[0].position,"builtin function not applicable to this type");
 							END;
 						ELSE
-							Error(parameter0.position,"is not a type symbol");
+							Error(parameter[0].position,"is not a type symbol");
 						END
-					ELSIF CheckNonComplexNumberSizeType(parameter0) & CheckNonComplexNumberSizeType(parameter1) THEN
-						ConvertOperands(parameter0,parameter1);
-						actualParameters.SetExpression(0,parameter0);
-						actualParameters.SetExpression(1,parameter1);
-						IF IsRealValue(parameter0,r0) & IsRealValue(parameter1,r1) THEN
-							IF r0 < r1 THEN result.SetResolved(parameter0.resolved)
-							ELSE result.SetResolved(parameter1.resolved)
+					ELSIF CheckNonComplexNumberSizeType(parameter[0]) & CheckNonComplexNumberSizeType(parameter[1]) THEN
+						ConvertOperands(parameter[0],parameter[1]);
+						actualParameters.SetExpression(0,parameter[0]);
+						actualParameters.SetExpression(1,parameter[1]);
+						IF IsRealValue(parameter[0],r0) & IsRealValue(parameter[1],r1) THEN
+							IF r0 < r1 THEN result.SetResolved(parameter[0].resolved)
+							ELSE result.SetResolved(parameter[1].resolved)
 							END;
-						ELSIF IsIntegerValue(parameter0,i0) & IsIntegerValue(parameter1,i1) THEN
-							IF i0 < i1 THEN result.SetResolved(parameter0.resolved)
-							ELSE result.SetResolved(parameter1.resolved)
+						ELSIF IsIntegerValue(parameter[0],i0) & IsIntegerValue(parameter[1],i1) THEN
+							IF i0 < i1 THEN result.SetResolved(parameter[0].resolved)
+							ELSE result.SetResolved(parameter[1].resolved)
 							END;
 						END;
-						type := parameter0.type;
+						type := parameter[0].type;
 					ELSE type := SyntaxTree.invalidType;
 					END;
 				(* ---- ODD ----- *)
 				ELSIF (id = Global.Odd) & CheckArity(1,1) THEN
 					type := system.booleanType;
-					IF CheckIntegerType(parameter0) THEN
-						IF IsIntegerValue(parameter0,i0)  THEN
+					IF CheckIntegerType(parameter[0]) THEN
+						IF IsIntegerValue(parameter[0],i0)  THEN
 							result.SetResolved(SyntaxTree.NewBooleanValue(position,ODD(i0)));
 							type := system.booleanType;
 						END;
@@ -5107,21 +5115,21 @@ TYPE
 					ELSE
 						type := Global.Signed32;
 					END;
-					IF CompatibleTo(system, parameter0.type, system.characterType) THEN
-						parameter0 := NewConversion(parameter0.position, parameter0, system.characterType,NIL);
-						actualParameters.SetExpression(0,parameter0);
-						(* IF CheckCharacterType(parameter0) THEN*)
-						IF IsCharacterValue(parameter0,c)THEN
+					IF CompatibleTo(system, parameter[0].type, system.characterType) THEN
+						parameter[0] := NewConversion(parameter[0].position, parameter[0], system.characterType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
+						(* IF CheckCharacterType(parameter[0]) THEN*)
+						IF IsCharacterValue(parameter[0],c)THEN
 							result.SetResolved(Global.NewIntegerValue(system,position,ORD(c)));
 							type := Global.GetSignedIntegerType(system,ORD(c));
 						END;
-					ELSE Error(parameter0.position, "incompatible parameter");
+					ELSE Error(parameter[0].position, "incompatible parameter");
 					END;
 				(* ---- SHORT ----- *)
 				ELSIF (id = Global.Short) & CheckArity(1,1) THEN
 					type := type0;
 					IF IsSignedIntegerType(type) THEN
-						IF (type.sizeInBits = 8) OR (type = Global.Signed8) THEN Error(parameter0.position,"short not applicable")
+						IF (type.sizeInBits = 8) OR (type = Global.Signed8) THEN Error(parameter[0].position,"short not applicable")
 						ELSIF type = Global.Signed16 THEN type := Global.Signed8
 						ELSIF type = Global.Signed32 THEN type := Global.Signed16
 						ELSIF type = Global.Signed64 THEN type:= Global.Signed32
@@ -5133,7 +5141,7 @@ TYPE
 							END;
 						END;
 					ELSIF IsUnsignedIntegerType(type) THEN
-						IF (type.sizeInBits = 8) OR (type = Global.Unsigned8) THEN Error(parameter0.position,"short not applicable")
+						IF (type.sizeInBits = 8) OR (type = Global.Unsigned8) THEN Error(parameter[0].position,"short not applicable")
 						ELSE
 							CASE type.sizeInBits OF
 								16: type := Global.Unsigned8
@@ -5142,29 +5150,29 @@ TYPE
 							END;
 						END;
 					ELSIF type IS SyntaxTree.FloatType THEN
-						IF (type.sizeInBits = 32) OR (type = Global.Float32) THEN Error(parameter0.position,"short not applicable")
+						IF (type.sizeInBits = 32) OR (type = Global.Float32) THEN Error(parameter[0].position,"short not applicable")
 						ELSIF type = Global.Float64 THEN type := Global.Float32
 						ELSIF type.sizeInBits = 64 THEN type := Global.Float32
 						END;
 					ELSIF type IS SyntaxTree.ComplexType THEN
-						IF (type.sizeInBits = 64) OR (type = Global.Complex32) THEN Error(parameter0.position,"short not applicable")
+						IF (type.sizeInBits = 64) OR (type = Global.Complex32) THEN Error(parameter[0].position,"short not applicable")
 						ELSIF (type = Global.Complex64) THEN type := Global.Complex32
 						ELSIF type.sizeInBits = 128 THEN type := Global.Complex32
 						END;
 					ELSE
-						Error(parameter0.position,"short not applicable")
+						Error(parameter[0].position,"short not applicable")
 					END;
-					IF (parameter0.resolved # NIL) THEN
-						parameter0 := ConvertValue(parameter0.position,parameter0.resolved,type);
-						IF parameter0 IS SyntaxTree.Value THEN
-							result.SetResolved(parameter0(SyntaxTree.Value));
+					IF (parameter[0].resolved # NIL) THEN
+						parameter[0] := ConvertValue(parameter[0].position,parameter[0].resolved,type);
+						IF parameter[0] IS SyntaxTree.Value THEN
+							result.SetResolved(parameter[0](SyntaxTree.Value));
 						END;
 					END;
 				(* ---- LONG ----- *)
 				ELSIF (id = Global.Long) & CheckArity(1,1) THEN
 					type := type0;
 					IF IsSignedIntegerType(type) THEN
-						IF (type.sizeInBits = 64) OR (type = Global.Signed64) THEN Error(parameter0.position,"long not applicable")
+						IF (type.sizeInBits = 64) OR (type = Global.Signed64) THEN Error(parameter[0].position,"long not applicable")
 						ELSIF type = Global.Signed32 THEN type := Global.Signed64
 						ELSIF type = Global.Signed16 THEN type := Global.Signed32
 						ELSIF type = Global.Signed8 THEN type := Global.Signed16
@@ -5176,7 +5184,7 @@ TYPE
 							END;
 						END;
 					ELSIF IsUnsignedIntegerType(type) THEN
-						IF (type.sizeInBits = 64) OR (type = Global.Unsigned64) THEN Error(parameter0.position,"long not applicable")
+						IF (type.sizeInBits = 64) OR (type = Global.Unsigned64) THEN Error(parameter[0].position,"long not applicable")
 						ELSE
 							CASE type.sizeInBits OF
 							8: type := Global.Unsigned16
@@ -5185,97 +5193,97 @@ TYPE
 							END;
 						END;
 					ELSIF type IS SyntaxTree.FloatType THEN
-						IF (type.sizeInBits = 64) OR (type = Global.Float64) THEN Error(parameter0.position,"long not applicable")
+						IF (type.sizeInBits = 64) OR (type = Global.Float64) THEN Error(parameter[0].position,"long not applicable")
 						ELSIF type= Global.Float32 THEN  type := Global.Float64
 						ELSIF type.sizeInBits = 32 THEN type := Global.Float64
 						END;
 					ELSIF type IS SyntaxTree.ComplexType THEN
-						IF (type.sizeInBits = 128) OR (type = Global.Complex64) THEN Error(parameter0.position,"long not applicable")
+						IF (type.sizeInBits = 128) OR (type = Global.Complex64) THEN Error(parameter[0].position,"long not applicable")
 						ELSIF type = Global.Complex32 THEN type := Global.Complex64
 						ELSIF type.sizeInBits = 64 THEN type := Global.Complex64
 						END;
 					ELSE
-						Error(parameter0.position,"long not applicable")
+						Error(parameter[0].position,"long not applicable")
 					END;
-					IF (parameter0.resolved # NIL) THEN
-						parameter0 := ConvertValue(parameter0.position,parameter0.resolved,type);
-						IF parameter0 IS SyntaxTree.Value THEN
-							result.SetResolved(parameter0(SyntaxTree.Value));
+					IF (parameter[0].resolved # NIL) THEN
+						parameter[0] := ConvertValue(parameter[0].position,parameter[0].resolved,type);
+						IF parameter[0] IS SyntaxTree.Value THEN
+							result.SetResolved(parameter[0](SyntaxTree.Value));
 						END;
 					END;
 				(* ---- SIZE OF ----- *)
 				ELSIF (id = Global.systemSize) & CheckArity(1,1) THEN
-					IF (parameter0.type = SyntaxTree.typeDeclarationType) THEN
-						type := parameter0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
+					IF (parameter[0].type = SyntaxTree.typeDeclarationType) THEN
+						type := parameter[0](SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
 						result.SetResolved(SyntaxTree.NewIntegerValue(position,system.SizeOf(type.resolved) DIV 8 (* in bytes *) ));
 						type := Global.Signed16;
 						(* was Int16  in paco but should be systemSize (conflict with current release) *)
 					ELSE
 						(* for variables, system sizeof could represent the physically occupied size
 							determined via the type descriptor, implement that ? *)
-						Error(parameter0.position,"is not a type symbol");
+						Error(parameter[0].position,"is not a type symbol");
 					END
 				(* ---- SYSTEM.TRACE -----*)
 				ELSIF (id = Global.systemTrace) & CheckArity(1,Infinity) THEN
 					FOR i := 0 TO numberActualParameters-1 DO
-						parameter0 := actualParameters.GetExpression(i);
-						IF ~IsBasicType(parameter0.type) & ~IsStringType(parameter0.type) THEN
-							Error(parameter0.position,"incompatible parameter");
+						parameter[0] := actualParameters.GetExpression(i);
+						IF ~IsBasicType(parameter[0].type) & ~IsStringType(parameter[0].type) THEN
+							Error(parameter[0].position,"incompatible parameter");
 						END;
 					END;
 					(* remaining issues can only be tested in backend *)
 				(* ---- ADDRESSOF----- *)
 				ELSIF (id = Global.systemAdr) & CheckArity(1,1) THEN
-					IF HasAddress(system,parameter0) THEN
+					IF HasAddress(system,parameter[0]) THEN
 						type := system.addressType;
 					ELSE
 						type := SyntaxTree.invalidType;
-						Error(parameter0.position,"has no address");
+						Error(parameter[0].position,"has no address");
 
 					END;
 				(* ---- BIT ----- *)
 				ELSIF (id = Global.systemBit) & CheckArity(2,2) THEN
-					IF CheckAddressType(parameter0) & CheckSizeType(parameter1) THEN
-						parameter0 := NewConversion(parameter0.position,parameter0,system.addressType,NIL);
-						actualParameters.SetExpression(0,parameter0);
-						parameter1 := NewConversion(parameter1.position,parameter1,system.addressType,NIL);
-						actualParameters.SetExpression(1,parameter1);
+					IF CheckAddressType(parameter[0]) & CheckSizeType(parameter[1]) THEN
+						parameter[0] := NewConversion(parameter[0].position,parameter[0],system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
+						parameter[1] := NewConversion(parameter[1].position,parameter[1],system.addressType,NIL);
+						actualParameters.SetExpression(1,parameter[1]);
 					END;
 					type := system.booleanType;
 				(* ----- MSK ---- *)
 				ELSIF (id = Global.systemMsk) & CheckArity(2,2) THEN
-					IF CheckIntegerType(parameter0) & CheckIntegerType(parameter1) THEN
-						ConvertOperands(parameter0,parameter1);
-						actualParameters.SetExpression(0,parameter0);
-						actualParameters.SetExpression(1,parameter1);
+					IF CheckIntegerType(parameter[0]) & CheckIntegerType(parameter[1]) THEN
+						ConvertOperands(parameter[0],parameter[1]);
+						actualParameters.SetExpression(0,parameter[0]);
+						actualParameters.SetExpression(1,parameter[1]);
 					END;
-					type := parameter0.type;
+					type := parameter[0].type;
 				(* ---- SYSTEM.GET64 ----- *)
 				ELSIF (id = Global.systemGet64) & CheckArity(1,1) THEN
-					IF CheckAddressType(parameter0) THEN
-						parameter0 := NewConversion(Basic.invalidPosition,parameter0,system.addressType,NIL);
-						actualParameters.SetExpression(0,parameter0);
+					IF CheckAddressType(parameter[0]) THEN
+						parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
 					END;
 					type := Global.Signed64;
 				(* ---- SYSTEM.GET32 ----- *)
 				ELSIF (id = Global.systemGet32) & CheckArity(1,1) THEN
-					IF CheckAddressType(parameter0) THEN
-						parameter0 := NewConversion(Basic.invalidPosition,parameter0,system.addressType,NIL);
-						actualParameters.SetExpression(0,parameter0);
+					IF CheckAddressType(parameter[0]) THEN
+						parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
 					END;
 					type := Global.Signed32;
 				(* ---- SYSTEM.GET16 ----- *)
 				ELSIF (id = Global.systemGet16) & CheckArity(1,1) THEN
-					IF CheckAddressType(parameter0) THEN
-						parameter0 := NewConversion(Basic.invalidPosition,parameter0,system.addressType,NIL);
-						actualParameters.SetExpression(0,parameter0);
+					IF CheckAddressType(parameter[0]) THEN
+						parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
 					END;
 					type := Global.Signed16;
 				(* ---- SYSTEM.GET8 ----- *)
 				ELSIF (id = Global.systemGet8) & CheckArity(1,1) THEN
-					IF CheckAddressType(parameter0) THEN
-						parameter0 := NewConversion(Basic.invalidPosition,parameter0,system.addressType,NIL);
-						actualParameters.SetExpression(0,parameter0);
+					IF CheckAddressType(parameter[0]) THEN
+						parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
 					END;
 					type := Global.Signed8;
 				(* ---- SYSTEM.GetStackPointer ----- *)
@@ -5289,21 +5297,21 @@ TYPE
 					type := system.objectType;
 				(* ---- SYSTEM.SetStackPointer ----- *)
 				ELSIF (id = Global.systemSetStackPointer) & CheckArity(1,1) THEN
-					IF CheckAddressType(parameter0) THEN
-						parameter0 := NewConversion(Basic.invalidPosition,parameter0,system.addressType,NIL);
-						actualParameters.SetExpression(0,parameter0);
+					IF CheckAddressType(parameter[0]) THEN
+						parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
 					END;
 				(* ---- SYSTEM.SetFramePointer ----- *)
 				ELSIF (id = Global.systemSetFramePointer) & CheckArity(1,1) THEN
-					IF CheckAddressType(parameter0) THEN
-						parameter0 := NewConversion(Basic.invalidPosition,parameter0,system.addressType,NIL);
-						actualParameters.SetExpression(0,parameter0);
+					IF CheckAddressType(parameter[0]) THEN
+						parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
 					END;
 				(* ---- SYSTEM.SetActivity ----- *)
 				ELSIF cooperative & (id = Global.systemSetActivity) & CheckArity(1,1) THEN
-					IF CheckObjectType(parameter0) THEN
-						parameter0 := NewConversion(Basic.invalidPosition,parameter0,system.addressType,NIL);
-						actualParameters.SetExpression(0,parameter0);
+					IF CheckObjectType(parameter[0]) THEN
+						parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
 					END;
 				(* ---- LSH, ROT, ASH ----- *)
 				ELSIF ((id = Global.Lsh) OR (id = Global.Rot) OR (id = Global.Ash)
@@ -5311,17 +5319,17 @@ TYPE
 				) & CheckArity(2,2) THEN
 					type := type0;
 
-					IF (id # Global.Ash) OR CheckIntegerType(parameter0) & CheckIntegerType(parameter1) THEN
-						parameter1 := NewConversion(parameter1.position,parameter1,Global.Signed32,NIL);
-						actualParameters.SetExpression(1, parameter1);
+					IF (id # Global.Ash) OR CheckIntegerType(parameter[0]) & CheckIntegerType(parameter[1]) THEN
+						parameter[1] := NewConversion(parameter[1].position,parameter[1],Global.Signed32,NIL);
+						actualParameters.SetExpression(1, parameter[1]);
 
-						IF IsIntegerValue(parameter1,i1) & (i1 < 0) THEN
+						IF IsIntegerValue(parameter[1],i1) & (i1 < 0) THEN
 							IF (id = Global.Shl) OR (id = Global.Shr) OR (id = Global.Rol) OR (id = Global.Ror) THEN
-								Error(parameter1.position,"must not be negative");
+								Error(parameter[1].position,"must not be negative");
 							END;
 						END;
 
-						IF IsIntegerValue(parameter0,i0) & IsIntegerValue(parameter1,i1) THEN
+						IF IsIntegerValue(parameter[0],i0) & IsIntegerValue(parameter[1],i1) THEN
 							IF id = Global.Lsh THEN
 								result.SetResolved(SyntaxTree.NewIntegerValue(position,LSH(i0,i1)));
 							ELSIF id = Global.Rot THEN
@@ -5347,103 +5355,103 @@ TYPE
 							(*!compatibility with release, remove when resolved
 								critical in release : SHORT(ASH(..))), ASH(ORD(..))
 							*)
-							parameter1 := NewConversion(parameter1.position,parameter1,Global.Signed32,NIL);
-							parameter0 := NewConversion(parameter0.position,parameter0,type,NIL);
-							actualParameters.SetExpression(0,parameter0);
-							actualParameters.SetExpression(1,parameter1);
+							parameter[1] := NewConversion(parameter[1].position,parameter[1],Global.Signed32,NIL);
+							parameter[0] := NewConversion(parameter[0].position,parameter[0],type,NIL);
+							actualParameters.SetExpression(0,parameter[0]);
+							actualParameters.SetExpression(1,parameter[1]);
 						END;
 					END;
 				(* ---- SYSTEM.VAL ----- *)
 				ELSIF (id = Global.systemVal) & CheckArity(2,2) THEN
-					IF CheckTypeDeclarationType(parameter0) THEN
-						type := parameter0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
+					IF CheckTypeDeclarationType(parameter[0]) THEN
+						type := parameter[0](SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
 						IF (type.resolved IS SyntaxTree.ArrayType) & (type.resolved(SyntaxTree.ArrayType).form # SyntaxTree.Static) THEN
 							result := SyntaxTree.invalidExpression;
-							Error(parameter0.position,"is no basic type");
+							Error(parameter[0].position,"is no basic type");
 						ELSE
-							IF (system.SizeOf(parameter1.type) # system.SizeOf(type)) & (IsBasicType(parameter1.type) OR IsBasicType(type)) THEN
-								Warning(parameter0.position,"types do not have the same size");
+							IF (system.SizeOf(parameter[1].type) # system.SizeOf(type)) & (IsBasicType(parameter[1].type) OR IsBasicType(type)) THEN
+								Warning(parameter[0].position,"types do not have the same size");
 							END;
-							IF (parameter1.resolved # NIL) THEN
-								parameter0 := ConvertValue(parameter1.position,parameter1.resolved,type);
-								IF parameter0 IS SyntaxTree.Value THEN
-									result.SetResolved(parameter0(SyntaxTree.Value));
+							IF (parameter[1].resolved # NIL) THEN
+								parameter[0] := ConvertValue(parameter[1].position,parameter[1].resolved,type);
+								IF parameter[0] IS SyntaxTree.Value THEN
+									result.SetResolved(parameter[0](SyntaxTree.Value));
 								END;
 							END;
-							result.SetAssignable(parameter1.assignable);
+							result.SetAssignable(parameter[1].assignable);
 						END;
 					END;
 				(* ---- SYSTEM.GET ----- *)
 				ELSIF (id = Global.systemGet) & CheckArity(2,2) THEN
-					IF CheckAddressType(parameter0) & CheckBasicType(parameter1) & CheckVariable(parameter1) THEN
-						parameter0 := NewConversion(Basic.invalidPosition,parameter0,system.addressType,NIL);
-						actualParameters.SetExpression(0,parameter0);
+					IF CheckAddressType(parameter[0]) & CheckBasicType(parameter[1]) & CheckVariable(parameter[1]) THEN
+						parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
 					END;
 				(* ---- SYSTEM.PUT ----- *)
 				ELSIF (id = Global.systemPut) & CheckArity(2,2) THEN
-					IF CheckAddressType(parameter0) & CheckBasicType(parameter1) THEN
-						parameter0 := NewConversion(Basic.invalidPosition,parameter0,system.addressType,NIL);
-						actualParameters.SetExpression(0,parameter0);
+					IF CheckAddressType(parameter[0]) & CheckBasicType(parameter[1]) THEN
+						parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
 					END;
 				(* ---- SYSTEM.PUT64 ----- *)
 				ELSIF (id = Global.systemPut64) & CheckArity(2,2) THEN
-					IF CheckAddressType(parameter0) & CheckBasicType(parameter1) THEN
-						parameter0 := NewConversion(parameter0.position,parameter0,system.addressType,NIL);
-						parameter1 := NewConversion(parameter1.position,parameter1,Global.Signed64,NIL);
-						actualParameters.SetExpression(0,parameter0);
-						actualParameters.SetExpression(1,parameter1);
+					IF CheckAddressType(parameter[0]) & CheckBasicType(parameter[1]) THEN
+						parameter[0] := NewConversion(parameter[0].position,parameter[0],system.addressType,NIL);
+						parameter[1] := NewConversion(parameter[1].position,parameter[1],Global.Signed64,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
+						actualParameters.SetExpression(1,parameter[1]);
 					END;
 				(* ---- SYSTEM.PUT32 ----- *)
 				ELSIF (id = Global.systemPut32) & CheckArity(2,2) THEN
-					IF CheckAddressType(parameter0) & CheckBasicType(parameter1) THEN
-						parameter0 := NewConversion(parameter0.position,parameter0,system.addressType,NIL);
-						parameter1 := NewConversion(parameter1.position,parameter1,Global.Signed32,NIL);
-						actualParameters.SetExpression(0,parameter0);
-						actualParameters.SetExpression(1,parameter1);
+					IF CheckAddressType(parameter[0]) & CheckBasicType(parameter[1]) THEN
+						parameter[0] := NewConversion(parameter[0].position,parameter[0],system.addressType,NIL);
+						parameter[1] := NewConversion(parameter[1].position,parameter[1],Global.Signed32,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
+						actualParameters.SetExpression(1,parameter[1]);
 					END;
 				(* ---- SYSTEM.PUT16 ----- *)
 				ELSIF (id = Global.systemPut16) & CheckArity(2,2) THEN
-					IF CheckAddressType(parameter0) & CheckBasicType(parameter1) THEN
-						parameter0 := NewConversion(parameter0.position,parameter0,system.addressType,NIL);
-						parameter1 := NewConversion(parameter1.position,parameter1,Global.Signed16,NIL);
-						actualParameters.SetExpression(0,parameter0);
-						actualParameters.SetExpression(1,parameter1);
+					IF CheckAddressType(parameter[0]) & CheckBasicType(parameter[1]) THEN
+						parameter[0] := NewConversion(parameter[0].position,parameter[0],system.addressType,NIL);
+						parameter[1] := NewConversion(parameter[1].position,parameter[1],Global.Signed16,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
+						actualParameters.SetExpression(1,parameter[1]);
 					END;
 				(* ---- SYSTEM.PUT8 ----- *)
 				ELSIF (id = Global.systemPut8) & CheckArity(2,2) THEN
-					IF CheckAddressType(parameter0) & CheckBasicType(parameter1) THEN
-						parameter0 := NewConversion(parameter0.position,parameter0,system.addressType,NIL);
-						parameter1 := NewConversion(parameter1.position,parameter1,Global.Signed8,NIL);
-						actualParameters.SetExpression(0,parameter0);
-						actualParameters.SetExpression(1,parameter1);
+					IF CheckAddressType(parameter[0]) & CheckBasicType(parameter[1]) THEN
+						parameter[0] := NewConversion(parameter[0].position,parameter[0],system.addressType,NIL);
+						parameter[1] := NewConversion(parameter[1].position,parameter[1],Global.Signed8,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
+						actualParameters.SetExpression(1,parameter[1]);
 					END;
 				(* ---- SYSTEM.MOVE ----- *)
 				ELSIF (id = Global.systemMove) & CheckArity(3,3) THEN
-					IF CheckAddressType(parameter0) & CheckAddressType(parameter1) & CheckAddressType(parameter2) THEN
-						parameter0 := NewConversion(Basic.invalidPosition,parameter0,system.addressType,NIL);
-						parameter1 := NewConversion(Basic.invalidPosition,parameter1,system.addressType,NIL);
-						parameter2 := NewConversion(Basic.invalidPosition,parameter2,system.addressType,NIL);
-						actualParameters.SetExpression(0,parameter0);
-						actualParameters.SetExpression(1,parameter1);
-						actualParameters.SetExpression(2,parameter2);
+					IF CheckAddressType(parameter[0]) & CheckAddressType(parameter[1]) & CheckAddressType(parameter[2]) THEN
+						parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],system.addressType,NIL);
+						parameter[1] := NewConversion(Basic.invalidPosition,parameter[1],system.addressType,NIL);
+						parameter[2] := NewConversion(Basic.invalidPosition,parameter[2],system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter[0]);
+						actualParameters.SetExpression(1,parameter[1]);
+						actualParameters.SetExpression(2,parameter[2]);
 					END;
 				(* ---- SYSTEM.NEW ----- *)
 				ELSIF (id = Global.systemNew) & CheckArity(2,2) THEN
-					IF ~IsPointerType(parameter0.type) THEN
-						Error(parameter0.position,"is not a pointer")
-					ELSIF CheckSizeType(parameter1) THEN
-						parameter1 := NewConversion(Basic.invalidPosition, parameter1, system.sizeType,NIL);
-						actualParameters.SetExpression(1,parameter1);
+					IF ~IsPointerType(parameter[0].type) THEN
+						Error(parameter[0].position,"is not a pointer")
+					ELSIF CheckSizeType(parameter[1]) THEN
+						parameter[1] := NewConversion(Basic.invalidPosition, parameter[1], system.sizeType,NIL);
+						actualParameters.SetExpression(1,parameter[1]);
 					END;
 				(* ----SYSTEM.REF ---- *)
-				ELSIF (id = Global.systemRef) & CheckArity(1,1) & CheckStringType(parameter0) THEN
+				ELSIF (id = Global.systemRef) & CheckArity(1,1) & CheckStringType(parameter[0]) THEN
 					type := system.addressType
 				(* ---- INCR ----- *)
 				ELSIF (id = Global.Incr) & CheckArity(1,2) THEN
 					type := system.sizeType;
 					base := type0;
-					IF (numberActualParameters =2) & CheckSizeType(parameter1) THEN
-						IF ~IsIntegerValue(parameter1,i1) THEN i1 := 0 END;
+					IF (numberActualParameters =2) & CheckSizeType(parameter[1]) THEN
+						IF ~IsIntegerValue(parameter[1],i1) THEN i1 := 0 END;
 						IF i1 < 0 THEN
 							Error(position, "invalid dimension");
 							base := SyntaxTree.invalidType;
@@ -5458,9 +5466,9 @@ TYPE
 								base := SyntaxTree.invalidType;
 							END;
 						END;
-						parameter1 := NewConversion(parameter1.position,parameter1,system.sizeType,NIL);
-						actualParameters.SetExpression(1,parameter1);
-						IF (numberActualParameters =2) & (parameter1 IS SyntaxTree.IntegerValue) THEN
+						parameter[1] := NewConversion(parameter[1].position,parameter[1],system.sizeType,NIL);
+						actualParameters.SetExpression(1,parameter[1]);
+						IF (numberActualParameters =2) & (parameter[1] IS SyntaxTree.IntegerValue) THEN
 							mathArrayType := base(SyntaxTree.MathArrayType);
 							IF (mathArrayType.form = SyntaxTree.Static) THEN
 								result := SyntaxTree.NewIntegerValue(position,ToMemoryUnits(system,mathArrayType.staticIncrementInBits));
@@ -5493,7 +5501,7 @@ TYPE
 					IF type0.IsComposite () THEN
 						Error(position, "first parameter of composite type");
 						result := SyntaxTree.invalidExpression;
-					ELSIF ~IsVariable (parameter0) THEN
+					ELSIF ~IsVariable (parameter[0]) THEN
 						Error(position, "first parameter not assignable");
 						result := SyntaxTree.invalidExpression;
 					ELSIF ~CompatibleTo(system,type1,type0) THEN
@@ -5503,8 +5511,8 @@ TYPE
 						Error(position, "third parameter incompatible");
 						result := SyntaxTree.invalidExpression;
 					ELSE
-						parameter1 := NewConversion(Basic.invalidPosition,parameter1,type0,NIL); actualParameters.SetExpression(1,parameter1);
-						parameter2 := NewConversion(Basic.invalidPosition,parameter2,type0,NIL); actualParameters.SetExpression(2,parameter2);
+						parameter[1] := NewConversion(Basic.invalidPosition,parameter[1],type0,NIL); actualParameters.SetExpression(1,parameter[1]);
+						parameter[2] := NewConversion(Basic.invalidPosition,parameter[2],type0,NIL); actualParameters.SetExpression(2,parameter[2]);
 						type := type0;
 					END;
 				(* ---- RESHAPE ----- *)
@@ -5518,19 +5526,19 @@ TYPE
 						parameterType := SyntaxTree.NewMathArrayType(Basic.invalidPosition,currentScope,SyntaxTree.Tensor);
 						parameterType(SyntaxTree.MathArrayType).SetArrayBase(base);
 						IF ~CompatibleTo(system,type0,parameterType) THEN
-							Error(parameter0.position,"incompatible parameter in reshape");
+							Error(parameter[0].position,"incompatible parameter in reshape");
 							result := SyntaxTree.invalidExpression;
 						ELSE
-							parameter0 := NewConversion(Basic.invalidPosition,parameter0,parameterType,NIL); actualParameters.SetExpression(0,parameter0);
+							parameter[0] := NewConversion(Basic.invalidPosition,parameter[0],parameterType,NIL); actualParameters.SetExpression(0,parameter[0]);
 						END;
 
 						parameterType := SyntaxTree.NewMathArrayType(Basic.invalidPosition,currentScope,SyntaxTree.Open);
 						parameterType(SyntaxTree.MathArrayType).SetArrayBase(system.sizeType);
 						IF ~CompatibleTo(system,type1,parameterType) THEN
-							Error(parameter1.position,"parameter incompatible to math array of longint");
+							Error(parameter[1].position,"parameter incompatible to math array of longint");
 							result := SyntaxTree.invalidExpression;
 						ELSE
-							parameter1 := NewConversion(Basic.invalidPosition,parameter1,parameterType,NIL); actualParameters.SetExpression(1,parameter1);
+							parameter[1] := NewConversion(Basic.invalidPosition,parameter[1],parameterType,NIL); actualParameters.SetExpression(1,parameter[1]);
 						END;
 					ELSE
 						Error(position,"reshape on non math array type");
@@ -5538,25 +5546,25 @@ TYPE
 					END;
 				(* ---- SYSTEM.TYPECODE ----- *)
 				ELSIF (id = Global.systemTypeCode) & CheckArity(1,1) THEN
-					IF (parameter0.type = SyntaxTree.typeDeclarationType) THEN
-						type := parameter0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
+					IF (parameter[0].type = SyntaxTree.typeDeclarationType) THEN
+						type := parameter[0](SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
 						type := type.resolved;
 						IF type IS SyntaxTree.PointerType THEN
 							type := type(SyntaxTree.PointerType).pointerBase.resolved;
 						END;
 						IF ~(type IS SyntaxTree.RecordType) THEN
-							Error(parameter0.position,"must be type with type descriptor");
+							Error(parameter[0].position,"must be type with type descriptor");
 						END;
 					ELSE
-						Error(parameter0.position,"is not a type symbol");
+						Error(parameter[0].position,"is not a type symbol");
 					END;
 					type := system.addressType;
 				(* -------- FLT --------- *)
 				ELSIF (id = Global.Flt) & CheckArity(1,1) THEN
 					type := Global.Float32;
-					IF IsRealValue(parameter0, r) THEN
+					IF IsRealValue(parameter[0], r) THEN
 						result.SetResolved(SyntaxTree.NewRealValue(position, r, Scanner.None));
-					ELSIF CheckIntegerType(parameter0) & IsIntegerValue(parameter0, i0) THEN
+					ELSIF CheckIntegerType(parameter[0]) & IsIntegerValue(parameter[0], i0) THEN
 						value := ABS(i0);
 						IF value # 0 THEN
 							i1 := 23;
@@ -5576,18 +5584,18 @@ TYPE
 						Error(position, "connection outside activeCells body block");
 					END;*)
 
-					IF CheckPortType(parameter0, outPort) & CheckPortType(parameter1, inPort) THEN
-						IF (outPort.direction # SyntaxTree.OutPort) THEN Error(parameter0.position,"not an out-port") END;
-						IF (inPort.direction # SyntaxTree.InPort) THEN Error(parameter1.position,"not an in-port") END;
+					IF CheckPortType(parameter[0], outPort) & CheckPortType(parameter[1], inPort) THEN
+						IF (outPort.direction # SyntaxTree.OutPort) THEN Error(parameter[0].position,"not an out-port") END;
+						IF (inPort.direction # SyntaxTree.InPort) THEN Error(parameter[1].position,"not an in-port") END;
 					END;
 
 					IF numberActualParameters = 3 THEN
-						(*IF ~cellsAreObjects & ~IsIntegerValue(parameter2,i0) & (i0>=0) THEN
+						(*IF ~cellsAreObjects & ~IsIntegerValue(parameter[2],i0) & (i0>=0) THEN
 							Error(position, "incompatible channel size parameter");
 						END;
 						*)
-						parameter2 := NewConversion(Basic.invalidPosition,parameter2,Global.Signed32,NIL);
-						actualParameters.SetExpression(2,parameter2);
+						parameter[2] := NewConversion(Basic.invalidPosition,parameter[2],Global.Signed32,NIL);
+						actualParameters.SetExpression(2,parameter[2]);
 					END;
 
 					activeCellsStatement := TRUE;
@@ -5598,12 +5606,12 @@ TYPE
 						Error(position, "connection delegation outside activeCells body block");
 					END;
 					*)
-					IF ~CheckPortType(parameter1, inPort) THEN
-						Error(parameter0.position,"not a port")
-					ELSIF ~CheckPortType(parameter0, outPort) THEN
-						Error(parameter1.position,"not a port")
+					IF ~CheckPortType(parameter[1], inPort) THEN
+						Error(parameter[0].position,"not a port")
+					ELSIF ~CheckPortType(parameter[0], outPort) THEN
+						Error(parameter[1].position,"not a port")
 					ELSIF (outPort.direction # inPort.direction) THEN
-						Error(parameter0.position,"invalid port direction");
+						Error(parameter[0].position,"invalid port direction");
 					ELSIF outPort.sizeInBits # inPort.sizeInBits THEN
 						Error(position, "incompatible port sizes");
 					END;
@@ -5611,29 +5619,29 @@ TYPE
 				(* --------- RECEIVE ---------*)
 				ELSIF (id = Global.Receive) & CheckArity(2,3) THEN
 					IF ~cellsAreObjects THEN ImportModule(Global.NameChannelModule,position) END;
-					IF CheckPortType(parameter0,inPort) & CheckVariable(parameter1) THEN
+					IF CheckPortType(parameter[0],inPort) & CheckVariable(parameter[1]) THEN
 						IF inPort.direction # SyntaxTree.InPort THEN
-							Error(parameter0.position,"not an in-port")
-						ELSIF inPort.sizeInBits # system.SizeOf(parameter1.type) THEN
-							Error(parameter1.position,"incompatible to port type");
+							Error(parameter[0].position,"not an in-port")
+						ELSIF inPort.sizeInBits # system.SizeOf(parameter[1].type) THEN
+							Error(parameter[1].position,"incompatible to port type");
 						END;
-						IF (numberActualParameters=3) & CheckVariable(parameter2) THEN
-							IF ~SameType(parameter2.type, Global.Signed16) THEN
-								Error(parameter2.position,"incompatible to integer type");
+						IF (numberActualParameters=3) & CheckVariable(parameter[2]) THEN
+							IF ~SameType(parameter[2].type, Global.Signed16) THEN
+								Error(parameter[2].position,"incompatible to integer type");
 							END;
 						END;
 					END;
 				(* --------- SEND ---------*)
 				ELSIF (id = Global.Send) & CheckArity(2,2) THEN
 					IF ~cellsAreObjects THEN ImportModule(Global.NameChannelModule,position) END;
-					IF CheckPortType(parameter0,outPort)  THEN
+					IF CheckPortType(parameter[0],outPort)  THEN
 						IF outPort.direction # SyntaxTree.OutPort THEN
-							Error(parameter1.position,"not an out-port")
-						ELSIF outPort.sizeInBits # system.SizeOf(parameter1.type) THEN
-							Error(parameter1.position,"incompatible to port type");
+							Error(parameter[1].position,"not an out-port")
+						ELSIF outPort.sizeInBits # system.SizeOf(parameter[1].type) THEN
+							Error(parameter[1].position,"incompatible to port type");
 						ELSE
-							parameter1 := NewConversion(position,parameter1,parameter0.type.resolved,NIL);
-							actualParameters.SetExpression(1,parameter1);
+							parameter[1] := NewConversion(position,parameter[1],parameter[0].type.resolved,NIL);
+							actualParameters.SetExpression(1,parameter[1]);
 						END;
 					END;
 				(* ------- custom builtins ----- *)
@@ -9297,6 +9305,17 @@ TYPE
 		END;
 		RETURN t;
 	END ArrayBase;
+
+	PROCEDURE NonStaticArrayBase*(t: SyntaxTree.Type): SyntaxTree.Type;
+	BEGIN
+		WHILE (t # NIL) & (t IS SyntaxTree.MathArrayType) & (t(SyntaxTree.MathArrayType).form # SyntaxTree.Static) DO
+			t := t(SyntaxTree.MathArrayType).arrayBase.resolved;
+		END;
+		WHILE (t # NIL) & (t IS SyntaxTree.ArrayType) & (t(SyntaxTree.ArrayType).form # SyntaxTree.Static) DO
+			t := t(SyntaxTree.ArrayType).arrayBase.resolved;
+		END;
+		RETURN t;
+	END NonStaticArrayBase;
 
 	PROCEDURE IsOpenArray*(type: SyntaxTree.Type; VAR base: SyntaxTree.Type): BOOLEAN;
 	BEGIN

@@ -584,6 +584,108 @@ TYPE
 
 TYPE
 
+	SizePropertyView = OBJECT(PropertyView)
+	VAR
+		size : WMProperties.SizeProperty;
+		editor : WMEditors.TextField;
+		outOfDate : BOOLEAN;
+
+		PROCEDURE &Init*;
+		BEGIN
+			Init^;
+			SetNameAsString(StrSizePropertyView);
+			outOfDate := FALSE;
+
+			NEW(editor); editor.alignment.Set(WMComponents.AlignLeft);
+			editor.type.Set(WMEditors.Decimal);
+			editor.bounds.SetWidth(80);
+			editor.onEnter.Add(EnterPressed);
+			editor.onChanged.Add(EditorContentChanged);
+			AddContent(editor);
+		END Init;
+
+		PROCEDURE Apply(force : BOOLEAN);
+		VAR size : WMProperties.SizeProperty; string : ARRAY 256 OF CHAR; value : SIZE;
+		BEGIN
+			size := SELF.size;
+			IF (size # NIL) THEN
+				editor.GetAsString(string);
+				Strings.StrToSize(string, value);
+				IF force OR (value # size.Get()) THEN
+					size.Set(value);
+				ELSE
+					SetOutOfDate(FALSE);
+				END;
+			END;
+		END Apply;
+
+		PROCEDURE Synchronize(force : BOOLEAN);
+		VAR size : WMProperties.SizeProperty; value : SIZE; string : ARRAY 256 OF CHAR;
+		BEGIN
+			Synchronize^(force);
+			size := SELF.size;
+			IF (size # NIL) & (force OR (lastTimestamp # size.GetTimestamp())) THEN
+				lastTimestamp := size.GetTimestamp();
+				value := size.Get();
+				Strings.IntToStr(value, string);
+				editor.SetAsString(string);
+				SetOutOfDate(FALSE);
+			END;
+		END Synchronize;
+
+		PROCEDURE IsCompatible(property : WMProperties.Property) : BOOLEAN;
+		BEGIN
+			RETURN (property # NIL) & (property IS WMProperties.SizeProperty);
+		END IsCompatible;
+
+		PROCEDURE Enable;
+		BEGIN
+			editor.enabled.Set(TRUE);
+		END Enable;
+
+		PROCEDURE Disable;
+		BEGIN
+			editor.enabled.Set(FALSE);
+		END Disable;
+
+		PROCEDURE SetProperty(property : WMProperties.Property);
+		BEGIN
+			ASSERT((property = NIL) OR ((property # NIL) & (property IS WMProperties.SizeProperty)));
+			SetProperty^(property);
+			IF (property # NIL) THEN
+				SELF.size := property (WMProperties.SizeProperty);
+			ELSE
+				SELF.size := NIL;
+				editor.SetAsString("");
+			END;
+		END SetProperty;
+
+		PROCEDURE SetOutOfDate(value : BOOLEAN);
+		BEGIN
+			IF (outOfDate # value) THEN
+				outOfDate := value;
+				IF outOfDate THEN
+					editor.fillColor.Set(SIGNED32(0FFFF0099H));
+				ELSE
+					editor.fillColor.Set(WMGraphics.White);
+				END;
+			END;
+		END SetOutOfDate;
+
+		PROCEDURE EditorContentChanged(sender, data : ANY);
+		BEGIN
+			SetOutOfDate(TRUE);
+		END EditorContentChanged;
+
+		PROCEDURE EnterPressed(sender, data : ANY);
+		BEGIN
+			Apply(FALSE);
+		END EnterPressed;
+
+	END SizePropertyView;
+
+TYPE
+
 	RealPropertyView = OBJECT(PropertyView)
 	VAR
 		real : WMProperties.RealProperty;
@@ -2479,6 +2581,7 @@ TYPE
 			property : WMProperties.Property;
 			booleanView : BooleanPropertyView;
 			int32View : Int32PropertyView;
+			sizeView : SizePropertyView;
 			realView : RealPropertyView;
 			referenceView : ReferencePropertyView;
 			fontView : FontPropertyView;
@@ -2510,6 +2613,12 @@ TYPE
 							content.AddContent(int32View);
 							list.Add(int32View);
 							INC(height, int32View.bounds.GetHeight());
+							INC(nofElements);
+						ELSIF (property IS WMProperties.SizeProperty) THEN
+							NEW(sizeView); sizeView.SetProperty(property (WMProperties.SizeProperty));
+							content.AddContent(sizeView);
+							list.Add(sizeView);
+							INC(height, sizeView.bounds.GetHeight());
 							INC(nofElements);
 						ELSIF (property IS WMProperties.RealProperty) THEN
 							NEW(realView); realView.SetProperty(property (WMProperties.RealProperty));
@@ -3758,7 +3867,7 @@ VAR
 
 	StrNotAvailable, StrNoCaption, StrType,
 	StrComponentInfo, StrStandardProperties, StrExtendedProperties, StrExtendedPropertiesView, StrEventListeners, StrEventSources,
-	StrBooleanPropertyView, StrInt32PropertyView, StrRealPropertyView, StrRectanglePropertyView, StrPointPropertyView,
+	StrBooleanPropertyView, StrInt32PropertyView, StrSizePropertyView, StrRealPropertyView, StrRectanglePropertyView, StrPointPropertyView,
 	StrStringPropertyView,
 	StrColorPropertyView, StrEventSourceView, StrEventListenerView, StrUnknownPropertyView,
 	StrFontPropertyView, StrReferencePropertyView, StrAlignmentPropertyView, StrModelView : Strings.String;
@@ -3910,6 +4019,7 @@ BEGIN
 	StrEventSources := Strings.NewString("EventSources");
 	StrBooleanPropertyView := Strings.NewString("BooleanPropertyView");
 	StrInt32PropertyView := Strings.NewString("Int32PropertyView");
+	StrSizePropertyView := Strings.NewString("SizePropertyView");
 	StrRealPropertyView := Strings.NewString("RealPropertyView");
 	StrRectanglePropertyView := Strings.NewString("RectanglePropertyView");
 	StrPointPropertyView := Strings.NewString("PointPropertyView");

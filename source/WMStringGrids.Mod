@@ -53,7 +53,7 @@ TYPE
 
 		PROCEDURE &Init*;
 		BEGIN
-			NEW(onChanged, SELF, WMComponents.NewString("TreeModelChanged"), NIL, NIL);
+			NEW(onChanged, SELF, WMComponents.NewString("StringGridModelChanged"), NIL, NIL);
 			NEW(rows, 4);
 			lockLevel :=0;
 		END Init;
@@ -364,8 +364,8 @@ TYPE
 			Acquire;
 			nofCols.Set(model.nofCols);
 			nofRows.Set(model.nofRows);
-			Invalidate;
 			SetDrawCellProc(DrawCell);
+			Invalidate;
 			Release
 		END ModelChanged;
 
@@ -556,7 +556,7 @@ BEGIN
 	p:=WMStandardComponents.GenPanel()(WMStandardComponents.Panel); p.fillColor.Set(0FF0000FFH);
 	g.model.SetCellData(0,0,p);
 	img:=WMGraphics.LoadImage("Yellow_Duck.jpg",FALSE);
-	(*g.model.SetCellTextAOC(0,1,12,"yellow duck");*)
+	g.model.SetCellTextAOC(0,1,12,"yellow duck");
 	rowSp[1]:=100; g.SetRowSpacings(rowSp);
 	colSp[0]:=100; g.SetColSpacings(colSp);
 	g.model.SetCellImage(0,1,img);
@@ -573,7 +573,7 @@ END ShowGrid.
 
 ShowGrid.Do ~
 
-System.FreeDownTo WMStringGrids ShowGrid~
+System.FreeDownTo WMInspectionComponents WMStringGrids ShowGrid~
 
 ComponentViewer.Open WMStringGrids.GenStringGrid ~
 

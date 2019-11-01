@@ -133,8 +133,8 @@ TYPE
 		ELSE
 			dividend := -dividend;
 			DivModU32(dividend, divisor, uquotient, uremainder);
-			quotient := -SIGNED32(quotient);
-			remainder := SIGNED32(remainder);
+			quotient := -SIGNED32(uquotient);
+			remainder := SIGNED32(uremainder);
 			IF remainder # 0 THEN
 				DEC(quotient);
 				remainder := divisor - remainder

@@ -5623,7 +5623,8 @@ TYPE
 						IF left IS SyntaxTree.DereferenceDesignator THEN (* dereference, if required *)
 							left := left(SyntaxTree.Designator).left;
 						END;
-						expression := checker.NewObjectOperatorCall(Basic.invalidPosition, left, 0, actualParameter.parameters, tempVariableDesignator);
+						checker.SetCurrentScope(currentScope);
+						expression := checker.NewObjectOperatorCall(Basic.invalidPosition, left, Global.Indexer, actualParameter.parameters, tempVariableDesignator);
 						currentWriteBackCall.call := expression(SyntaxTree.ProcedureCallDesignator);
 					END;
 					actualParameter := tempVariableDesignator;

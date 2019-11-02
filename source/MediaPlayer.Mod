@@ -390,11 +390,12 @@ TYPE
 				vBufferPool.Add(readyBufferPool.Remove())
 			END;
 			videoDecoder.SeekFrame(pos, TRUE, res);
-			videoDecoder.Next; videoDecoder.Next;
+			(*videoDecoder.Next; *)(*videoDecoder.Next; *)
 			videoDecoder.Render(frame);
+			(*videoDecoder.Next; *)
 			f := frame;
-			videoDecoder.SeekFrame(pos, TRUE, res);
-			videoDecoder.Next;
+			(*	videoDecoder.SeekFrame(pos, TRUE, res); *)
+			(* videoDecoder.Next;*)
 			IF videoDecoder.HasMoreData() THEN positionChanged := TRUE; END;
 		END SeekAndGetFrame;
 
@@ -404,7 +405,7 @@ TYPE
 				vBufferPool.Add(readyBufferPool.Remove())
 			END;
 			videoDecoder.SeekFrame(pos, TRUE, res);
-			videoDecoder.Next;
+			(*videoDecoder.Next;*)
 			IF videoDecoder.HasMoreData() THEN positionChanged := TRUE; END;
 		END SeekFrame;
 
@@ -439,8 +440,9 @@ TYPE
 						IF PerformanceStats THEN
 							perf := Kernel.GetTicks();
 						END;
-						videoDecoder.Next;
+						(*videoDecoder.Next;*)
 						videoDecoder.Render(vBuffer);
+						videoDecoder.Next;
 						IF PerformanceStats THEN
 							perf := Kernel.GetTicks() - perf;
 							IF perf < min THEN min := perf;
@@ -617,6 +619,7 @@ TYPE
 			END;
 			RequestState(Ready, context);
 			IF Trace * TraceOpen # {} THEN KernelLog.String("MediaPlayer: Opened "); KernelLog.String(uri); KernelLog.Ln; END;
+			KernelLog.String("MediaPlayer.filler.GetFrame"); KernelLog.Int(current.filler.GetFrame(),0);KernelLog.Ln;
 		END Open;
 
 		PROCEDURE Play*;
@@ -698,18 +701,20 @@ TYPE
 		BEGIN
 			RequestState(Paused, NIL);
 		END Pause;
-
+(*
 		PROCEDURE DoReset*;
 		VAR uri, msg: ARRAY 256 OF CHAR; res:INTEGER;
 		BEGIN
-			COPY(current.uri,uri);
+			Reset(NIL,NIL);
+			(*COPY(current.uri,uri);
 			IF ~ (state IN {NotReady, Ready, Stopped, Closed}) THEN
 				Stop;
-				BEGIN {EXCLUSIVE} AWAIT(state IN {Stopped}) END;
+				(*BEGIN {EXCLUSIVE} AWAIT(state IN {Stopped}) END;*)
 			END;
 			Open(uri, msg, res);
+			*)
 		END DoReset;
-
+*)
 		(* Get in  1/10 sec. Returns -1 if information is not available. *)
 		PROCEDURE GetTimePos*(): SIGNED32;
 		VAR context : Context; res : INTEGER;
@@ -760,7 +765,7 @@ TYPE
 
 		(* Set position *)
 		PROCEDURE SetPos*(pos: SIGNED32);
-		VAR current : Context;  audioPos, res : SIGNED32; img : WMGraphics.Image;
+		VAR current : Context;  audioPos, res : SIGNED32; img : WMGraphics.Image; 
 		BEGIN {EXCLUSIVE}
 			IF pos < 0 THEN
 				IF Debug THEN KernelLog.String("MediaPlayer: Warning: Setpos to "); KernelLog.Int(pos, 0); KernelLog.String("!?!"); KernelLog.Ln; END;
@@ -794,6 +799,7 @@ TYPE
 					current.oldPos := current.pos-1;
 				END;
 				(* IF update # NIL THEN update(state, pos, current.maxFrames, pos) END *)
+			
 			ELSIF (current # NIL) & ~current.canSeek THEN
 				IF Debug THEN KernelLog.String("MediaPlayer: Warning: can not set position "); KernelLog.Int(pos, 0); KernelLog.String("!?!"); KernelLog.Ln; END;
 			END;
@@ -877,9 +883,7 @@ TYPE
 
 		PROCEDURE CanSeek*():BOOLEAN;
 		BEGIN
-			IF current#NIL THEN RETURN current.canSeek
-			ELSE RETURN FALSE
-			END;
+			RETURN (current#NIL) & current.canSeek
 		END CanSeek;
 
 		PROCEDURE GetCurrentFrame*() : VideoBuffer;
@@ -1121,12 +1125,15 @@ TYPE
 		END NoAction;
 
 		PROCEDURE Reset*(sender, data: ANY);
-		VAR msg: ARRAY 256 OF CHAR; res:INTEGER;
+		VAR msg,uri: ARRAY 256 OF CHAR; res:INTEGER;
 		BEGIN
 			IF Trace * TraceEof # {} THEN KernelLog.String("MediaPlayer: EOF Reset."); KernelLog.Ln; END;
+			COPY(current.uri, uri);
 			Stop;
-			IF ~ current.canSeek THEN
-				Open(current.uri, msg, res);
+			IF current.canSeek THEN
+				SetPos(0);
+			ELSE
+				Open(uri, msg, res);
 			END;
 		END Reset;
 
@@ -1291,7 +1298,7 @@ TYPE
 			IF current # NIL THEN
 				IF state = Finished THEN
 					current.pos := 0; current.oldPos := -1;
-					IF current.hasVideo THEN current.filler.SeekFrame(0, TRUE, res); END;
+					IF current.hasVideo THEN current.filler.SeekFrame(0, TRUE, res); END; (*??? necessary ? anyway not used if cannot seek*)
 					IF current.hasAudio THEN current.channel.Stop; current.audio.SeekSample(0, FALSE, res); END;
 				END;
 				IF current.hasAudio THEN current.channel.SetVolume(255); current.channel.Start; END;
@@ -1497,6 +1504,7 @@ TYPE
 		END EvaluateState;
 
 	BEGIN {ACTIVE}
+		timer.Sleep(100);
 		WHILE state < Closed DO
 			(* Synchronization to player commands *)
 			BEGIN {EXCLUSIVE} AWAIT((state = Playing) OR (state = Stepping) OR (state = InTransition) OR (state >= Closed) OR (nextState # NoRequest)); END;

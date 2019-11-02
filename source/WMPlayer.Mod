@@ -361,7 +361,7 @@ TYPE
 					ELSIF b = stepBtn THEN player.Step;
 					ELSIF b = ffBtn THEN player.SetPos(player.GetFrame() + stepSize); (*?use time units or frame units *)
 					ELSIF b = rewBtn THEN player.SetPos(player.GetFrame() - 2 * stepSize);
-					ELSIF b = resetBtn THEN player.DoReset;
+					ELSIF b = resetBtn THEN player.Reset(NIL,NIL); (*player.DoReset;*)
 					ELSIF b = infoBtn THEN
 						IF setupData # NIL THEN
 							NEW(info, setupData);
@@ -533,4 +533,5 @@ MediaPlayer.Open Filme:/test.mp3 ~
 MediaPlayer.Close ~
 
 
-WMPlayer.Open -f="HIGHDIM:/Data/Sperm/IMSI2.wmv" ~
+WMPlayer.Open "HIGHDIM:/Data/Sperm/IMSI1.wmv" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI1.wmv" ~

@@ -2817,12 +2817,24 @@ TYPE
 			RecacheProperties^;
 			scaleImageI := scaleImage.Get();
 			s := imageName.Get();
-			IF (s # NIL) THEN
+			IF (s # NIL)& (s^#"") THEN
 				image := WMGraphics.LoadImage(s^, TRUE);
+			ELSE
+				(*image := NIL;*)
+			END;
+		END RecacheProperties;
+
+		PROCEDURE SetImage*(sender, data : ANY);
+		BEGIN
+			IF (data # NIL) & (data IS WMGraphics.Image) THEN
+				image := data(WMGraphics.Image);
+				IF (bounds.GetWidth()#image.width) OR (bounds.GetHeight()#image.height) THEN bounds.SetExtents(image.width, image.height) END;
 			ELSE
 				image := NIL;
 			END;
-		END RecacheProperties;
+			imageName.SetAOC("");
+			Invalidate
+		END SetImage;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR width, height : SIZE;

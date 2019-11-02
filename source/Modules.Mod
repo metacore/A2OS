@@ -431,7 +431,7 @@ END Initialize;
 
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
 PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: INTEGER; VAR msg: ARRAY OF CHAR): Module;
-VAR m: Module; fileName: ARRAY 64 OF CHAR; i: SIZE; registered: BOOLEAN;
+VAR m: Module; fileName: Name; i: SIZE; registered: BOOLEAN;
 BEGIN
 	res := Ok; msg[0] := 0X; m := ByName(name, registered);
 	IF (m#NIL) & (registered) THEN

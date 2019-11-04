@@ -46,7 +46,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		b* = 0; g* = 1; r* = 2; a* = 3;	(** index of blue, green, red, and alpha components in a Pixel **)
 
 		(** format codes **)
-		custom* = 0; a1* = 1; a8* = 2; d8* = 3; p8* = 4; bgr555* = 5; bgr565* = 6; bgr466* = 7; bgr888* = 8; bgra8888* = 9; p16* =10;
+		custom* = 0; a1* = 1; a8* = 2; d8* = 3; p8* = 4; 
+		bgr555* = 5; bgr565* = 6; bgr466* = 7; bgr888* = 8; bgra8888* = 9; 
+		p16* =10; 
+		yuv422*=11;
 
 		(** components **)
 		color* = 0; alpha* = 1; index* = 2;
@@ -1748,6 +1751,25 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		END
 	END BGRA8888CopyAny16;
 
+	(*use in data formats that use color interleving, e.g. yuv422 *)
+	PROCEDURE BGRA8888CopyInterlace32 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
+		VAR pix: Pixel;
+	BEGIN
+		WHILE len > 0 DO
+			IF len>0 THEN
+				SYSTEM.MOVE(sadr, ADDRESSOF(pix[0]), 4);
+				mode.dst.pack(mode.dst, dadr, 0, pix);(*signals packing of part 1 with location of 1st byte*)
+				sbit := sbit + mode.src.bpp; INC(sadr, sbit DIV 8); sbit := sbit MOD 8; DEC(len)
+			END;
+			IF len>0 THEN
+				SYSTEM.MOVE(sadr, ADDRESSOF(pix[0]), 4);
+				mode.dst.pack(mode.dst, dadr, 16, pix);(*signals packing of part 2 with location of 1st byte*)
+				INC(dadr, 2); INC(dadr, 2); 
+				sbit := sbit + mode.src.bpp; INC(sadr, sbit DIV 8); sbit := sbit MOD 8; DEC(len)
+			END;
+		END
+	END BGRA8888CopyInterlace32;
+
 	PROCEDURE Any16CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
 		VAR pix: Pixel;
 	BEGIN
@@ -1778,6 +1800,24 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		END
 	END Any16CopyBGRA8888;
 
+	(*use in data formats like yuv422 with interleaved color data*)
+	PROCEDURE Interlace32CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
+		VAR pix: Pixel;
+	BEGIN
+		WHILE len > 0 DO
+			IF len>0 THEN 	(*first 16 bit*)
+				mode.src.unpack(mode.src, sadr, 0, pix);  (*signals first byte location*)
+				SYSTEM.MOVE(ADDRESSOF(pix[0]), dadr, 4); INC(dadr, 4); 
+				DEC(len)
+			END;
+			IF len>0 THEN (*second 16 bit*)	
+				mode.src.unpack(mode.src, sadr, 16, pix); (*signals  first alterative first byte location*)
+				INC(sadr, 2);  INC(sadr, 2);
+				SYSTEM.MOVE(ADDRESSOF(pix[0]), dadr, 4); INC(dadr, 4); 
+				DEC(len)
+			END;
+		END
+	END Interlace32CopyBGRA8888;
 
 	(* BGR888 *)
 	PROCEDURE AnyCopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
@@ -4028,11 +4068,17 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 						mode.transfer :=BGR888CopyBGRA8888;
 					#END
 				| bgra8888: mode.transfer := Copy32
+				| yuv422: mode.transfer := Interlace32CopyBGRA8888
 				ELSE 
 					IF src.bpp=16 THEN mode.transfer:=Any16CopyBGRA8888
 					ELSE mode.transfer := AnyCopyBGRA8888
 					END;
 				END
+			| yuv422: 
+				CASE src.code OF
+				| bgra8888: mode.transfer:= BGRA8888CopyInterlace32
+				ELSE mode.transfer:=AnyCopyAny16
+				END;
 			ELSE
 				CASE src.code OF
 				| a1: mode.transfer := A1CopyAny
@@ -4040,13 +4086,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 				| d8: mode.transfer := D8CopyAny
 				| bgr555, bgr565, bgr466,p16: mode.transfer := Any16CopyAny
 				| bgr888: mode.transfer := BGR888CopyAny
-				| bgra8888: 
-					IF dst.bpp=16 THEN mode.transfer:=BGRA8888CopyAny16
-					ELSE mode.transfer := BGRA8888CopyAny 
-					END;
+				| bgra8888: mode.transfer := BGRA8888CopyAny 
+				| yuv422: mode.transfer := Interlace32CopyBGRA8888 
 				ELSE
-					IF (src.bpp=16) THEN mode.transfer := Any16CopyAny
-					ELSIF (src.bpp MOD 8 = 0) & (dst.bpp MOD 8 = 0) THEN mode.transfer := AnyBytesCopyAnyBytes
+					IF (src.bpp MOD 8 = 0) & (dst.bpp MOD 8 = 0) THEN mode.transfer := AnyBytesCopyAnyBytes
 					ELSE mode.transfer := AnyCopyAny
 					END
 				END
@@ -4078,11 +4121,17 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 				| a8: mode.buf := mode.col; mode.transfer := A8OverAny;
 					IF mode.op = srcOverDst THEN mode.transfer := A8OverBGRA8888 END;
 				| bgra8888: mode.transfer := BGRA8888OverBGRA8888
+				| yuv422: mode.transfer := Interlace32CopyBGRA8888
 				ELSE
-					IF src.bpp=16 THEN mode.transfer:=Any16CopyBGRA8888 (*?!*)
-					ELSE mode.transfer := AnyCopyBGRA8888; (*! was BGRA8888OverAny *)
+					IF src.bpp=16 THEN mode.transfer:=Any16CopyBGRA8888 
+					ELSE mode.transfer := AnyCopyBGRA8888; 
 					END;
 				END
+			| yuv422: 
+				CASE src.code OF 
+				|bgra8888: mode.transfer := BGRA8888CopyInterlace32
+				ELSE HALT(200);
+				END;
 			ELSE
 				CASE src.code OF
 				| a1:
@@ -4118,9 +4167,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 							mode.transfer := BGRA8888Over565
 						#END
 					ELSE 
-						IF dst.bpp=16 THEN mode.transfer:=BGRA8888OverAny16 (*?!*)
-						ELSE mode.transfer := BGRA8888OverAny
-						END;
+						 mode.transfer := BGRA8888OverAny
 					END
 				ELSE
 					mode.transfer := AnyBlendAny

@@ -3,7 +3,6 @@ MODULE RasterPixelFormats; (** AUTHOR "Patrick Hunziker"; PURPOSE "more pixel fo
 IMPORT Raster, SYSTEM;
 
 CONST b = Raster.b; g = Raster.g; r = Raster.r; a = Raster.a;
-		yuv422* = 11;
 
 VAR YUV422*: Raster.Format;
 
@@ -17,17 +16,24 @@ VAR YUV422*: Raster.Format;
 		g:=CHR(MAX(0,MIN(255, (298*c - 100*d -208*e +128) DIV 256)));
 		b:=CHR(MAX(0,MIN(255, (298*c + 516*d +128) DIV 256)));
 	END YUVtoBGRInt;
-
-
+	
+	PROCEDURE -clamp(VAR c:FLOAT32):CHAR;
+	BEGIN
+		RETURN CHR(MAX(0,MIN(255, ENTIER(c))));
+	END clamp;
+	
 	PROCEDURE YUVtoBGR(y,u,v: CHAR; VAR b,g,r: CHAR);
 	VAR B,G,R: FLOAT32;
 	BEGIN
 		B:=ORD(y)+ORD(u)/0.493;
 		R:=ORD(y)+ORD(v)/0.877;
 		G:=1.704*ORD(y) - 0.509*R -0.194*B;
+		b:=clamp(B);
+		r:=clamp(R);
+		g:=clamp(G);(*
 		b:=CHR(MAX(0,MIN(255, ENTIER(B))));
 		r:=CHR(MAX(0,MIN(255, ENTIER(R))));
-		g:=CHR(MAX(0,MIN(255, ENTIER(G))));
+		g:=CHR(MAX(0,MIN(255, ENTIER(G))));*)
 	END YUVtoBGR;
 
 PROCEDURE BGRtoYUV(blue,green,red: CHAR; VAR y,u,v: CHAR);
@@ -37,9 +43,12 @@ PROCEDURE BGRtoYUV(blue,green,red: CHAR; VAR y,u,v: CHAR);
 		Y:=0.299*ORD(red)+0.587*ORD(green)+0.114*ORD(blue);
 		U:=(ORD(blue)-Y)*0.493;
 		V:=(ORD(red)-Y)*0.877;
+		y:=clamp(Y);
+		u:=clamp(U);
+		v:=clamp(V);(*
 		y:=CHR(MAX(0,MIN(255,ENTIER(Y)))); (* ? +0.5..*)
 		u:=CHR(MAX(0,MIN(255,ENTIER(U))));
-		v:=CHR(MAX(0,MIN(255,ENTIER(V))));
+		v:=CHR(MAX(0,MIN(255,ENTIER(V))));*)
 	END BGRtoYUV;
 	
 	PROCEDURE BGRtoYUVInt(blue,green,red: CHAR; VAR y,u,v: CHAR);
@@ -56,7 +65,6 @@ PROCEDURE BGRtoYUV(blue,green,red: CHAR; VAR y,u,v: CHAR);
 		v:=CHR((127*ORD(red)-106*ORD(green)-21*ORD(blue)+128) DIV 256 +128);
 		*)
 	END BGRtoYUVInt;
-
 	
 	(* y0uy1v data are 32 bits for two adjacent pixels *);
 	PROCEDURE PackYUV422 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel);
@@ -64,32 +72,29 @@ PROCEDURE BGRtoYUV(blue,green,red: CHAR; VAR y,u,v: CHAR);
 	BEGIN
 		IF pix[a]#0X THEN 
 			BGRtoYUV(pix[b],pix[g],pix[r], y,u,v);
-			IF adr  MOD 4 <2 THEN
-				SYSTEM.PUT(adr, y);  SYSTEM.PUT(adr+1, u);
-			ELSE
-				SYSTEM.PUT(adr, y);  SYSTEM.PUT(adr+1, v);
+			IF bit=0 THEN
+				SYSTEM.PUT(adr, y);  SYSTEM.PUT(adr+1, u); (* v is encoded with next pixel*)
+			ELSIF bit=16 THEN
+				SYSTEM.PUT(adr+2, y);  SYSTEM.PUT(adr+3, v); (* u is encoded with next pixel*)
 			END;
 		END;
 	END PackYUV422;
 
-	(* YUV422 - 32 bit  pixels with 8 bit Y for two pixel, 8bits U in every second pixel, and 8 bits V in every second pixel *)
-	PROCEDURE UnpackYUV422 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel);
+	(* YUV422 - 32 bit  pixels with 8 bit Y0 , 8bit U, 8Bit Y1 and 8 bits V, encoding two consecutive pxels *)
+	PROCEDURE UnpackYUV422 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel);(*this encodes one pixel with source location depending on "bit" *)
 		VAR y0,y1,u,v: CHAR; 
 	BEGIN
-		(*y0uy1v data are 32 bits for two adjacent pixels*);
-		IF adr MOD 4 <2 THEN (* first half*)(*!!this may not be correct*)
-			SYSTEM.GET(adr, y0); SYSTEM.GET(adr+1, u); (*SYSTEM.GET(adr+2, y1);*) SYSTEM.GET(adr+3, v);
-			YUVtoBGR(y0,u,v, pix[b], pix[g], pix[r]);
-		ELSE
-			(*SYSTEM.GET(adr-2, y0);*) SYSTEM.GET(adr-1, u); SYSTEM.GET(adr, y1); SYSTEM.GET(adr+1, v); 	
-			YUVtoBGR(y1,u,v, pix[b], pix[g], pix[r]);
+		SYSTEM.GET(adr, y0); SYSTEM.GET(adr+1, u); SYSTEM.GET(adr+2, y1); SYSTEM.GET(adr+3, v);
+		IF bit=0 THEN YUVtoBGR(y0,u,v, pix[b], pix[g], pix[r]);
+		ELSIF bit=16 THEN YUVtoBGR(y1,u,v, pix[b], pix[g], pix[r]);
+		ELSE HALT(200)
 		END;
 		pix[a] := 0FFX
 	END UnpackYUV422;
 
 BEGIN
 	(*Raster.InitFormat(YUV422, yuv422, 16, 2, {Raster.color}, NIL, PackYUV422, UnpackYUV422);*)
-	Raster.InitFormat(YUV422, yuv422, 16, 4, {Raster.color}, NIL, PackYUV422, UnpackYUV422);
+	Raster.InitFormat(YUV422, Raster.yuv422, 16, 2, {Raster.color}, NIL, PackYUV422, UnpackYUV422);
 END RasterPixelFormats.
 
 System.FreeDownTo RasterPixelFormats~

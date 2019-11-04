@@ -71,7 +71,7 @@ PROCEDURE BGRtoYUV(blue,green,red: CHAR; VAR y,u,v: CHAR);
 	VAR y,u,v: CHAR;
 	BEGIN
 		IF pix[a]#0X THEN 
-			BGRtoYUV(pix[b],pix[g],pix[r], y,u,v);
+			BGRtoYUVInt(pix[b],pix[g],pix[r], y,u,v);
 			IF bit=0 THEN
 				SYSTEM.PUT(adr, y);  SYSTEM.PUT(adr+1, u); (* v is encoded with next pixel*)
 			ELSIF bit=16 THEN
@@ -85,8 +85,8 @@ PROCEDURE BGRtoYUV(blue,green,red: CHAR; VAR y,u,v: CHAR);
 		VAR y0,y1,u,v: CHAR; 
 	BEGIN
 		SYSTEM.GET(adr, y0); SYSTEM.GET(adr+1, u); SYSTEM.GET(adr+2, y1); SYSTEM.GET(adr+3, v);
-		IF bit=0 THEN YUVtoBGR(y0,u,v, pix[b], pix[g], pix[r]);
-		ELSIF bit=16 THEN YUVtoBGR(y1,u,v, pix[b], pix[g], pix[r]);
+		IF bit=0 THEN YUVtoBGRInt(y0,u,v, pix[b], pix[g], pix[r]);
+		ELSIF bit=16 THEN YUVtoBGRInt(y1,u,v, pix[b], pix[g], pix[r]);
 		ELSE HALT(200)
 		END;
 		pix[a] := 0FFX

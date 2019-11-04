@@ -11,51 +11,89 @@ VAR YUV422*: Raster.Format;
 	PROCEDURE YUVtoBGRInt(y,u,v: CHAR; VAR b,g,r: CHAR);
 	VAR c,d,e: SIGNED32;
 	BEGIN
+		(*"studio swing BT.601"*)
 		c:=ORD(y)-16; d:=ORD(u)-128; e:=ORD(v)-128;
 		r:=CHR(MAX(0,MIN(255, (298*c + 409*e +128) DIV 256)));
 		g:=CHR(MAX(0,MIN(255, (298*c - 100*d -208*e +128) DIV 256)));
 		b:=CHR(MAX(0,MIN(255, (298*c + 516*d +128) DIV 256)));
 	END YUVtoBGRInt;
 
-	PROCEDURE BGRtoYUVInt(blue,green,red: CHAR; VAR y,u,v: CHAR);
-	VAR c,d,e: SIGNED32;
+
+	PROCEDURE YUVtoBGR(y,u,v: CHAR; VAR b,g,r: CHAR);
+	VAR B,G,R: FLOAT32;
 	BEGIN
+		B:=ORD(y)+ORD(u)/0.493;
+		R:=ORD(y)+ORD(v)/0.877;
+		G:=1.704*ORD(y) - 0.509*R -0.194*B;
+		b:=CHR(MAX(0,MIN(255, ENTIER(B))));
+		r:=CHR(MAX(0,MIN(255, ENTIER(R))));
+		g:=CHR(MAX(0,MIN(255, ENTIER(G))));
+	END YUVtoBGR;
+
+PROCEDURE BGRtoYUV(blue,green,red: CHAR; VAR y,u,v: CHAR);
+	VAR Y,U,V: FLOAT32;
+	BEGIN
+		(* float version*)
+		Y:=0.299*ORD(red)+0.587*ORD(green)+0.114*ORD(blue);
+		U:=(ORD(blue)-Y)*0.493;
+		V:=(ORD(red)-Y)*0.877;
+		y:=CHR(MAX(0,MIN(255,ENTIER(Y)))); (* ? +0.5..*)
+		u:=CHR(MAX(0,MIN(255,ENTIER(U))));
+		v:=CHR(MAX(0,MIN(255,ENTIER(V))));
+	END BGRtoYUV;
+	
+	PROCEDURE BGRtoYUVInt(blue,green,red: CHAR; VAR y,u,v: CHAR);
+	BEGIN
+		(*"studio swing BT.601"*)	
 		y:=CHR((66*ORD(red)+129*ORD(green)+25*ORD(blue)+128) DIV 256 +16);
-		u:=CHR((-3866*ORD(red)-74*ORD(green)+112*ORD(blue)+128) DIV 256 +128);
-		v:=CHR((112*ORD(red)-94*ORD(green)-18*ORD(blue)+128) DIV 256 +128)
+		u:=CHR((-38*ORD(red)-74*ORD(green)+112*ORD(blue)+128) DIV 256 +128);
+		v:=CHR((112*ORD(red)-94*ORD(green)-18*ORD(blue)+128) DIV 256 +128);
+		
+		(*"full swing BT.601"*)
+		(*
+		y:=CHR((77*ORD(red)+150*ORD(green)+29*ORD(blue)+128) DIV 256);
+		u:=CHR((-43*ORD(red)-84*ORD(green)+127*ORD(blue)+128) DIV 256 +128);
+		v:=CHR((127*ORD(red)-106*ORD(green)-21*ORD(blue)+128) DIV 256 +128);
+		*)
 	END BGRtoYUVInt;
 
-	(*! to do: this is inefficient because two adjacent pixels are handled despite their common u and v parts; However, the design of the Raster module renders this mandatory. A direct conversion may help in some cases. *)
+	
+	(* y0uy1v data are 32 bits for two adjacent pixels *);
 	PROCEDURE PackYUV422 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel);
-	VAR y,u,v: CHAR; baseadr:ADDRESS;
+	VAR y,u,v: CHAR;
 	BEGIN
-		IF pix[a]#0X THEN
-			baseadr:= adr-adr MOD 4; (*y0uy1v data are 32 bits for two adjacent pixels*);
-			BGRtoYUVInt(pix[b],pix[g],pix[r], y,u,v);
-			IF baseadr=adr THEN (*i.e. first of two pixels*)
-				SYSTEM.PUT(baseadr, y);  SYSTEM.PUT(baseadr, u);
+		IF pix[a]#0X THEN 
+			BGRtoYUV(pix[b],pix[g],pix[r], y,u,v);
+			IF adr  MOD 4 <2 THEN
+				SYSTEM.PUT(adr, y);  SYSTEM.PUT(adr+1, u);
 			ELSE
-				SYSTEM.PUT(baseadr, y);  SYSTEM.PUT(baseadr, v);
+				SYSTEM.PUT(adr, y);  SYSTEM.PUT(adr+1, v);
 			END;
 		END;
 	END PackYUV422;
 
 	(* YUV422 - 32 bit  pixels with 8 bit Y for two pixel, 8bits U in every second pixel, and 8 bits V in every second pixel *)
-	(*! to do: this is inefficient because raw data are read twice for two adjacent pixels. However, the design of the Raster module renders this mandatory. A direct conversion may help in some cases. *)
 	PROCEDURE UnpackYUV422 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel);
-		VAR y0,y1,u,v: CHAR; int: SIGNED32; baseadr:ADDRESS;
+		VAR y0,y1,u,v: CHAR; 
 	BEGIN
-		baseadr:= adr-adr MOD 4; (*y0uy1v data are 32 bits for two adjacent pixels*);
-		SYSTEM.GET(baseadr, y0); SYSTEM.GET(baseadr+1, u); SYSTEM.GET(baseadr+2, y1); SYSTEM.GET(baseadr+3, v);
-		IF baseadr#adr THEN y0:=y1 END; (*second pixel*)
-		YUVtoBGRInt(y0,u,v, pix[b], pix[g], pix[r]);
+		(*y0uy1v data are 32 bits for two adjacent pixels*);
+		IF adr MOD 4 <2 THEN (* first half*)(*!!this may not be correct*)
+			SYSTEM.GET(adr, y0); SYSTEM.GET(adr+1, u); (*SYSTEM.GET(adr+2, y1);*) SYSTEM.GET(adr+3, v);
+			YUVtoBGR(y0,u,v, pix[b], pix[g], pix[r]);
+		ELSE
+			(*SYSTEM.GET(adr-2, y0);*) SYSTEM.GET(adr-1, u); SYSTEM.GET(adr, y1); SYSTEM.GET(adr+1, v); 	
+			YUVtoBGR(y1,u,v, pix[b], pix[g], pix[r]);
+		END;
 		pix[a] := 0FFX
 	END UnpackYUV422;
 
 BEGIN
-	Raster.InitFormat(YUV422, yuv422, 16, 2, {Raster.color}, NIL, PackYUV422, UnpackYUV422);
+	(*Raster.InitFormat(YUV422, yuv422, 16, 2, {Raster.color}, NIL, PackYUV422, UnpackYUV422);*)
+	Raster.InitFormat(YUV422, yuv422, 16, 4, {Raster.color}, NIL, PackYUV422, UnpackYUV422);
 END RasterPixelFormats.
 
+System.FreeDownTo RasterPixelFormats~
+Yellow_Duck.jpg
 
 Raster format codes used in video: ( Windows: 'biCompression' constant)
 Video compression formats in Windows (FOURCC identifiers) :

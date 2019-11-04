@@ -4006,7 +4006,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 					#ELSE
 						mode.transfer := BGRA8888CopyBGR888
 					#END
-				ELSE mode.transfer := AnyCopyBGR888
+				ELSE 
+					IF src.bpp=16 THEN mode.transfer:=Any16CopyBGR888
+					ELSE mode.transfer := AnyCopyBGR888
+					END;
 				END
 			| bgra8888:
 				CASE src.code OF
@@ -4025,7 +4028,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 						mode.transfer :=BGR888CopyBGRA8888;
 					#END
 				| bgra8888: mode.transfer := Copy32
-				ELSE mode.transfer := AnyCopyBGRA8888
+				ELSE 
+					IF src.bpp=16 THEN mode.transfer:=Any16CopyBGRA8888
+					ELSE mode.transfer := AnyCopyBGRA8888
+					END;
 				END
 			ELSE
 				CASE src.code OF
@@ -4034,9 +4040,13 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 				| d8: mode.transfer := D8CopyAny
 				| bgr555, bgr565, bgr466,p16: mode.transfer := Any16CopyAny
 				| bgr888: mode.transfer := BGR888CopyAny
-				| bgra8888: mode.transfer := BGRA8888CopyAny
+				| bgra8888: 
+					IF dst.bpp=16 THEN mode.transfer:=BGRA8888CopyAny16
+					ELSE mode.transfer := BGRA8888CopyAny 
+					END;
 				ELSE
-					IF (src.bpp MOD 8 = 0) & (dst.bpp MOD 8 = 0) THEN mode.transfer := AnyBytesCopyAnyBytes
+					IF (src.bpp=16) THEN mode.transfer := Any16CopyAny
+					ELSIF (src.bpp MOD 8 = 0) & (dst.bpp MOD 8 = 0) THEN mode.transfer := AnyBytesCopyAnyBytes
 					ELSE mode.transfer := AnyCopyAny
 					END
 				END
@@ -4068,7 +4078,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 				| a8: mode.buf := mode.col; mode.transfer := A8OverAny;
 					IF mode.op = srcOverDst THEN mode.transfer := A8OverBGRA8888 END;
 				| bgra8888: mode.transfer := BGRA8888OverBGRA8888
-				ELSE mode.transfer := BGRA8888OverAny; (* ? *)
+				ELSE
+					IF src.bpp=16 THEN mode.transfer:=Any16CopyBGRA8888 (*?!*)
+					ELSE mode.transfer := AnyCopyBGRA8888; (*! was BGRA8888OverAny *)
+					END;
 				END
 			ELSE
 				CASE src.code OF
@@ -4104,7 +4117,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 						#ELSE
 							mode.transfer := BGRA8888Over565
 						#END
-					ELSE mode.transfer := BGRA8888OverAny
+					ELSE 
+						IF dst.bpp=16 THEN mode.transfer:=BGRA8888OverAny16 (*?!*)
+						ELSE mode.transfer := BGRA8888OverAny
+						END;
 					END
 				ELSE
 					mode.transfer := AnyBlendAny

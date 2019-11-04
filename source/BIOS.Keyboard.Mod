@@ -22,12 +22,13 @@ TYPE
 		VAR last: Inputs.KeyboardMsg;
 
 		PROCEDURE HandleInterrupt;
-		VAR m: SET; i, k: INTEGER; msg: Inputs.KeyboardMsg; c: CHAR;
+		VAR m: SET; i, k: INTEGER; msg: Inputs.KeyboardMsg; c, temp: CHAR;
 		BEGIN {EXCLUSIVE}
 			Machine.Portin8(060H, c);	(* get scan code *)
-			Machine.Portin8(061H, SYSTEM.VAL(CHAR, m));
-			INCL(m, 7); Machine.Portout8(061H, SYSTEM.VAL(CHAR, m));
-			EXCL(m, 7); Machine.Portout8(061H, SYSTEM.VAL(CHAR, m));	(* ack *)
+			Machine.Portin8(061H, temp);
+			m := SET(ORD(temp)); 
+			INCL(m, 7); Machine.Portout8(061H, CHR(INTEGER(m)));
+			EXCL(m, 7); Machine.Portout8(061H, CHR(INTEGER(m)));	(* ack *)
 			IF TraceKeys THEN KernelLog.Hex(ORD(c), -3) END;
 			k := MapScanCode(c, msg.keysym);
 			IF k >= 0 THEN msg.ch := CHR(k) ELSE msg.ch := 0X END;
@@ -257,7 +258,7 @@ END TableFromFile;
 PROCEDURE Translate(flags: SET; c: CHAR): INTEGER;
 CONST
 	Alt = {LAlt, RAlt}; Ctrl = {LCtrl, RCtrl}; Shift = {LShift, RShift};
-VAR a: ADDRESS; s1: CHAR; s: SET; k, dkn: INTEGER;
+VAR a: ADDRESS; s1,temp: CHAR; s: SET; k, dkn: INTEGER;
 BEGIN {EXCLUSIVE}
 	IF (c = 46X) & (flags * Ctrl # {}) THEN RETURN -2 END;	(* Ctrl-Break - break *)
 	IF (c = 44X) & (flags * Ctrl # {}) THEN RETURN 0FFH END;	(* Ctrl-F10 - exit *)
@@ -269,7 +270,8 @@ BEGIN {EXCLUSIVE}
 		IF s1 = 0FFX THEN	(* end of table, unmapped key *)
 			k := -1; dkey := 0; EXIT
 		ELSIF s1 = c THEN	(* found scan code in table *)
-			SYSTEM.GET(a+3, SYSTEM.VAL(CHAR, s));	(* flags from table *)
+			SYSTEM.GET(a+3, temp);	(* flags from table *)
+			s := SET(ORD(temp));
 			dkn := SYSTEM.VAL(INTEGER, s) DIV 32 MOD 8;
 			s := s * {DeadKey, NumLock, CapsLock, LAlt, RAlt, LCtrl, RCtrl}; k := 0;
 			IF ((s * Alt = flags * Alt) OR (NumLock IN s) OR (s1 > 03BX)) & (dkn = dkey) THEN	(* Alt & dead keys match exactly *)
@@ -281,8 +283,8 @@ BEGIN {EXCLUSIVE}
 					IF NumLock IN flags THEN s := s + {LShift} ELSE s := s - {LShift} END
 				END;
 					(* get key code *)
-				IF LShift IN s THEN SYSTEM.GET(a+2, SYSTEM.VAL(CHAR, k))	(* shifted value *)
-				ELSE SYSTEM.GET(a+1, SYSTEM.VAL(CHAR, k))	(* unshifted value *)
+				IF LShift IN s THEN SYSTEM.GET(a+2, temp); k := ORD(temp)	(* shifted value *)
+				ELSE SYSTEM.GET(a+1, temp); k := ORD(temp)	(* unshifted value *)
 				END;
 				IF (DeadKey IN s) & (k <= 7) THEN	(* dead key *)
 					dkey := k; k := -1	(* set new dead key state *)
@@ -317,11 +319,12 @@ END Translate;
 (* Wait - Wait for keyboard serial port to acknowledge byte. *)
 
 PROCEDURE Wait;
-VAR t: Kernel.MilliTimer; s: SET;
+VAR t: Kernel.MilliTimer; s: SET; temp: CHAR;
 BEGIN
 	Kernel.SetTimer(t, 20);	(* wait up to 17 ms *)
 	REPEAT
-		Machine.Portin8(64H, SYSTEM.VAL(CHAR, s))
+		Machine.Portin8(64H,temp );
+		s := SET(ORD(temp));
 	UNTIL ~(1 IN s) OR Kernel.Expired(t)
 END Wait;
 
@@ -374,7 +377,7 @@ BEGIN
 			EXCL(flags, Resetting); INCL(flags, SendingLEDs);
 			SendByte(60H, 0EDX)	(* set keyboard LEDs *)
 		ELSIF SendingLEDs IN flags THEN
-			SendByte(60H, SYSTEM.VAL(CHAR, oldleds));
+			SendByte(60H, CHR(INTEGER(oldleds)));
 			EXCL(flags, SendingLEDs)
 		ELSIF SetTypematic IN flags THEN
 			EXCL(flags, SetTypematic); INCL(flags, Resetting);
@@ -488,7 +491,7 @@ END KeySym;
 (* InitKeyboard - Initialise the keyboard. *)
 
 PROCEDURE InitKeyboard;
-VAR s: SET; c: CHAR; i: SIGNED8; k: ARRAY 32 OF CHAR;
+VAR s: SET; c,temp: CHAR; i: SIGNED8; k: ARRAY 32 OF CHAR;
 BEGIN
 	keyval := -1; dkey := 0;
 	mapflag[LAlt] := Inputs.LeftAlt; mapflag[RAlt] := Inputs.RightAlt;
@@ -506,12 +509,14 @@ BEGIN
 		(* clear the keyboard's internal buffer *)
 	i := 8;
 	LOOP
-		Machine.Portin8(64H, SYSTEM.VAL(CHAR, s));
+		Machine.Portin8(64H, temp);
+		s := SET(ORD(temp));
 		IF ~(0 IN s) OR (i = 0) THEN EXIT END;
 		Machine.Portin8(60H, c);	(* read byte *)
-		Machine.Portin8(61H, SYSTEM.VAL(CHAR, s));
-		INCL(s, 7); Machine.Portout8(61H, SYSTEM.VAL(CHAR, s));
-		EXCL(s, 7); Machine.Portout8(61H, SYSTEM.VAL(CHAR, s));	(* ack *)
+		Machine.Portin8(61H, temp);
+		s := SET(ORD(temp));
+		INCL(s, 7); Machine.Portout8(61H, CHR(INTEGER(s)));
+		EXCL(s, 7); Machine.Portout8(61H, CHR(INTEGER(s)));	(* ack *)
 		DEC(i)
 	END;
 	flags := {SetTypematic};

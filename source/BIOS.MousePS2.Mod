@@ -18,10 +18,11 @@ TYPE
 			timer: Objects.Timer;
 
 		PROCEDURE HandleInterrupt;
-		VAR b: SET; m: Inputs.MouseMsg; ch: CHAR;
+		VAR b: SET; m: Inputs.MouseMsg; ch: CHAR; s: SET;
 		BEGIN {EXCLUSIVE}
 			Machine.Portin8(64H, ch); (* check for valid data *)
-			IF SYSTEM.VAL(SET, ch) * {0} = {} THEN INC(ignored); RETURN	END;
+			s := SET(ORD(ch));
+			IF s * {0} = {} THEN INC(ignored); RETURN	END;
 			Machine.Portin8(60H, ch);	(* read byte *)
 			IF active THEN
 				b := SYSTEM.VAL(SET, LONG(ORD(ch)));
@@ -34,11 +35,11 @@ TYPE
 						IF 2 IN buf[0] THEN INCL(m.keys, 1) END;
 						IF 1 IN buf[0] THEN INCL(m.keys, 2) END;
 						IF 0 IN buf[0] THEN INCL(m.keys, 0) END;
-						m.dx := SYSTEM.VAL(SIGNED32, buf[1]);
+						m.dx := SIGNED32(buf[1]);
 						IF 4 IN buf[0] THEN DEC(m.dx, 256) END;
-						m.dy := SYSTEM.VAL(SIGNED32, buf[2]);
+						m.dy := SIGNED32(buf[2]);
 						IF 5 IN buf[0] THEN DEC(m.dy, 256) END;
-						m.dz := SYSTEM.VAL(SIGNED8, buf[3]);
+						m.dz := SIGNED8(buf[3]);
 						IF 6 IN buf[0] THEN DEC(m.dz, 256) END;
 						p := 0; m.dy := -m.dy;
 						Inputs.mouse.Handle(m)
@@ -91,14 +92,16 @@ VAR
 	aux: Aux;
 
 PROCEDURE PollAux;
-VAR s: SET; i: SIGNED32; t: Kernel.MilliTimer;
+VAR s: SET; i: SIGNED32; t: Kernel.MilliTimer; c: CHAR; 
 BEGIN
 	i := 10;	(* up to 0.2s! *)
 	LOOP
-		Machine.Portin8(64H, SYSTEM.VAL(CHAR, s));
+		Machine.Portin8(64H, c);
+		s := SET(ORD(c));
 		IF (s * {0,1} = {}) OR (i = 0) THEN EXIT END;
-		Machine.Portin8(64H, SYSTEM.VAL(CHAR, s));
-		IF s * {0,5} = {0,5} THEN Machine.Portin8(60H, SYSTEM.VAL(CHAR, s)) END;	(* byte avail *)
+		Machine.Portin8(64H, c);
+		s := SET(ORD(c));
+		IF s * {0,5} = {0,5} THEN Machine.Portin8(60H, c); s := SET(ORD(c)) END;	(* byte avail *)
 		Kernel.SetTimer(t, 20);	(* 20ms *)
 		REPEAT UNTIL Kernel.Expired(t);
 		DEC(i)
@@ -110,7 +113,8 @@ VAR s: SET; t: Kernel.MilliTimer;ch: CHAR; i: SIGNED8;
 BEGIN
 	i := 10;	(* up to 0.2s! *)
 	REPEAT
-		Machine.Portin8(64H, SYSTEM.VAL(CHAR, s));
+		Machine.Portin8(64H, ch);
+		s := SET(ORD(ch));
 		IF s * {0,5} = {0,5} THEN 	(* byte avail *)
 			Machine.Portin8(60H, ch);
 			RETURN ch
@@ -128,17 +132,18 @@ BEGIN
 END WriteDev;
 
 PROCEDURE WriteAck(b: CHAR);
-VAR s: SET; i: SIGNED32; t: Kernel.MilliTimer;
+VAR s: SET; i: SIGNED32; t: Kernel.MilliTimer; c: CHAR;
 BEGIN
 	WriteDev(b); i := 10;	(* up to 0.2s! *)
 	LOOP
-		Machine.Portin8(64H, SYSTEM.VAL(CHAR, s));
+		Machine.Portin8(64H, c);
+		s := SET(ORD(c));
 		IF (s * {0,5} = {0,5}) OR (i = 0) THEN EXIT END;
 		Kernel.SetTimer(t, 20);	(* 20ms *)
 		REPEAT UNTIL Kernel.Expired(t);
 		DEC(i)
 	END;
-	IF i # 0 THEN Machine.Portin8(60H, SYSTEM.VAL(CHAR, s)) END	(* byte avail *)
+	IF i # 0 THEN Machine.Portin8(60H, c) END	(* byte avail *)
 END WriteAck;
 
 PROCEDURE WriteCmd(b: CHAR);

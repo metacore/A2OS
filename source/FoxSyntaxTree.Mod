@@ -1751,6 +1751,7 @@ TYPE
 			callingConvention-: CallingConvention;
 			stackAlignment-: SIZE;
 			parametersOffset-: SIZE; (* stack parameter offset -- in units of addresses: one pointer = 1 *)
+			varReturn-: BOOLEAN;
 
 		PROCEDURE & InitProcedureType( position: Position; scope: Scope);
 		BEGIN
@@ -1769,6 +1770,7 @@ TYPE
 			selfParameter := NIL;
 			isNested := FALSE;
 			selfParameterInObject := NIL;
+			varReturn := FALSE;
 		END InitProcedureType;
 
 		PROCEDURE SetNoReturn*(noReturn: BOOLEAN);
@@ -1830,6 +1832,11 @@ TYPE
 		PROCEDURE SetCallingConvention*(cc: CallingConvention);
 		BEGIN callingConvention := cc
 		END SetCallingConvention;
+		
+		PROCEDURE SetVarReturn*(b: BOOLEAN);
+		BEGIN
+			varReturn := b;
+		END SetVarReturn;
 
 		PROCEDURE AddParameter*(p: Parameter);
 		BEGIN

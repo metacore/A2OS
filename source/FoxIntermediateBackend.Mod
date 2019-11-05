@@ -5602,6 +5602,9 @@ TYPE
 				expression, left: SyntaxTree.Expression; tempVariableDesignator : SyntaxTree.Designator;
 			BEGIN
 				IF (formalParameter.kind = SyntaxTree.VarParameter) & SemanticChecker.IsIndexOperator(actualParameter) THEN
+					IF actualParameter(SyntaxTree.ProcedureCallDesignator).left.type.resolved(SyntaxTree.ProcedureType).varReturn THEN
+						RETURN
+					END;
 					WITH actualParameter: SyntaxTree.ProcedureCallDesignator DO
 						(* prepare writeback for any other "normal" indexer *)
 						variable := GetTemporaryVariable(actualParameter.type.resolved, FALSE, TRUE (* untraced *));
@@ -5966,7 +5969,11 @@ TYPE
 			END;
 
 			IF (procedureType.returnType # NIL) & ~structuredReturnType THEN
+				IF procedureType.varReturn THEN
+					return := NewRegisterOperand(addressType);
+				ELSE
 					return := NewRegisterOperand(IntermediateCode.GetType(system,procedureType.returnType));
+				END;
 				Emit(Result(position,return));
 			END;
 
@@ -6035,7 +6042,11 @@ TYPE
 					Symbol(variable,result);
 				ELSE
 					RestoreRegisters(saved);
+					IF procedureType.varReturn THEN
+						InitOperand(result,ModeReference);
+					ELSE
 						InitOperand(result,ModeValue);
+					END;
 					result.op := return;
 				END;
 			END;
@@ -11170,7 +11181,11 @@ TYPE
 					IF locked THEN Lock(FALSE) END;
 					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
 				ELSIF ~SemanticChecker.StructuredReturnType(system,procedureType) THEN
+					IF procedureType.varReturn THEN
+						Designate(expression,res);
+					ELSE
 						Evaluate(expression,res);
+					END;
 					ASSERT(~((type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate)));
 					IF locked OR profile THEN
 						Emit(Push(position,res.op));

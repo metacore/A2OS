@@ -1825,6 +1825,10 @@ TYPE
 				IF Optional( Scanner.LeftBrace) THEN
 					procedureType.SetReturnTypeModifiers(Flags());
 				END;
+				IF Optional( Scanner.Var ) THEN
+					Basic.Warning(diagnostics, scanner.source^, position, "experimental feature -- subject to change");
+					procedureType.SetVarReturn(TRUE);
+				END;
 				type := Type(SyntaxTree.invalidIdentifier,parentScope);
 				(* formally, any type is permitted as return type. Actually some of them might simply not be usable *)
 				procedureType.SetReturnType(type);

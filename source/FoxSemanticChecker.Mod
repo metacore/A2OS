@@ -3962,7 +3962,7 @@ TYPE
 				END;
 
 				result := SyntaxTree.NewProcedureCallDesignator(position,original,left,actualParameters);
-				result.SetAssignable(FALSE);
+				result.SetAssignable(procedureType.varReturn);
 				result.SetType(left.type.resolved(SyntaxTree.ProcedureType).returnType);
 			END;
 
@@ -7216,7 +7216,7 @@ TYPE
 
 			IF (left = SyntaxTree.invalidDesignator) OR (right = SyntaxTree.invalidExpression) THEN
 				(* error already handled *)
-			ELSIF IsIndexOperator(left) & left.assignable THEN
+			ELSIF IsIndexOperator(left) & left.assignable & ~left(SyntaxTree.ProcedureCallDesignator).left.type(SyntaxTree.ProcedureType).varReturn THEN
 				(* LHS is index write operator call *)
 				procedureCallDesignator :=  left(SyntaxTree.ProcedureCallDesignator);
 				RETURN SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);

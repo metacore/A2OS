@@ -6670,7 +6670,7 @@ VAR
 
 	PROCEDURE SetMatMulMethod*( i: SIGNED32 );
 	BEGIN
-			KernelLog.String("ArrayBaseOptimized, method = ");
+			KernelLog.String("FoxArrayBaseOptimized, method = ");
 		IF i = cMatMulDynamic THEN
 			KernelLog.String("dynamic.");
 			ArrayBase.matMulIncR := MatMulIncR;
@@ -7184,16 +7184,16 @@ END FoxArrayBaseOptimized.
 
 System.Free ArrayBaseOptimized ~
 
-ArrayBaseOptimized.Install ~
-ArrayBaseOptimized.InstallSSE2 ~
-ArrayBaseOptimized.InstallSSE ~
-ArrayBaseOptimized.InstallAsm ~
+FoxArrayBaseOptimized.Install ~
+FoxArrayBaseOptimized.InstallSSE2 ~
+FoxArrayBaseOptimized.InstallSSE ~
+FoxArrayBaseOptimized.InstallAsm ~
 
-ArrayBaseOptimized.InstallMatMul dynamic ~
-ArrayBaseOptimized.InstallMatMul scalarproduct ~
-ArrayBaseOptimized.InstallMatMul transposed ~
-ArrayBaseOptimized.InstallMatMul naive ~
-ArrayBaseOptimized.InstallMatMul stride ~
-ArrayBaseOptimized.InstallMatMul blocked ~
+FoxArrayBaseOptimized.InstallMatMul dynamic ~
+FoxArrayBaseOptimized.InstallMatMul scalarproduct ~
+FoxArrayBaseOptimized.InstallMatMul transposed ~
+FoxArrayBaseOptimized.InstallMatMul naive ~
+FoxArrayBaseOptimized.InstallMatMul stride ~
+FoxArrayBaseOptimized.InstallMatMul blocked ~
 
-ArrayBaseOptimized.SetParameters  0 1    ~ (* BlockSize, NrProcesses *)
+FoxArrayBaseOptimized.SetParameters  0 1    ~ (* BlockSize, NrProcesses *)

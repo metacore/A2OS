@@ -181,7 +181,7 @@ VAR
 
 	PROCEDURE SetDefaults*;   (* set standard procedures *)
 	BEGIN
-		KernelLog.String( "ArrayBase XXXXXXX: setting runtime library (semi-optimized) default methods." );  KernelLog.Ln;  loopSPAXAX := SPAXAXLoop;
+		KernelLog.String( "FoxArrayBase: setting runtime library (semi-optimized) default methods." );  KernelLog.Ln;  loopSPAXAX := SPAXAXLoop;
 		loopSPARAR := SPARARLoop;  loopAddAXAX := AddAXAXLoop;  loopSubAXAX := SubAXAXLoop; loopEMulAXAX := EMulAXAXLoop;
 		loopSPAZAZ := SPAZAZLoop; loopSPALZALZ := SPALZALZLoop;
 		loopAddARAR := AddARARLoop; loopSubARAR := SubARARLoop; loopEMulARAR := EMulARARLoop; loopMatMulAXAX := MatMulAXAXLoop;
@@ -381,7 +381,7 @@ VAR
 		ELSE reason := "unknown";
 		END;
 
-		KernelLog.String( "ArrayBase Halt. Reason= " );  KernelLog.String( reason );  KernelLog.Ln;
+		KernelLog.String( "FoxArrayBase Halt. Reason= " );  KernelLog.String( reason );  KernelLog.Ln;
 
 		HALT( 400 );
 	END Halt;

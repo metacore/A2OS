@@ -16,6 +16,7 @@ CONST
 	bgr888* = 8; 
 	bgra8888* = 9; 
 	p16* = 10; 
+	yuv422* = 11; 
 	color* = 0; 
 	alpha* = 1; 
 	index* = 2; 
@@ -195,9 +196,11 @@ VAR
 	PROCEDURE ^ Any16CopyAny16(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ BGR888CopyAny16(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ BGRA8888CopyAny16(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
+	PROCEDURE ^ BGRA8888CopyInterlace32(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ Any16CopyAny(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ Any16CopyBGR888(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ Any16CopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
+	PROCEDURE ^ Interlace32CopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ AnyCopyBGR888(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ BGRA8888CopyBGR888(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ SSE2BGRA8888CopyBGR888(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 

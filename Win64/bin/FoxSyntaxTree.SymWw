@@ -32,6 +32,7 @@ CONST
 	Resolved* = 2; 
 	Fingerprinted* = 3; 
 	Warned* = 4; 
+	Initialized* = 5; 
 	ArrayIndex* = 0; 
 	SetElement* = 1; 
 	CaseGuard* = 2; 
@@ -519,6 +520,7 @@ TYPE
 		callingConvention-: CallingConvention; 
 		stackAlignment-: SIZE; 
 		parametersOffset-: SIZE; 
+		varReturn-: BOOLEAN; 
 
 		PROCEDURE ^  & InitProcedureType(position: Position; scope: Scope); 
 		PROCEDURE ^ SetNoReturn*(noReturn: BOOLEAN); 
@@ -535,6 +537,7 @@ TYPE
 		PROCEDURE ^ SetSelfParameter*(parameter: Parameter); 
 		PROCEDURE ^ SetSelfParameterInObject*(parameter: Parameter); 
 		PROCEDURE ^ SetCallingConvention*(cc: CallingConvention); 
+		PROCEDURE ^ SetVarReturn*(b: BOOLEAN); 
 		PROCEDURE ^ AddParameter*(p: Parameter); 
 		PROCEDURE ^ RevertParameters*; 
 		PROCEDURE ^ SetReturnType*(type: Type); 

@@ -348,6 +348,7 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ SetImage*(sender, data: ANY); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Image; 
 

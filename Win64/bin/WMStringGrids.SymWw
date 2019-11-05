@@ -65,6 +65,7 @@ TYPE
 		model-: StringGridModel; 
 		cellColor, hoverColor, selectedColor, fixedColor, textHoverColor, textColor, textSelectedColor: WMGraphics.Color; 
 		clCell-, clFixed-, clHover-, clSelected-, clTextDefault-, clTextHover-, clTextSelected-: WMProperties.ColorProperty; 
+		showImgOnlyCells-: WMProperties.BooleanProperty; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ModelChanged(sender, data: ANY); 
@@ -75,6 +76,7 @@ TYPE
 VAR 
 	PrototypeTclCell*, PrototypeTclHover*, PrototypeTclSelected*, PrototypeTclTextDefault*, PrototypeTclTextHover*, PrototypeTclTextSelected*, PrototypeTclFixed*: WMProperties.ColorProperty; 
 	PrototypeTfontHeight*: WMProperties.Int32Property; 
+	PrototypeShowImgOnlyCells*: WMProperties.BooleanProperty; 
 	StrStringGrid: Strings.String; 
 
 	PROCEDURE ^ GenStringGrid*(): XML.Element; 

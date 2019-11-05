@@ -71,6 +71,7 @@ TYPE
 		variableAccessed: BOOLEAN; 
 		inAwait: BOOLEAN; 
 		inReturn: BOOLEAN; 
+		initializingVariable: SyntaxTree.Variable; 
 		awaitProcCounter := 0: SIZE; 
 
 		PROCEDURE ^  & InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR); 
@@ -114,9 +115,10 @@ TYPE
 		PROCEDURE ^ NewConversion(position: Position; expression: SyntaxTree.Expression; type: SyntaxTree.Type; reference: SyntaxTree.Expression): SyntaxTree.Expression; 
 		PROCEDURE ^ CompatibleConversion(position: Position; expression: SyntaxTree.Expression; type: SyntaxTree.Type): SyntaxTree.Expression; 
 		PROCEDURE ^ ConvertOperands(VAR left, right: SyntaxTree.Expression); 
-		PROCEDURE ^ FindOperator(system: Global.System; operator: SIGNED32; actualParameters: SyntaxTree.ExpressionList; returnType: SyntaxTree.Type): SyntaxTree.Operator; 
+		PROCEDURE ^ FindOperator(op: SIGNED32; actualParameters: SyntaxTree.ExpressionList; returnType: SyntaxTree.Type): SyntaxTree.Operator; 
 		PROCEDURE ^ SetCurrentScope*(scope: SyntaxTree.Scope); 
-		PROCEDURE ^ NewOperatorCall*(position: Position; original: SyntaxTree.Expression; op: SIGNED32; leftExpression, rightExpression: SyntaxTree.Expression; resultType: SyntaxTree.Type): SyntaxTree.Expression; 
+		PROCEDURE ^ NewOperatorCall*(position: SyntaxTree.Position; original: SyntaxTree.Expression; op: SIGNED32; parameter: SyntaxTree.ExpressionList; resultType: SyntaxTree.Type): SyntaxTree.Expression; 
+		PROCEDURE ^ NewBinaryOperatorCall*(position: Position; original: SyntaxTree.Expression; op: SIGNED32; leftExpression, rightExpression: SyntaxTree.Expression; resultType: SyntaxTree.Type): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveBinaryExpression(binaryExpression: SyntaxTree.BinaryExpression): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveRangeExpression(x: SyntaxTree.RangeExpression): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveDesignator(d: SyntaxTree.Expression): SyntaxTree.Designator; 
@@ -217,6 +219,8 @@ TYPE
 		PROCEDURE ^ Implementation(scope: SyntaxTree.Scope); 
 		PROCEDURE ^ Implementations(x: SyntaxTree.Module); 
 		PROCEDURE ^ Declarations(scope: SyntaxTree.Scope; skipImplementation: BOOLEAN; phases: SET); 
+		PROCEDURE ^ Initializer(variable: SyntaxTree.Variable); 
+		PROCEDURE ^ Initializers(scope: SyntaxTree.Scope); 
 		PROCEDURE ^ CheckInterOperatorConformity(thisModuleScope, thatModuleScope: SyntaxTree.ModuleScope); 
 		PROCEDURE ^ Module*(x: SyntaxTree.Module); 
 	END Checker; 
@@ -270,6 +274,7 @@ TYPE
 	PROCEDURE ^ Indexable(x: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ SameType(t1, t2: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ ArrayBase*(t: SyntaxTree.Type; max: SIZE): SyntaxTree.Type; 
+	PROCEDURE ^ NonStaticArrayBase*(t: SyntaxTree.Type): SyntaxTree.Type; 
 	PROCEDURE ^ IsOpenArray*(type: SyntaxTree.Type; VAR base: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsOpenArrayRecursive*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStaticArray*(type: SyntaxTree.Type; VAR base: SyntaxTree.Type; VAR dim: SIGNED32): BOOLEAN; 

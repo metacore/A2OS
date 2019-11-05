@@ -114,6 +114,24 @@ TYPE
 		PROCEDURE ^ EnterPressed(sender, data: ANY); 
 	END Int32PropertyView; 
 
+	SizePropertyView = OBJECT {EXCLUSIVE} (PropertyView)
+	VAR 
+		size: WMProperties.SizeProperty; 
+		editor: WMEditors.TextField; 
+		outOfDate: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Apply(force: BOOLEAN); 
+		PROCEDURE ^ Synchronize(force: BOOLEAN); 
+		PROCEDURE ^ IsCompatible(property: WMProperties.Property): BOOLEAN; 
+		PROCEDURE ^ Enable; 
+		PROCEDURE ^ Disable; 
+		PROCEDURE ^ SetProperty(property: WMProperties.Property); 
+		PROCEDURE ^ SetOutOfDate(value: BOOLEAN); 
+		PROCEDURE ^ EditorContentChanged(sender, data: ANY); 
+		PROCEDURE ^ EnterPressed(sender, data: ANY); 
+	END SizePropertyView; 
+
 	RealPropertyView = OBJECT {EXCLUSIVE} (PropertyView)
 	VAR 
 		real: WMProperties.RealProperty; 
@@ -571,7 +589,7 @@ TYPE
 	END Window; 
 VAR 
 	nofWindows: SIGNED32; 
-	StrNotAvailable, StrNoCaption, StrType, StrComponentInfo, StrStandardProperties, StrExtendedProperties, StrExtendedPropertiesView, StrEventListeners, StrEventSources, StrBooleanPropertyView, StrInt32PropertyView, StrRealPropertyView, StrRectanglePropertyView, StrPointPropertyView, StrStringPropertyView, StrColorPropertyView, StrEventSourceView, StrEventListenerView, StrUnknownPropertyView, StrFontPropertyView, StrReferencePropertyView, StrAlignmentPropertyView, StrModelView: Strings.String; 
+	StrNotAvailable, StrNoCaption, StrType, StrComponentInfo, StrStandardProperties, StrExtendedProperties, StrExtendedPropertiesView, StrEventListeners, StrEventSources, StrBooleanPropertyView, StrInt32PropertyView, StrSizePropertyView, StrRealPropertyView, StrRectanglePropertyView, StrPointPropertyView, StrStringPropertyView, StrColorPropertyView, StrEventSourceView, StrEventListenerView, StrUnknownPropertyView, StrFontPropertyView, StrReferencePropertyView, StrAlignmentPropertyView, StrModelView: Strings.String; 
 	StrBoolean, StrInteger, StrBoundedInteger, StrReal, StrLongreal, StrChar, StrString, StrSet, StrText, StrContainer, StrCustom, StrNil: Strings.String; 
 	StrWindowTitle: Strings.String; 
 

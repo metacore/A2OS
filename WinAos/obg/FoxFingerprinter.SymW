@@ -4,7 +4,7 @@ CONST
 	fpModeVar = 1; 
 	fpModePar = 1; 
 	fpModeVarPar = 2; 
-	fpModeConstPar = fpModeVarPar; 
+	fpModeConstPar = 3; 
 	fpModeConst = 3; 
 	fpModeField = 4; 
 	fpModeType = 5; 

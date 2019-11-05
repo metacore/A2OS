@@ -38,7 +38,7 @@ CONST
 	TraceStates = {5}; 
 	TraceRendering = {6}; 
 	TraceEof = {7}; 
-	Trace = {2, 4, 5}; 
+	Trace = {2, 4}; 
 	Debug = TRUE; 
 TYPE 
 	VideoBuffer* = WMGraphics.Image; 
@@ -196,7 +196,6 @@ TYPE
 		PROCEDURE ^ DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration: SIGNED32; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Stop*; 
 		PROCEDURE ^ Pause*; 
-		PROCEDURE ^ DoReset*; 
 		PROCEDURE ^ GetTimePos*(): SIGNED32; 
 		PROCEDURE ^ GetFrame*(): SIGNED32; 
 		PROCEDURE ^ PreviewFrame*(delta: SIZE): VideoBuffer; 

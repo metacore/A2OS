@@ -146,7 +146,8 @@ CONST
 	AtMulInc* = (AtMulDec + 1); 
 	DecMul* = (AtMulInc + 1); 
 	IncMul* = (DecMul + 1); 
-	endFox* = (IncMul + 1); 
+	Indexer* = (IncMul + 1); 
+	endFox* = (Indexer + 1); 
 	VectorCapability* = 0; 
 	FloatingPointCapability* = 1; 
 	EngineCapability* = 2; 

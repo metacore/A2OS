@@ -6603,7 +6603,7 @@ TYPE
 					variable := type.recordScope.firstVariable;
 					WHILE variable # NIL DO
 						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits), initStatic);
-						IF (variable.initializer # NIL) & initStatic OR (variable.initializer.resolved = NIL) THEN
+						IF (variable.initializer # NIL) & (initStatic OR (variable.initializer.resolved = NIL)) THEN
 							IF variable.initializer.type = NIL THEN
 								Designate(variable.initializer,initializerOp);
 							ELSE

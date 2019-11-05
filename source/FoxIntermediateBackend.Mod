@@ -5966,7 +5966,7 @@ TYPE
 			END;
 
 			IF (procedureType.returnType # NIL) & ~structuredReturnType THEN
-				return := NewRegisterOperand(IntermediateCode.GetType(system,procedureType.returnType));
+					return := NewRegisterOperand(IntermediateCode.GetType(system,procedureType.returnType));
 				Emit(Result(position,return));
 			END;
 
@@ -6035,7 +6035,7 @@ TYPE
 					Symbol(variable,result);
 				ELSE
 					RestoreRegisters(saved);
-					InitOperand(result,ModeValue);
+						InitOperand(result,ModeValue);
 					result.op := return;
 				END;
 			END;
@@ -6587,7 +6587,7 @@ TYPE
 			END;
 		END SystemTrace;
 
-		PROCEDURE InitFields(type: SyntaxTree.Type; CONST adr: IntermediateCode.Operand; offset: SIZE);
+		PROCEDURE InitFields(type: SyntaxTree.Type; CONST adr: IntermediateCode.Operand; offset: SIZE; initStatic: BOOLEAN);
 		VAR baseType: SyntaxTree.Type; imm,mem: IntermediateCode.Operand; dim,size: SIZE;
 			variable: SyntaxTree.Variable; i: SIZE; initializerOp: Operand;
 		BEGIN
@@ -6598,12 +6598,12 @@ TYPE
 					IF baseType # NIL THEN
 						baseType := baseType.resolved;
 						IF baseType IS SyntaxTree.PointerType THEN baseType := baseType(SyntaxTree.PointerType).pointerBase END;
-						InitFields(baseType,adr,offset);
+						InitFields(baseType,adr,offset,initStatic);
 					END;
 					variable := type.recordScope.firstVariable;
 					WHILE variable # NIL DO
-						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits));
-						IF variable.initializer # NIL THEN
+						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits), initStatic);
+						IF (variable.initializer # NIL) & initStatic OR (variable.initializer.resolved = NIL) THEN
 							IF variable.initializer.type = NIL THEN
 								Designate(variable.initializer,initializerOp);
 							ELSE
@@ -6623,11 +6623,11 @@ TYPE
 					IF baseType # NIL THEN
 						baseType := baseType.resolved;
 						IF baseType IS SyntaxTree.PointerType THEN baseType := baseType(SyntaxTree.PointerType).pointerBase END;
-						InitFields(baseType,adr,offset);
+						InitFields(baseType,adr,offset,initStatic);
 					END;
 					variable := type.cellScope.firstVariable;
 					WHILE variable # NIL DO
-						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits));
+						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits),initStatic);
 						IF variable.initializer # NIL THEN
 							Evaluate(variable.initializer,initializerOp);
 							MakeMemory(mem,adr,IntermediateCode.GetType(system,variable.type),offset+ ToMemoryUnits(system,variable.offsetInBits));
@@ -6644,7 +6644,7 @@ TYPE
 						baseType := type.arrayBase;
 						size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
 						FOR i := 0 TO type.staticLength-1 DO
-							InitFields(baseType,adr,offset+i*size);
+							InitFields(baseType,adr,offset+i*size,initStatic);
 						END;
 					END;
 				END;
@@ -6672,7 +6672,7 @@ TYPE
 						size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
 						ASSERT(type.staticLength < 1024*1024*1024);
 						FOR i := 0 TO type.staticLength-1 DO
-							InitFields(baseType,adr,offset+i*size);
+							InitFields(baseType,adr,offset+i*size,initStatic);
 						END;
 					END;
 				END;
@@ -6689,7 +6689,7 @@ TYPE
 					WITH type: SyntaxTree.MathArrayType DO
 						IF type.form = SyntaxTree.Open THEN
 							Symbol(variable,operand);
-							InitFields(type, operand.tag,0);
+							InitFields(type, operand.tag,0,initStatic);
 							IF temporary THEN
 								PutMathArrayField(operand.tag, IntermediateCode.Immediate(addressType,ASH(1,StackFlag)),MathFlagsOffset);
 							END;
@@ -6711,7 +6711,7 @@ TYPE
 				END;
 			ELSE
 				Symbol(variable,operand);
-				InitFields(type, operand.op,0);
+				InitFields(type, operand.op,0,initStatic);
 				IF (variable.initializer # NIL) & ((variable.initializer.resolved = NIL) OR (initStatic)) THEN
 					IF variable.initializer.type = NIL THEN
 						Designate(variable.initializer, ignore);
@@ -7651,7 +7651,7 @@ TYPE
 					ELSE
 						size := BaseRecordTypeSize;
 					END;
-					InitFields(recordType, pointer,size*ToMemoryUnits(system,addressType.sizeInBits));
+					InitFields(recordType, pointer,size*ToMemoryUnits(system,addressType.sizeInBits),TRUE);
 
 					(* call initializer *)
 					constructor := GetConstructor(recordType);
@@ -7756,7 +7756,7 @@ TYPE
 					Emit(Push(position,pointer));
 
 					(* initialize fields *)
-					InitFields(recordType, pointer,0);
+					InitFields(recordType, pointer,0,TRUE);
 
 					(* call initializer *)
 					constructor := GetConstructor(recordType);
@@ -8283,7 +8283,7 @@ TYPE
 				(* l.op contains address of pointer to record *)
 				ToMemory(l.op,addressType,0);
 				(* l.op contains value  of pointer to record *)
-				InitFields(baseType, l.op,0);
+				InitFields(baseType, l.op,0,TRUE);
 
 				(* add capabilities *)
 				modifier := p[0](SyntaxTree.Designator).modifiers;
@@ -11166,7 +11166,7 @@ TYPE
 					IF locked THEN Lock(FALSE) END;
 					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
 				ELSIF ~SemanticChecker.StructuredReturnType(system,procedureType) THEN
-					Evaluate(expression,res);
+						Evaluate(expression,res);
 					ASSERT(~((type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate)));
 					IF locked OR profile THEN
 						Emit(Push(position,res.op));
@@ -11523,7 +11523,7 @@ TYPE
 		VAR x: SyntaxTree.Variable; initStatic: BOOLEAN;
 		BEGIN
 			x := scope.firstVariable;
-			initStatic := ~(scope IS SyntaxTree.ModuleScope);
+			initStatic := ~(scope IS SyntaxTree.ModuleScope); (* initialize static (fields of) variables only if not in module scope *)
 			WHILE x # NIL DO
 				InitVariable(x,initStatic,FALSE);
 				x := x.nextVariable;

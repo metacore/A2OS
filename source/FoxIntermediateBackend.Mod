@@ -7695,7 +7695,11 @@ TYPE
 					CallBodies(pointer,type);
 
 					SetLabel(exit);
-					needsTrace := p[0].NeedsTrace();
+					IF x.type = NIL THEN 
+						needsTrace := p[0].NeedsTrace();
+					ELSE
+						needsTrace := type.NeedsTrace();
+					END; 
 					IF needsTrace THEN ModifyAssignments(true) END;
 					IF ~type(SyntaxTree.PointerType).isDisposable THEN
 						Emit(Push(position, pointer));

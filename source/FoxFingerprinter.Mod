@@ -64,7 +64,7 @@ CONST
 	fpModeVar=1;
 	fpModePar=1;
 	fpModeVarPar=2;
-	fpModeConstPar=fpModeVarPar; (*! for compatibility, must be changed *)
+	fpModeConstPar=3;
 	fpModeConst=3;
 	fpModeField=4;
 	fpModeType=5;
@@ -898,12 +898,7 @@ TYPE
 			VAR deep: BOOLEAN;
 			BEGIN
 				IF par.kind = SyntaxTree.VarParameter THEN  FPNumber(fp, fpModeVarPar)
-				ELSIF par.kind = SyntaxTree.ConstParameter THEN
-					IF (par.type.resolved IS SyntaxTree.ArrayType) OR (par.type.resolved IS SyntaxTree.RecordType) THEN (*! compatiblity with paco *)
-						FPNumber(fp,fpModeVarPar)
-					ELSE
-						FPNumber(fp,fpModePar)
-					END;
+				ELSIF par.kind = SyntaxTree.ConstParameter THEN FPNumber(fp, fpModeConstPar)
 				ELSE  FPNumber(fp, fpModePar)  END;
 
 				deep := SELF.deep;

@@ -1184,7 +1184,7 @@ TYPE
 					NextToken;
 					returnStatement := SyntaxTree.NewReturnStatement( token.position, outer);
 					CommentStatement(returnStatement);
-					IF (Symbol() >= Scanner.Plus) & (Symbol() <= Scanner.Identifier) THEN
+					IF (Symbol() >= Scanner.Plus) & (Symbol() <= Scanner.Identifier) OR (Symbol() >= Scanner.Address) & (Symbol() <= Scanner.Alias) THEN
 						expression := Expression();
 						returnStatement.SetReturnValue( expression );
 					END;

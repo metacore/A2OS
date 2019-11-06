@@ -15,7 +15,11 @@ CONST
 	W6 = 1108;				(* 2048*sqrt(2)*cos(6*pi/16) *)
 	W7 = 565;				(* 2048*sqrt(2)*cos(7*pi/16) *)
 
+#IF I386 THEN
 	EnableMMX = TRUE;
+#ELSE
+	EnableMMX = FALSE;
+#END
 
 VAR
 	IdctBorder*: POINTER TO ARRAY OF SIGNED32;
@@ -1775,6 +1779,7 @@ TYPE
 				ConvertYUVToRGB888( src, srcYBaseOffset,  yStride, srcUBaseOffset, srcVBaseOffset, uvStride, img, width, height,
 					dstStride );
 			ELSIF img.fmt.code = Raster.BGR565.code THEN
+#IF I386 THEN
 				IF EnableMMX THEN
 					ConvertYUVToRGB565MMX( src, srcYBaseOffset,  yStride, srcUBaseOffset, srcVBaseOffset, uvStride, img, width, height,
 						dstStride );
@@ -1782,9 +1787,13 @@ TYPE
 					ConvertYUVToRGB565( src, srcYBaseOffset,  yStride, srcUBaseOffset, srcVBaseOffset, uvStride, img, width, height,
 						dstStride );
 				END;
+#ELSE
+					ConvertYUVToRGB565( src, srcYBaseOffset,  yStride, srcUBaseOffset, srcVBaseOffset, uvStride, img, width, height,
+						dstStride );
+#END
 			END;
 		END Convert;
-
+#IF I386 THEN
 		(* Convert picture from YUV -> RGB 565, mmx version *)
 		PROCEDURE ConvertYUVToRGB565MMX(
 			puc: PointerToArrayOfCHAR;
@@ -1952,7 +1961,7 @@ TYPE
 			EMMS
 			POP ECX
 		END ScanLine565MMX;
-
+#END
 		(* Convert picture from YUV -> RGB 565 *)
 		PROCEDURE ConvertYUVToRGB565(
 			puc: PointerToArrayOfCHAR;
@@ -2102,11 +2111,15 @@ TYPE
 		(* clear an 8x8 SIGNED32 array *)
 		PROCEDURE ClearBlockLongint*(block: PointerToArrayOfLONGINT);
 		BEGIN
+#IF I386 THEN
 			IF EnableMMX THEN
 				ClearBlockMMX(ADDRESSOF(block[0]));
 			ELSE
 				ClearBlockGeneric(block);
 			END;
+#ELSE
+				ClearBlockGeneric(block);
+#END
 		END ClearBlockLongint;
 
 		(* Reset block to 0 *)
@@ -2122,7 +2135,7 @@ TYPE
 				INC(adr, SIZEOF(SIGNED32));
 			END;
 		END ClearBlockGeneric;
-
+#IF I386 THEN
 		PROCEDURE ClearBlockMMX(dst: ADDRESS);
 		CODE{ SYSTEM.MMX, SYSTEM.PentiumPro }
 			MOV		EDX, -32			; clear loop counter
@@ -2136,7 +2149,7 @@ TYPE
 			JNZ		loop
 			EMMS
 		END ClearBlockMMX;
-
+#END
 		PROCEDURE CopyBlock*(src, dest: PointerToArrayOfCHAR; srcOffs, destOffs, srcIncr, destIncr, lines: SIZE);
 		VAR
 			s, d: ADDRESS;		(* current addresses *)
@@ -2354,20 +2367,28 @@ TYPE
 
 		PROCEDURE TransferIDCTAdd*( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE );
 		BEGIN
+#IF I386 THEN
 			IF EnableMMX THEN
 				TransferIDCTAddMMX( ADDRESSOF( source[0] ), ADDRESSOF( dest[destOffset] ), stride );
 			ELSE
 				TransferIDCTAddGeneric( source, dest, destOffset, stride );
 			END;
+#ELSE
+				TransferIDCTAddGeneric( source, dest, destOffset, stride );
+#END
 		END TransferIDCTAdd;
 
 		PROCEDURE TransferIDCTCopy*( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE );
 		BEGIN
+#IF I386 THEN
 			IF EnableMMX THEN
 				TransferIDCTCopyMMX( ADDRESSOF( source[0] ), ADDRESSOF( dest[destOffset] ), stride );
 			ELSE
 				TransferIDCTCopyGeneric( source, dest, destOffset, stride );
 			END;
+#ELSE
+				TransferIDCTCopyGeneric( source, dest, destOffset, stride );
+#END;
 		END TransferIDCTCopy;
 
 		(* Add macroblock to a block in the actual picture *)
@@ -2397,7 +2418,7 @@ TYPE
 				d := d + stride
 			END;
 		END TransferIDCTAddGeneric;
-
+#IF I386 THEN
 		PROCEDURE TransferIDCTAddMMX( source, dest: ADDRESS; stride: SIZE );
 		CODE{ SYSTEM.MMX, SYSTEM.PentiumPro }
 			MOV EAX, [EBP+source]			;  PARAMETER 1, *SOURCES32
@@ -2425,7 +2446,7 @@ TYPE
 			JNZ loop
 			EMMS
 		END TransferIDCTAddMMX;
-
+#END
 		(* Copy a macroblock to the actual picture *)
 		PROCEDURE TransferIDCTCopyGeneric( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE );
 		VAR
@@ -2451,7 +2472,7 @@ TYPE
 				d := d + stride
 			END;
 		END TransferIDCTCopyGeneric;
-
+#IF I386 THEN
 		PROCEDURE TransferIDCTCopyMMX( source, dest: ADDRESS; stride: SIZE );
 		CODE{ SYSTEM.MMX, SYSTEM.PentiumPro }
 			MOV EAX, [EBP+source]			;  PARAMETER 1, *SOURCES32
@@ -2472,6 +2493,7 @@ TYPE
 			JNZ loop
 			EMMS
 		END TransferIDCTCopyMMX;
+#END
 	END BlockActions;
 
 BEGIN

@@ -34,6 +34,7 @@ VAR
 	intTab: POINTER TO ARRAY OF SIGNED16;
 	status*: INTEGER;
 
+#IF I386 THEN
 
 PROCEDURE -MOVDQA1;
 CODE{SYSTEM.i386, SYSTEM.SSE, SYSTEM.MMX, SYSTEM.SSE2}
@@ -104,12 +105,15 @@ END MOVDQA5;
 	PROCEDURE -SetRDI(n: SIZE);
 	CODE POP EDI
 	END SetRDI;
+ #END;
 
+(*! not working because of alignment changes, see above*)
 (* Pay attention if you change local varss. In the inline procedures there are direct address variable *)
 PROCEDURE TransformSSE2*(src, dst: ADDRESS);
 VAR tg116, tg216, tg316, cos416, onecorr, roundinvcol, roundinvcorr: ADDRESS; ecx: SIZE;
 BEGIN {UNCOOPERATIVE}
 
+#IF I386 THEN
 	tg116 := tg116adr;
 	tg216 := tg216adr;
 	tg316 := tg316adr;
@@ -141,10 +145,11 @@ BEGIN {UNCOOPERATIVE}
 	MOVDQA5;
 	DCT8INVCOLSSE2;
 	SetRC (ecx);
+#END
 END TransformSSE2;
 
 
-
+#IF I386 THEN
 PROCEDURE -DCT8INVROWSSE2;
 CODE{SYSTEM.i386, SYSTEM.SSE, SYSTEM.MMX, SYSTEM.SSE2}
 	PSHUFLW	XMM0, XMM0, 0D8H
@@ -366,12 +371,12 @@ CODE{SYSTEM.i386, SYSTEM.SSE, SYSTEM.MMX}
 	MOVQ		MMX0, [EDX+88]
 	ADD		EDX, 8
 END MOVQ10;
-
+#END;
 (* Pay attention if you change local varss. In the inline procedures there are direct address variable *)
 PROCEDURE TransformSSE*(src, dst: ADDRESS);
 VAR tg116, tg216, tg316, cos416, onecorr, roundinvcol, roundinvcorr: ADDRESS; ecx: SIZE;
 BEGIN {UNCOOPERATIVE}
-
+#IF I386 THEN
 	tg116 := tg116adr;
 	tg216 := tg216adr;
 	tg316 := tg316adr;
@@ -413,9 +418,10 @@ BEGIN {UNCOOPERATIVE}
 	MOVQ10;
 	DCT8INVCOLSSE;
 	SetRC(ecx);
-
+#END
 END TransformSSE;
 
+#IF I386 THEN
 PROCEDURE -DCT8INVROWSSE;
 CODE{SYSTEM.i386, SYSTEM.SSE2, SYSTEM.MMX}
 	MOVQ		MMX2, MMX0
@@ -558,6 +564,8 @@ CODE{SYSTEM.i386, SYSTEM.SSE, SYSTEM.MMX}
 	MOVQ		[EDX+96], MMX3
 	MOVQ		[EDX+112], MMX5
 END DCT8INVCOLSSE;
+
+#END
 
 PROCEDURE TransformINT*(src, dst: ADDRESS);
 VAR i: SIZE;
@@ -860,6 +868,7 @@ BEGIN
 
 END FillTablesSSE2;
 
+(*! not working because of alignment changes, see above*)
 PROCEDURE FillTablesSSE;
 VAR i: SIZE;
 BEGIN
@@ -960,7 +969,7 @@ END FillTablesINT;
 PROCEDURE CheckFeatures;
 BEGIN
 
-	(* SSE requires special alignment of data blocks which has changed
+	(*!TBD: SSE requires special alignment of data blocks which has changed
 	since new heap datastructures were introduced in revision 1620 *)
 
 	IF FALSE & Machine.SSE2Support THEN
@@ -1015,8 +1024,11 @@ BEGIN
 END IDCT.
 
 IDCT.Change INT ~
+
+#IF I386 THEN
 IDCT.Change SSE ~
 IDCT.Change SSE2 ~
+END
 
 IDCT.Obx ~
 System.Free IDCT ~

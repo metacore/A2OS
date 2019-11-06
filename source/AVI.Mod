@@ -1272,7 +1272,7 @@ IMPORT
 	(* -- Helper Procedures -- *)
 
 (* Align stream to next Byte *)
-PROCEDURE Align*(VAR  index: SIGNED32);
+PROCEDURE Align*(VAR  index: SIZE);
 BEGIN
 	IF ( index MOD 8 ) # 0 THEN
 		index :=  index - ( index MOD 8 ) + 8
@@ -1280,7 +1280,7 @@ BEGIN
 END Align;
 
 (* True if actual position is on byte boundary *)
-PROCEDURE IsAligned*(index: SIGNED32): BOOLEAN;
+PROCEDURE IsAligned*(index: SIZE): BOOLEAN;
 BEGIN
 	IF ( index MOD 8 ) = 0 THEN
 		RETURN TRUE;
@@ -1291,7 +1291,7 @@ END IsAligned;
 
 (* Read next n Bits (max 32), without advancing in stream. Max 32 Bits are allowed *)
 (* Very slow but portable *)
-PROCEDURE ShowBitsSlow*( n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32;
+PROCEDURE ShowBitsSlow*( n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIZE): SIGNED32;
 VAR
 	ret: SIGNED32;
 	count: SIGNED32;
@@ -1315,10 +1315,10 @@ END ShowBitsSlow;
 
 (* Read next n Bits (max 32), without advancing in stream. Max 32 Bits are allowed *)
 (* Fast, but im not sure if it's portable *)
-PROCEDURE ShowBits*( n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32;
+PROCEDURE ShowBits*( n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIZE): SIGNED32;
 VAR
-	nbit: SIGNED32;
-	posInLONGINT: SIGNED32;
+	nbit: SIZE;
+	posInLONGINT: SIZE;
 	bufa, bufb: SIGNED32;
 	temp: ADDRESS;
 	bufAdr: ADDRESS;
@@ -1344,9 +1344,9 @@ BEGIN
 END ShowBits;
 
 (* Show n bits, byte aligned without advancing in bit stream *)
-PROCEDURE ShowBitsByteAligned*(n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32;
+PROCEDURE ShowBitsByteAligned*(n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIZE): SIGNED32;
 VAR
-	count: SIGNED32;
+	count: SIZE;
 	ret: SIGNED32;
 BEGIN
 	count := 8 - ( index MOD 8 );
@@ -1366,7 +1366,7 @@ BEGIN
 END ShowBitsByteAligned;
 
 (* Read next n Bits and advance in Bit Stream. Max 32 Bits are allowed *)
-PROCEDURE GetBits*( n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32;
+PROCEDURE GetBits*( n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIZE): SIGNED32;
 VAR
 	ret: SIGNED32;
 BEGIN
@@ -1376,7 +1376,7 @@ BEGIN
 END GetBits;
 
 (* Skip Next n Bits *)
-PROCEDURE SkipBits*(n: SIGNED32; VAR index: SIGNED32 );
+PROCEDURE SkipBits*(n: SIGNED32; VAR index: SIZE );
 BEGIN
 	index := index + n
 END SkipBits;
@@ -1389,3 +1389,5 @@ BEGIN
 END Factory;
 
 END AVI.
+
+flags.avi

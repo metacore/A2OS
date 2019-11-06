@@ -995,10 +995,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	# Video codecs
 	IDCT.Mod MPEGTables.Mod MPEGUtilities.Mod MPEGVideoDecoder.Mod 	# MPEG1/2 Support
-	I386 {
-		AVI.Mod DivXTypes.Mod I386.DivXHelper.Mod I386.DivXDecoder.Mod # DivX Support
-		
-	}
+	AVI.Mod DivXTypes.Mod DivXHelper.Mod DivXDecoder.Mod # AVI, DivX Support
 
 	# Image codecs
 	JPEG2000DecoderUtil.Mod JPEG2000DecoderCS.Mod JPEG2000Decoder.Mod

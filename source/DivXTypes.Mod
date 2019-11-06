@@ -63,8 +63,8 @@ MODULE DivXTypes;
 	TYPE
 		VideoBuffer*=RECORD
 		data*: POINTER TO ARRAY OF CHAR;
-		index*: SIGNED32;
-		size*: SIGNED32;
+		index*: SIZE;
+		size*: SIZE;
 	END;
 
 	(* 2 helper functions *)

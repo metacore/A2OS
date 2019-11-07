@@ -6727,7 +6727,7 @@ TYPE
 				
 				IF constructor # NIL THEN
 					ASSERT(constructor.type(SyntaxTree.ProcedureType).firstParameter = NIL);
-					CallConstructor(constructor, operand.op, NIL,0,-1);
+					CallConstructor(constructor, type.resolved(SyntaxTree.RecordType), operand.op, NIL,0,-1);
 				END;
 				
 				IF (variable.initializer # NIL) & ((variable.initializer.resolved = NIL) OR (initStatic)) THEN
@@ -7525,13 +7525,12 @@ TYPE
 			Emit(Push(position,op.op))
 		END PushString;
 		
-		PROCEDURE CallConstructor(constructor: SyntaxTree.Procedure; reference: IntermediateCode.Operand; parameters: SyntaxTree.ExpressionList; firstParameter, lastParameter: SIZE);
-		VAR reg: IntermediateCode.Operand; recordType: SyntaxTree.RecordType; formalParameter: SyntaxTree.Parameter; i: SIZE;
+		PROCEDURE CallConstructor(constructor: SyntaxTree.Procedure; recordType: SyntaxTree.RecordType; reference: IntermediateCode.Operand; parameters: SyntaxTree.ExpressionList; firstParameter, lastParameter: SIZE);
+		VAR reg: IntermediateCode.Operand; formalParameter: SyntaxTree.Parameter; i: SIZE;
 			name: Basic.SegmentedName; symbol: Sections.Section; dummy: IntermediateCode.Operand; saved: RegisterEntry;
 		BEGIN
 			SaveRegisters();ReleaseUsedRegisters(saved);
-			recordType := constructor.scope(SyntaxTree.RecordScope).ownerRecord;
-			IF (constructor.scope(SyntaxTree.RecordScope).ownerRecord.pointerType = NIL) THEN
+			IF (recordType # NIL) & (recordType.pointerType = NIL) THEN
 				reg := TypeDescriptorAdr(recordType);
 				Emit(Push(position,reg));
 				ReleaseIntermediateOperand(reg);
@@ -7708,11 +7707,12 @@ TYPE
 						parameters := x.expression(SyntaxTree.ProcedureCallDesignator).parameters;
 						len := parameters.Length();
 						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);
+						recordType := x.expression.type.resolved(SyntaxTree.RecordType);
 					ELSE
 						parameters := x.parameters;
 					END;
 					IF constructor # NIL THEN
-						CallConstructor(constructor, pointer, parameters, firstPar, len-1);
+						CallConstructor(constructor, recordType, pointer, parameters, firstPar, len-1);
 					END;
 					ReleaseIntermediateOperand(pointer);
 
@@ -7794,11 +7794,12 @@ TYPE
 						parameters := x.expression(SyntaxTree.ProcedureCallDesignator).parameters;
 						len := parameters.Length();
 						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);
+						recordType := x.expression.type.resolved(SyntaxTree.RecordType);
 					ELSE
 						parameters := x.parameters;
 					END;
 					IF (constructor # NIL) THEN
-						CallConstructor(constructor, pointer, parameters, firstPar, len-1);
+						CallConstructor(constructor, recordType, pointer, parameters, firstPar, len-1);
 					END;
 					ReleaseIntermediateOperand(pointer);
 

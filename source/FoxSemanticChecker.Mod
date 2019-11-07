@@ -8065,15 +8065,15 @@ TYPE
 		(** implementation phase:
 			check and resolve all scopes (implementation phase) that have been entered into a list during the declaration phase
 		**)
-		PROCEDURE Implementations(x: SyntaxTree.Module);
+		PROCEDURE Implementations(x: SyntaxTree.Scope);
 		VAR  scope: SyntaxTree.Scope; prevPhase: SIGNED32;
 		BEGIN
 			prevPhase := phase;
 			phase := ImplementationPhase;
-			Implementation(x.moduleScope);
-			scope := x.moduleScope.firstScope;
+			Implementation(x);
+			scope := x.firstScope;
 			WHILE(scope # NIL) DO
-				Implementation(scope);
+				Implementations(scope);
 				scope := scope.nextScope;
 			END;
 			phase := prevPhase;
@@ -8290,9 +8290,9 @@ TYPE
 				Error(Basic.invalidPosition,"problems during offset computation in module");
 			END;
 
-			IF  (scope.ownerModule # NIL) & (1 IN phases)   THEN
+			IF  (prevScope # NIL) & (1 IN phases)   THEN
 				(* add scope to global list of all scopes, very handy for code generation and for checking implementations *)
-				scope.ownerModule.moduleScope.AddScope(scope);
+				prevScope.AddScope(currentScope);
 			END;
 
 			phase := prevPhase;
@@ -8323,14 +8323,15 @@ TYPE
 		PROCEDURE Initializers(scope: SyntaxTree.Scope);
 		VAR variable: SyntaxTree.Variable;
 		BEGIN
+			currentScope := scope;
+			variable := scope.firstVariable;
+			WHILE variable # NIL DO
+				Initializer(variable);
+				variable := variable.nextVariable;
+			END;
 			scope := scope.firstScope;
 			WHILE (scope # NIL) DO
-				currentScope := scope;
-				variable := scope.firstVariable;
-				WHILE variable # NIL DO
-					Initializer(variable);
-					variable := variable.nextVariable;
-				END;
+				Initializers(scope);
 				scope := scope.nextScope;
 			END;	
 		END Initializers;
@@ -8472,7 +8473,7 @@ TYPE
 				END;
 			END;
 
-			Implementations(x);
+			Implementations(x.moduleScope);
 			module := NIL;
 			currentIsCellNet := prevIsCellNet;
 			currentScope := prevScope;

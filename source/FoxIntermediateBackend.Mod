@@ -6692,7 +6692,7 @@ TYPE
 
 		PROCEDURE InitVariable(VAR variable: SyntaxTree.Variable; initStatic, temporary: BOOLEAN);
 		VAR type: SyntaxTree.Type; operand, ignore: Operand; tmp: IntermediateCode.Operand; reference: SyntaxTree.Expression;
-			saved: RegisterEntry;
+			saved: RegisterEntry; constructor: SyntaxTree.Procedure;
 		BEGIN
 			type := variable.type.resolved;
 			IF (type IS SyntaxTree.MathArrayType) THEN
@@ -6723,6 +6723,13 @@ TYPE
 			ELSE
 				Symbol(variable,operand);
 				InitFields(type, operand.op,0,initStatic);
+				constructor := GetConstructor(type); 
+				
+				IF constructor # NIL THEN
+					ASSERT(constructor.type(SyntaxTree.ProcedureType).firstParameter = NIL);
+					CallConstructor(constructor, operand.op, NIL,0,-1);
+				END;
+				
 				IF (variable.initializer # NIL) & ((variable.initializer.resolved = NIL) OR (initStatic)) THEN
 					IF variable.initializer.type = NIL THEN
 						Designate(variable.initializer, ignore);
@@ -6732,7 +6739,7 @@ TYPE
 						reference.SetType(variable.type.resolved);
 						reference.SetAssignable(TRUE);
 						Assign(reference,variable.initializer);
-					END;
+					END
 				ELSIF temporary THEN
 					IF SemanticChecker.IsPointerType(variable.type) THEN
 						IF backend.cooperative THEN
@@ -7517,6 +7524,36 @@ TYPE
 			END;
 			Emit(Push(position,op.op))
 		END PushString;
+		
+		PROCEDURE CallConstructor(constructor: SyntaxTree.Procedure; reference: IntermediateCode.Operand; parameters: SyntaxTree.ExpressionList; firstParameter, lastParameter: SIZE);
+		VAR reg: IntermediateCode.Operand; recordType: SyntaxTree.RecordType; formalParameter: SyntaxTree.Parameter; i: SIZE;
+			name: Basic.SegmentedName; symbol: Sections.Section; dummy: IntermediateCode.Operand; saved: RegisterEntry;
+		BEGIN
+			SaveRegisters();ReleaseUsedRegisters(saved);
+			recordType := constructor.scope(SyntaxTree.RecordScope).ownerRecord;
+			IF (constructor.scope(SyntaxTree.RecordScope).ownerRecord.pointerType = NIL) THEN
+				reg := TypeDescriptorAdr(recordType);
+				Emit(Push(position,reg));
+				ReleaseIntermediateOperand(reg);
+			END;
+			Emit(Push(position,reference));			
+			formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
+			FOR i := firstParameter TO lastParameter DO
+				PushParameter(parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
+				formalParameter := formalParameter.nextParameter;
+			END;
+			(* static call of the constructor *)
+			GetCodeSectionNameForSymbol(constructor,name);
+			ASSERT(~constructor.isInline);
+			IF ~InThisModule(constructor.scope,module.module) THEN
+				symbol := NewSection(module.importedSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
+			ELSE
+				symbol := NewSection(module.allSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
+			END;
+			Emit(Call(position,IntermediateCode.Address(addressType, symbol.name, GetFingerprint(constructor), 0),ProcParametersSize(constructor)));
+			RestoreRegisters(saved);
+		END CallConstructor;
+		
 
 		PROCEDURE Allocate(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand);
 		VAR
@@ -7675,32 +7712,9 @@ TYPE
 						parameters := x.parameters;
 					END;
 					IF constructor # NIL THEN
-						(*! should be unified with ProcedureCallDesignator *)
-						IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator)  THEN
-							reg := TypeDescriptorAdr(recordType);
-							Emit(Push(position,reg));
-							ReleaseIntermediateOperand(reg);
-						END;
-						Emit(Push(position,pointer));
-						ReleaseIntermediateOperand(pointer);
-						formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
-						FOR i := firstPar TO len-1 DO
-							PushParameter(parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
-							formalParameter := formalParameter.nextParameter;
-						END;
-
-						(* static call of the constructor *)
-						GetCodeSectionNameForSymbol(constructor,name);
-						ASSERT(~constructor.isInline);
-						IF ~InThisModule(constructor.scope,module.module) THEN
-							symbol := NewSection(module.importedSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
-						ELSE
-							symbol := NewSection(module.allSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
-						END;
-						Emit(Call(position,IntermediateCode.Address(addressType, symbol.name, GetFingerprint(constructor), 0),ProcParametersSize(constructor) - ToMemoryUnits(system,addressType.sizeInBits)));
-						IntermediateCode.InitRegister(pointer,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
-						Emit(Pop(position,pointer));
+						CallConstructor(constructor, pointer, parameters, firstPar, len-1);
 					END;
+					ReleaseIntermediateOperand(pointer);
 
 					(* call bodies *)
 					CallBodies(pointer,type);
@@ -7784,31 +7798,9 @@ TYPE
 						parameters := x.parameters;
 					END;
 					IF (constructor # NIL) THEN
-						(*! should be unified with ProcedureCallDesignator *)
-						IF (x.expression # NIL) & (x.expression IS SyntaxTree.ProcedureCallDesignator)  THEN
-							reg := TypeDescriptorAdr(recordType);
-							Emit(Push(position,reg));
-							ReleaseIntermediateOperand(reg);
-						END;
-						Emit(Push(position,pointer));
-						ReleaseIntermediateOperand(pointer);
-						formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
-						FOR i := firstPar TO len-1 DO
-							PushParameter(parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
-							formalParameter := formalParameter.nextParameter;
-						END;
-						(* static call of the constructor *)
-						GetCodeSectionNameForSymbol(constructor,name);
-						ASSERT(~constructor.isInline);
-						IF ~InThisModule(constructor.scope,module.module) THEN
-							symbol := NewSection(module.importedSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
-						ELSE
-							symbol := NewSection(module.allSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
-						END;
-						Emit(Call(position,IntermediateCode.Address(addressType, symbol.name, GetFingerprint(constructor), 0),ProcParametersSize(constructor)));
-					ELSE
-						ReleaseIntermediateOperand(pointer);
+						CallConstructor(constructor, pointer, parameters, firstPar, len-1);
 					END;
+					ReleaseIntermediateOperand(pointer);
 
 					IntermediateCode.InitRegister(pointer,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 					Emit(Pop(position,pointer));
@@ -14482,18 +14474,24 @@ TYPE
 		RETURN val = 1
 	END PowerOf2;
 
-	PROCEDURE GetConstructor(record: SyntaxTree.RecordType): SyntaxTree.Procedure;
+	PROCEDURE GetConstructor(type: SyntaxTree.Type): SyntaxTree.Procedure;
 	VAR procedure: SyntaxTree.Procedure;
 	BEGIN
-		procedure := record.recordScope.constructor;
-		IF procedure = NIL THEN
-			record := record.GetBaseRecord();
-			IF record # NIL THEN
-				procedure := GetConstructor(record)
+		IF type = NIL THEN 
+			RETURN NIL 
+		END;
+		type := type.resolved;
+		WITH type: SyntaxTree.RecordType DO
+			procedure := type.recordScope.constructor;
+			IF procedure = NIL THEN
+				procedure := GetConstructor(type.GetBaseRecord());
 			END;
+		ELSE
+			procedure := NIL;
 		END;
 		RETURN procedure;
 	END GetConstructor;
+	
 
 	PROCEDURE IsIntegerImmediate(CONST op: IntermediateCode.Operand; VAR value: Basic.Integer): BOOLEAN;
 	BEGIN

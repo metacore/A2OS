@@ -481,29 +481,6 @@ TYPE
 			IF offset < bscope.minVariableOffset THEN
 				bscope.SetMinVariableOffset(offset);
 			END;
-			(*
-			WHILE (scope IS SyntaxTree.BlockScope) DO
-				TRACE(scope, scope.minVariableOffset);
-				IF scope.minVariableOffset < scope.outerScope.minVariableOffset THEN
-					scope.outerScope.SetMinVariableOffset(scope.minVariableOffset);
-				END;
-				scope := scope.outerScope;
-			END;
-			*)
-			(*
-			WITH scope: SyntaxTree.ProcedureScope DO
-				s := scope.firstScope;
-				WHILE (s # NIL) DO (* block scopes *)
-					IF ~GenerateVariableOffsets(s) THEN RETURN FALSE END;
-					s := s.nextScope;
-				END;
-			| SyntaxTree.BlockScope DO
-				IF offset < scope.outerScope.minVariableOffset THEN
-					scope.outerScope.SetMinVariableOffset(offset);
-				END;
-			ELSE
-			END;
-			*)
 			RETURN TRUE
 		END GenerateVariableOffsets;
 

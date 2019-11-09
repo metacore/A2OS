@@ -772,8 +772,8 @@ TYPE
 		AddMnemonic(opBEQ, "BEQ");	AddInstruction(currOpCode+makeCondition(0), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 		AddMnemonic(opBNE, "BNE");	AddInstruction(currOpCode+makeCondition(1), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
-		AddMnemonic(opBAE, "BAE");	AddInstruction(currOpCode+makeCondition(2), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		AddMnemonic(opBB, "BB");	AddInstruction(currOpCode+makeCondition(3), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBB, "BB");	AddInstruction(currOpCode+makeCondition(2), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBAE, "BAE");	AddInstruction(currOpCode+makeCondition(3), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
 		AddMnemonic(opBN, "BN");	AddInstruction(currOpCode+makeCondition(4), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 		AddMnemonic(opBNN, "BNN");	AddInstruction(currOpCode+makeCondition(5), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;

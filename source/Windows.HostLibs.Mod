@@ -57,7 +57,7 @@ CONST
 				TRACE(fullName, err);
 			END;
 		ELSE (*! can happen when the library path is not specified *)
-			lib := Kernel32.LoadLibraryEx(fileName, NIL, LoadLibraryExFlags);
+			lib := Kernel32.LoadLibrary(fileName);
 			IF lib = NilLibHandle THEN
 				err := Kernel32.GetLastError();
 				TRACE(fileName, err);

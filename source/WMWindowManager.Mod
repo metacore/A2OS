@@ -920,7 +920,7 @@ TYPE
 		PROCEDURE SetWindowFlag*(w : Window; flag : SIGNED32; value : BOOLEAN);
 		BEGIN
 			ASSERT(w # NIL);
-			ASSERT((flag = FlagFrame) OR (flag = FlagStayOnTop) OR (flag = FlagStayOnBottom) OR (flag = FlagHidden));
+			ASSERT((flag = FlagFrame) OR (flag = FlagStayOnTop) OR (flag = FlagStayOnBottom) OR (flag = FlagHidden) OR (flag = FlagStorable));
 		END SetWindowFlag;
 
 		(** Set if the window is willing to accept a dropped item *)

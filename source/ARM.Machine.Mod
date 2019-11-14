@@ -1243,6 +1243,16 @@ VAR
 		numberOfProcessors := num;
 	END SetNumberOfProcessors;
 
+	(* function for changing byte order *)
+	PROCEDURE ChangeByteOrder* (n: SIGNED32): SIGNED32;
+	CODE
+		LDR R0, [SP, #n] ; R0 := n
+		EOR R3, R0, R0, ROR #16
+		LSR R3, R3, #8
+		BIC R3, R3, #65280
+		EOR R0, R3, R0, ROR #8 ; result is returned in R0
+	END ChangeByteOrder;
+
 	(* ===== Context Switching ===== *)
 	(** Pushes state of the processor on the stack. Used in task-switching.
 		Does not exactly represent the layout of State. Pushed data is always used by JumpState.

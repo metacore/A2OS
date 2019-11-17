@@ -34,7 +34,7 @@ TYPE
 	VAR
 		isClosed : BOOLEAN;
 		languages : Localization.Languages;
-
+		
 		PROCEDURE &New(entries : Entry);
 		VAR vc : WMComponents.VisualComponent;
 		BEGIN
@@ -123,7 +123,7 @@ TYPE
 
 		PROCEDURE FocusLost*;
 		BEGIN
-			Close;
+			Close
 		END FocusLost;
 
 		PROCEDURE Close*;
@@ -150,6 +150,7 @@ TYPE
 		first, last : Entry;
 
 		window : PopupWindow;
+		(*closeOnFocusLost:BOOLEAN;*)
 
 		PROCEDURE &New*;
 		BEGIN
@@ -277,7 +278,7 @@ TYPE
 			ELSE
 			END;
 			IF (y>0) & (y<bounds.GetHeight()) & (x>0) &(x<bounds.GetWidth())THEN
-				ChosenColorProc(cColor);
+				ChosenColorProc(cColor); 
 			END;
 		END PointerDown;
 
@@ -304,7 +305,7 @@ TYPE
 				FOR j := 0 TO 18 DO
 					WMGraphics.ColorToRGBA(colors[j], r, g, b, a);
 					r := 255-ENTIER((3-i)/4*(255-r)); g:= 255-ENTIER((3-i)/4*(255-g)); b:= 255-ENTIER((3-i)/4*(255-b));
-					color := WMGraphics.RGBAToColor(r, g, b, a);
+					color := WMGraphics.RGBAToColor (r, g, b, a);
 					canvas.Fill(WMRectangles.MakeRect(10*j,10*i+40,10*j+10,10*i+10+40),color , WMGraphics.ModeCopy);
 				END;
 			END;
@@ -335,6 +336,20 @@ TYPE
 
 	END ColorSwatchPanel;
 
+	PROCEDURE PopupNoFocus* (popup:Popup; x, y : SIZE);
+		VAR manager : WMWindowManager.WindowManager;
+		BEGIN 
+			IF (popup.first # NIL) THEN
+				IF (popup.window # NIL) THEN popup.window.Close; END;
+				NEW(popup.window, popup.first);
+				manager := WMWindowManager.GetDefaultManager();
+				manager.Add(x, y, popup.window, {WMWindowManager.FlagStayOnTop, WMWindowManager.FlagHidden});
+			END;
+		END PopupNoFocus;
+
 END WMPopups.
 -----------------------------------------------------
-System.Free WMPopups
+System.Free WMPopups ~
+
+ProcedureInterfaces.Install ~
+ProcedureInterfaces.UnInstall ~

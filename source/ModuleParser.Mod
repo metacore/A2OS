@@ -900,7 +900,7 @@ TYPE
 		END ProcDeclP;
 
 		PROCEDURE ProcHeadP(head: ProcHead);
-		VAR forward: BOOLEAN;
+		VAR forward: BOOLEAN; fpSection: FPSection;
 		BEGIN
 			ProcedureModifierP(head);
 			(*SysFlag;*)
@@ -914,6 +914,13 @@ TYPE
 			| FoxScanner.String: head.operator := TRUE;
 			| FoxScanner.Number: IF token.numberType = FoxScanner.Character THEN head.operator := TRUE END;
 			ELSE
+			END;
+			
+			IF token.symbol = FoxScanner.LeftParenthesis THEN (* Oberon-2 *)
+					NextToken;
+					NEW(fpSection,NIL);
+					FPSectionP(fpSection);
+					NextToken;
 			END;
 
 			NEW(head.identDef);
@@ -984,6 +991,7 @@ TYPE
 			Check(FoxScanner.RightParenthesis);
 			IF token.symbol = FoxScanner.Colon THEN
 				NextToken;
+				IF token.symbol = FoxScanner.Var THEN NextToken END;
 				SysFlag;
 				NEW(pars.returnType, pars);
 				TypeP(pars.returnType)

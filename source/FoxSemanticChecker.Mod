@@ -8290,7 +8290,7 @@ TYPE
 				Error(Basic.invalidPosition,"problems during offset computation in module");
 			END;
 
-			IF  (prevScope # NIL) & (1 IN phases)   THEN
+			IF  (prevScope # NIL) & (prevScope # global) & (1 IN phases)   THEN
 				(* add scope to global list of all scopes, very handy for code generation and for checking implementations *)
 				prevScope.AddScope(currentScope);
 			END;

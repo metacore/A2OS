@@ -846,6 +846,26 @@ TYPE
 			END;
 		END;
 	END Link;
+	
+	TYPE 
+		TRMFileWriter = OBJECT
+		VAR
+			bitsPerLine: SIZE;
+			lines: SIZE;
+			
+			PROCEDURE & InitTRMFileWriter (b, l: SIZE);
+			BEGIN
+				bitsPerLine := b;
+				lines := l;
+			END InitTRMFileWriter;
+			
+			PROCEDURE WriteFile*(linker: GenericLinker.Linker; arrangement: StaticLinker.Arrangement; writer: Files.Writer);
+			BEGIN
+				StaticLinker.WriteTRMFile(arrangement, writer, bitsPerLine, lines); 
+			END WriteFile;
+
+		END TRMFileWriter;
+		
 
 	PROCEDURE WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; CONST codeFileExtension, dataFileExtension: ARRAY OF CHAR; objectFile: Formats.ObjectFileFormat; VAR instructionMemorySize, dataMemorySize: BinaryCode.Unit; backend: Backend.Backend;  diagnostics: Diagnostics.Diagnostics; log:Streams.Writer): BOOLEAN;
 	VAR code, data: StaticLinker.Arrangement; linker: GenericLinker.Linker; linkerLog: Files.Writer;
@@ -855,6 +875,7 @@ TYPE
 			fileName, codeFileName, dataFileName: Files.FileName;
 			system: Global.System;
 			msg: ARRAY 256 OF CHAR;
+			trmWriter: TRMFileWriter;
 	CONST MinimalStackSize = 64;
 	(*CONST CodeFileExtension="code"; DataFileExtension="data";*)
 	BEGIN
@@ -865,52 +886,59 @@ TYPE
 		NEW (linker, diagnostics, linkerLog, GenericLinker.UseInitCode, code, data);
 		StaticLinker.ReadObjectFile(instanceName, "",objectFile.extension, linker, NIL);
 
-				(* do linking after having read in all blocks to account for potential constraints *)
-				IF ~linker.error THEN linker.Link; END;
+		(* do linking after having read in all blocks to account for potential constraints *)
+		IF ~linker.error THEN linker.Link; END;
 
-				system := backend.GetSystem();
+		system := backend.GetSystem();
 
-				IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
-					Basic.Error(diagnostics, instanceName, Basic.invalidPosition, "specified instruction memory size too small");
-					error := TRUE;
-				ELSIF instructionMemorySize = 0 THEN
-					instructionMemorySize := code.SizeInBits() DIV system.codeUnit;
-				END;
+		IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
+			Basic.Error(diagnostics, instanceName, Basic.invalidPosition, "specified instruction memory size too small");
+			error := TRUE;
+		ELSIF instructionMemorySize = 0 THEN
+			instructionMemorySize := code.SizeInBits() DIV system.codeUnit;
+		END;
 
-				dataMemorySize := MAX(data.SizeInBits() DIV system.dataUnit, dataMemorySize);
+		dataMemorySize := MAX(data.SizeInBits() DIV system.dataUnit, dataMemorySize);
 
-				IF (dataMemorySize - data.SizeInBits() DIV system.dataUnit) < MinimalStackSize THEN
-					Basic.Error(diagnostics, instanceName,Basic.invalidPosition, "specified data memory size too small");
-					error := TRUE;
-				END;
+		IF (dataMemorySize - data.SizeInBits() DIV system.dataUnit) < MinimalStackSize THEN
+			Basic.Error(diagnostics, instanceName,Basic.invalidPosition, "specified data memory size too small");
+			error := TRUE;
+		END;
 
-				Files.JoinExtension(instanceName,codeFileExtension,codeFileName);
-				Files.JoinExtension(instanceName,dataFileExtension,dataFileName);
+		Files.JoinExtension(instanceName,codeFileExtension,codeFileName);
+		Files.JoinExtension(instanceName,dataFileExtension,dataFileName);
 
-				IF ~linker.error THEN
-					StaticLinker.WriteOutputFile (code, codeFileName, linker, StaticLinker.WriteTRMCodeFile);
-					StaticLinker.WriteOutputFile (data, dataFileName, linker, StaticLinker.WriteTRMDataFile);
+		IF ~linker.error THEN
+			NEW(trmWriter,system.codeUnit,instructionMemorySize);
+			StaticLinker.WriteOutputFile (code, codeFileName, linker, trmWriter.WriteFile); 
+			NEW(trmWriter,system.dataUnit,dataMemorySize);
+			StaticLinker.WriteOutputFile (data, dataFileName, linker, trmWriter.WriteFile);
 
-					IF linkerLog # NIL THEN linkerLog.Update; Files.Register(logFile) END;
-					IF log # NIL THEN
-						log.String(instanceName);
-						log.String(" linked. IM = ");log.Int(instructionMemorySize,1);
-						log.String(" (used: "); log.Int(code.SizeInBits() DIV system.codeUnit,1);
-						log.String("), DM = "); log.Int(dataMemorySize,1);
-						log.String(" (used: "); log.Int(data.SizeInBits() DIV system.dataUnit,1);
-						log.String(")");
-						log.Ln; log.Update;
+			(*
+			StaticLinker.WriteOutputFile (code, codeFileName, linker, StaticLinker.WriteTRMCodeFile);
+			StaticLinker.WriteOutputFile (data, dataFileName, linker, StaticLinker.WriteTRMDataFile);
+			*)
 
-						log.String("generated code file: ");log.String(codeFileName); log.Ln;
-						log.String("generated data file: ");log.String(dataFileName); log.Ln;
+			IF linkerLog # NIL THEN linkerLog.Update; Files.Register(logFile) END;
+			IF log # NIL THEN
+				log.String(instanceName);
+				log.String(" linked. IM = ");log.Int(instructionMemorySize,1);
+				log.String(" (used: "); log.Int(code.SizeInBits() DIV system.codeUnit,1);
+				log.String("), DM = "); log.Int(dataMemorySize,1);
+				log.String(" (used: "); log.Int(data.SizeInBits() DIV system.dataUnit,1);
+				log.String(")");
+				log.Ln; log.Update;
 
-					END;
-				ELSE
-					msg := "could not link ";
-					Strings.Append(msg,instanceName);
-					Basic.Error(diagnostics, "",Basic.invalidPosition, msg);
-				END;
-				RETURN ~linker.error & ~error
+				log.String("generated code file: ");log.String(codeFileName); log.Ln;
+				log.String("generated data file: ");log.String(dataFileName); log.Ln;
+
+			END;
+		ELSE
+			msg := "could not link ";
+			Strings.Append(msg,instanceName);
+			Basic.Error(diagnostics, "",Basic.invalidPosition, msg);
+		END;
+		RETURN ~linker.error & ~error
 
 	END WriteCodeAndDataFiles;
 

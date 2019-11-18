@@ -169,7 +169,7 @@ TYPE
 
 END Arrangement;
 
-TYPE FileFormat = PROCEDURE (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
+TYPE FileFormat = PROCEDURE {DELEGATE} (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
 
 VAR defaults: Options.Defaults;
 	processing, finished: GenericLinker.Block;
@@ -291,7 +291,7 @@ BEGIN
 	WriteRelocations( arrangement, writer )
 END WriteUnixBinaryFile;
 
-PROCEDURE WriteTRMFile (arrangement: Arrangement; writer: Files.Writer; bitsPerLine, lines: SIZE);
+PROCEDURE WriteTRMFile* (arrangement: Arrangement; writer: Files.Writer; bitsPerLine, lines: SIZE);
 VAR i, j, size, end, nonZeroInLeadingNibble: SIZE;
 
 	PROCEDURE GetBits(pos: SIZE): INTEGER;

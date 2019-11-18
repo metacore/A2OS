@@ -241,12 +241,6 @@ TYPE
 				END New0;
 
 
-				PROCEDURE IsDirectory( VAR stat: Unix.Status ): BOOLEAN;
-				VAR mode: SIGNED32;
-				BEGIN
-					mode := stat.mode;
-					RETURN ODD( mode DIV 4000H )
-				END IsDirectory;
 
 
 				PROCEDURE Old0*(CONST name: ARRAY OF CHAR ): Files.File;
@@ -325,7 +319,6 @@ TYPE
 					key := 0;
 				END Delete0;
 
-
 				(* return remaining old file, if any *)
 				PROCEDURE TryRename*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: INTEGER ): SIGNED32;
 				CONST Bufsize = 4096;
@@ -387,7 +380,6 @@ TYPE
 					of := TryRename(old, new, f, res);
 				END Rename0;
 
-
 				PROCEDURE CreateDirectory0*(CONST path: ARRAY OF CHAR;  VAR res: INTEGER );
 				VAR r: SIGNED32;
 				BEGIN {EXCLUSIVE}
@@ -397,7 +389,6 @@ TYPE
 					END
 				END CreateDirectory0;
 
-
 				PROCEDURE RemoveDirectory0*(CONST path: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: SIGNED32; VAR res: INTEGER );
 				VAR r: SIGNED32;
 				BEGIN {EXCLUSIVE}
@@ -406,7 +397,6 @@ TYPE
 					ELSE  res := Unix.errno( )
 					END
 				END RemoveDirectory0;
-
 
 				PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR;  flags: SET;  enum: Files.Enumerator );
 				VAR
@@ -490,27 +480,15 @@ TYPE
 					END;
 					checkSet := NIL;
 				END Enumerate0;
-
+				
 				PROCEDURE Has(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
-				VAR r: SIGNED32; p: ADDRESS; stat: Unix.Status;
 				BEGIN
-					r := Unix.stat( ADDRESSOF( name ), stat );
-					IF r  # 0 THEN RETURN FALSE END;
-					flags := {};
-					IF IsDirectory( stat ) THEN
-						flags := {Files.ReadOnly, Files.Directory}
-					ELSE
-						r := Unix.access( ADDRESSOF( name ), Unix.W_OK );
-						IF r < 0 THEN  flags := {Files.ReadOnly}  END
-					END;
-					p := Unix.realpath(ADDRESSOF(name), ADDRESSOF(fullName));
-					IF (p = 0) THEN COPY(name, fullName) END; (* no success *)
-					RETURN TRUE;
+					RETURN HasInternal(name,fullName,flags); (* copy name when calling HasInternal because Unix.realpath cannot deal with ADDRESSOF(name) = ADDRESSOF(fullName) *)
 				END Has;
 
 	END UnixFileSystem;
 
-
+	TYPE
 	Buffer =	POINTER TO RECORD (Files.Hint)
 					chg: BOOLEAN;
 					org, size: SIZE;
@@ -846,7 +824,31 @@ TYPE
 				END GetName;
 
 			END File;
+	
+	PROCEDURE HasInternal(name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
+	VAR r: SIGNED32; p: ADDRESS; stat: Unix.Status;
+	BEGIN
+		r := Unix.stat( ADDRESSOF( name ), stat );
+		IF r  # 0 THEN RETURN FALSE END;
+		flags := {};
+		IF IsDirectory( stat ) THEN
+			flags := {Files.ReadOnly, Files.Directory}
+		ELSE
+			r := Unix.access( ADDRESSOF( name ), Unix.W_OK );
+			IF r < 0 THEN  flags := {Files.ReadOnly}  END
+		END;
+		p := Unix.realpath(ADDRESSOF(name), ADDRESSOF(fullName));
+		IF (p = 0) THEN COPY(name, fullName) END; (* no success *)
+		RETURN TRUE;
+	END HasInternal; 	
 
+	PROCEDURE IsDirectory( VAR stat: Unix.Status ): BOOLEAN;
+	VAR mode: SIGNED32;
+	BEGIN
+		mode := stat.mode;
+		RETURN ODD( mode DIV 4000H )
+	END IsDirectory;
+			
 	PROCEDURE EnumFinalize( f: ANY;  VAR cont: BOOLEAN );
 	VAR F: File;
 	BEGIN

@@ -149,7 +149,7 @@ TYPE
 	VAR
 		first, last : Entry;
 
-		window : PopupWindow;
+		window- : PopupWindow;
 		(*closeOnFocusLost:BOOLEAN;*)
 
 		PROCEDURE &New*;
@@ -182,16 +182,21 @@ TYPE
 			END;
 		END Close;
 
-		PROCEDURE Popup* (x, y : SIZE);
+		PROCEDURE Popup0* (x, y : SIZE; getFocus:BOOLEAN; windowFlags: SET);
 		VAR manager : WMWindowManager.WindowManager;
 		BEGIN {EXCLUSIVE}
 			IF (first # NIL) THEN
 				IF (window # NIL) THEN window.Close; END;
 				NEW(window, first);
 				manager := WMWindowManager.GetDefaultManager();
-				manager.Add(x, y, window, {WMWindowManager.FlagStayOnTop, WMWindowManager.FlagHidden});
-				manager.SetFocus(window);
+				manager.Add(x, y, window, windowFlags);
+				IF getFocus THEN manager.SetFocus(window) END;
 			END;
+		END Popup0;
+
+		PROCEDURE Popup* (x, y : SIZE);
+		BEGIN
+			Popup0(x,y,TRUE, {WMWindowManager.FlagStayOnTop, WMWindowManager.FlagHidden}) 
 		END Popup;
 
 	END Popup;
@@ -223,7 +228,7 @@ TYPE
 			manager.SetFocus(SELF);
 		END Popup;
 
-		PROCEDURE Clicked(sender, data : ANY);
+		PROCEDURE Clicked*(sender, data : ANY);
 		BEGIN
 			manager.Remove(SELF)
 		END Clicked;
@@ -335,17 +340,6 @@ TYPE
 		END BuildPalette;
 
 	END ColorSwatchPanel;
-
-	PROCEDURE PopupNoFocus* (popup:Popup; x, y : SIZE);
-		VAR manager : WMWindowManager.WindowManager;
-		BEGIN 
-			IF (popup.first # NIL) THEN
-				IF (popup.window # NIL) THEN popup.window.Close; END;
-				NEW(popup.window, popup.first);
-				manager := WMWindowManager.GetDefaultManager();
-				manager.Add(x, y, popup.window, {WMWindowManager.FlagStayOnTop, WMWindowManager.FlagHidden});
-			END;
-		END PopupNoFocus;
 
 END WMPopups.
 -----------------------------------------------------

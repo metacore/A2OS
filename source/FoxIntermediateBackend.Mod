@@ -9230,41 +9230,44 @@ TYPE
 				END;
 				Evaluate(p1,s1);
 				IF IsIntegerConstant(p1,hint) THEN
-					ReuseCopy(reg,s0.op);
-					IF hint  > 0 THEN
+					IF hint > 0 THEN
+						Reuse2(reg,s0.op,s1.op);
 						IntermediateCode.InitImmediate(s1.op,s1.op.type,hint);
 						IF x.id = Global.Ash THEN Emit(Shl(position,reg,s0.op,s1.op))
 						ELSIF x.id = Global.Lsh THEN Emit(Shl(position,reg,s0.op,s1.op))
 						ELSIF x.id = Global.Rot THEN Emit(Rol(position,reg,s0.op,s1.op))
 						END;
 					ELSIF hint < 0 THEN
+						Reuse2(reg,s0.op,s1.op);
 						IntermediateCode.InitImmediate(s1.op,s1.op.type,-hint);
 						IF x.id = Global.Ash THEN Emit(Shr(position,reg,s0.op,s1.op));
 						ELSIF x.id = Global.Lsh THEN Emit(Shr(position,reg,s0.op,s1.op));
 						ELSIF x.id = Global.Rot THEN Emit(Ror(position,reg,s0.op,s1.op));
 						END;
+					ELSE
+						ReuseCopy(reg,s0.op);
 					END;
 					ReleaseOperand(s0); ReleaseOperand(s1);
 				ELSE
 					exit := NewLabel();
 					end := NewLabel();
-					ReuseCopy(reg,s0.op);
+					Reuse1(reg,s0.op);
 					BrgeL(exit,s1.op,IntermediateCode.Immediate(IntermediateCode.GetType(system,p1.type),0));
 					Reuse1(tmp,s1.op);
 					Emit(Neg(position,tmp,s1.op));
 					Convert(tmp,s1.op.type);
-					IF x.id = Global.Ash THEN Emit(Shr(position,reg,reg,tmp))
-					ELSIF x.id = Global.Lsh THEN Emit(Shr(position,reg,reg,tmp))
-					ELSIF x.id = Global.Rot THEN Emit(Ror(position,reg,reg,tmp))
+					IF x.id = Global.Ash THEN Emit(Shr(position,reg,s0.op,tmp))
+					ELSIF x.id = Global.Lsh THEN Emit(Shr(position,reg,s0.op,tmp))
+					ELSIF x.id = Global.Rot THEN Emit(Ror(position,reg,s0.op,tmp))
 					END;
 					ReleaseIntermediateOperand(tmp);
 					BrL(end);
 					SetLabel(exit);
 					ReuseCopy(tmp,s1.op);
 					Convert(tmp,s1.op.type);
-					IF x.id = Global.Ash THEN Emit(Shl(position,reg,reg,tmp))
-					ELSIF x.id = Global.Lsh THEN Emit(Shl(position,reg,reg,tmp))
-					ELSIF x.id = Global.Rot THEN Emit(Rol(position,reg,reg,tmp))
+					IF x.id = Global.Ash THEN Emit(Shl(position,reg,s0.op,tmp))
+					ELSIF x.id = Global.Lsh THEN Emit(Shl(position,reg,s0.op,tmp))
+					ELSIF x.id = Global.Rot THEN Emit(Rol(position,reg,s0.op,tmp))
 					END;
 					ReleaseIntermediateOperand(tmp);
 					SetLabel(end);

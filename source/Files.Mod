@@ -784,7 +784,7 @@ BEGIN {EXCLUSIVE}
 	END;
 	NEW(enum); enum.count := 0; enum.fs := fs;
 	files.Enumerate(enum.EnumFile);
-	IF enum.count # 0 THEN
+	IF Trace & (enum.count # 0) THEN
 		KernelLog.Enter; KernelLog.String("Files: "); KernelLog.Int(enum.count, 1);
 		KernelLog.String(" open files");
 		IF fs.vol # NIL THEN

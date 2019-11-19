@@ -1948,7 +1948,12 @@ TYPE
 				END;
 				(* nothing to be done *)
 			ELSIF expression IS SyntaxTree.ProcedureValue THEN
-				result := expression;
+				IF type IS SyntaxTree.EnumerationType THEN
+					Error(position, "procedure value cannot be converted");
+					result := SyntaxTree.invalidExpression;
+				ELSE
+					result := expression;
+				END;
 			ELSE
 				Error(position, "expression cannot be converted");
 				IF VerboseErrorMessage THEN

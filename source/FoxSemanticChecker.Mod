@@ -1987,13 +1987,10 @@ TYPE
 			ELSIF (expression.type.resolved IS SyntaxTree.ObjectType) & (type IS SyntaxTree.AnyType) THEN (*! binary symbol file problem *)
 			ELSIF expression.resolved # NIL THEN (* value *)
 				value := ConvertValue(position,expression.resolved(SyntaxTree.Value),type);
-				IF value = NIL THEN
+				IF (value = NIL) OR (value IS SyntaxTree.Value) THEN
 					result := SyntaxTree.NewConversion(expression.position,expression,type,reference);
+					IF value # NIL THEN result.SetResolved(value(SyntaxTree.Value)) END;
 					result.SetType(type);
-				ELSIF value IS SyntaxTree.Value THEN
-					result := SyntaxTree.NewConversion(expression.position,expression,type,reference);
-					result.SetResolved(value(SyntaxTree.Value));
-					result.SetType(value.type);
 				ELSE
 					result := value
 				END;
@@ -5386,7 +5383,7 @@ TYPE
 							END;
 							IF (parameter[1].resolved # NIL) THEN
 								parameter[0] := ConvertValue(parameter[1].position,parameter[1].resolved,type);
-								IF parameter[0] IS SyntaxTree.Value THEN
+								IF (parameter[0] # NIL) & (parameter[0] IS SyntaxTree.Value) THEN
 									result.SetResolved(parameter[0](SyntaxTree.Value));
 								END;
 							END;

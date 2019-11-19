@@ -1277,6 +1277,7 @@ TYPE
 		ime : WMInputMethods.IME;
 		multiLine-, readOnly- : WMProperties.BooleanProperty;
 		highlighting- : WMProperties.StringProperty;
+		extInterface-: ANY; (* interface plugin *)
 		text- : Texts.Text;
 		utilreader : Texts.TextReader;
 		onEnter-, onEscape- : WMEvents.EventSource;
@@ -1460,6 +1461,11 @@ TYPE
 			i.SetCursorInfo := SetCursorInfo;
 			ime.SetInterface(i);
 		END SetIMEInterface;
+		
+		PROCEDURE SetExtInterface*(extInterface:ANY);
+		BEGIN
+			SELF.extInterface:=extInterface;
+		END SetExtInterface;
 
 		PROCEDURE FocusReceived*;
 		BEGIN

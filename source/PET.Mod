@@ -14,6 +14,8 @@ MODULE PET; (** AUTHOR "TF, PL"; PURPOSE "Programmer's Editing Tool"; *)
  *	CTRL-O:	Set focus to filename editor and clear its content
  *	CTRL-S:		Store current page
  *
+ *	CTRL-I:	Toggle interactive Interface Finder
+ * 
  *	CTRL-M:	Toggle visibility of sidepanel
  *
  *	CTRL-H:		Compile file opened in current page
@@ -512,7 +514,8 @@ TYPE
 		codecFormat: ARRAY 128 OF CHAR;
 		autoCodecFormat: ARRAY 128 OF CHAR;
 
-		name : Filename; (* name of tab (filename without path *)
+		name: Filename; (* name of tab (filename without path *)
+			
 		filename : Filename; (* Filename including path *)
 
 		options : CompilerOptions;
@@ -902,7 +905,7 @@ TYPE
 
 
 		PROCEDURE HandleShortcut(ucs : SIZE; flags : SET; keysym : SIZE) : BOOLEAN;
-		VAR pos : SIZE;
+		VAR pos : SIZE; res:INTEGER; msg: ARRAY 32 OF CHAR; ctx:Commands.Context;
 
 			PROCEDURE HandlePreviousNext(forward : BOOLEAN);
 			BEGIN
@@ -982,6 +985,14 @@ TYPE
 				searchPanel.ToggleVisibility;
 			ELSIF (keysym = 05H) & ControlKeyDown(flags) THEN (* CTRL-E *)
 				logPanel.visible.Set(~logPanel.visible.Get());
+			ELSIF (keysym = 09H) & ControlKeyDown(flags) THEN (* CTRL-I *)
+				IF editor.extInterface#NIL THEN
+					Configuration.Get("Applications.PET.ExtInterface.UnInstall", name, res);
+				ELSE
+					Configuration.Get("Applications.PET.ExtInterface.Install", name, res);
+				END;
+				NEW(ctx, NIL, NIL, logWriter, errorWriter, SELF);
+				IF res = Configuration.Ok THEN Commands.Activate(name, ctx,{}, res, msg) END;
 			ELSIF (keysym= 0CH) & ControlKeyDown(flags) THEN (* CTRL-L *)
 				logEdit.visible.Set(~logEdit.visible.Get());
 			ELSIF (keysym= 0EH) & ControlKeyDown(flags) THEN (* CTRL-N *)
@@ -2647,7 +2658,6 @@ TYPE
 				DisableUpdate; SelectPreviousTab; EnableUpdate;
 			ELSIF (keysym = 015H) & ControlKeyDown(flags) THEN (* CTRL-U *)
 				IF (currentPage # NIL) THEN UnloadModule; END;
-
 			(* relay hot key to current page *)
 			ELSIF (currentPage = NIL) OR ((currentPage # NIL) & (~currentPage.HandleShortcut(ucs, flags, keysym))) THEN
 				RETURN FALSE; (* Key not handled *)

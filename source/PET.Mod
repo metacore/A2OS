@@ -876,6 +876,18 @@ TYPE
 			END;
 			wrap := ~wrap;
 		END ToggleWrap;
+		
+		PROCEDURE ToggleExtInterface;
+		VAR ctx:Commands.Context; res:INTEGER; msg:ARRAY 32 OF CHAR;
+		BEGIN
+			IF editor.extInterface#NIL THEN
+				Configuration.Get("Applications.PET.ExtInterface.UnInstall", name, res);
+			ELSE
+				Configuration.Get("Applications.PET.ExtInterface.Install", name, res);
+			END;
+			NEW(ctx, NIL, NIL, logWriter, errorWriter, SELF);
+			IF res = Configuration.Ok THEN Commands.Activate(name, ctx,{}, res, msg) END;
+		END ToggleExtInterface;
 
 		PROCEDURE TextChanged(sender, data : ANY);
 		BEGIN
@@ -905,7 +917,7 @@ TYPE
 
 
 		PROCEDURE HandleShortcut(ucs : SIZE; flags : SET; keysym : SIZE) : BOOLEAN;
-		VAR pos : SIZE; res:INTEGER; msg: ARRAY 32 OF CHAR; ctx:Commands.Context;
+		VAR pos : SIZE; 
 
 			PROCEDURE HandlePreviousNext(forward : BOOLEAN);
 			BEGIN
@@ -986,13 +998,7 @@ TYPE
 			ELSIF (keysym = 05H) & ControlKeyDown(flags) THEN (* CTRL-E *)
 				logPanel.visible.Set(~logPanel.visible.Get());
 			ELSIF (keysym = 09H) & ControlKeyDown(flags) THEN (* CTRL-I *)
-				IF editor.extInterface#NIL THEN
-					Configuration.Get("Applications.PET.ExtInterface.UnInstall", name, res);
-				ELSE
-					Configuration.Get("Applications.PET.ExtInterface.Install", name, res);
-				END;
-				NEW(ctx, NIL, NIL, logWriter, errorWriter, SELF);
-				IF res = Configuration.Ok THEN Commands.Activate(name, ctx,{}, res, msg) END;
+				ToggleExtInterface;
 			ELSIF (keysym= 0CH) & ControlKeyDown(flags) THEN (* CTRL-L *)
 				logEdit.visible.Set(~logEdit.visible.Get());
 			ELSIF (keysym= 0EH) & ControlKeyDown(flags) THEN (* CTRL-N *)

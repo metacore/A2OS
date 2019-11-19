@@ -1948,11 +1948,10 @@ TYPE
 				END;
 				(* nothing to be done *)
 			ELSIF expression IS SyntaxTree.ProcedureValue THEN
-				IF type IS SyntaxTree.EnumerationType THEN
-					Error(position, "procedure value cannot be converted");
-					result := SyntaxTree.invalidExpression;
-				ELSE
+				IF type IS SyntaxTree.ProcedureType THEN
 					result := expression;
+				ELSE
+					result := NIL;
 				END;
 			ELSE
 				Error(position, "expression cannot be converted");
@@ -1988,7 +1987,10 @@ TYPE
 			ELSIF (expression.type.resolved IS SyntaxTree.ObjectType) & (type IS SyntaxTree.AnyType) THEN (*! binary symbol file problem *)
 			ELSIF expression.resolved # NIL THEN (* value *)
 				value := ConvertValue(position,expression.resolved(SyntaxTree.Value),type);
-				IF value IS SyntaxTree.Value THEN
+				IF value = NIL THEN
+					result := SyntaxTree.NewConversion(expression.position,expression,type,reference);
+					result.SetType(type);
+				ELSIF value IS SyntaxTree.Value THEN
 					result := SyntaxTree.NewConversion(expression.position,expression,type,reference);
 					result.SetResolved(value(SyntaxTree.Value));
 					result.SetType(value.type);

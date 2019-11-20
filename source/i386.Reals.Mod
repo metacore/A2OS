@@ -11,8 +11,6 @@ Implemented by Bernd Moesli, Seminar for Applied Mathematics,
 Swiss Federal Institute of Technology Zürich.
 *)
 
-(** Simple port to ARM, without platform-dependent code by Timothée Martiel *)
-
 IMPORT SYSTEM, Machine;
 
 (* Bernd Moesli
@@ -59,12 +57,6 @@ PROCEDURE ExpoL* (x: FLOAT64): SIGNED32;
 BEGIN
 	SYSTEM.GET(ADDRESSOF(x) + H, i); RETURN ASH(i, -20) MOD 2048
 END ExpoL;
-
-(** Returns the mantissa *)
-PROCEDURE Mantissa* (x: FLOAT32): SIGNED32;
-BEGIN
-	RETURN SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, x) * {0 .. 22})
-END Mantissa;
 
 (** Sets the shifted binary exponent. *)
 PROCEDURE SetExpo* (e: SIGNED32; VAR x: FLOAT32);
@@ -186,21 +178,39 @@ END fcr;
 
 (** Return state of the floating-point control register. *)
 PROCEDURE FCR*(): SET;
+CODE {SYSTEM.i386, SYSTEM.FPU}
+	PUSH 0
+	FSTCW [ESP]
+	FWAIT
+	POP EAX
 END FCR;
 
 (** Set state of floating-point control register.  Traps reset this to the default.  Note that changing the rounding mode affects rounding of imprecise results as well as the ENTIER operation. *)
 
 PROCEDURE SetFCR*(s: SET);
+CODE {SYSTEM.i386, SYSTEM.FPU}
+	FLDCW [EBP+s]
 END SetFCR;
 
 (** Round x to an integer using the current rounding mode. *)
 
-PROCEDURE Round*(x: FLOAT32): SIGNED32;	(** non-portable *)
+PROCEDURE -Round*(x: FLOAT32): SIGNED32;	(** non-portable *)
+CODE {SYSTEM.i386, SYSTEM.FPU}
+	FLD DWORD [ESP]
+	FISTP DWORD [ESP]	; store integer using current rounding mode
+	FWAIT
+	POP EAX	; return value
 END Round;
 
 (** Round x to an integer using the current rounding mode. *)
 
-PROCEDURE RoundL*(x: FLOAT64): SIGNED32;	(** non-portable *)
+PROCEDURE -RoundL*(x: FLOAT64): SIGNED32;	(** non-portable *)
+CODE {SYSTEM.i386, SYSTEM.FPU}
+	FLD QWORD [ESP]
+	FISTP DWORD [ESP]	; store integer using current rounding mode
+	FWAIT
+	POP EAX	; return value
+	POP EBX	; drop rest of parameter
 END RoundL;
 
 PROCEDURE RealX (hh, hl: SIGNED64; adr: ADDRESS);

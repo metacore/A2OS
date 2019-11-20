@@ -42,6 +42,8 @@ VAR
 	ten: ARRAY 27 OF FLOAT64;
 	eq, gr: ARRAY 20 OF SET;
 	H, L: SIGNED16;
+	eps: FLOAT32;
+	epsL:FLOAT64;
 
 (** Returns the shifted binary exponent (0 <= e < 256). *)
 PROCEDURE Expo* (x: FLOAT32): SIGNED32;
@@ -216,6 +218,27 @@ BEGIN
 	h := SHORT(hh); l := SHORT(hl);
 	SYSTEM.PUT(adr + H, h); SYSTEM.PUT(adr + L, l);
 END RealX;
+
+(*machine epsilon. Note that there are two competing definitions in computer science, see Wikipedia: "machine epsilon" *)
+PROCEDURE Eps*():FLOAT32;
+VAR x:FLOAT32;
+BEGIN
+	IF eps=0 THEN 
+		x:=0.5;
+		WHILE (1-x<1)&(1-x>0) DO eps:=x; x:=x/2 END;
+	END;
+	RETURN eps
+END Eps;
+
+PROCEDURE EpsL*():FLOAT64;
+VAR x:FLOAT64;
+BEGIN
+	IF epsL=0 THEN 	
+		x:=0.5;
+		WHILE (1-x<1)&(1-x>0) DO epsL:=x; x:=x/2 END;
+	END;
+	RETURN epsL
+END EpsL;
 
 PROCEDURE InitHL;
 	VAR i: ADDRESS; dmy: SIGNED16; littleEndian: BOOLEAN;

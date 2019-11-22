@@ -163,7 +163,7 @@ VAR
 		TextUtilities.TextToStr( text, sendBuffer^ );  slen := Strings.Length( sendBuffer^ );
 		A2ToUnix;
 		Machine.Acquire( Machine.X11 );
-		X11.SetSelectionOwner( xdisp, clipboard (* X11.XAPRIMARY *), primary, X11.CurrentTime);
+		X11.SetSelectionOwner( xdisp, clipboard, primary, X11.CurrentTime);
 		Machine.Release( Machine.X11 );
 	END PutToClipboard;
 
@@ -213,7 +213,7 @@ VAR
 	BEGIN{EXCLUSIVE}
 		received := FALSE;
 		Machine.Acquire( Machine.X11 );
-		X11.ConvertSelection( xdisp, X11.XAPRIMARY, X11.XASTRING, myProperty, primary, X11.lastEventTime );
+		X11.ConvertSelection( xdisp, clipboard, X11.XASTRING, myProperty, primary, X11.lastEventTime );
 		Machine.Release( Machine.X11 );
 		AWAIT( received );
 	END GetX11Selection;
@@ -222,7 +222,7 @@ VAR
 	VAR type: X11.Atom;  format: INTEGER; len, after: LONGINTEGER;  prop, adr: ADDRESS; ch: CHAR;
 	BEGIN {EXCLUSIVE}
 		rlen := 0; recBuffer[0] := 0X;
-		IF (event.selection = X11.XAPRIMARY) & (event.property = myProperty) THEN
+		IF (event.selection = clipboard) & (event.property = myProperty) THEN
 			Machine.Acquire( Machine.X11 );
 			X11.GetWindowProperty( xdisp, event.requestor, event.property, 0, BufferSize, X11.False,
 									event.target, type, format, len, after, prop );
@@ -326,3 +326,4 @@ END Clipboard.
 		'System.Free Clipboard ~'.
 
 	---------------------------------------------
+

@@ -51,7 +51,7 @@ System.DoCommands
 	~
 
 	Compiler.Compile --define=WIN,I386,SHAREDLIB -p=Win32 --destPath=A2Dll/
-		Streams.Mod Commands.Mod Files.Mod Windows.WinFS.Mod Windows.Clock.Mod Dates.Mod i386.Reals.Mod 
+		Streams.Mod Commands.Mod Files.Mod Windows.WinFS.Mod Windows.Clock.Mod Dates.Mod I386.Reals.Mod 
 		Strings.Mod Diagnostics.Mod BitSets.Mod StringPool.Mod ObjectFIle.Mod GenericLinker.Mod Reflection.Mod 
 		Loader.Mod CRC.Mod SystemVersion.Mod TrapWriters.Mod Windows.Traps.Mod FileTrapWriter.Mod Options.Mod 
 		ProcessInfo0.Mod ProcessInfo.Mod Plugins.Mod System.Mod

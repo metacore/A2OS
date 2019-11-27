@@ -6,7 +6,7 @@ MODULE Math;	(** portable *)
 
 (* Aos version - requires floating-point instruction support. *)
 
-IMPORT SYSTEM;
+IMPORT SYSTEM, Commands;
 
 CONST
 	e* = 2.7182818284590452354E0;
@@ -119,57 +119,71 @@ BEGIN
 #END
 END cos;
 
-PROCEDURE arctan*(x: Value): Value;
+PROCEDURE -arctan0(y:Value):Value;
 VAR
 	k: INTEGER;
-	prev, res, term, xk: Value;
+	prev, res, term, yk: Value;
 BEGIN
-#IF I386 THEN
-	CODE
-		FLD [EBP + x]
-		FLD1
-		FPATAN
-		#IF ~LEGACY THEN
-			FSTP [EBP + x]
-			MOVSS XMM0, [EBP + x]
-		#END
-	END;
-	RETURN RESULT;
-#ELSIF AMD64 THEN
-	CODE
-		FLD [RBP + x]
-		FLD1
-		FPATAN
-		#IF ~LEGACY THEN
-			FSTP [RBP + x]
-			MOVSS XMM0, [RBP + x]
-		#END
-	END;
-	RETURN RESULT;
-#ELSE
-	IF (x = 1) OR (x = -1) THEN
-		RETURN x * pi / 4
-	ELSIF (x > 1) OR (x < -1) THEN
-		RETURN pi / 2 - arctan(1 / x)
+	IF (y = 1) OR (y = -1) THEN
+		RETURN y * pi / 4
+	ELSIF (y > 1) OR (y < -1) THEN
+		RETURN pi / 2 - arctan(1 / y)
 	ELSE
-		(* atan(x) = sum_k (-1)^(k) x^{2 k + 1} / (2 k + 1), |x| < 1 *)
+		(* atan(y) = sum_k (-1)^(k) y^{2 k + 1} / (2 k + 1), |y| < 1 *)
 		prev := pi / 2;
 		res := 0.0;
-		xk := x;
+		yk := y;
 		k := 0;
 		REPEAT
 			prev := res;
-
-			term := 1 / (2 * k + 1) * xk;
+			term := 1 / (2 * k + 1) * yk;
 			IF ODD(k) THEN
 				res := res - term
 			ELSE
 				res := res + term
 			END;
-			xk := xk * x * x;
+			yk := yk * y * y;
 			INC(k)
 		UNTIL Equal(prev, res) OR (k = 50000);
 		RETURN res
+	END
+END arctan0;
+
+(* one-parameter version: res:=arctan(y/x) with the usual loss of the quadrant information
+	two-parameter version specific for all quadrants: res:=arctan(y,x) iusing optional second argument*)
+PROCEDURE arctan*(y: Value; x:=1:Value): Value;
+VAR
+
+BEGIN
+#IF I386 THEN
+	CODE
+		FLD [EBP + y]
+		FLD	[EBP + x]
+		FPATAN
+		#IF ~LEGACY THEN
+			FSTP [EBP + y]
+			MOVSS XMM0, [EBP + y]
+		#END
+	END;
+	RETURN RESULT;
+#ELSIF AMD64 THEN
+	CODE
+		FLD [RBP + y]
+		FLD [RBP + x]
+		FPATAN
+		#IF ~LEGACY THEN
+			FSTP [RBP + y]
+			MOVSS XMM0, [RBP + y]
+		#END
+	END;
+	RETURN RESULT;
+#ELSE 
+	IF (x>0) & (y>=0) THEN RETURN arctan0(y/x)
+	ELSIF (x>0) & (y<0) THEN RETURN arctan0(y/x)
+	ELSIF x<0 THEN RETURN arctan0(y/x)-pi (*?*)
+	ELSIF (x=0) & (y>0) THEN RETURN pi/2
+	ELSIF (x=0) & (y<0) THEN RETURN -pi/2
+	ELSE (*( x=0) & (y=0) *) RETURN 0 
 	END
 #END
 END arctan;
@@ -332,4 +346,32 @@ BEGIN
 #END
 END exp;
 
+PROCEDURE {TEST} Test*;
+VAR a,b,c,d, e,f,g: REAL; res, x,y: FLOAT32; i:INTEGER; 
+BEGIN
+	a:=arctan(1,1);
+	b:=arctan(1,-1);
+	c:=arctan(-1,1);
+	d:=arctan(-1,-1);
+	e:=arctan(1);
+	f:=arctan(-1);
+	g:=arctan(0,0);
+	ASSERT(a=e,200);
+	ASSERT(b=-d,201);
+	ASSERT(c=f,202);
+	ASSERT(g=0,203);
+	(*
+	FOR i:=-100 TO 100 DO
+	 	y:=i*2*pi/100;
+	 	context.out.FloatFix(y,8,2,0); 
+	 	res:=arctan(y,1);context.out.FloatFix(res, 8,2,0);
+	 	res:=arctan(y,-1);context.out.FloatFix(res, 8,2,0);
+	 	context.out.Ln; context.out.Update;
+	END;
+	*)
+END Test;
+
 END Math.
+
+System.FreeDownTo Math~
+Math.Test

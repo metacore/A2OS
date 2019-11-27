@@ -898,13 +898,12 @@ TYPE
 
 			PROCEDURE IsImm32(value: SIGNED64): BOOLEAN;
 			BEGIN
-				value := value DIV 10000H DIV 10000H;
-				RETURN (value = 0) OR (value=-1);
+				RETURN (value >= -80000000H) & (value < 100000000H)
 			END IsImm32;
 
 			PROCEDURE IsSignedImm32(value: SIGNED64): BOOLEAN;
 			BEGIN
-				RETURN (value <= MAX(SIGNED32)) & (value >= MIN(SIGNED32));
+				RETURN (value >= -80000000H) & (value < 80000000H)
 			END IsSignedImm32;
 
 		BEGIN

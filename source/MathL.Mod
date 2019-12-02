@@ -151,7 +151,7 @@ END arctan0;
 
 (* one-parameter version: res:=arctan(y/x) with the usual loss of the quadrant information
 	two-parameter version specific for all quadrants: res:=arctan(y,x) iusing optional second argument*)
-PROCEDURE arctan*(y:Value; x:=1.0: Value): Value;
+PROCEDURE arctan2*(y:Value; x:=1.0: Value): Value;
 BEGIN
 #IF I386 THEN
 	CODE
@@ -184,6 +184,11 @@ BEGIN
 	ELSE (*( x=0) & (y=0) *) RETURN 0 
 	END
 #END
+END arctan2;
+
+PROCEDURE arctan*(y:Value): Value;
+BEGIN
+RETURN arctan2(y)
 END arctan;
 
 PROCEDURE sqrt*(x: Value): Value;
@@ -349,13 +354,13 @@ END exp;
 PROCEDURE {TEST} Test*;
 VAR a,b,c,d, e,f,g: REAL; res, x,y: FLOAT32; i:INTEGER; 
 BEGIN
-	a:=arctan(1,1);
-	b:=arctan(1,-1);
-	c:=arctan(-1,1);
-	d:=arctan(-1,-1);
-	e:=arctan(1);
-	f:=arctan(-1);
-	g:=arctan(0,0);
+	a:=arctan2(1,1);
+	b:=arctan2(1,-1);
+	c:=arctan2(-1,1);
+	d:=arctan2(-1,-1);
+	e:=arctan2(1);
+	f:=arctan2(-1);
+	g:=arctan2(0,0);
 	ASSERT(a=e,200);
 	ASSERT(b=-d,201);
 	ASSERT(c=f,202);

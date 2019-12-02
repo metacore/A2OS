@@ -8789,7 +8789,7 @@ TYPE
 					ReuseCopy(result.op, result.op);
 					ReleaseIntermediateOperand(tmp);
 					(* add offset to result.op *)
-					IntermediateCode.AddOffset(result.op, ToMemoryUnits(system, system.SizeOf(Global.Signed32)))
+					IntermediateCode.AddOffset(result.op, ToMemoryUnits(system, system.SizeOf(system.sizeType)))
 				END
 
 			(* ---- STEP ---- *)
@@ -8805,7 +8805,7 @@ TYPE
 					ReleaseIntermediateOperand(tmp);
 
 					(* add offset to result.op *)
-					IntermediateCode.AddOffset(result.op, 2 * ToMemoryUnits(system, system.SizeOf(Global.Signed32)))
+					IntermediateCode.AddOffset(result.op, 2 * ToMemoryUnits(system, system.SizeOf(system.sizeType)))
 				END
 
 			(* ---- RE ---- *)

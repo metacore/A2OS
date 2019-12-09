@@ -181,6 +181,7 @@ TYPE
 		PROCEDURE ^ SplitEditorFocusHandler(hasFocus: BOOLEAN); 
 		PROCEDURE ^ ToggleLabels; 
 		PROCEDURE ^ ToggleWrap; 
+		PROCEDURE ^ ToggleExtInterface; 
 		PROCEDURE ^ TextChanged(sender, data: ANY); 
 		PROCEDURE ^ CursorChanged; 
 		PROCEDURE ^ OpenLogEditor; 

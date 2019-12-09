@@ -67,7 +67,6 @@ TYPE
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ New0*(CONST name: ARRAY OF CHAR): Files.File; 
-		PROCEDURE ^ IsDirectory(VAR stat: Unix.Status): BOOLEAN; 
 		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
 		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER); 
@@ -128,6 +127,8 @@ VAR
 	unixFS: UnixFileSystem; 
 	collection: Collection; 
 
+	PROCEDURE ^ HasInternal(name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
+	PROCEDURE ^ IsDirectory(VAR stat: Unix.Status): BOOLEAN; 
 	PROCEDURE ^ EnumFinalize(f: ANY; VAR cont: BOOLEAN); 
 	PROCEDURE ^ GetWorkingDirectory*(VAR path: ARRAY OF CHAR); 
 	PROCEDURE ^ ChangeDirectory*(CONST path: ARRAY OF CHAR; VAR done: BOOLEAN); 

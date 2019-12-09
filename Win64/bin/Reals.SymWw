@@ -6,6 +6,8 @@ VAR
 	ten: ARRAY 27 OF FLOAT64; 
 	eq, gr: ARRAY 20 OF SET; 
 	H, L: SIGNED16; 
+	eps: FLOAT32; 
+	epsL: FLOAT64; 
 
 	PROCEDURE ^ Expo*(x: FLOAT32): SIGNED32; 
 	PROCEDURE ^ ExpoL*(x: FLOAT64): SIGNED32; 
@@ -41,6 +43,8 @@ VAR
 
 	END RoundL; 
 	PROCEDURE ^ RealX(hh, hl: SIGNED64; adr: ADDRESS); 
+	PROCEDURE ^ Eps*(): FLOAT32; 
+	PROCEDURE ^ EpsL*(): FLOAT64; 
 	PROCEDURE ^ InitHL; 
 BEGIN
 END Reals.

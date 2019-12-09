@@ -18,12 +18,12 @@ TYPE
 		PROCEDURE ^ Decode(VAR s: DT.VideoBuffer): BOOLEAN; 
 		PROCEDURE ^ AddBlockIntra(comp, bx, by: SIGNED32); 
 		PROCEDURE ^ AddBlockInter(comp, bx, by: SIGNED32); 
-		PROCEDURE ^ TransferIDCTAdd(source: SIGNED32; dest: DT.PointerToArrayOfCHAR; destOffset, stride: SIGNED32); 
-		PROCEDURE ^ TransferIDCTCopy(source: SIGNED32; dest: DT.PointerToArrayOfCHAR; destOffset, stride: SIGNED32); 
-		PROCEDURE ^ TransferIDCTAddGeneric(source: SIGNED32; dest: DT.PointerToArrayOfCHAR; destOffset, stride: SIGNED32); 
-		PROCEDURE ^ TransferIDCTAddMMX(source, dest, stride: SIGNED32); 
-		PROCEDURE ^ TransferIDCTCopyGeneric(source: SIGNED32; dest: DT.PointerToArrayOfCHAR; destOffset, stride: SIGNED32); 
-		PROCEDURE ^ TransferIDCTCopyMMX(source, dest, stride: SIGNED32); 
+		PROCEDURE ^ TransferIDCTAdd(source: ADDRESS; dest: DT.PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+		PROCEDURE ^ TransferIDCTCopy(source: ADDRESS; dest: DT.PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+		PROCEDURE ^ TransferIDCTAddGeneric(source: ADDRESS; dest: DT.PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+		PROCEDURE ^ TransferIDCTAddMMX(source, dest: ADDRESS; stride: SIZE); 
+		PROCEDURE ^ TransferIDCTCopyGeneric(source: ADDRESS; dest: DT.PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+		PROCEDURE ^ TransferIDCTCopyMMX(source, dest: ADDRESS; stride: SIZE); 
 		PROCEDURE ^ GetCBPY(VAR s: DT.VideoBuffer): SIGNED32; 
 		PROCEDURE ^ GetMCBPC(VAR s: DT.VideoBuffer): SIGNED32; 
 	END MacroBlock; 
@@ -77,11 +77,11 @@ TYPE
 		mmxConsts: MMXConsts; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Convert(src: DT.PointerToArrayOfCHAR; srcYBaseOffset: SIGNED32; yStride: SIGNED32; srcUBaseOffset, srcVBaseOffset, uvStride: SIGNED32; img: Raster.Image; width, height, dstStride: SIGNED32); 
+		PROCEDURE ^ Convert(src: DT.PointerToArrayOfCHAR; srcYBaseOffset: SIGNED32; yStride: SIGNED32; srcUBaseOffset, srcVBaseOffset, uvStride: SIGNED32; img: Raster.Image; width, height, dstStride: SIZE); 
 		PROCEDURE ^ ConvertYUVToRGB565MMX(puc: DT.PointerToArrayOfCHAR; pucYBaseOffset: SIGNED32; strideY: SIGNED32; pucUBaseOffset, pucVBaseOffset, strideUV: SIGNED32; pucOut: Raster.Image; widthY, heightY, strideOut: SIGNED32); 
 		PROCEDURE ^ ScanLine565MMX(horizCount, pucV, pucU, pucY, pucOut: SIGNED32; mmxConsts: SIGNED32); 
-		PROCEDURE ^ ConvertYUVToRGB565(puc: DT.PointerToArrayOfCHAR; pucYBaseOffset: SIGNED32; strideY: SIGNED32; pucUBaseOffset, pucVBaseOffset, strideUV: SIGNED32; pucOut: Raster.Image; widthY, heightY, strideOut: SIGNED32); 
-		PROCEDURE ^ ConvertYUVToRGB888(puc: DT.PointerToArrayOfCHAR; pucYBaseOffset: SIGNED32; strideY: SIGNED32; pucUBaseOffset, pucVBaseOffset, strideUV: SIGNED32; pucOut: Raster.Image; widthY, heightY, strideOut: SIGNED32); 
+		PROCEDURE ^ ConvertYUVToRGB565(puc: DT.PointerToArrayOfCHAR; pucYBaseOffset: ADDRESS; strideY: SIZE; pucUBaseOffset, pucVBaseOffset: ADDRESS; strideUV: SIZE; pucOut: Raster.Image; widthY, heightY, strideOut: SIZE); 
+		PROCEDURE ^ ConvertYUVToRGB888(puc: DT.PointerToArrayOfCHAR; pucYBaseOffset: ADDRESS; strideY: SIZE; pucUBaseOffset, pucVBaseOffset: ADDRESS; strideUV: SIZE; pucOut: Raster.Image; widthY, heightY, strideOut: SIZE); 
 	END ColorSpace; 
 
 	DivXDecoder* = OBJECT (Codecs.VideoDecoder)
@@ -93,7 +93,7 @@ TYPE
 		macroBlock: MacroBlock; 
 		col: ColorSpace; 
 		opt: DT.DecoderOptions; 
-		stride: SIGNED32; 
+		stride: SIZE; 
 		util: DT.MyUtils; 
 		log: Files.Writer; 
 		debugFile: Files.File; 

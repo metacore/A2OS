@@ -52,6 +52,15 @@ TYPE
 		PROCEDURE ^ GenerateObjectFile*(objectFileFormat: Formats.ObjectFileFormat; log: Streams.Writer; CONST desiredName: ARRAY OF CHAR): BOOLEAN; 
 	END Linker; 
 
+	TRMFileWriter = OBJECT 
+	VAR 
+		bitsPerLine: SIZE; 
+		lines: SIZE; 
+
+		PROCEDURE ^  & InitTRMFileWriter(b, l: SIZE); 
+		PROCEDURE ^ WriteFile*(linker: GenericLinker.Linker; arrangement: StaticLinker.Arrangement; writer: Files.Writer); 
+	END TRMFileWriter; 
+
 	PROCEDURE ^ FileNameToModuleName(CONST filename: ARRAY OF CHAR; VAR moduleName: ARRAY OF CHAR); 
 	PROCEDURE ^ SectionNameToFileName(CONST sectionName: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR); 
 	PROCEDURE ^ GetPriority*(block: Sections.Section): INTEGER; 

@@ -413,6 +413,7 @@ TYPE
 		PROCEDURE ^ AddPortProperties(modifier: SyntaxTree.Modifier); 
 		PROCEDURE ^ PushPort(p: SyntaxTree.Expression); 
 		PROCEDURE ^ PushString(op: Operand; actualType: SyntaxTree.Type); 
+		PROCEDURE ^ CallConstructor(constructor: SyntaxTree.Procedure; recordType: SyntaxTree.RecordType; reference: IntermediateCode.Operand; parameters: SyntaxTree.ExpressionList; firstParameter, lastParameter: SIZE); 
 		PROCEDURE ^ Allocate(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
 		PROCEDURE ^ IfMarking(): Label; 
 		PROCEDURE ^ MarkPointer(CONST op: IntermediateCode.Operand); 
@@ -466,7 +467,7 @@ TYPE
 		PROCEDURE ^ Code(x: SyntaxTree.Code); 
 		PROCEDURE ^ ProcParametersSize(procedure: SyntaxTree.Procedure): SIGNED32; 
 		PROCEDURE ^ ParameterCopies(x: SyntaxTree.ProcedureType); 
-		PROCEDURE ^ InitVariables(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ InitVariables(scope: SyntaxTree.Scope; static: BOOLEAN); 
 		PROCEDURE ^ GetFingerprint(symbol: SyntaxTree.Symbol): Basic.Fingerprint; 
 		PROCEDURE ^ Body(x: SyntaxTree.Body; scope: SyntaxTree.Scope; ir: IntermediateCode.Section; moduleBody: BOOLEAN); 
 	END ImplementationEmitter; 
@@ -619,7 +620,7 @@ VAR
 	PROCEDURE ^ HasExplicitTraceMethod(recordType: SyntaxTree.RecordType): BOOLEAN; 
 	PROCEDURE ^ IsIntegerConstant(expression: SyntaxTree.Expression; VAR val: SIGNED64): BOOLEAN; 
 	PROCEDURE ^ PowerOf2*(val: SIGNED64; VAR exp: SIGNED32): BOOLEAN; 
-	PROCEDURE ^ GetConstructor(record: SyntaxTree.RecordType): SyntaxTree.Procedure; 
+	PROCEDURE ^ GetConstructor(type: SyntaxTree.Type): SyntaxTree.Procedure; 
 	PROCEDURE ^ IsIntegerImmediate(CONST op: IntermediateCode.Operand; VAR value: Basic.Integer): BOOLEAN; 
 	PROCEDURE ^ IsStrictlyPointerToRecord(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsUnsafePointer(type: SyntaxTree.Type): BOOLEAN; 

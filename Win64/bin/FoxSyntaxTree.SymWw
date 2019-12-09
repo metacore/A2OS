@@ -995,6 +995,7 @@ TYPE
 		nextParameter-, prevParameter-: Parameter; 
 		modifiers-: Modifier; 
 		defaultValue-: Expression; 
+		assignmentOperator-: Operator; 
 		kind-: SIGNED32; 
 		ownerType-: Type; 
 		untraced-: BOOLEAN; 
@@ -1015,6 +1016,7 @@ TYPE
 		PROCEDURE ^ SetMoveable*(movable: BOOLEAN); 
 		PROCEDURE ^ SetSelfParameter*(b: BOOLEAN); 
 		PROCEDURE ^ SetDefaultValue*(e: Expression); 
+		PROCEDURE ^ SetAssignmentOperator*(op: Operator); 
 		PROCEDURE ^ SetKind*(kind: SIGNED32); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 	END Parameter; 
@@ -1342,9 +1344,11 @@ TYPE
 	ReturnStatement* = OBJECT (Statement)
 	VAR 
 		returnValue-: Expression; 
+		assignmentOperator-: Expression; 
 
 		PROCEDURE ^  & InitReturnStatement(position: Position; outer: Statement); 
 		PROCEDURE ^ SetReturnValue*(returnValue: Expression); 
+		PROCEDURE ^ SetAssignmentOperator*(op: Expression); 
 		PROCEDURE ^ Clone(): Statement; 
 	END ReturnStatement; 
 

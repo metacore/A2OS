@@ -217,9 +217,10 @@ TYPE
 		PROCEDURE ^ Body(body: SyntaxTree.Body); 
 		PROCEDURE ^ Register(symbol: SyntaxTree.Symbol; scope: SyntaxTree.Scope; allowDuplicate: BOOLEAN); 
 		PROCEDURE ^ Implementation(scope: SyntaxTree.Scope); 
-		PROCEDURE ^ Implementations(x: SyntaxTree.Module); 
+		PROCEDURE ^ Implementations(x: SyntaxTree.Scope); 
 		PROCEDURE ^ Declarations(scope: SyntaxTree.Scope; skipImplementation: BOOLEAN; phases: SET); 
 		PROCEDURE ^ Initializer(variable: SyntaxTree.Variable); 
+		PROCEDURE ^ CheckValueParameterAssignment(parameter: SyntaxTree.Parameter); 
 		PROCEDURE ^ Initializers(scope: SyntaxTree.Scope); 
 		PROCEDURE ^ CheckInterOperatorConformity(thisModuleScope, thatModuleScope: SyntaxTree.ModuleScope); 
 		PROCEDURE ^ Module*(x: SyntaxTree.Module); 
@@ -287,6 +288,7 @@ TYPE
 	PROCEDURE ^ IsUnsafePointer*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsDisposable*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsPointerToRecord(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsRecordType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsFinalRecord(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsPointerToObject(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ ContainsPointer*(type: SyntaxTree.Type): BOOLEAN; 

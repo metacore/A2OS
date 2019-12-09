@@ -151,6 +151,7 @@ TYPE
 		ime: WMInputMethods.IME; 
 		multiLine-, readOnly-: WMProperties.BooleanProperty; 
 		highlighting-: WMProperties.StringProperty; 
+		extInterface-: ANY; 
 		text-: Texts.Text; 
 		utilreader: Texts.TextReader; 
 		onEnter-, onEscape-: WMEvents.EventSource; 
@@ -176,6 +177,7 @@ TYPE
 		PROCEDURE ^ GetCursorPosition(): SIZE; 
 		PROCEDURE ^ GetCursorScreenPosition(VAR x, y: SIZE); 
 		PROCEDURE ^ SetIMEInterface(ime: WMInputMethods.IME; text: Texts.Text); 
+		PROCEDURE ^ SetExtInterface*(extInterface: ANY); 
 		PROCEDURE ^ FocusReceived*; 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ InsertChar*(ch: Texts.Char32); 

@@ -30,12 +30,13 @@ TYPE
 	Popup* = OBJECT {EXCLUSIVE} 
 	VAR 
 		first, last: Entry; 
-		window: PopupWindow; 
+		window-: PopupWindow; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Add*(CONST caption: ARRAY OF CHAR; onClickHandler: WMEvents.EventListener); 
 		PROCEDURE ^ AddParButton*(CONST caption: ARRAY OF CHAR; onClickHandler: WMEvents.EventListener; par: ANY); 
 		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Popup0*(x, y: SIZE; getFocus: BOOLEAN; windowFlags: SET); 
 		PROCEDURE ^ Popup*(x, y: SIZE); 
 	END Popup; 
 
@@ -48,7 +49,7 @@ TYPE
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ CreatePopup; 
 		PROCEDURE ^ Popup*(x, y: SIZE); 
-		PROCEDURE ^ Clicked(sender, data: ANY); 
+		PROCEDURE ^ Clicked*(sender, data: ANY); 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ FocusGot*; 
 		PROCEDURE ^ SetColor(color: WMGraphics.Color); 

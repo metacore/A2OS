@@ -51,7 +51,7 @@ TYPE
 		PROCEDURE ^ CheckReloc*(target: GenericLinker.Address; pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch); 
 	END Arrangement; 
 
-	FileFormat = PROCEDURE (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
+	FileFormat = PROCEDURE {DELEGATE}(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
 VAR 
 	defaults: Options.Defaults; 
 	processing, finished: GenericLinker.Block; 
@@ -62,7 +62,7 @@ VAR
 	PROCEDURE ^ WriteOutputFile*(arrangement: Arrangement; CONST fileName: Files.FileName; linker: GenericLinker.Linker; fileFormat: FileFormat); 
 	PROCEDURE ^ WriteBinaryFile(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
 	PROCEDURE ^ WriteUnixBinaryFile(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
-	PROCEDURE ^ WriteTRMFile(arrangement: Arrangement; writer: Files.Writer; bitsPerLine, lines: SIZE); 
+	PROCEDURE ^ WriteTRMFile*(arrangement: Arrangement; writer: Files.Writer; bitsPerLine, lines: SIZE); 
 	PROCEDURE ^ WriteTRMCodeFile*(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
 	PROCEDURE ^ WriteTRMDataFile*(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
 	PROCEDURE ^ WritePEFile(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer; bitmode, subSystem: SIGNED16; isDLL: BOOLEAN); 

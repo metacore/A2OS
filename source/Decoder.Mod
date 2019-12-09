@@ -2120,6 +2120,10 @@ BEGIN
 	Initialize ("ARMDecoder");
 	Initialize ("I386Decoder");
 	Initialize ("AMD64Decoder");
+#ELSE
+	Initialize ("ARMDecoder");
+	Initialize ("I386Decoder");
+	Initialize ("AMD64Decoder");
 #END
 END Decoder.
 

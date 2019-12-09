@@ -7,7 +7,7 @@ IMPORT SYSTEM, Modules, Streams, MemoryReader, Strings, Files, KernelLog, TextUt
 	WM := WMWindowManager, D:= Debugging, Reflection;
 
 CONST
-	maxDecoders = 5;
+	maxDecoders = 16;
 
 	MaxOpcodeSize = 20; (* enough for IA32 *)
 
@@ -2108,10 +2108,22 @@ VAR
 BEGIN
 	nofDecoders := 0;
 	Modules.InstallTermHandler(Cleanup);
+#IF AMD64 THEN
+	Initialize ("AMD64Decoder");
 	Initialize ("I386Decoder");
 	Initialize ("ARMDecoder");
+#ELSIF I386 THEN
+	Initialize ("I386Decoder");
 	Initialize ("AMD64Decoder");
+	Initialize ("ARMDecoder");
+#ELSIF ARM THEN
+	Initialize ("ARMDecoder");
+	Initialize ("I386Decoder");
+	Initialize ("AMD64Decoder");
+#END
 END Decoder.
 
 System.FreeDownTo Decoder ~
+
+Decoder.Open Decoder ~
 WMProperties.Obw

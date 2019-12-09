@@ -3096,6 +3096,7 @@ TYPE
 		nextParameter-, prevParameter-: Parameter;
 		modifiers-: Modifier;
 		defaultValue-: Expression;
+		assignmentOperator-: Operator;
 
 		kind-: SIGNED32;   (* ValueParameter, ConstParameter, VarParameter *)
 		ownerType-: Type;
@@ -3124,6 +3125,7 @@ TYPE
 			inRegister := FALSE;
 			registerNumber := -1;
 			autoConvert := FALSE;
+			assignmentOperator := NIL;
 		END InitParameter;
 
 		PROCEDURE PreferRegister*(b: BOOLEAN);
@@ -3166,6 +3168,10 @@ TYPE
 		PROCEDURE SetDefaultValue*(e: Expression);
 		BEGIN defaultValue := e
 		END SetDefaultValue;
+		
+		PROCEDURE SetAssignmentOperator*(op: Operator);
+		BEGIN assignmentOperator := op;
+		END SetAssignmentOperator;
 
 		PROCEDURE SetKind*(kind: SIGNED32);
 		BEGIN SELF.kind := kind; END SetKind;
@@ -4081,15 +4087,20 @@ TYPE
 	(** << RETURN returnValue >> **)
 	ReturnStatement* = OBJECT (Statement)
 		VAR returnValue-: Expression; (* strictly speaking this is not a value but this term is in common use here *)
-
+			  assignmentOperator-: Expression; (* assignment operator *)
 		PROCEDURE & InitReturnStatement( position: Position ; outer: Statement);
 		BEGIN
-			InitStatement( position,outer );  returnValue := NIL
+			InitStatement( position,outer );  returnValue := NIL; assignmentOperator := NIL;
 		END InitReturnStatement;
 
 		PROCEDURE SetReturnValue*( returnValue: Expression );
 		BEGIN SELF.returnValue := returnValue
 		END SetReturnValue;
+
+		PROCEDURE SetAssignmentOperator*(op: Expression);
+		BEGIN
+			assignmentOperator := op;
+		END SetAssignmentOperator;
 
 		PROCEDURE Clone(): Statement;
 		VAR copy: ReturnStatement;

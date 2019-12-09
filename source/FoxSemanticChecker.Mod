@@ -2110,6 +2110,7 @@ TYPE
 				WHILE(operator # NIL) DO
 					IF (operator.name=identifier) & (operator.access * access # {}) THEN
 						procedureType := operator.type(SyntaxTree.ProcedureType);
+						
 						distance := Distance(system, procedureType,actualParameters);
 						IF (distance < Infinity) THEN
 							IF returnType # NIL THEN
@@ -6358,10 +6359,12 @@ TYPE
 						END;
 					END;
 				END;
+				
 				IF (parameter.kind = SyntaxTree.ValueParameter) & IsMathArrayType(parameter.type) & (parameter.type.resolved(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
 					Error(parameter.position, "forbidden value parameter of math array type ");
 				END;
 
+								
 				IF HasFlag(modifiers, Global.NameUntraced,position) THEN
 					parameter.SetUntraced(TRUE);
 					IF ~ContainsPointer(parameter.type) THEN
@@ -7228,7 +7231,9 @@ TYPE
 				procedureCallDesignator :=  left(SyntaxTree.ProcedureCallDesignator);
 				RETURN SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);
 			ELSIF CheckVariable(left) THEN
-				expression := NewBinaryOperatorCall(assignment.position, NIL, Scanner.Becomes, left, right, NIL);
+				IF ~(right IS SyntaxTree.ProcedureCallDesignator) OR ~CompatibleTo(system,right.type,left.type) THEN
+					expression := NewBinaryOperatorCall(assignment.position, NIL, Scanner.Becomes, left, right, NIL);
+				END;
 				IF (expression # NIL) & (expression IS SyntaxTree.ProcedureCallDesignator) THEN
 					procedureCallDesignator := expression(SyntaxTree.ProcedureCallDesignator);
 					RETURN SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);
@@ -7718,6 +7723,7 @@ TYPE
 		PROCEDURE ResolveReturnStatement(returnStatement: SyntaxTree.ReturnStatement): SyntaxTree.Statement;
 		VAR expression: SyntaxTree.Expression; position: Position; procedure: SyntaxTree.Procedure;
 			returnType: SyntaxTree.Type; outer: SyntaxTree.Statement; scope: SyntaxTree.Scope; prevInReturn: BOOLEAN;
+			left, right, operator: SyntaxTree.Expression;
 		BEGIN
 			prevInReturn := inReturn;
 			inReturn := TRUE;
@@ -7743,6 +7749,11 @@ TYPE
 						Error(position, "return statement in procedure that does not return");
 					END;
 					returnType := procedure.type(SyntaxTree.ProcedureType).returnType;
+					
+					
+				
+
+
 					IF returnType # NIL THEN
 						returnType := returnType.resolved;
 						IF expression = NIL THEN
@@ -7751,15 +7762,25 @@ TYPE
 							Error(position,"returned type incompatible: expression has no type");
 						ELSIF expression IS SyntaxTree.ResultDesignator THEN
 							(* always ok *)
-						ELSIF ~CompatibleTo(system,expression.type.resolved,returnType) THEN
-							Error(position, "return type not compatible");
-							IF VerboseErrorMessage THEN
-								Printout.Info("returnType",returnType);
-								Printout.Info("expression",expression);
+						END;
+						IF expression # NIL THEN
+							IF (~(expression IS SyntaxTree.ProcedureCallDesignator) & ~(expression IS SyntaxTree.ResultDesignator) OR ~CompatibleTo(system,expression.type,returnType)) THEN
+								left := ResolveExpression(SyntaxTree.NewResultDesignator(returnStatement.position));
+								right := expression;
+								operator := NewBinaryOperatorCall(returnStatement.position, NIL, Scanner.Becomes, left, right, NIL);
 							END;
-						ELSE
-							expression := NewConversion(expression.position,expression,returnType,NIL);
-							returnStatement.SetReturnValue(expression);
+							IF (operator # NIL) THEN
+								returnStatement.SetAssignmentOperator(operator);
+							ELSIF ~CompatibleTo(system,expression.type.resolved,returnType) THEN
+								Error(position, "return type not compatible");
+								IF VerboseErrorMessage THEN
+									Printout.Info("returnType",returnType);
+									Printout.Info("expression",expression);
+								END;
+							ELSE
+								expression := NewConversion(expression.position,expression,returnType,NIL);
+								returnStatement.SetReturnValue(expression);
+							END;
 						END;
 					ELSIF expression # NIL THEN
 						Error(position, "non-empty return type in procedure providing no return type");
@@ -8313,7 +8334,10 @@ TYPE
 			initializingVariable := variable;
 			IF variable.initializer # NIL THEN
 				initializer := ResolveExpression(variable.initializer);
-				IF ~CompatibleTo(system, initializer.type, variable.type) THEN
+				IF (currentScope IS SyntaxTree.RecordScope) & (initializer.resolved = NIL) THEN
+					Error(variable.position,"frobidden non-static record field initializer");
+				END; 
+				IF ~(initializer IS SyntaxTree.ProcedureCallDesignator) OR ~CompatibleTo(system, initializer.type, variable.type) THEN
 					expression := NewSymbolDesignator(variable.position, NIL, NIL, variable);
 					expression := NewBinaryOperatorCall(variable.position, NIL, Scanner.Becomes, expression, initializer, NIL);	
 				END;
@@ -8322,13 +8346,30 @@ TYPE
 				ELSE
 					variable.SetInitializer(CompatibleConversion(variable.initializer.position, initializer, variable.type));
 				END;
-				variable.SetState(SyntaxTree.Initialized);
 			END;
+			variable.SetState(SyntaxTree.Initialized);
 			initializingVariable := NIL;
 		END Initializer;
 		
+		PROCEDURE CheckValueParameterAssignment(parameter: SyntaxTree.Parameter);
+		VAR expression: SyntaxTree.Expression; expressionList: SyntaxTree.ExpressionList; operator: SyntaxTree.Operator;
+		BEGIN
+				IF (parameter.kind = SyntaxTree.ValueParameter) & IsRecordType(parameter.type) THEN
+					expression := SyntaxTree.NewSymbolDesignator(parameter.position, NIL, NIL, parameter);
+					expression.SetType(ResolveType(parameter.type));
+					expression.SetAssignable(TRUE);
+					expressionList := SyntaxTree.NewExpressionList();
+					expressionList.AddExpression(expression);
+					expressionList.AddExpression(expression);
+					operator := FindOperator(Scanner.Becomes,expressionList,NIL);
+					IF operator # NIL THEN
+						parameter.SetAssignmentOperator(operator);					
+					END;
+				END;
+		END CheckValueParameterAssignment;
+		
 		PROCEDURE Initializers(scope: SyntaxTree.Scope);
-		VAR variable: SyntaxTree.Variable;
+		VAR variable: SyntaxTree.Variable; parameter: SyntaxTree.Parameter;
 		BEGIN
 			currentScope := scope;
 			variable := scope.firstVariable;
@@ -8336,6 +8377,14 @@ TYPE
 				Initializer(variable);
 				variable := variable.nextVariable;
 			END;
+			WITH scope: SyntaxTree.ProcedureScope DO
+				parameter := scope.ownerProcedure.type.resolved(SyntaxTree.ProcedureType).firstParameter;
+				WHILE parameter # NIL DO
+					CheckValueParameterAssignment(parameter);
+					parameter := parameter.nextParameter; 
+				END;
+			ELSE
+			END; 
 			scope := scope.firstScope;
 			WHILE (scope # NIL) DO
 				Initializers(scope);
@@ -9461,6 +9510,17 @@ TYPE
 		RETURN result
 	END IsPointerToRecord;
 
+	PROCEDURE IsRecordType(type: SyntaxTree.Type): BOOLEAN;
+	VAR result: BOOLEAN;
+	BEGIN
+		IF type = NIL THEN result := FALSE
+		ELSE
+			type := type.resolved;
+			result := (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType = NIL);
+		END;
+		RETURN result
+	END IsRecordType;
+
 	PROCEDURE IsFinalRecord(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
 		type := type.resolved;
@@ -9976,7 +10036,7 @@ TYPE
 	BEGIN
 		RETURN (procedureType # NIL) & (procedureType.callingConvention=SyntaxTree.OberonCallingConvention) & ReturnedAsParameter(system,procedureType.returnType);
 	END StructuredReturnType;
-
+	
 	PROCEDURE ReplaceCharacter(VAR dst: ARRAY OF CHAR; this, by: CHAR);
 	VAR i: SIZE;
 	BEGIN

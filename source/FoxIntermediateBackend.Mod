@@ -660,13 +660,6 @@ TYPE
 					END;
 					IF stackSize <0 THEN stackSize := -stackSize END;
 					Basic.Align(stackSize,system.AlignmentOf(system.parameterAlignment,system.byteType));  (* round up to parameter alignment *)
-					(*
-					ir.Emit(Nop(position)); (* placeholder for stack frame check *)
-					ir.Emit(Nop(position)); (* placeholder for stack frame check (2) *)
-					*)
-					(*
-					ir.Emit(Nop(position)); (* placeholder for fill *)
-					*)
 
 					IF (callingConvention # SyntaxTree.OberonCallingConvention) & (~(callingConvention IN SysvABI) OR (system.addressSize # 64)) THEN
 						backend.ResetParameterRegisters();
@@ -747,19 +740,6 @@ TYPE
 				END;
 
 				IF ~inline  & ~(x.isPlain) & ~x.isOpening & ~x.isClosing THEN
-					(*
-					IF ToMemoryUnits(system,stackSize) > 4*1024-256 THEN (* stack frame potentially larger than page size *) (*! get page size from backend *)
-						(*! unnecessary with new implementation of ENTER -- should potentially be called by backend
-						IF implementationEmitter.GetRuntimeProcedure(implementationEmitter.builtinsModuleName,"EnsureAllocatedStack",procedure,TRUE) THEN
-							size := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,stackSize+256));
-							ir.EmitAt(pc,Push(size));
-							implementationEmitter.StaticCallOperand(result,procedure);
-							ir.EmitAt(pc+1,Call(result.op,ProcedureParametersSize(system,procedure)));
-						END;
-						*)
-					END;
-					*)
-
 					ir.EmitAt(pc(*+2*),implementationEmitter.Enter(x.position,callingConvention,ToMemoryUnits(system,stackSize))); (*!!*)
 
 					IF stackSize > 0 THEN
@@ -5341,7 +5321,7 @@ TYPE
 					END
 				END
 			ELSE
-				IF (parameter.kind = SyntaxTree.ValueParameter) OR (parameter.kind = SyntaxTree.ConstParameter) & ~(parameter.type.resolved IS SyntaxTree.RecordType) & ~(parameter.type.resolved IS SyntaxTree.ArrayType) THEN
+				IF (parameter.kind = SyntaxTree.ValueParameter) & (parameter.assignmentOperator = NIL) OR (parameter.kind = SyntaxTree.ConstParameter) & ~(parameter.type.resolved IS SyntaxTree.RecordType) & ~(parameter.type.resolved IS SyntaxTree.ArrayType) THEN
 					IF (type IS SyntaxTree.RecordType) OR IsStaticArray(parameter.type) THEN
 						Designate(expression,operand);
 						size := ToMemoryUnits(system,system.SizeOf(parameter.type));
@@ -5896,8 +5876,6 @@ TYPE
 							(* IF dump # NIL THEN dump.String("push pointer"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
 							IF formalParameter.kind = SyntaxTree.VarParameter THEN
 								(* add dereference *)
-								(* IF dump # NIL THEN dump.String("dereference pointer"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-							(*! better: do refer to stack above than using parameter backups !!*)
 								ReleaseIntermediateOperand(parameterBackups[i]);
 								MakeMemory(parameterBackups[i], parameterBackups[i], addressType, 0)
 							END;
@@ -6614,7 +6592,7 @@ TYPE
 					variable := type.recordScope.firstVariable;
 					WHILE variable # NIL DO
 						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits), initStatic);
-						IF (variable.initializer # NIL) & (initStatic OR (variable.initializer.resolved = NIL)) THEN
+						IF (variable.initializer # NIL) & (initStatic = (variable.initializer.resolved # NIL)) THEN
 							IF variable.initializer.type = NIL THEN
 								Designate(variable.initializer,initializerOp);
 							ELSE
@@ -6639,7 +6617,7 @@ TYPE
 					variable := type.cellScope.firstVariable;
 					WHILE variable # NIL DO
 						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits),initStatic);
-						IF variable.initializer # NIL THEN
+						IF (variable.initializer # NIL) & (initStatic = (variable.initializer.resolved # NIL)) THEN
 							Evaluate(variable.initializer,initializerOp);
 							MakeMemory(mem,adr,IntermediateCode.GetType(system,variable.type),offset+ ToMemoryUnits(system,variable.offsetInBits));
 							Emit(Mov(position,mem,initializerOp.op));
@@ -6713,7 +6691,7 @@ TYPE
 						END;
 					END;
 				END;
-				IF variable.initializer # NIL THEN
+				IF ~initStatic & (variable.initializer # NIL) THEN
 					Symbol(variable,operand);
 					reference := SyntaxTree.NewSymbolDesignator(variable.initializer.position,NIL, NIL,variable);
 					reference.SetType(variable.type.resolved);
@@ -6723,15 +6701,20 @@ TYPE
 			ELSE
 				Symbol(variable,operand);
 				InitFields(type, operand.op,0,initStatic);
-				constructor := GetConstructor(type); 
+				IF ~initStatic THEN
+					constructor := GetConstructor(type); 
+				END;
 				
 				IF constructor # NIL THEN
 					ASSERT(constructor.type(SyntaxTree.ProcedureType).firstParameter = NIL);
-					CallConstructor(constructor, type.resolved(SyntaxTree.RecordType), operand.op, NIL,0,-1);
+					IF (variable.initializer = NIL) OR (variable.initializer.type = NIL) THEN
+						(* no assignment or overloaded operatpr "=" *)
+						CallConstructor(constructor, type.resolved(SyntaxTree.RecordType), operand.op, NIL,0,-1);
+					END;
 				END;
 				
-				IF (variable.initializer # NIL) & ((variable.initializer.resolved = NIL) OR (initStatic)) THEN
-					IF variable.initializer.type = NIL THEN
+				IF (variable.initializer # NIL) & (initStatic = (variable.initializer.resolved # NIL)) THEN
+					IF variable.initializer.type = NIL THEN (* overloaded operator "=" *)
 						Designate(variable.initializer, ignore);
 					ELSE
 						Symbol(variable,operand);
@@ -7053,6 +7036,7 @@ TYPE
 					ASSERT(system.GenerateVariableOffsets(scope));
 					scope.EnterSymbol(variable, duplicate);
 					InitVariable(variable(SyntaxTree.Variable),TRUE,TRUE);
+					InitVariable(variable(SyntaxTree.Variable),FALSE,TRUE);
 				ELSE
 					variable.PreferRegister(TRUE);
 					variable(SyntaxTree.Variable).SetOffset(0);
@@ -7070,6 +7054,7 @@ TYPE
 				scope.EnterSymbol(variable, duplicate);
 				ASSERT(~duplicate);
 				InitVariable(variable(SyntaxTree.Variable),TRUE,TRUE);
+				InitVariable(variable(SyntaxTree.Variable),FALSE,TRUE);
 			END;
 			RETURN variable(SyntaxTree.Variable)
 		END GetTemporaryVariable;
@@ -9982,6 +9967,7 @@ TYPE
 			IF Trace THEN TraceEnter("DesignateVariable");  END;
 			type := x.type.resolved;
 			x.GetName(nm);
+
 			IF (x.preferRegister) THEN
 				InitOperand(result, ModeValue);
 				IF x.registerNumber < 0 THEN
@@ -10099,7 +10085,6 @@ TYPE
 		BEGIN
 			type := x.type.resolved;
 			IF Trace THEN TraceEnter("DesignateParameter") END;
-
 			IF (x.preferRegister) THEN
 				InitOperand(result, ModeValue);
 				IF x.registerNumber < 0 THEN
@@ -10213,7 +10198,7 @@ TYPE
 				END;
 			(* tag for pointer type computed not here but during dereferencing *)
 			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) THEN
-				IF (x.kind = SyntaxTree.ValueParameter) OR type(SyntaxTree.RecordType).isFinal THEN
+				IF (x.kind = SyntaxTree.ValueParameter) OR type(SyntaxTree.RecordType).isFinal OR (x.assignmentOperator # NIL) THEN
 					ReleaseIntermediateOperand(result.tag);
 					result.tag := TypeDescriptorAdr(type);
 					UseIntermediateOperand(result.tag);
@@ -11170,8 +11155,9 @@ TYPE
 			procedure := currentScope(SyntaxTree.ProcedureScope).ownerProcedure;
 			procedureType := procedure.type(SyntaxTree.ProcedureType);
 			returnType := procedureType.returnType;
-
-			IF expression # NIL THEN
+			IF x.assignmentOperator # NIL THEN
+				Designate(x.assignmentOperator,res);
+			ELSIF expression # NIL THEN
 				type := expression.type.resolved;
 				IF (expression IS SyntaxTree.ResultDesignator) THEN (* RETURN RESULT *)
 					IF locked THEN Lock(FALSE) END;
@@ -11446,9 +11432,12 @@ TYPE
 		VAR parameter: SyntaxTree.Parameter; type, base: SyntaxTree.Type;
 			op: Operand; temp,size,par,dst, length,null: IntermediateCode.Operand;
 			const, call: IntermediateCode.Operand;
-			parameterDesignator: SyntaxTree.Expression;
 			saved: RegisterEntry;
 			name: Basic.SegmentedName;
+			variable: SyntaxTree.Variable;
+			src, dest: SyntaxTree.Expression;
+			callDesignator, parameterDesignator: SyntaxTree.Expression;
+			parameters: SyntaxTree.ExpressionList; 
 		BEGIN
 			IF Trace THEN TraceEnter("ParameterCopies") END;
 			parameter := x.firstParameter;
@@ -11523,6 +11512,20 @@ TYPE
 						ReleaseOperand(op);
 						IntermediateCode.MakeMemory(par,addressType);
 						Emit(Mov(position,par,sp));
+					ELSIF (type IS SyntaxTree.RecordType) & (parameter.assignmentOperator # NIL) THEN
+						parameter.SetKind(SyntaxTree.ConstParameter); 
+						src := checker.NewSymbolDesignator(position, NIL, NIL, parameter);
+						variable := GetTemporaryVariable(parameter.type, FALSE, FALSE); 
+						dest := checker.NewSymbolDesignator(position, NIL, NIL, variable); 
+						callDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, NIL, parameter.assignmentOperator);
+						callDesignator.SetType(parameter.assignmentOperator.type);
+						parameters := SyntaxTree.NewExpressionList();  
+						parameters.AddExpression(dest); 
+						parameters.AddExpression(src);
+						callDesignator := SyntaxTree.NewProcedureCallDesignator(position,NIL,callDesignator(SyntaxTree.Designator),parameters);
+						DesignateProcedureCallDesignator(callDesignator(SyntaxTree.ProcedureCallDesignator), op);
+						parameter.SetKind(SyntaxTree.ValueParameter); 
+						parameter.SetOffset(variable.offsetInBits);
 					ELSIF (type IS SyntaxTree.MathArrayType) & (type(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
 						checker.SetCurrentScope(currentScope);
 						parameterDesignator := checker.NewSymbolDesignator(position,NIL, NIL,parameter);
@@ -11534,13 +11537,14 @@ TYPE
 			IF Trace THEN TraceExit("ParameterCopies") END;
 		END ParameterCopies;
 
-		PROCEDURE InitVariables(scope: SyntaxTree.Scope);
-		VAR x: SyntaxTree.Variable; initStatic: BOOLEAN;
+		PROCEDURE InitVariables(scope: SyntaxTree.Scope; static: BOOLEAN);
+		VAR x: SyntaxTree.Variable;
 		BEGIN
 			x := scope.firstVariable;
-			initStatic := ~(scope IS SyntaxTree.ModuleScope); (* initialize static (fields of) variables only if not in module scope *)
 			WHILE x # NIL DO
-				InitVariable(x,initStatic,FALSE);
+				IF ~temporaries.Contains(x) THEN
+					InitVariable(x,static,FALSE);
+				END;
 				x := x.nextVariable;
 			END;
 		END InitVariables;
@@ -11624,11 +11628,13 @@ TYPE
 					END;
 					var := var.nextVariable;
 				END;
-				InitVariables(scope);
-				IF moduleBody THEN
-					InitVariables(moduleScope)
-				END;
 
+				IF ~moduleBody THEN
+					InitVariables(scope, TRUE); 
+				ELSE
+					InitVariables(moduleScope, TRUE);
+				END;
+				
 				par := procedureType.firstParameter;
 				WHILE par # NIL DO
 					IF par.preferRegister THEN
@@ -11646,8 +11652,6 @@ TYPE
 					END;
 					par := par.nextParameter;
 				END;
-
-
 
 
 				IF backend.preciseGC & (x.code = NIL) & (~procedure.isPlain) & ~procedure.isOpening & ~procedure.isClosing THEN
@@ -11668,6 +11672,13 @@ TYPE
 
 				(* must be done after the descriptor is there, otherwise copied parameters are forgotten to be traced *)
 				ParameterCopies(procedureType);
+				(* dynamic part of constructors *)
+				InitVariables(scope,FALSE);
+				IF moduleBody THEN
+					InitVariables(moduleScope, FALSE); 
+				END;
+
+
 
 				IF x.code = NIL THEN
 					StatementBlock(x);

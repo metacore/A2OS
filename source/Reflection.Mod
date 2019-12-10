@@ -113,7 +113,7 @@ CONST
 		modes: ARRAY 25 OF CHAR;
 
 	TYPE
-		Name = ARRAY 256 OF CHAR;
+		Name* = ARRAY 256 OF CHAR;
 
 		Meta* = RECORD
 			module-: Modules.Module;

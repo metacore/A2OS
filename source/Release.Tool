@@ -1496,9 +1496,6 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	# Oberon pretty printing
 	PrettyPrint.Mod PrettyPrintHighlighter.XML
 
-	# streams and files compression
-	BorrowsWheeler.Mod Huffman.Mod OZip.Mod
-	AdaptiveHuffman.Mod OZip2.Mod
 
 	NbrInt8.Mod NbrInt16.Mod NbrInt32.Mod NbrInt64.Mod NbrInt.Mod NbrRat.Mod
 	NbrRe32.Mod NbrRe64.Mod NbrRe.Mod NbrCplx.Mod NbrStrings.Mod

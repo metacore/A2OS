@@ -1172,9 +1172,12 @@ TYPE
 	END AddSearchPath;
 
 	PROCEDURE SetWorkPath*( context: Commands.Context );
-	VAR name: Files.FileName; done: BOOLEAN;
+	VAR name, fullName: Files.FileName; flags: SET; res: INTEGER; done: BOOLEAN;
 	BEGIN
 		IF context.arg.GetString( name ) THEN
+			IF ~Files.Exists(name, fullName, flags) THEN
+				Files.CreateDirectory(name, res);
+			END;
 			ChangeDirectory( name, done );
 			IF ~done THEN
 				context.error.String( "could not change directory to " );  context.error.String( name );  context.error.Ln

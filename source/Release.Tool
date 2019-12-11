@@ -1496,6 +1496,8 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	# Oberon pretty printing
 	PrettyPrint.Mod PrettyPrintHighlighter.XML
 
+	# fast and effective Compressor
+	BitStreams.Mod NextPrime.Mod MoveToFront.Mod BWHCompressor.Mod OZip3.Mod
 
 	NbrInt8.Mod NbrInt16.Mod NbrInt32.Mod NbrInt64.Mod NbrInt.Mod NbrRat.Mod
 	NbrRe32.Mod NbrRe64.Mod NbrRe.Mod NbrCplx.Mod NbrStrings.Mod

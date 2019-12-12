@@ -5390,7 +5390,7 @@ TYPE
 							Pass((operand.op));
 						END;
 					END;
-				ELSIF expression IS SyntaxTree.NilValue THEN (* for special WinAPI rule *)
+				ELSIF (expression IS SyntaxTree.NilValue) OR (expression IS SyntaxTree.IntegerValue) THEN (* for special WinAPI rule *)
 					Evaluate(expression,operand);
 					Pass((operand.op));
 				ELSE (* var parameter *)

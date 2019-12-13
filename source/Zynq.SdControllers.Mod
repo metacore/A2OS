@@ -127,7 +127,7 @@ VAR
 		i: SIGNED32;
 	BEGIN
 		Modules.InstallTermHandler(Cleanup);
-		FOR i := 0 TO Platform.SdNb - 1 DO
+		FOR i := 0 TO LEN(Platform.SdBase,0) - 1 DO
 			IF SdEnvironment.Enable(i) THEN
 				IF Sd.EnableTrace THEN
 					Log.String("[SD] Enabling controller "); Log.Int(i, 0); Log.Ln;

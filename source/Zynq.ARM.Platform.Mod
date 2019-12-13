@@ -105,14 +105,15 @@ CONST
 	UartIrq * = [59,82];
 
 	(* ===== USB ===== *)
-	UsbNb * = 2; (** Number of USB controllers *)
 	UsbBase * = [ADDRESS(0E0002100H), ADDRESS(0E0003100H)]; (** Base addresses of USB controllers: CAPLENGTH must be at offset 0. *)
 	UsbIrq * = [53, 76]; (** USB IRQs *)
 
 	(* ===== SD ===== *)
-	SdNb * = 2;
 	SdBase * = [ADDRESS(0E0100000H), ADDRESS(0E0101000H)];
 	SdIrq * = [56, 79];
+	
+	(* ===== QSPI ===== *)
+	QspiBase* = [ADDRESS(0xE000D000)];
 
 	RAMCore * = 100000H;
 	RAMLogicalLow * = 0H;

@@ -128,9 +128,11 @@ IMPORT SYSTEM;
 		UartBase* = [ADDRESS(0E0000000H),ADDRESS(0E0001000H)]; (* base address for all UART controllers present in the system *)
 
 		(* ===== SD ===== *)
-		SdNb * = 2;
 		SdBase * = [ADDRESS(0E0100000H), ADDRESS(0E0101000H)];
 		SdIrq * = [56, 79];
+		
+		(* ===== QSPI ===== *)
+		QspiBase* = [ADDRESS(0xE000D000)];
 
 		MINOSCOMMAND*				= "PSUART1";
 

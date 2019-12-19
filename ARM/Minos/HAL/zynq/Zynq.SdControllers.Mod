@@ -29,7 +29,7 @@ VAR
 		i, result: SIGNED32;
 	BEGIN
 		Platform.slcr.SDIO_CLK_CTRL := 0;
-		FOR i := 0 TO Platform.SdNb - 1 DO
+		FOR i := 0 TO LEN(Platform.SdBase,0) - 1 DO
 			IF SdEnvironment.Enable(i) THEN
 			 	IF Trace THEN
 					SdEnvironment.String("[SD] Enabling controller "); SdEnvironment.Int(i, 0); SdEnvironment.Ln;

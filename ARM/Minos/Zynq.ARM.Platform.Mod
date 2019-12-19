@@ -88,6 +88,9 @@ CONST
 	(* ===== UART ===== *)
 	UartBaseAddr* = [ADDRESS(0E0000000H),ADDRESS(0E0001000H)]; (* base address for all UART controllers present in the system *)
 	UartModemPinsConnected* = [FALSE,FALSE];
+	
+	(* ===== QSPI ===== *)
+	QspiBase* = [ADDRESS(0xE000D000)];
 
 	(* ===== USB ===== *)
 	UsbNb * = 2; (** Number of USB controllers *)

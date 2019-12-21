@@ -110,8 +110,8 @@ TYPE
 			ASSERT(file # NIL);
 			SELF.file := file;
 			file.Set(r, pos);
-			received := pos; (* this effects that Streams.Reader.Pos() returns the correct location in the file *)
 			InitReader(SELF.Receive, DefaultReaderSize);
+			received := pos; (* this effects that Streams.Reader.Pos() returns the correct location in the file *)
 		END InitFileReader;
 
 	END Reader;

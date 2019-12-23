@@ -27,9 +27,9 @@ TYPE
 	END;
 	
 	Procedure*= POINTER TO RECORD
-		name*: ARRAY 64 OF CHAR;
-		path*: ARRAY 256 OF CHAR;
-		interface*: ARRAY 256 OF CHAR;
+		name*: ARRAY 1024 OF CHAR;
+		path*: ARRAY 1024 OF CHAR;
+		interface*: ARRAY 1024 OF CHAR;
 	END;
 
 PROCEDURE Find(list:Lists.List; CONST name: ARRAY OF CHAR; VAR pos: SIZE);

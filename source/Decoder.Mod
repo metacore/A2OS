@@ -72,19 +72,19 @@ TYPE
 		PROCEDURE WriteHex8* (x : SIGNED32; w : Streams.Writer);
 		VAR result : ARRAY 3 OF CHAR;
 		BEGIN
-			IntToHex(x, 2, result); w.String(result)
+			Strings.IntToHexStr(x, 2, result); w.String(result)
 		END WriteHex8;
 
 		PROCEDURE WriteHex16* (x : SIGNED32; w : Streams.Writer);
 		VAR result : ARRAY 5 OF CHAR;
 		BEGIN
-			IntToHex(x, 4, result); w.String(result)
+			Strings.IntToHexStr(x, 4, result); w.String(result)
 		END WriteHex16;
 
 		PROCEDURE WriteHex32* (x : SIGNED32; w : Streams.Writer);
 		VAR result : ARRAY 10 OF CHAR;
 		BEGIN
-			IntToHex(x, 8, result); w.String(result)
+			Strings.IntToHexStr(x, 8, result); w.String(result)
 		END WriteHex32;
 	END Opcode;
 
@@ -839,7 +839,7 @@ TYPE
 			textWriter.SetFontStyle({WMGraphics.FontBold});
 			w.String(currentProcInfo.name);
 			w.String(":");
-(* ug *)		w.Ln; w.String("codeOffset = "); NEW(s2, 20); IntToHex(currentProcInfo.codeOffset, 8, s2^); Strings.Append(s2^, "H"); w.String(s2^);
+(* ug *)		w.Ln; w.String("codeOffset = "); NEW(s2, 20); Strings.IntToHexStr(currentProcInfo.codeOffset, 8, s2^); Strings.Append(s2^, "H"); w.String(s2^);
 			w.Ln; w.Ln;
 			textWriter.SetFontStyle({});
 
@@ -855,7 +855,7 @@ TYPE
 
 				textWriter.SetFontColor(WMGraphics.Black);
 				NEW(s, 20);
-				IntToHex(opcodes.offset, 8, s^);
+				Strings.IntToHexStr(opcodes.offset, 8, s^);
 				Strings.Append(s^, "H");
 				w.String(s^); w.Char(9X);
 				(* insert marker for pc if selected *)
@@ -1988,20 +1988,6 @@ VAR
 		END;
 		RETURN result
 	END HexBytes2Code;
-
-	PROCEDURE IntToHex(h: SIZE; width: SIGNED32; VAR s: ARRAY OF CHAR);
-	VAR c: CHAR;
-	BEGIN
-		IF (width <= 0) THEN width := 8 END;
-		ASSERT(LEN(s) > width);
-		s[width] := 0X;
-		DEC(width);
-		WHILE (width >= 0) DO
-			c := CHR(h MOD 10H + ORD("0"));
-			IF (c > "9") THEN c := CHR((h MOD 10H - 10) + ORD("A")) END;
-			s[width] := c; h := h DIV 10H; DEC(width)
-		END
-	END IntToHex;
 
 	PROCEDURE IncCount;
 	BEGIN {EXCLUSIVE}

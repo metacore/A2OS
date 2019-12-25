@@ -1091,7 +1091,7 @@ TYPE
 		CASE c OF
 			sfTypeNone: w.String("no type");
 		| sfTypePointerToRecord: w.String("POINTER TO RECORD");
-		| sfTypePointerToArray: w.String("POINTER TO"); ReportType(w, refs, offset);
+		| sfTypePointerToArray: w.String("POINTER TO "); ReportType(w, refs, offset);
 		| sfTypeOpenArray: w.String("ARRAY OF "); ReportType(w, refs, offset);
 		| sfTypeStaticArray: w.String("ARRAY "); w.Int(GetSize(refs, offset),1 ); w.String(" OF "); ReportType(w, refs, offset);
 		| sfTypeDynamicArray: w.String("DARRAY OF "); ReportType(w,refs, offset);

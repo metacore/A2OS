@@ -645,11 +645,11 @@ TYPE
 		BEGIN
 			string := "";
 			FOR i := 0 TO prefixes-1 DO
-				IntToHex(ORD(prefix[i]), 2, hexStr);
+				Strings.IntToHexStr(ORD(prefix[i]), 2, hexStr);
 				w.String(hexStr); w.String(" | ")
 			END;
 			FOR i := prefixes TO LEN(code)-1 DO
-				IntToHex(ORD(code[i]), 2, hexStr);
+				Strings.IntToHexStr(ORD(code[i]), 2, hexStr);
 				w.String(hexStr); w.String(" ");
 			END
 		END PrintOpcodeBytes;
@@ -3305,20 +3305,6 @@ TYPE
 	END IA32Decoder;
 
 VAR
-
-	PROCEDURE IntToHex(h, width: SIGNED32; VAR s: ARRAY OF CHAR);
-	VAR c: CHAR;
-	BEGIN
-		IF (width <= 0) THEN width := 8 END;
-		ASSERT(LEN(s) > width);
-		s[width] := 0X;
-		DEC(width);
-		WHILE (width >= 0) DO
-			c := CHR(h MOD 10H + ORD("0"));
-			IF (c > "9") THEN c := CHR((h MOD 10H - 10) + ORD("A")) END;
-			s[width] := c; h := h DIV 10H; DEC(width)
-		END
-	END IntToHex;
 
 	PROCEDURE IA32DecoderFactory (reader : Streams.Reader) : Decoder.Decoder;
 	VAR

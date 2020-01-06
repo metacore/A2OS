@@ -15,11 +15,10 @@ Rfrences :
 -	Knuth, D. E., "The art of computer programming", Addison-Wesley, Volume 2, pages 45-52.
 *)
 
-IMPORT  Streams, NextPrime, MoveToFront, BitStreams;
+IMPORT  Streams, NextPrime, MoveToFront, BitStreams, Commands;
 
 CONST
-	minVersion = 0;
-	maxVersion = 0;
+	VersionTag = 0F0E1H;
 
 	Sentinel = MIN( SIGNED8 ) - 1;
 
@@ -635,7 +634,7 @@ TYPE
 		NEW( co, output );
 		NEW( mtf );  mtf.Initialize;
 		
-		co.arch.OutBits( maxVersion, 1 );
+		co.arch.OutBits( VersionTag, 16 );
 		REPEAT
 			input.Bytes( co.buf^, 0, BufSize, len );
 			IF len # 0 THEN
@@ -649,6 +648,16 @@ TYPE
 		co.arch.OutBit( 0 );
 		co.arch.Finish;
 	END Compress;
+	
+	
+	PROCEDURE Error( CONST msg: ARRAY OF CHAR );
+	VAR 
+		c: Commands.Context;
+	BEGIN
+		c := Commands.GetContext();
+		c.out.Update;
+		c.error.String( msg ); c.error.Ln; c.error.Update
+	END Error;
 
 
 
@@ -724,8 +733,10 @@ TYPE
 		NEW( mtf );  mtf.Initialize;
 		NEW( buf, BufSize );
 		
-		n := huff.arch.InBits( 1 );
-		ASSERT((n >= minVersion) & (n <= maxVersion), 20);
+		IF huff.arch.InBits( 16 ) # VersionTag THEN
+			Error( "BWHCompressor.Expand: wrong input" );
+			RETURN
+		END;
 		
 		WHILE huff.arch.InBit() # 0 DO
 			p := 0;

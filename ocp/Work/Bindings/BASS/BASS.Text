@@ -1,0 +1,54 @@
+BASS 2.4.12 A2 OS (WinAos, UnixAos) Wrapper
+
+Windows
+
+x86:
+	Compiler.Compile -b=AMD I386.BASScpu.Mod Win32.BASS.Mod ~
+x64:
+	Compiler.Compile -b=AMD --bits=64 AMD64.BASScpu.Mod Win32.BASS.Mod ~
+
+Linux
+
+x86:
+	Compiler.Compile -b=AMD I386.BASScpu.Mod Linux.BASS.Mod ~
+x64:
+	Compiler.Compile -b=AMD --bits=64 AMD64.BASScpu.Mod Linux.BASS.Mod ~
+
+Darwin
+
+x86:
+	Compiler.Compile -b=AMD I386.BASScpu.Mod Darwin.BASS.Mod ~
+x64:
+	Compiler.Compile -b=AMD --bits=64 AMD64.BASScpu.Mod Darwin.BASS.Mod ~
+
+Demos
+
+x86:
+	Compiler.Compile -b=AMD
+		MathUtils.Mod Containers.Mod AAGraphics.Mod
+		WMDropDownLists.Mod WMBass3DTest.Mod ~
+x64:
+	Compiler.Compile -b=AMD --bits=64
+		MathUtils.Mod Containers.Mod AAGraphics.Mod
+		WMDropDownLists.Mod WMBass3DTest.Mod ~
+
+	WMBass3DTest.Open ~
+
+SystemTools.Free WMBass3DTest WMDropDownLists MathUtils
+	Containers AAGraphics BASS BASScpu ~
+
+Installation in Darwin:
+
+1. Copy BASS folder, for example, to desktop
+2. Start shell, get admin rights
+	sudo -s
+3. Copy libbass.dylib into /usr/lib
+	cp Desktop/BASS/libbass.dylib /usr/lib/libbass.dylib
+4. Check rights
+	cd /usr/lib
+	ls -l libbass.dylib
+change if needed
+	chmod 777 libbass.dylib
+4. Go to working directory and run Aos
+	cd /Users/User/Desktop/BASS
+	aos

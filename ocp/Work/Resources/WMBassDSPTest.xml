@@ -1,0 +1,108 @@
+<VisualComponent generator="WMComponents.NewVisualComponent">
+	<Properties>
+		<Bounds loader="WMProperties.NewRectangle">
+			<Left>0</Left>
+			<Top>0</Top>
+			<Width>352</Width>
+			<Height>156</Height>
+		</Bounds>
+		<FillColor loader="WMProperties.NewColor">CCCCCCFF</FillColor>
+		<Alignment loader="WMProperties.NewInt32">5</Alignment>
+		<TakesFocus loader="WMProperties.NewBoolean">false</TakesFocus>
+		<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+	</Properties>
+
+	<Button generator="WMStandardComponents.GenButton">
+		<Properties>
+			<UID loader="WMProperties.NewString">btnOpen</UID>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>16</Left>
+				<Top>32</Top>
+				<Width>320</Width>
+				<Height>40</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+			<Caption loader="WMProperties.NewString">click here to open a file ...</Caption>
+		</Properties>
+	</Button>
+
+	<Checkbox generator="WMStandardComponents.GenCheckbox">
+		<Properties>
+			<UID loader="WMProperties.NewString">chbRotate</UID>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>32</Left>
+				<Top>104</Top>
+				<Width>20</Width>
+				<Height>20</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+			<Caption loader="WMProperties.NewString">rotate</Caption>
+			<State loader="WMProperties.NewInt32">0</State>
+		</Properties>
+	</Checkbox>
+
+	<Checkbox generator="WMStandardComponents.GenCheckbox">
+		<Properties>
+			<UID loader="WMProperties.NewString">chbEcho</UID>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>144</Left>
+				<Top>104</Top>
+				<Width>20</Width>
+				<Height>20</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+		</Properties>
+	</Checkbox>
+
+	<Checkbox generator="WMStandardComponents.GenCheckbox">
+		<Properties>
+			<UID loader="WMProperties.NewString">chbFlanger</UID>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>256</Left>
+				<Top>104</Top>
+				<Width>20</Width>
+				<Height>20</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+		</Properties>
+	</Checkbox>
+
+	<Label generator="WMStandardComponents.GenLabel">
+		<Properties>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>56</Left>
+				<Top>104</Top>
+				<Width>64</Width>
+				<Height>20</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+			<Caption loader="WMProperties.NewString">rotate</Caption>
+		</Properties>
+	</Label>
+
+	<Label generator="WMStandardComponents.GenLabel">
+		<Properties>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>168</Left>
+				<Top>104</Top>
+				<Width>64</Width>
+				<Height>20</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+			<Caption loader="WMProperties.NewString">echo</Caption>
+		</Properties>
+	</Label>
+
+	<Label generator="WMStandardComponents.GenLabel">
+		<Properties>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>280</Left>
+				<Top>104</Top>
+				<Width>64</Width>
+				<Height>20</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+			<Caption loader="WMProperties.NewString">flanger</Caption>
+		</Properties>
+	</Label>
+</VisualComponent>

@@ -1,0 +1,297 @@
+<VisualComponent generator="WMComponents.NewVisualComponent">
+	<Properties>
+		<Bounds loader="WMProperties.NewRectangle">
+			<Left>0</Left>
+			<Top>0</Top>
+			<Width>376</Width>
+			<Height>296</Height>
+		</Bounds>
+		<Alignment loader="WMProperties.NewInt32">5</Alignment>
+		<FillColor loader="WMProperties.NewColor">CCCCCCFF</FillColor>
+		<TakesFocus loader="WMProperties.NewBoolean">false</TakesFocus>
+		<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+	</Properties>
+
+	<GroupPanel generator="WMStandardComponents.GenGroupPanel">
+		<Properties>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>8</Left>
+				<Top>192</Top>
+				<Width>176</Width>
+				<Height>48</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+			<Caption loader="WMProperties.NewString">Movement</Caption>
+		</Properties>
+
+		<Label generator="WMStandardComponents.GenLabel">
+			<Properties>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>8</Left>
+					<Top>16	</Top>
+					<Width>12</Width>
+					<Height>20</Height>
+				</Bounds>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Caption loader="WMProperties.NewString">X</Caption>
+				<AlignH loader="WMProperties.NewInt32">1</AlignH>
+			</Properties>
+		</Label>
+
+		<NumberField Value="" generator="WMEditors.GenNumberField">
+			<Properties>
+				<UID loader="WMProperties.NewString">fldX</UID>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>24</Left>
+					<Top>16</Top>
+					<Width>32</Width>
+					<Height>20</Height>
+				</Bounds>
+				<TakesFocus loader="WMProperties.NewBoolean">true</TakesFocus>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Model loader="WMProperties.NewReference">Models:Real:0</Model>
+				<FractionalDigits loader="WMProperties.NewInt32">1</FractionalDigits>
+				<Unit loader="WMProperties.NewReference">Models:Real:0</Unit>
+			</Properties>
+		</NumberField>
+
+		<Label generator="WMStandardComponents.GenLabel">
+			<Properties>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>64</Left>
+					<Top>16</Top>
+					<Width>12</Width>
+					<Height>20</Height>
+				</Bounds>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Caption loader="WMProperties.NewString">Z</Caption>
+				<AlignH loader="WMProperties.NewInt32">1</AlignH>
+			</Properties>
+		</Label>
+
+		<NumberField Value="" generator="WMEditors.GenNumberField">
+			<Properties>
+				<UID loader="WMProperties.NewString">fldZ</UID>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>80</Left>
+					<Top>16</Top>
+					<Width>32</Width>
+					<Height>20</Height>
+				</Bounds>
+				<TakesFocus loader="WMProperties.NewBoolean">true</TakesFocus>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Model loader="WMProperties.NewReference">Models:Real:0</Model>
+				<FractionalDigits loader="WMProperties.NewInt32">1</FractionalDigits>
+				<Unit loader="WMProperties.NewReference">Models:Real:0</Unit>
+			</Properties>
+		</NumberField>
+
+		<Button generator="WMStandardComponents.GenButton">
+			<Properties>
+				<UID loader="WMProperties.NewString">btnReset</UID>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>120</Left>
+					<Top>16</Top>
+					<Width>48</Width>
+					<Height>20</Height>
+				</Bounds>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Caption loader="WMProperties.NewString">Reset</Caption>
+			</Properties>
+		</Button>
+	</GroupPanel>
+
+	<GroupPanel generator="WMStandardComponents.GenGroupPanel">
+		<Properties>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>8</Left>
+				<Top>8</Top>
+				<Width>176</Width>
+				<Height>184</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+			<Caption loader="WMProperties.NewString">Channels (sample/music)</Caption>
+		</Properties>
+
+		<StringGrid generator="WMStringGrids.GenStringGrid">
+			<Properties>
+				<UID loader="WMProperties.NewString">grChannels</UID>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>8</Left>
+					<Top>16</Top>
+					<Width>160</Width>
+					<Height>104</Height>
+				</Bounds>
+				<FillColor loader="WMProperties.NewColor">EEEEEEFF</FillColor>
+				<TakesFocus loader="WMProperties.NewBoolean">true</TakesFocus>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+			</Properties>
+		</StringGrid>
+
+		<Button generator="WMStandardComponents.GenButton">
+			<Properties>
+				<UID loader="WMProperties.NewString">btnAdd</UID>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>8</Left>
+					<Top>128</Top>
+					<Width>72</Width>
+					<Height>20</Height>
+				</Bounds>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Caption loader="WMProperties.NewString">Add...</Caption>
+			</Properties>
+		</Button>
+
+		<Button generator="WMStandardComponents.GenButton">
+			<Properties>
+				<UID loader="WMProperties.NewString">btnRemove</UID>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>96</Left>
+					<Top>128</Top>
+					<Width>72</Width>
+					<Height>20</Height>
+				</Bounds>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Caption loader="WMProperties.NewString">Remove</Caption>
+			</Properties>
+		</Button>
+
+		<Button generator="WMStandardComponents.GenButton">
+			<Properties>
+				<UID loader="WMProperties.NewString">btnPlay</UID>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>8</Left>
+					<Top>152</Top>
+					<Width>72</Width>
+					<Height>20</Height>
+				</Bounds>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Caption loader="WMProperties.NewString">Play</Caption>
+			</Properties>
+		</Button>
+
+		<Button generator="WMStandardComponents.GenButton">
+			<Properties>
+				<UID loader="WMProperties.NewString">btnStop</UID>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>96</Left>
+					<Top>152</Top>
+					<Width>72</Width>
+					<Height>20</Height>
+				</Bounds>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Caption loader="WMProperties.NewString">Stop</Caption>
+			</Properties>
+		</Button>
+	</GroupPanel>
+
+	<GroupPanel generator="WMStandardComponents.GenGroupPanel">
+		<Properties>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>8</Left>
+				<Top>240</Top>
+				<Width>176</Width>
+				<Height>48</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+			<Caption loader="WMProperties.NewString">EAX environment</Caption>
+		</Properties>
+
+		<DropDownList generator="WMDropDownLists.GenDropDownList">
+			<Properties>
+				<UID loader="WMProperties.NewString">ddlEAXEnv</UID>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>8</Left>
+					<Top>16</Top>
+					<Width>160</Width>
+					<Height>20</Height>
+				</Bounds>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Mode loader="WMProperties.NewInt32">2</Mode>
+			</Properties>
+		</DropDownList>
+	</GroupPanel>
+
+	<GroupPanel generator="WMStandardComponents.GenGroupPanel">
+		<Properties>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>192</Left>
+				<Top>192</Top>
+				<Width>176</Width>
+				<Height>48</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+			<Caption loader="WMProperties.NewString">Doppler factor</Caption>
+		</Properties>
+
+		<Slider generator="WMStandardComponents.GenSlider">
+			<Properties>
+				<UID loader="WMProperties.NewString">slDoppler</UID>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>8</Left>
+					<Top>16</Top>
+					<Width>160</Width>
+					<Height>20</Height>
+				</Bounds>
+				<TakesFocus loader="WMProperties.NewBoolean">false</TakesFocus>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Model loader="WMProperties.NewReference">Models:Integer:0</Model>
+				<TrackerSize loader="WMProperties.NewInt32">10</TrackerSize>
+				<Vertical loader="WMProperties.NewBoolean">false</Vertical>
+			</Properties>
+		</Slider>
+	</GroupPanel>
+
+	<GroupPanel generator="WMStandardComponents.GenGroupPanel">
+		<Properties>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>192</Left>
+				<Top>240</Top>
+				<Width>176</Width>
+				<Height>48</Height>
+			</Bounds>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+			<Caption loader="WMProperties.NewString">RollOff factor</Caption>
+		</Properties>
+
+		<Slider generator="WMStandardComponents.GenSlider">
+			<Properties>
+				<UID loader="WMProperties.NewString">slRollOff</UID>
+				<Bounds loader="WMProperties.NewRectangle">
+					<Left>8</Left>
+					<Top>16</Top>
+					<Width>160</Width>
+					<Height>20</Height>
+				</Bounds>
+				<TakesFocus loader="WMProperties.NewBoolean">false</TakesFocus>
+				<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+				<Model loader="WMProperties.NewReference">Models:Integer:0</Model>
+				<TrackerSize loader="WMProperties.NewInt32">10</TrackerSize>
+				<Vertical loader="WMProperties.NewBoolean">false</Vertical>
+			</Properties>
+		</Slider>
+	</GroupPanel>
+	
+	<Timer generator="WMStandardComponents.GenTimer">
+		<Properties>
+			<UID loader="WMProperties.NewString">timPeriod</UID>
+			<Enabled loader="WMProperties.NewBoolean">false</Enabled>
+			<Interval loader="WMProperties.NewInt32">50</Interval>
+		</Properties>
+	</Timer>
+
+	<ImagePanel generator="WMStandardComponents.GenImagePanel">
+		<Properties>
+			<UID loader="WMProperties.NewString">pnlImage</UID>
+			<Bounds loader="WMProperties.NewRectangle">
+				<Left>196</Left>
+				<Top>12</Top>
+				<Width>168</Width>
+				<Height>176</Height>
+			</Bounds>
+			<FillColor loader="WMProperties.NewColor">EEEEEEFF</FillColor>
+			<EditMode loader="WMProperties.NewBoolean">false</EditMode>
+		</Properties>
+	</ImagePanel>
+
+</VisualComponent>

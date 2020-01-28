@@ -43,6 +43,8 @@ CONST
 	SelectionColor = 0000FF60H;
 	SelectionColorInterclick01 = SIGNED32(0FFFF0060H);
 	SelectionColorInterclick02 = SIGNED32(0FF000060H);
+	
+	TextViewMinimalDelay = 30; (*ms*) (*limit update messaging; helpful on slow systems.*)
 
 TYPE
 	Char32 = Texts.Char32;
@@ -746,6 +748,7 @@ TYPE
 		PROCEDURE &Init*;
 		BEGIN
 			Init^;
+			onChanged.SetMinimalDelay(DefaultMinimalUpdateDelay);
 			SetGenerator("WMTextView.GenTextView");
 			SetNameAsString(StrTextView);
 			(* properties *)
@@ -4170,6 +4173,8 @@ VAR
 	StrTextView : Strings.String;
 
 	DefaultStyle : POINTER TO RECORD END;
+	
+	DefaultMinimalUpdateDelay* := 30: SIGNED32; (*limit update frequency for new TextView on slow systems; milliseconds between TextView updates*)
 
 (* Actually, this is a hack... but for now, do it.  *)
 PROCEDURE GetNewSize(CONST fontname : ARRAY OF CHAR; value, currentSize : SIZE; VAR newSize : SIZE);
@@ -4341,6 +4346,11 @@ BEGIN
 	NEW(PVTtextAlignV, NIL, Strings.NewString("TextAlignV"), Strings.NewString("vertical Text Alignment"));
 	PVTtextAlignV.Set(WMGraphics.AlignTop);
 END InitPrototypes;
+
+PROCEDURE SetDefaultMinimalUpdateDelay(c:Commands.Context);
+BEGIN
+	IF c.arg.GetInteger(DefaultMinimalUpdateDelay,FALSE) THEN END;
+END SetDefaultMinimalUpdateDelay;
 
 
 PROCEDURE EnablePiemenu*;

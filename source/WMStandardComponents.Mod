@@ -1419,6 +1419,7 @@ TYPE
 			NEW(vTrackerPressedNameBottom, PrototypeSvTrackerPressedBottom, NIL, NIL); properties.Add(vTrackerPressedNameBottom);
 
 			NEW(onPositionChanged, SELF, GSonPositionChanged, GSonPositionChangedInfo, SELF.StringToCompCommand);
+			onPositionChanged.SetMinimalDelay(30); (*limit messaging frequency*)
 			events.Add(onPositionChanged);
 
 			(* --- arrow buttons --- *)

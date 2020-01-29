@@ -95,7 +95,7 @@ TYPE
 		END YHeader;
 
 		PROCEDURE SendFile;
-		VAR fR: Files.Reader; len, length: SIZE; blkn, blk, i, retry: SIGNED32; start, ch: CHAR;
+		VAR fR: Files.Reader; i, len, length: SIZE; blkn, blk, retry: SIGNED32; start, ch: CHAR;
 
 			PROCEDURE SendData;
 			VAR crc: SIGNED32;
@@ -141,7 +141,8 @@ TYPE
 				IF retry = 0 THEN
 					IF (mode = XModem) OR (len < (1024-128)) THEN start := SOH; blkn := 128 END;
 					fR.Bytes(data, 0, blkn, length); DEC(len, blkn); INC(bytesProcessed, length);
-					IF (fR.res # Streams.Ok) OR (i < blkn) THEN
+					IF (fR.res # Streams.Ok) OR (length < blkn) THEN
+						i := length;
 						WHILE i < blkn DO data[i] := EOF; INC(i) END
 					END
 				END;
@@ -367,7 +368,7 @@ CONST
 
 			TRACE(fileName);
 
-			m := 0;
+			INC(k); m := 0;
 			WHILE (k < blockSize) & (buf[k] # 0X) & (m < LEN(str)) DO
 				str[m] := buf[k];
 				INC(k); INC(m);
@@ -379,6 +380,8 @@ CONST
 			END;
 
 			IF fileLength <= 0 THEN fileLength := MAX(SIGNED32); END;
+			
+			TRACE(fileLength);
 		END ProcessBlock0;
 
 	BEGIN
@@ -456,6 +459,7 @@ CONST
 		BEGIN
 			IF length = MAX(SIGNED32) THEN
 				(* remove EOF padding characters *)
+				TRACE(dataLen);
 				WHILE (dataLen > 0) & (data[dataLen-1] = EOF) DO
 					DEC(dataLen);
 				END;

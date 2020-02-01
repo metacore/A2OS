@@ -1208,7 +1208,7 @@ TYPE
 		moduleScope : SyntaxTree.ModuleScope; (* shortcut for module.module.moduleScope *)
 		awaitProcCounter, labelId, constId, caseId: SIGNED32;
 
-		hiddenPointerType: SyntaxTree.RecordType; (* used as hidden pointer, for example for ARRAY OF ANY *)
+		hiddenPointerType, anyRecordType: SyntaxTree.RecordType; (* used as hidden pointer, for example for ARRAY OF ANY *)
 		delegatePointerType: SyntaxTree.RecordType; (* used for delegates, for example in ARRAY OF PROCEDURE{DELEGATE} *)
 
 		checker: SemanticChecker.Checker;
@@ -5321,7 +5321,7 @@ TYPE
 					END
 				END
 			ELSE
-				IF (parameter.kind = SyntaxTree.ValueParameter) & (parameter.assignmentOperator = NIL) OR (parameter.kind = SyntaxTree.ConstParameter) & ~(parameter.type.resolved IS SyntaxTree.RecordType) & ~(parameter.type.resolved IS SyntaxTree.ArrayType) THEN
+				IF (parameter.kind = SyntaxTree.ValueParameter) & (parameter.assignmentOperator = NIL) OR (parameter.kind = SyntaxTree.ConstParameter) & ~(parameter.type.resolved IS SyntaxTree.RecordType) & ~(parameter.type.resolved IS SyntaxTree.AnyRecordType) & ~(parameter.type.resolved IS SyntaxTree.ArrayType) THEN
 					IF (type IS SyntaxTree.RecordType) OR IsStaticArray(parameter.type) THEN
 						Designate(expression,operand);
 						size := ToMemoryUnits(system,system.SizeOf(parameter.type));
@@ -6039,6 +6039,21 @@ TYPE
 
 			td: SyntaxTree.Symbol;
 
+			PROCEDURE GetAnyRecordType(): SyntaxTree.Type;
+			VAR scope: SyntaxTree.RecordScope; typeDeclaration: SyntaxTree.TypeDeclaration;
+			BEGIN
+				IF (anyRecordType = NIL) OR ~InThisModule(anyRecordType.typeDeclaration.scope,module.module) THEN
+					scope := SyntaxTree.NewRecordScope(module.module.moduleScope);
+					anyRecordType := SyntaxTree.NewRecordType(Basic.invalidPosition,NIL,scope);
+					typeDeclaration := SyntaxTree.NewTypeDeclaration(Basic.invalidPosition,SyntaxTree.NewIdentifier("@AnyRecordType"));
+					typeDeclaration.SetDeclaredType(anyRecordType);
+					typeDeclaration.SetScope(module.module.moduleScope);
+					anyRecordType.SetTypeDeclaration(typeDeclaration);
+					anyRecordType.SetState(SyntaxTree.Resolved);
+				END;
+				RETURN anyRecordType;
+			END GetAnyRecordType;
+
 			PROCEDURE GetHiddenPointerType(): SyntaxTree.Type;
 			VAR scope: SyntaxTree.RecordScope; variable: SyntaxTree.Variable; typeDeclaration: SyntaxTree.TypeDeclaration;
 			BEGIN
@@ -6056,6 +6071,7 @@ TYPE
 				END;
 				RETURN hiddenPointerType;
 			END GetHiddenPointerType;
+
 
 			PROCEDURE GetDelegateType(): SyntaxTree.Type;
 			VAR scope: SyntaxTree.RecordScope; variable: SyntaxTree.Variable; typeDeclaration: SyntaxTree.TypeDeclaration;
@@ -6091,6 +6107,8 @@ TYPE
 				x := x.resolved;
 				IF (x IS SyntaxTree.AnyType) OR (x IS SyntaxTree.PointerType) THEN
 					x := GetHiddenPointerType();
+				ELSIF (x IS SyntaxTree.AnyRecordType) THEN
+					x := GetAnyRecordType();
 				ELSIF IsDelegate(x) THEN
 					x := GetDelegateType();
 				ELSIF (x IS SyntaxTree.RecordType) OR (x IS SyntaxTree.CellType) THEN
@@ -6130,23 +6148,9 @@ TYPE
 			END GetBackendType;
 
 		BEGIN
-			(*td := t.typeDeclaration;*)
 			td := GetBackendType(t,offset,name); (*! do not dereference a pointer here as the type descriptor for the pointer might be asked for *)
-			(*
-			IF t IS SyntaxTree.PointerType THEN
-				source := GetBackendType(t(SyntaxTree.PointerType).pointerBase.resolved);
-			ELSE
-				source := GetBackendType(t);
-			END;
-			*)
-			IntermediateCode.InitAddress(res, addressType, name, GetFingerprint(td), 0 (*
-			1+t(SyntaxTree.RecordType).recordScope.numberMethods+16+1 *));
+			IntermediateCode.InitAddress(res, addressType, name, GetFingerprint(td), 0 );
 			IntermediateCode.SetOffset(res,offset);
-			(*
-			IntermediateCode.MakeMemory(res,IntermediateCode.UnsignedInteger,addressType.sizeInBits);
-			make memory should be used when tag is used, not earlier
-			*)
-
 			RETURN res
 		END TypeDescriptorAdr;
 
@@ -10059,9 +10063,9 @@ TYPE
 					IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,MathAdrOffset*addressType.sizeInBits));
 					IntermediateCode.MakeMemory(result.op,addressType);
 				END;
-			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType = NIL) THEN
+			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType = NIL) OR (type IS SyntaxTree.AnyRecordType) THEN
 				
-				IF (x.kind = SyntaxTree.ValueParameter) OR type(SyntaxTree.RecordType).isFinal THEN
+				IF (x.kind = SyntaxTree.ValueParameter) OR (type IS SyntaxTree.RecordType) & type(SyntaxTree.RecordType).isFinal THEN
 					ReleaseIntermediateOperand(result.tag);
 					result.tag := TypeDescriptorAdr(type);
 					UseIntermediateOperand(result.tag);
@@ -10175,7 +10179,7 @@ TYPE
 					ELSE HALT(100)
 					END;
 				END;
-			ELSIF (x.kind = SyntaxTree.VarParameter) OR (x.kind = SyntaxTree.ConstParameter) & (type IS SyntaxTree.RecordType) THEN
+			ELSIF (x.kind = SyntaxTree.VarParameter) OR (x.kind = SyntaxTree.ConstParameter) & type.IsRecordType() THEN
 				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
 				IntermediateCode.MakeMemory(result.op,addressType);
 			ELSIF (x.kind = SyntaxTree.ValueParameter) OR (x.kind = SyntaxTree.ConstParameter) THEN
@@ -10197,8 +10201,8 @@ TYPE
 					result.tag := nil;
 				END;
 			(* tag for pointer type computed not here but during dereferencing *)
-			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) THEN
-				IF (x.kind = SyntaxTree.ValueParameter) OR type(SyntaxTree.RecordType).isFinal OR (x.assignmentOperator # NIL) THEN
+			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) OR (type IS SyntaxTree.AnyRecordType) THEN
+				IF (x.kind = SyntaxTree.ValueParameter) OR (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).isFinal) OR (x.assignmentOperator # NIL) THEN
 					ReleaseIntermediateOperand(result.tag);
 					result.tag := TypeDescriptorAdr(type);
 					UseIntermediateOperand(result.tag);
@@ -10591,6 +10595,8 @@ TYPE
 
 				ReleaseOperand(rightO);
 				ReleaseOperand(leftO)
+			ELSIF (leftType IS SyntaxTree.AnyRecordType) THEN
+				(* do nothing *)
 			ELSIF (leftType IS SyntaxTree.BasicType) OR (leftType IS SyntaxTree.PointerType) OR (leftType IS SyntaxTree.EnumerationType)
 				OR (leftType IS SyntaxTree.PortType) THEN
 				(* rightO := leftO;*)
@@ -10641,6 +10647,7 @@ TYPE
 				END;
 				ReleaseOperand(leftO);
 				ReleaseOperand(rightO);
+
 			ELSIF (leftType IS SyntaxTree.RecordType) THEN
 				Designate(right,rightO);
 				Designate(left,leftO);
@@ -12534,6 +12541,7 @@ TYPE
 				sfTypeENUM = 2BX;
 (*				sfTypeCELL = 2CX; *)
 				sfTypePORT = 2DX;
+				sfTypeAnyRecord = 2EX;
 
 				sfIN = 0X;
 				sfOUT = 1X;
@@ -12827,6 +12835,9 @@ TYPE
 						|SyntaxTree.ObjectType DO
 							IF RefInfo THEN Info(section,"OBJECT") END;
 							Char(section, sfTypeOBJECT);
+						|SyntaxTree.AnyRecordType DO
+							IF RefInfo THEN Info(section,"ANY RECORD") END;
+							Char(section, sfTypeAnyRecord);
 						|SyntaxTree.ByteType DO
 							IF RefInfo THEN Info(section,"BYTE") END;
 							Char(section, sfTypeBYTE);

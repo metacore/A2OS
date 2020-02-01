@@ -197,6 +197,11 @@ TYPE
 			SetTypeFingerprint(x,fpTypePointer)
 		END VisitAnyType;
 
+		PROCEDURE VisitAnyRecordType*(x: SyntaxTree.AnyRecordType);
+		BEGIN
+			SetTypeFingerprint(x,fpTypeRecord)
+		END VisitAnyRecordType;
+
 		PROCEDURE VisitAddressType*(x: SyntaxTree.AddressType);
 		BEGIN
 			SetTypeFingerprint(x,fpTypeAddress)

@@ -550,17 +550,25 @@ TYPE
 		BEGIN
 			IF type = NIL THEN RETURN -1 END;
 			type := type.resolved;
-			IF type IS SyntaxTree.BasicType THEN
-				size := type.sizeInBits
-			ELSIF type IS SyntaxTree.PointerType THEN
+			WITH type: SyntaxTree.AnyType DO
 				size := addressSize
-			ELSIF type IS SyntaxTree.ProcedureType THEN
+			| SyntaxTree.ObjectType DO
+				size := addressSize
+			| SyntaxTree.AnyRecordType DO
+				size := 0
+			| SyntaxTree.RangeType DO
+				size := 3 * SizeOf(sizeType);
+			| SyntaxTree.BasicType DO
+				size := type.sizeInBits
+			| SyntaxTree.PointerType DO
+				size := addressSize
+			| SyntaxTree.ProcedureType DO
 				IF type(SyntaxTree.ProcedureType).isDelegate THEN
 					size := 2*addressSize
 				ELSE
 					size := addressSize
 				END;
-			ELSIF type IS SyntaxTree.RecordType THEN
+			| SyntaxTree.RecordType DO
 				(* do not treat a record type like a pointer even if the Pointer field is set, this leads to problems in object files
 					rather make sure that each reference type is a POINTER TO at least behind the secenes!
 				*)
@@ -576,7 +584,7 @@ TYPE
 						END;
 					END;
 				END;
-			ELSIF type IS SyntaxTree.ArrayType THEN
+			| SyntaxTree.ArrayType DO
 				IF ~(SyntaxTree.Resolved IN type.state) THEN
 					size := -1
 				ELSIF type.sizeInBits >= 0 THEN
@@ -593,7 +601,7 @@ TYPE
 					size := size*addressSize+addressSize;
 					type.SetSize(size)
 				END;
-			ELSIF type IS SyntaxTree.MathArrayType THEN
+			| SyntaxTree.MathArrayType DO
 				IF ~(SyntaxTree.Resolved IN type.state) THEN
 					size := -1
 				ELSIF type(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
@@ -603,29 +611,29 @@ TYPE
 					size := addressSize (* pointer to geometry descriptor *)
 				ELSE
 					size := 0;
-					WHILE(type # NIL) & (type IS SyntaxTree.MathArrayType) DO
-						type := type(SyntaxTree.MathArrayType).arrayBase;
-						IF type # NIL THEN type := type.resolved END;
+					base := type;
+					WHILE(base # NIL) & (base IS SyntaxTree.MathArrayType) DO
+						base := base(SyntaxTree.MathArrayType).arrayBase;
+						IF base # NIL THEN base := base.resolved END;
 						INC(size);
 					END;
 					size := size*2*addressSize (* length and increments *) +5*addressSize (* data ptr, adr ptr, flags, dim and elementsize *);
 				END;
-			ELSIF type IS SyntaxTree.StringType THEN
+			| SyntaxTree.StringType DO
 				ASSERT(SyntaxTree.Resolved IN type.state);
 				size := type(SyntaxTree.StringType).length * SizeOf(type(SyntaxTree.StringType).baseType);
-			ELSIF type IS SyntaxTree.EnumerationType THEN
+			| SyntaxTree.EnumerationType DO
 				size := addressSize
-			ELSIF type = SyntaxTree.invalidType THEN size := 0
-			ELSIF type IS SyntaxTree.QualifiedType THEN
+			| SyntaxTree.QualifiedType DO
 				HALT(101); (* hint that unresolved type has been taken for type size computation *)
-			ELSIF type IS SyntaxTree.PortType THEN
+			| SyntaxTree.PortType DO
 				size := addressSize
-			ELSIF type IS SyntaxTree.CellType THEN
+			| SyntaxTree.CellType DO
 				size := addressSize;
-			ELSIF type IS SyntaxTree.RangeType THEN
-				size := 3 * SizeOf(sizeType);
 			ELSE
-				HALT(100)
+				IF type = SyntaxTree.invalidType THEN size := 0
+				ELSE HALT(100)
+				END
 			END;
 			RETURN size
 		END SizeOf;

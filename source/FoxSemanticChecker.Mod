@@ -1251,7 +1251,7 @@ TYPE
 					END;
 				ELSIF (formal.autoConvert) (* to support special builtins only! *) THEN
 					result := system.SizeOf(actualType) = system.SizeOf(formalType);
-				ELSIF (formalType IS SyntaxTree.ByteType) OR (formalType IS SyntaxTree.RecordType) & (~formalType(SyntaxTree.RecordType).isObject) THEN
+				ELSIF (formalType IS SyntaxTree.ByteType) OR (formalType IS SyntaxTree.RecordType) & (~formalType(SyntaxTree.RecordType).isObject) OR (formalType IS SyntaxTree.AnyRecordType) THEN
 					result := CompatibleTo(system,actualType,formalType);
 				ELSIF (formalType IS SyntaxTree.ArrayType) & (formalType(SyntaxTree.ArrayType).form = SyntaxTree.Open) THEN
 					result := OpenArrayCompatible(formalType(SyntaxTree.ArrayType),actualType);
@@ -1985,6 +1985,7 @@ TYPE
 			ELSIF IsPointerType(expression.type) & IsPointerType(type) THEN (* nothing to be done *)
 			ELSIF (expression.type.resolved IS SyntaxTree.AnyType) THEN (*! binary symbol file problem: ANY and OBJECT cannot be distinguished  *)
 			ELSIF (expression.type.resolved IS SyntaxTree.ObjectType) & (type IS SyntaxTree.AnyType) THEN (*! binary symbol file problem *)
+			ELSIF (expression.type.resolved IS SyntaxTree.RecordType) & (type IS SyntaxTree.AnyRecordType) THEN (* nothing to be done *)
 			ELSIF expression.resolved # NIL THEN (* value *)
 				value := ConvertValue(position,expression.resolved(SyntaxTree.Value),type);
 				IF value = NIL THEN
@@ -8739,6 +8740,8 @@ TYPE
 					result :=  (this IS SyntaxTree.RecordType) & this(SyntaxTree.RecordType).isObject OR (this IS SyntaxTree.PointerType) OR (this IS SyntaxTree.ProcedureType) OR (this IS SyntaxTree.NilType) OR (this IS SyntaxTree.AnyType) OR (this IS SyntaxTree.ObjectType);
 				ELSIF to IS SyntaxTree.ObjectType THEN
 					result := IsPointerToRecord(this) OR (this IS SyntaxTree.NilType) OR (this IS SyntaxTree.ObjectType) OR (this IS SyntaxTree.AnyType) (*! remove when symbol file can distinguish OBJECT from ANY *) ;
+				ELSIF to IS SyntaxTree.AnyRecordType THEN
+					result :=  (this IS SyntaxTree.RecordType);
 				ELSIF to IS SyntaxTree.ByteType THEN
 					result := (this IS SyntaxTree.IntegerType) & (to.sizeInBits = 8) OR IsCharacterType(this)
 				ELSIF to IS SyntaxTree.CharacterType THEN
@@ -9602,6 +9605,8 @@ TYPE
 
 		IF ( (base IS SyntaxTree.ObjectType) OR  (base IS SyntaxTree.AnyType)) & IsPointerToRecord(extension) THEN
 			result := TRUE;
+		ELSIF (base IS SyntaxTree.AnyRecordType) & ~IsPointerToRecord(extension) THEN
+			result := TRUE;
 		ELSE
 			IF (base IS SyntaxTree.PointerType) & (extension IS SyntaxTree.PointerType) THEN
 				base := base(SyntaxTree.PointerType).pointerBase.resolved;
@@ -9713,7 +9718,7 @@ TYPE
 		type := type.resolved;
 		IF type IS SyntaxTree.PointerType THEN
 			result := IsExtensibleType(type(SyntaxTree.PointerType).pointerBase.resolved);
-		ELSIF (type IS SyntaxTree.AnyType) OR (type IS SyntaxTree.ObjectType)  THEN
+		ELSIF (type IS SyntaxTree.AnyType) OR (type IS SyntaxTree.ObjectType) OR (type IS SyntaxTree.AnyRecordType)  THEN
 			result := TRUE
 		ELSIF (type IS SyntaxTree.NumberType) OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType) THEN
 			result := TRUE

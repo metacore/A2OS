@@ -217,13 +217,18 @@ TYPE
 
 		PROCEDURE VisitObjectType*(x: SyntaxTree.ObjectType);
 		BEGIN
-			VisitBasicType(x);
+			(*! Keyword("ANY ");*) Keyword("OBJECT"); 
 		END VisitObjectType;
 
 		PROCEDURE VisitAnyType*(x: SyntaxTree.AnyType);
 		BEGIN
-			VisitBasicType(x);
+			Keyword("ANY "); (*! Keyword("POINTER");*) 
 		END VisitAnyType;
+
+		PROCEDURE VisitAnyRecordType*(x: SyntaxTree.AnyRecordType);
+		BEGIN
+			Keyword("ANY "); Keyword("RECORD"); 
+		END VisitAnyRecordType;
 
 		PROCEDURE VisitMathArrayType*(x: SyntaxTree.MathArrayType);
 		BEGIN

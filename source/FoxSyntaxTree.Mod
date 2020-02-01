@@ -89,6 +89,9 @@ TYPE
 		PROCEDURE VisitAnyType*(x: AnyType);
 		BEGIN HALT(100) (* abstract *) END VisitAnyType;
 
+		PROCEDURE VisitAnyRecordType*(x: AnyRecordType);
+		BEGIN HALT(100) (* abstract *) END VisitAnyRecordType;
+
 		PROCEDURE VisitObjectType*(x: ObjectType);
 		BEGIN HALT(100) (* abstract *) END VisitObjectType;
 
@@ -176,6 +179,7 @@ TYPE
 			|NilType DO VisitNilType(x)
 			|ObjectType DO VisitObjectType(x)
 			|AnyType DO VisitAnyType(x)
+			|AnyRecordType DO VisitAnyRecordType(x)
 			|ByteType DO VisitByteType(x)
 			|BasicType DO VisitBasicType(x)
 			ELSE VisitType(x)
@@ -662,7 +666,7 @@ TYPE
 		END SetName;
 
 		PROCEDURE SetTypeDeclaration*(typeDeclaration: TypeDeclaration);
-		BEGIN HALT(100);
+		BEGIN (* IGNORE *)
 		END SetTypeDeclaration;
 
 	END BasicType;
@@ -742,6 +746,29 @@ TYPE
 		END IsPointer;
 
 	END AnyType;
+	
+	AnyRecordType*=OBJECT(BasicType)
+	
+		PROCEDURE & InitAnyRecordType(sizeInBits: SIZE);
+		BEGIN
+			InitBasicType("@AnyRecord",sizeInBits);
+			hasPointers := TRUE;
+		END InitAnyRecordType;
+
+		PROCEDURE SameType*(this: Type): BOOLEAN;
+		BEGIN RETURN this IS AnyRecordType
+		END SameType;
+
+		PROCEDURE CompatibleTo*(to: Type): BOOLEAN;
+		BEGIN RETURN (to IS AnyRecordType)
+		END CompatibleTo;
+
+		PROCEDURE IsRecordType*(): BOOLEAN;
+		BEGIN
+			RETURN TRUE;
+		END IsRecordType;
+		
+	END AnyRecordType;
 
 	(** <<SYSTEM.BYTE>>
 		byte type
@@ -1576,6 +1603,8 @@ TYPE
 		BEGIN
 			result := FALSE;
 			IF this = SELF THEN result := TRUE
+			ELSIF this IS AnyRecordType THEN
+				result := TRUE;
 			ELSIF this IS RecordType THEN
 				IF (baseType # NIL) THEN
 					extension := baseType.resolved;
@@ -5371,6 +5400,12 @@ VAR
 	BEGIN
 		NEW(basicType, sizeInBits); RETURN basicType;
 	END NewAnyType;
+
+	PROCEDURE NewAnyRecordType*(): AnyRecordType;
+	VAR basicType: AnyRecordType;
+	BEGIN
+		NEW(basicType,0); RETURN basicType;
+	END NewAnyRecordType;
 
 	PROCEDURE NewObjectType*(sizeInBits: SIZE): ObjectType;
 	VAR basicType: ObjectType;

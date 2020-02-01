@@ -675,6 +675,11 @@ TYPE
 						factor := Factor();
 						expression := SyntaxTree.NewUnaryExpression( position, factor, operator );
 					END;
+			| Scanner.Any:
+					operator := Symbol();
+					identifier := token.identifier;
+					expression := SyntaxTree.NewIdentifierDesignator(position,identifier);
+					NextToken;				
 			| Scanner.Alias:
 					operator := Symbol();
 					NextToken();
@@ -1381,6 +1386,23 @@ TYPE
 			END;
 			RETURN procedureType;
 		END ProcedureType;
+		
+		(** AnyType = "any" ('object' | 'pointer' | 'record' *)
+		PROCEDURE AnyType(position: Position): SyntaxTree.Type;
+		BEGIN
+			IF Optional(Scanner.Object) THEN
+				RETURN SyntaxTree.NewObjectType(0)
+			ELSIF Optional(Scanner.Pointer) THEN
+				RETURN SyntaxTree.NewAnyType(0)
+			ELSIF Optional(Scanner.Record) THEN
+				RETURN SyntaxTree.NewAnyRecordType()
+			ELSE
+				(*!
+				Basic.Warning(diagnostics, scanner.source^, position, "deprecated use of ANY, use ANY POINTER instead");
+				*)
+				RETURN SyntaxTree.NewAnyType(0)
+			END;
+		END AnyType;
 
 		(** ObjectType = 'object' | 'object' [Flags] ['(' QualifiedIdentifier ')'] DeclarationSequence [Body] 'end' [Identifier] . **)
 		PROCEDURE ObjectType(position: Position;  name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope ): SyntaxTree.Type;
@@ -1399,6 +1421,9 @@ TYPE
 
 			(* generic empty OBJECT type *)
 			IF Peek(Scanner.Semicolon) OR Peek(Scanner.RightParenthesis) THEN
+				(*!
+				Basic.Warning(diagnostics, scanner.source^, position, "deprecated use of OBJECT, use ANY OBJECT instead");
+				*)
 				Scanner.GetKeyword(scanner.case,Scanner.Object,identifier);
 				qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(position,SyntaxTree.invalidIdentifier,identifier);
 				type := SyntaxTree.NewQualifiedType( position, parentScope, qualifiedIdentifier );
@@ -1696,7 +1721,8 @@ TYPE
 		BEGIN
 			IF Trace THEN S( "Type" ) END;
 			position := token.position;
-			IF Optional( Scanner.Array ) THEN type := ArrayType( position,parentScope );
+			IF Optional( Scanner.Any ) THEN type := AnyType( position);
+			ELSIF Optional( Scanner.Array ) THEN type := ArrayType( position,parentScope );
 			ELSIF Optional( Scanner.Record ) THEN type := RecordType( position,parentScope );
 			ELSIF Optional( Scanner.Pointer ) THEN type := PointerType( position,parentScope );
 			ELSIF Optional( Scanner.Object ) THEN type := ObjectType( position,name,parentScope );

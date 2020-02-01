@@ -55,7 +55,7 @@ CONST
 		(* declaration elements *)
 		Code Const Type Var Out Procedure Operator Import Definition Module Cell CellNet Extern
 		(* composite type symbols *)
-		Array Object Record Pointer Enum Port Address Size Alias
+		Any Array Object Record Pointer Enum Port Address Size Alias
 		(* assembler constants *)
 		Ln PC PCOffset
 		(* number types *)
@@ -63,43 +63,44 @@ CONST
 		Comment EndOfText Escape
 		~
 	*)
-	None*= 0;
+		
+	None*= 0; 
 	(* RelationOps: Equal ... Is *)
-	Equal*= 1; DotEqual*= 2; Unequal*= 3; DotUnequal*= 4; Less*= 5; DotLess*= 6;
-	LessEqual*= 7; DotLessEqual*= 8; Greater*= 9; DotGreater*= 10; GreaterEqual*= 11; DotGreaterEqual*= 12;
-	LessLessQ*= 13; GreaterGreaterQ*= 14; Questionmarks*= 15; ExclamationMarks*= 16; In*= 17; Is*= 18;
+	Equal*= 1; DotEqual*= 2; Unequal*= 3; DotUnequal*= 4; Less*= 5; DotLess*= 6; 
+	LessEqual*= 7; DotLessEqual*= 8; Greater*= 9; DotGreater*= 10; GreaterEqual*= 11; DotGreaterEqual*= 12; 
+	LessLessQ*= 13; GreaterGreaterQ*= 14; Questionmarks*= 15; ExclamationMarks*= 16; In*= 17; Is*= 18; 
 	(* MulOps: Times ... And *)
-	Times*= 19; TimesTimes*= 20; DotTimes*= 21; PlusTimes*= 22; Slash*= 23; Backslash*= 24;
-	DotSlash*= 25; Div*= 26; Mod*= 27; And*= 28;
+	Times*= 19; TimesTimes*= 20; DotTimes*= 21; PlusTimes*= 22; Slash*= 23; Backslash*= 24; 
+	DotSlash*= 25; Div*= 26; Mod*= 27; And*= 28; 
 	(* AddOps: Or ... Minus *)
-	Or*= 29; Plus*= 30; Minus*= 31;
+	Or*= 29; Plus*= 30; Minus*= 31; 
 	(* Prefix Unary Operators Plus ... Not *)
-	Not*= 32;
+	Not*= 32; 
 	(* expressions may start with Plus ... Identifier *)
-	LeftParenthesis*= 33; LeftBracket*= 34; LeftBrace*= 35; Number*= 36; Character*= 37; String*= 38;
-	Nil*= 39; Imag*= 40; True*= 41; False*= 42; Self*= 43; Result*= 44;
-	New*= 45; Identifier*= 46;
+	LeftParenthesis*= 33; LeftBracket*= 34; LeftBrace*= 35; Number*= 36; Character*= 37; String*= 38; 
+	Nil*= 39; Imag*= 40; True*= 41; False*= 42; Self*= 43; Result*= 44; 
+	New*= 45; Identifier*= 46; 
 	(* statementy may start with Self ... Begin *)
-	If*= 47; Case*= 48; While*= 49; Repeat*= 50; For*= 51; Loop*= 52;
-	With*= 53; Exit*= 54; Await*= 55; Return*= 56; Ignore*= 57; Begin*= 58;
+	If*= 47; Case*= 48; While*= 49; Repeat*= 50; For*= 51; Loop*= 52; 
+	With*= 53; Exit*= 54; Await*= 55; Return*= 56; Ignore*= 57; Begin*= 58; 
 	(* symbols, expressions and statements cannot start with *)
-	Semicolon*= 59; Transpose*= 60; RightBrace*= 61; RightBracket*= 62; RightParenthesis*= 63; Questionmark*= 64;
-	ExclamationMark*= 65; LessLess*= 66; GreaterGreater*= 67; Upto*= 68; Arrow*= 69; Period*= 70;
-	Comma*= 71; Colon*= 72; Of*= 73; Then*= 74; Do*= 75; To*= 76;
-	By*= 77; Becomes*= 78; Bar*= 79; End*= 80; Else*= 81; Elsif*= 82;
-	Until*= 83; Finally*= 84;
+	Semicolon*= 59; Transpose*= 60; RightBrace*= 61; RightBracket*= 62; RightParenthesis*= 63; Questionmark*= 64; 
+	ExclamationMark*= 65; LessLess*= 66; GreaterGreater*= 67; Upto*= 68; Arrow*= 69; Period*= 70; 
+	Comma*= 71; Colon*= 72; Of*= 73; Then*= 74; Do*= 75; To*= 76; 
+	By*= 77; Becomes*= 78; Bar*= 79; End*= 80; Else*= 81; Elsif*= 82; 
+	Until*= 83; Finally*= 84; 
 	(* declaration elements *)
-	Code*= 85; Const*= 86; Type*= 87; Var*= 88; Out*= 89; Procedure*= 90;
-	Operator*= 91; Import*= 92; Definition*= 93; Module*= 94; Cell*= 95; CellNet*= 96;
-	Extern*= 97;
+	Code*= 85; Const*= 86; Type*= 87; Var*= 88; Out*= 89; Procedure*= 90; 
+	Operator*= 91; Import*= 92; Definition*= 93; Module*= 94; Cell*= 95; CellNet*= 96; 
+	Extern*= 97; 
 	(* composite type symbols *)
-	Array*= 98; Object*= 99; Record*= 100; Pointer*= 101; Enum*= 102; Port*= 103;
-	Address*= 104; Size*= 105; Alias*= 106;
+	Any*= 98; Array*= 99; Object*= 100; Record*= 101; Pointer*= 102; Enum*= 103; 
+	Port*= 104; Address*= 105; Size*= 106; Alias*= 107; 
 	(* assembler constants *)
-	Ln*= 107; PC*= 108; PCOffset*= 109;
+	Ln*= 108; PC*= 109; PCOffset*= 110; 
 	(* number types *)
-	Shortint*= 110; Integer*= 111; Longint*= 112; Hugeint*= 113; Real*= 114; Longreal*= 115;
-	Comment*= 116; EndOfText*= 117; Escape*= 118;
+	Shortint*= 111; Integer*= 112; Longint*= 113; Hugeint*= 114; Real*= 115; Longreal*= 116; 
+	Comment*= 117; EndOfText*= 118; Escape*= 119; 
 
 	SingleQuote = 27X;  DoubleQuote* = 22X;
 	Ellipsis = 7FX;   (* used in Scanner.GetNumber to return with ".." when reading an interval like 3..5 *)
@@ -1340,6 +1341,7 @@ TYPE
 		symbols[Module] := "Module";
 		symbols[Cell] := "Cell";
 		symbols[CellNet] := "CellNet";
+		symbols[Any] := "Any";
 		symbols[Array] := "Array";
 		symbols[Object] := "Object";
 		symbols[Record] := "Record";
@@ -1453,6 +1455,7 @@ TYPE
 		Enter( "with" , With);
 
 		(* types *)
+		Enter( "any" , Any );
 		Enter( "array" , Array );
 		Enter( "object" , Object);
 		Enter( "pointer" , Pointer);

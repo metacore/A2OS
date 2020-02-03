@@ -669,6 +669,12 @@ TYPE
 				ELSE
 					RETURN SizeOf(par.type);
 				END;
+			ELSIF par.type.resolved IS SyntaxTree.AnyRecordType THEN
+				IF (par.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) THEN
+					RETURN 2*addressSize
+				ELSE
+					RETURN SizeOf(par.type);
+				END;					
 			ELSIF par.kind = SyntaxTree.VarParameter THEN
 				RETURN addressSize
 			ELSIF par.kind = SyntaxTree.ConstParameter THEN

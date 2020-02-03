@@ -3726,9 +3726,9 @@ TYPE
 		BEGIN
 			IF (e IS SyntaxTree.SymbolDesignator) & (e(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Parameter) THEN
 				parameter := e(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Parameter);
-				IF (parameter.kind IN {SyntaxTree.VarParameter,SyntaxTree.ConstParameter}) & (parameter.type.resolved IS SyntaxTree.RecordType) THEN RETURN GetSizeFromTag(tag) END;
+				IF (parameter.kind IN {SyntaxTree.VarParameter,SyntaxTree.ConstParameter}) & ((parameter.type.resolved IS SyntaxTree.RecordType) OR (parameter.type.resolved IS SyntaxTree.AnyRecordType)) THEN RETURN GetSizeFromTag(tag) END;
 			ELSIF e IS SyntaxTree.DereferenceDesignator THEN
-				IF (e.type.resolved IS SyntaxTree.RecordType) THEN RETURN GetSizeFromTag(tag) END;
+				IF (e.type.resolved IS SyntaxTree.RecordType) OR (e.type.resolved IS SyntaxTree.AnyRecordType) THEN RETURN GetSizeFromTag(tag) END;
 			END;
 			RETURN GetDynamicSize(e.type, tag);
 		END GetArrayOfBytesSize;
@@ -5395,7 +5395,7 @@ TYPE
 					Pass((operand.op));
 				ELSE (* var parameter *)
 					Designate(expression,operand);
-					IF (type IS SyntaxTree.RecordType) & ~type(SyntaxTree.RecordType).isFinal & (parameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.VarParameter}) THEN
+					IF ((type IS SyntaxTree.RecordType) & ~type(SyntaxTree.RecordType).isFinal OR (type IS SyntaxTree.AnyRecordType)) & (parameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.VarParameter}) THEN
 						IF callingConvention = SyntaxTree.OberonCallingConvention  THEN
 							Pass((operand.tag));
 						END;

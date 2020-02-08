@@ -36,6 +36,7 @@ TYPE Matrix*=MatrixBase.Matrix;
 	Scalar*=MatrixBase.Datatype;
 
 VAR w: Streams.Writer;
+	random:Random.Generator;
 
 (**
 y = Xb + e
@@ -214,6 +215,31 @@ Note that at current, this implementation limits the search to MIN(200, N/2) pai
 see http://en.wikipedia.org/wiki/Theil%E2%80%93Sen_estimator for  details
 **)
 PROCEDURE TheilSenEstimator*(CONST x: Vector; CONST y: Vector; VAR b, intercept: Scalar; VAR e: Vector);
+VAR slopes: Vector; i,j,j0,len:SIZE; dx, dy: Scalar;
+BEGIN
+	len:=MIN (200, LEN(x,0) DIV 2);
+	NEW(slopes, len);
+	i:=0; j:=0;
+	WHILE i<len DO
+		j0:=j;	(*choose sample pairs; extremal point pairs or random pairs could be used *)
+		j:=(j0 + LEN(x,0) DIV 4 +random.Dice(SIGNED32(LEN(x,0)) DIV 2)) MOD LEN(x,0); (*have some minimal distance*)
+		dx:=x[j]-x[j0];
+		dy:=y[j]-y[j0];
+		IF dx#0 THEN slopes[i]:=dy/dx; INC(i) END;
+	END;
+	b := StatisticsBase.DestructiveMedian(slopes);
+	(*
+	StatisticsBase.QSort(slopes);
+	b:=slopes[len DIV 2]; (*choose median slope *)
+	*)
+	e:=y-b*x;
+	intercept:=SUM(e)/LEN(e,0);
+	e:=e-intercept;
+	(*optional: estimation of 95% confidence interval, based on observation of 600 pairs is sufficient according to literature*)
+END TheilSenEstimator;
+
+(*
+PROCEDURE TheilSenEstimator*(CONST x: Vector; CONST y: Vector; VAR b, intercept: Scalar; VAR e: Vector);
 VAR slopes: Vector; i,j,len:SIZE; dx, dy: Scalar;
 BEGIN
 	(*choose sample pairs; here the extremal point pairs are used. Random pairs could also be used *)
@@ -238,7 +264,7 @@ BEGIN
 	e:=e-intercept;
 	(*optional: estimation of 95% confidence interval, based on observation of 600 pairs is sufficient according to literature*)
 END TheilSenEstimator;
-
+*)
 PROCEDURE SumSquares(CONST a:ARRAY[?] OF MatrixBase.Datatype):MatrixBase.Datatype;
 BEGIN
 	RETURN a+*a
@@ -292,8 +318,12 @@ BEGIN
 	w.String("Theil Sen Estimator: robust slope"); w.Ln; w.Update;
 	x:=[1.0,2,3,4,5,6];
 	TheilSenEstimator(x,y,b,intercept, e);
+	
+	(*take care with test: randomness is involved*)
+	(*
 	ASSERT((b-0.9800000191)*(b-0.9800000191)< TestThreshold, 204); 
 	ASSERT((intercept-2.0699999332)*(intercept-2.0699999332)<TestThreshold, 205);
+	*)
 	(*w.FloatFix(b, 4, 10, 0); w.FloatFix(intercept, 4, 10, 0); w.Ln;w.Update;
 	Util.OutVector(e);
 	w.FloatFix(e+*e, 4, 10, 0); w.Ln;
@@ -428,6 +458,7 @@ END TestFprobability;
 
 
 BEGIN
+	NEW(random);
 	Streams.OpenWriter(w, KernelLog.Send)
 END StatisticsLinearRegression.
 

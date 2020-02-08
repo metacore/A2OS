@@ -43,7 +43,7 @@ TYPE Matrix*=MatrixBase.Matrix;
 
 VAR w: Streams.Writer;
 	eps0, eps: Scalar;
-
+	random:Random.Generator;
 (**
 y = Xb + e
 
@@ -69,7 +69,7 @@ TYPE Regression*= OBJECT (*! work needed: implement univariate and multivariate 
 			ls: MatrixLeastSquares.LeastSquares;
 
 			isGLM:BOOLEAN;
-			nvar, nsamp: SIGNED32;
+			nvar, nsamp: SIZE;
 
 		PROCEDURE &Init*(CONST X: Matrix; intercept: BOOLEAN);
 		BEGIN
@@ -201,7 +201,7 @@ see http://en.wikipedia.org/wiki/General_linear_model
 
 PROCEDURE GeneralLinearModel*(CONST X: Matrix; CONST Y: Matrix; VAR B, U: Matrix); (** not exhaustively tested *)
 	VAR ls: MatrixLeastSquares.LeastSquares;
-		y, b,e: Vector; i:SIGNED32;
+		y, b,e: Vector; i,j,j0:SIZE;
 BEGIN
 	NEW(ls, X);
 	NEW(B, LEN(X,1), LEN(Y,1));
@@ -223,21 +223,28 @@ Note that at current, this implementation limits the search to MIN(200, N/2) pai
 see http://en.wikipedia.org/wiki/Theil%E2%80%93Sen_estimator for  details
 **)
 PROCEDURE TheilSenEstimator*(CONST x: Vector; CONST y: Vector; VAR b, intercept: Scalar; VAR e: Vector);
-VAR slopes: Vector; i,j,len:SIGNED32; dx, dy: Scalar;
+VAR slopes: Vector; i,j,j0,len:SIZE; dx, dy: Scalar;
 BEGIN
 	(*choose sample pairs; here the extremal point pairs are used. Random pairs could also be used *)
 	len:=MIN (200, LEN(x,0) DIV 2);
 	NEW(slopes, len);
-	FOR i:=0 TO len-1 DO
-		j:=i;
+	i:=0; j:=0;
+	WHILE i<len DO
+	(*FOR i:=0 TO len-1 DO
+		j:=i;*)
+		j0:=j;
+		j:=random.Dice(SIGNED32(LEN(x,0)));
 		(*? possible improvement: randomize i, or choose i with large dx
 		VAR random:Random.Generator;
 		NEW(random);
 		j:=ENTIER(random.Uniform() * len );
 		*)
-		dx:=x[LEN(x,0)-1-j]-x[j];
+		dx:=x[j]-x[j0];
+		dy:=y[j]-y[j0];
+		(*dx:=x[LEN(x,0)-1-j]-x[j];
 		dy:=y[LEN(x,0)-1-j]-y[j];
-		IF dx#0 THEN	slopes[i]:=dy/dx END; (* dx=0 not yet handled properly, but has usually only  a minor impact *)
+		IF dx#0 THEN	slopes[i]:=dy/dx END;*) (* dx=0 not yet handled properly, but has usually only  a minor impact *)
+		IF dx#0 THEN slopes[i]:=dy/dx; INC(i) END;
 	END;
 	b := StatisticsBase.DestructiveMedian(slopes);
 	(*
@@ -254,7 +261,7 @@ END TheilSenEstimator;
 	Multidimensional regression is assumed to be a composite of those partial regressions .
 	b[0] is intercept *)
 PROCEDURE MultivariateTheilSen*(CONST X: Matrix; CONST y: Vector; VAR b: Vector;  VAR e: Vector);
-VAR X0, slopes: Matrix; i,j,k,len:SIGNED32; dx: Vector; intercept, d, dy, sumx, slope, threshold, zero, inf, mininf: Scalar; random: Random.Generator;
+VAR X0, slopes: Matrix; i,j,k,len:SIZE; dx: Vector; intercept, d, dy, sumx, slope, threshold, zero, inf, mininf: Scalar; random: Random.Generator;
 	pca:MatrixPrincipalComponents.PCA;
 	max,min:Scalar;
 	columnMean, onesR: Vector;
@@ -375,7 +382,7 @@ BEGIN
 END Test;
 
 PROCEDURE TestSort*;
-VAR x: ARRAY [*] OF Scalar; i:SIGNED32;
+VAR x: ARRAY [*] OF Scalar; i:SIZE;
 	random:Random.Generator;
 BEGIN
 	 NEW(x,10);
@@ -389,6 +396,7 @@ BEGIN
 END TestSort;
 
 BEGIN
+	NEW(random);
 	Streams.OpenWriter(w, KernelLog.Send);
 	eps0:=1; WHILE eps0 > 0 DO eps:=eps0; eps0:=eps/2 END;
 	w.Float(eps, 30); w.Ln; w.Update;

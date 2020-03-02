@@ -8,6 +8,9 @@ MODULE FoxTestBackend;
 
 IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats, Backend := FoxBackend, Options, Files, Commands, Strings;
 
+CONST
+	DefaultContext = "A2";
+
 TYPE
 
 	TestBackend= OBJECT (Backend.Backend)
@@ -17,7 +20,7 @@ TYPE
 		PROCEDURE ProcessSyntaxTreeModule*(module: SyntaxTree.Module): Formats.GeneratedModule;
 		VAR
 			procedure: SyntaxTree.Procedure;
-			procedureName, moduleName: Basic.SectionName;
+			procedureName, moduleName, moduleContext: Basic.SectionName;
 			file: Files.File; writer: Files.Writer;
 			cmd, msg: ARRAY 256 OF CHAR; res:INTEGER;
 		BEGIN
@@ -28,24 +31,45 @@ TYPE
 				writer := NIL;
 			END;
 			Basic.GetString(module.name, moduleName);
+			Basic.GetString(module.context, moduleContext);
 			procedure:=module.moduleScope.firstProcedure;
 			WHILE procedure#NIL DO
 				IF procedure.isTest THEN
 					Basic.GetString(procedure.name, procedureName);
 					IF writer # NIL THEN
-						writer.String("positive: "); writer.String(moduleName); writer.String("."); writer.String(procedureName); writer.Ln;
+						writer.String("positive: "); 
+						IF moduleContext # DefaultContext THEN
+							writer.String(moduleContext); writer.String("-");
+						END;
+						writer.String(moduleName); writer.String("."); writer.String(procedureName); writer.Ln;
 						writer.Ln;
 						writer.String(\"\tMODULE Test42;\n"\);
-						writer.String(\"\tIMPORT "\); writer.String(moduleName); writer.String(\";\n"\);
+						writer.String(\"\tIMPORT "\); writer.String(moduleName);
+						IF moduleContext # DefaultContext THEN
+							writer.String(" IN "); writer.String(moduleContext);
+						END;
+						writer.String(\";\n"\);
 						writer.String(\"\tBEGIN "\);
+						IF moduleContext # DefaultContext THEN
+							writer.String(moduleContext); writer.String("-");
+						END;
 						writer.String(moduleName); writer.String("."); writer.String(procedureName);
 						writer.String(" END Test42."); writer.Ln;
 						writer.Ln;
 						writer.Update;
 					ELSE
-						COPY("System.FreeDownTo ", cmd); Strings.Append(cmd, moduleName);
+						COPY("System.FreeDownTo ", cmd);
+						IF moduleContext # DefaultContext THEN
+							Strings.Append(cmd, moduleContext); Strings.Append(cmd, "-");
+						END;
+						Strings.Append(cmd, moduleName);
 						Commands.Call(cmd, {Commands.Wait},res,msg);
-						COPY(moduleName, cmd); Strings.Append(cmd, "."); Strings.Append(cmd, procedureName);
+						cmd := "";
+						IF moduleContext # DefaultContext THEN
+							Strings.Append(cmd, moduleContext); Strings.Append(cmd, "-");
+						END;
+						Strings.Append(cmd, moduleName);
+						Strings.Append(cmd, "."); Strings.Append(cmd, procedureName);
 						IF log#NIL THEN
 							log.String("testing "); log.String(cmd); log.String(": "); log.Update;
 						END;

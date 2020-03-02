@@ -178,7 +178,11 @@ WIN64 -- 64-bit windows a2
 
 	FSTools.CloseFiles oberon.exe ~
 	~
-	
+	## Command line shell including compiler (and linker) ##
+	Linker.Link --path=NewAos/ --fileFormat=PE64CUI --fileName=fox.exe --extension=GofWw --displacement=401000H
+		Builtins Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
+		StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps System
+		Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~	
 	
 -----
 

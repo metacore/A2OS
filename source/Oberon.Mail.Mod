@@ -4,7 +4,7 @@ Refer to the "General ETH Oberon System Source License" contract available at: h
 MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	IMPORT SYSTEM, Kernel, Files, Strings, Dates, Objects, Display, Fonts, Texts, Oberon, NetSystem, NetTools, MIME,
 		Streams, TextStreams, Display3, Attributes, Links, Gadgets, ListRiders, ListGadgets, AsciiCoder, TextGadgets, TextDocs, Documents,
-		Desktops, HyperDocs, MD5 IN A2, Modules, FileDir;
+		Desktops, HyperDocs, MD5 IN A2, Modules, FileDir, Out := OutStub;
 
 	CONST
 		MsgFile = "MailMessages";
@@ -21,7 +21,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		SysMenu = "Desktops.Copy[Copy] Mail.Reply[Reply] Desktops.StoreDoc[Store]";
 		DefSMTPPort* = 25;
 		simpler = TRUE;
-
+		
 	TYPE
 		UIDL = ARRAY 64 OF CHAR;
 		ServerName* = ARRAY HyperDocs.ServerStrLen OF CHAR;
@@ -115,9 +115,23 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		Buffer = POINTER TO ARRAY OF CHAR;
 		Index = POINTER TO ARRAY OF SIGNED32;
 		Heap = RECORD
-				buffer: Buffer; bufLen: SIGNED32;
-				index: Index; idxLen: SIGNED32
-			END;
+			buffer: Buffer; bufLen: SIGNED32;
+			index: Index; idxLen: SIGNED32
+		END;
+		
+		WrapData = RECORD  (* Data in the Wrap procedure. *)
+			nCR: SIGNED32; (* Number of carriage returns in a separator.
+				nCR = 0 for word separator.
+				nCR = 1 for line separator.
+				nCR > 1 for paragraph separator. *)
+			indent: SIGNED32; (* Length of indentation in first line of paragraph. *)
+			lineLen: SIGNED32; (* Number of characters accumulated in current line. *)
+			width: SIGNED32; (* Preferred largest length of line = width of reformatted text. *)
+			space0, space1, gap: Texts.Writer; (* Writers for collecting characters in separators.
+				Refer to syntax at definition of Wrap. *)
+			word: Texts.Writer; (* Writer for collecting visible characters of a word. *)
+			accum: Texts.Writer (* Writer for collecting the reformatted text. *)
+		END;
 
 	VAR
 		msgs: MsgHeadList;
@@ -140,7 +154,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		mailer: ValueString;
 
 		trace: BOOLEAN;
-
+		
 (* String Heap *)
 
 	PROCEDURE Open(VAR heap: Heap);
@@ -250,7 +264,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		IF nr > 9 THEN
 			Strings.IntToStr(nr, arg)
 		ELSE
-			arg[0] := " "; arg[1] := CHR(nr+ORD("0")); arg[2] := 0X
+			(* arg[0] := " "; *) arg[0] := CHR(nr+ORD("0")); arg[1] := 0X
 		END
 	END NrToArg;
 
@@ -426,7 +440,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		IF ~ReadState(S) THEN
 		END
 	END DeleteMail;
-
+	
 	PROCEDURE ReceiveMail(S: NetTools.Session; no: SIGNED32; VAR R: Files.Rider);
 		VAR arg: ARRAY 12 OF CHAR;
 	BEGIN
@@ -770,6 +784,8 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		Gadgets.Update(obj);
 	END SetVPos;
 
+	(* Synchronize local data with the server.  The list of UIDs and the MsgFile are updated.
+	The command accepts no parameters. Invoked interactively and by Get in the Mail.Panel. *)
 	PROCEDURE Synchronize*;
 		VAR
 			S: NetTools.Session;
@@ -1134,7 +1150,8 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			S := Streams.OpenFileReader(msgsF, msgs[no].pos+len)
 		END;
 		S.mode := Streams.binary;
-		cont.len := msgs[no].len;
+		ASSERT(len < msgs[no].len);
+		cont.len := msgs[no].len - len;
 		IF plain THEN
 			Texts.SetFont(W, Fonts.Default)
 		ELSE
@@ -1208,6 +1225,9 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		Desktops.ShowDoc(D)
 	END ShowText;
 
+	(* Show the message activated in the Mail.Panel.
+		Or show the message identified by number.  Show 13 ~  
+		Or, with no message identified, show a list of messages.  Mail.Show ~ *)
 	PROCEDURE Show*;
 		VAR
 			S: Attributes.Scanner;
@@ -1218,27 +1238,13 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			no: SIGNED32;
 			plain: BOOLEAN;
 			line: ListGadgets.Line;
+			strm: Streams.Stream;
+			h: MIME.Header;
+			cont: MIME.Content;
+			len, pos: SIGNED32;
+			str: ARRAY BufLen OF CHAR;
 	BEGIN
-		Attributes.OpenScanner(S, Oberon.Par.text,Oberon.Par.pos);
-		Attributes.Scan(S);
-		IF S.class = Attributes.Int THEN
-			IF (S.i >= 0) & (S.i < noMsgs) THEN
-				obj := FindObj("MailList");
-				IF obj # NIL THEN
-					WITH obj: ListGadgets.Frame DO
-						line := obj.lines;
-						REPEAT
-							line.sel := msgs[S.i].pos = line.key;
-							line := line.next
-						UNTIL line = obj.lines;
-						obj.sel := TRUE; obj.time := Oberon.Time();
-						Gadgets.Update(obj)
-					END
-				END;
-				decodeMessage(S.i, T, FALSE);
-				ShowText("Mail.Text", T, TRUE)
-			END
-		ELSIF Desktops.IsInMenu(Gadgets.context) THEN
+		IF Desktops.IsInMenu(Gadgets.context) THEN
 			D := Desktops.CurDoc(Gadgets.context);
 			Links.GetLink(D.dsc, "Model", obj);
 			IF (obj # NIL) & (obj IS Texts.Text) THEN
@@ -1257,6 +1263,62 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 					Links.SetLink(D.dsc, "Model", T)
 				END;
 				Gadgets.Update(Gadgets.executorObj)
+			END
+		ELSE
+			Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
+			Attributes.Scan(S);
+			IF S.class = Attributes.Int THEN (* Possible message number. *)
+				IF (S.i >= 0) & (S.i < noMsgs) THEN
+					obj := FindObj("MailList");
+					IF obj # NIL THEN
+						WITH obj: ListGadgets.Frame DO
+							line := obj.lines;
+							REPEAT
+								line.sel := msgs[S.i].pos = line.key;
+								line := line.next
+							UNTIL line = obj.lines;
+							obj.sel := TRUE; obj.time := Oberon.Time();
+							Gadgets.Update(obj)
+						END
+					END;
+					decodeMessage(S.i, T, FALSE);
+					ShowText("Mail.Text", T, TRUE)
+				END
+		(*
+		ELSIF Desktops.IsInMenu(Gadgets.context) THEN
+			D := Desktops.CurDoc(Gadgets.context);
+			Links.GetLink(D.dsc, "Model", obj);
+			IF (obj # NIL) & (obj IS Texts.Text) THEN
+		*)
+			ELSE (* No message identified.  Make a list. *)
+				IF 0 < noMsgs THEN
+					IF 60 < noMsgs THEN
+						Texts.WriteInt(W, noMsgs, 0);
+						Texts.WriteString(W, " messages.  Stand by while list is created."); Texts.WriteLn(W);
+						Texts.Append(Oberon.Log, W.buf);
+					END;
+					Texts.WriteString(W, "Mail.Show messageNumber  From  To  Subject"); Texts.WriteLn(W);
+					no := 0;
+					WHILE no < noMsgs DO
+						Texts.WriteString(W, "Mail.Show ");
+						Texts.WriteInt(W, no, 0); Texts.Write(W, " ");
+						strm := Streams.OpenFileReader(msgsF, msgs[no].pos); strm.mode := Streams.binary;
+						MIME.ReadHeader(strm, NIL, h, len);
+						ParseContent(h, cont);
+						pos := MIME.FindField(h, "From");
+						MIME.ExtractEMail(h, pos, str);
+						Texts.WriteString(W, str); Texts.WriteString(W, "    ");
+						pos := MIME.FindField(h, "To");
+						MIME.ExtractEMail(h, pos, str);
+						Texts.WriteString(W, str); Texts.WriteString(W, "    ");
+						pos := MIME.FindField(h, "Subject");
+						MIME.ExtractValue(h, pos, str);
+						Texts.WriteString(W, str); Texts.WriteLn(W);
+						INC(no)
+					END;
+					NEW(T); Texts.Open(T, ""); Texts.Append(T, W.buf);
+					ShowText("Messages", T, TRUE)
+				END
 			END
 		END
 	END Show;
@@ -1712,7 +1774,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		BEGIN
 			Texts.WriteString(W, "Reparsing Mail: ");
 			CASE n OF
-			 	1: Texts.WriteString(W, "(1) MailMessages.idx not found.");
+				1: Texts.WriteString(W, "(1) MailMessages.idx not found.");
 			|	2: Texts.WriteString(W, "(2) MailMessages not open.");
 			|	3: Texts.WriteString(W, "(3) MailMessages.idx lacks proper key.");
 					Texts.WriteHex(W, key); Texts.WriteString(W, " # "); Texts.WriteHex(W, IndexFileKey);
@@ -2501,7 +2563,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 
 	PROCEDURE NewModel*;
 	BEGIN
-		 Objects.NewObj := msgList
+		Objects.NewObj := msgList
 	END NewModel;
 
 	PROCEDURE GetRider(F: ListGadgets.Frame; new: BOOLEAN): ListRiders.Rider;
@@ -3319,6 +3381,215 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END CutLines;
 
+	(** Ref. https://en.wikipedia.org/wiki/List_of_Unicode_characters#Control_codes 
+	  and syntax of MText in the heading of Wrap. *)
+	PROCEDURE Visible(ch: CHAR): BOOLEAN;
+		VAR visible: BOOLEAN;
+	BEGIN
+		IF ((" " < ch) & (ch < 80X)) OR (0A0X < ch) THEN
+			visible := TRUE
+		ELSE
+			visible := FALSE
+		END; 
+		RETURN visible
+	END Visible;
+
+	(** Copy and reset buffer. *)
+	PROCEDURE WCopy(VAR w, x: Texts.Writer);
+	BEGIN
+		Texts.Copy(w.buf, x.buf);
+		Texts.OpenBuf(w.buf) (* Reset buffer. *)
+	END WCopy;
+
+	(** Append unchanged separator to accumulator. *)
+	PROCEDURE WCopySeparator(VAR wdata: WrapData);
+	BEGIN
+		WCopy(wdata.space0, wdata.accum);
+		IF 0 < wdata.nCR THEN
+			Texts.WriteLn(wdata.accum);
+			DEC(wdata.nCR);
+			WCopy(wdata.space1, wdata.accum);
+			IF 0 < wdata.nCR THEN
+				Texts.WriteLn(wdata.accum);
+				wdata.nCR := 0;
+				WCopy(wdata.gap, wdata.accum)
+			END
+		END
+	END WCopySeparator;
+
+	(** Append separator and word to accumulator with CR included or not 
+		to adjust length of line. *)
+	PROCEDURE WCopySepWord(VAR wdata: WrapData);
+		VAR candidateLen: SIGNED32; (* Number of characters in candidate extended line. *)
+			spaceLength: SIGNED32; (* Total of invisible characters in sep0 + sep1. *)
+	BEGIN
+		IF wdata.nCR = 0 THEN (* Word separator; insert CR if necessary. *)
+			ASSERT(wdata.space1.buf.len = 0); ASSERT(wdata.gap.buf.len = 0);
+			candidateLen := wdata.lineLen + wdata.space0.buf.len + wdata.word.buf.len;
+			WCopy(wdata.space0, wdata.accum);
+			IF candidateLen <= wdata.width THEN
+				wdata.lineLen := candidateLen
+			ELSE (* wdata.width < candidateLen; insert CR. *)
+				Texts.WriteLn(wdata.accum);
+				wdata.lineLen := wdata.word.buf.len
+			END
+		ELSIF wdata.nCR = 1 THEN (* Line separator; remove CR when possible. *)
+			ASSERT(wdata.gap.buf.len = 0);
+			spaceLength := wdata.space0.buf.len + wdata.space1.buf.len;
+			IF spaceLength = 0 THEN
+				candidateLen := wdata.lineLen + 1 + wdata.word.buf.len;
+			ELSE
+				candidateLen := wdata.lineLen + spaceLength + wdata.word.buf.len
+			END;
+			IF candidateLen <= wdata.width THEN (* Extend line by omitting CR. *)
+				IF spaceLength = 0 THEN (* Create a separator. *)
+					Texts.Write(wdata.accum, " ")
+				ELSE
+					WCopy(wdata.space0, wdata.accum);
+					WCopy(wdata.space1, wdata.accum)
+				END;
+				wdata.lineLen := candidateLen
+			ELSE (* wdata.width < candidateLen; retain original structure. *)
+				WCopy(wdata.space0, wdata.accum);
+				Texts.WriteLn(wdata.accum);
+				wdata.lineLen := wdata.space1.buf.len + wdata.word.buf.len;
+				WCopy(wdata.space1, wdata.accum)
+			END;
+			DEC(wdata.nCR)
+		ELSE (* 1 < wdata.nCR THEN Paragraph separator.  Retain original structure. *)
+			WCopySeparator(wdata);
+			(* ASSERT(wdata.nCR = 0); *)
+			wdata.lineLen := wdata.indent + wdata.word.buf.len
+		END;
+		WCopy(wdata.word, wdata.accum);
+		ASSERT(wdata.nCR = 0)
+	END WCopySepWord;
+
+(** Wrap lines of Text to fit in width.
+	Mail.Wrap width ("*" | "@" | "^")  
+	Mail.Wrap 60 * (Text marked with * to 60 characters wide. )
+	Mail.Wrap 70 @ (Text beginning at selection wrapped to 70 characters wide.)
+	Mail.Wrap 1 * (Wrap marked Text as one word per line.  Useful to compare
+							similar texts differing in format.)
+	Mail.Wrap 10000 * (Unwrap paragraphs. )
+
+	DEFICIENCIES
+	Oberon Text attributes and non-character objects are omitted.
+	Result is plain ASCII text.
+
+	Syntax of Text input for this procedure.
+	WText = [word] {separator word} [separator].
+	word = visibleChar {visibleChar}.
+	separator = wordSeparator | lineSeparator | paragraphSeparator.
+	wordSeparator = spaceCh { spaceCh }.
+	lineSeparator = { spaceCh } CR { spaceCh }.
+	paragraphSeparator = lineSeparator { CR { spaceCh } }.
+	spaceCh = 00X | 01X | .. | 0CX | 0EX .. 20X | 7FX .. 9FX.
+	visibleChar = "!" | """ .. "~" | A1X .. FFX.
+	CR = 0DX. *)
+	PROCEDURE Wrap*;
+		VAR
+			S: Texts.Scanner;
+			T: Texts.Text;
+			rdr: Texts.Reader;
+			wdata: WrapData;
+			ch: CHAR;
+			previousVisible, visible: BOOLEAN;
+			pos0, pos, end, time: SIGNED32;
+	BEGIN
+		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); 
+		Texts.Scan(S);
+		IF S.class # Texts.Int THEN
+			Texts.WriteString(W, "Mail.Wrap: 1st parameter should be an integer"); Texts.WriteLn(W);
+			Texts.WriteString(W, "representing width of column of text."); Texts.WriteLn(W)
+		ELSE
+			wdata.width := S.i; 
+			Texts.Scan(S);
+			NEW(T);
+			T := NIL;
+			IF S.c = "*" THEN
+				T := Oberon.MarkedText();
+				pos0 := 0; pos := pos0; end := T.len;					
+			ELSIF S.c = "^" THEN
+				Oberon.GetSelection(T, pos0, end, time);
+				IF time <= 0 THEN
+					T := NIL
+				ELSE
+					pos := pos0
+				END
+			ELSIF S.c = "@" THEN
+				Oberon.GetSelection(T, pos0, end, time);
+				IF time <= 0 THEN
+					T := NIL
+				ELSE
+					pos := pos0; end := T.len
+				END
+			ELSE
+				Texts.WriteString(W, "Mail.Wrap: 2nd parameter should be * or @ or ^.  Aborting.");
+				Texts.WriteLn(W)
+			END;
+			IF T = NIL THEN
+				Texts.WriteString(W, "Mail.Wrap: T = NIL.  No Text to wrap."); Texts.WriteLn(W)
+			ELSE (* T # NIL *)
+				IF pos0 < end THEN (* T has content. *)
+					Texts.OpenReader(rdr, T, pos);
+					wdata.nCR := 0;
+					wdata.lineLen := 0;
+					Texts.OpenWriter(wdata.space0);
+					Texts.OpenWriter(wdata.space1);
+					Texts.OpenWriter(wdata.gap);
+					Texts.OpenWriter(wdata.word);
+					Texts.OpenWriter(wdata.accum);
+					ch := " ";
+					visible := FALSE;
+					WHILE pos < end DO
+						Texts.Read(rdr, ch);
+						INC(pos);
+						IF ~(rdr.lib IS Fonts.Font) THEN
+							Out.String("Non-character object at pos = "); Out.Int(pos, 0); Out.Ln();
+						ELSE
+							previousVisible := visible;
+							IF Visible(ch) THEN
+								visible := TRUE;
+								Texts.Write(wdata.word, ch);
+							ELSE 
+								ASSERT(~Visible(ch));
+								visible := FALSE;
+								IF previousVisible THEN (* Beginning a fresh separator; copy out and reset buffers. *)
+									WCopySepWord(wdata)
+								END;
+								(* Incorporate ch into wdata. *)
+								CASE wdata.nCR OF
+								0: IF ch = Strings.CR THEN INC(wdata.nCR) ELSE Texts.Write(wdata.space0, ch) END |
+								1: IF ch = Strings.CR THEN (* Paragraph separator found. *)
+										INC(wdata.nCR)
+									ELSE
+										Texts.Write(wdata.space1, ch)
+									END
+								ELSE (* 1 < wdata.nCR; reading paragraph separator. *) 
+									IF ch = Strings.CR THEN
+										INC(wdata.nCR); wdata.indent := 0
+									ELSE
+										INC(wdata.indent)
+									END; 
+									Texts.Write(wdata.gap, ch) 
+								END (* CASE *)
+							END (* IF Visible(ch) *)					
+						END (* IF ~(rdr.lib IS Fonts.Font) *)
+					END; (* WHILE; finished reading from T *)
+					IF 0 < wdata.word.buf.len THEN
+						WCopySepWord(wdata)
+					ELSE (* text ends with a separator.  Copy unchanged. *)
+						WCopySeparator(wdata)
+					END;
+					Texts.Replace(T, pos0, end, wdata.accum.buf)
+				END (* IF pos < end *)
+			END (* IF T = NIL *)
+		END; (* IF S.class # Texts.Int *)
+		Texts.WriteLn(W);
+		Texts.Append(Oberon.Log, W.buf)
+	END Wrap;
+
 (** Parsing of a mailto url. *)
 	PROCEDURE SplitMailTo*(VAR url, mailadr: ARRAY OF CHAR): SIGNED32;
 		VAR
@@ -3640,6 +3911,7 @@ Gadgets.Insert ListGadgets.NewFrame Mail.NewTopicModel ~
 
 Mail.Mod
 Mail.Panel
+Mail.Show ~  Mail.Show 12 ~
 
 Mail.Collect
 

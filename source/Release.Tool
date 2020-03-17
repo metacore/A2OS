@@ -1809,6 +1809,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	HyperDocs.Tool HyperDocs.Panel HyperLinks.Panel Oberon.HyperDocTools.Mod	# HyperDocs
 	Mail.Tool Mail.Panel # MD5.Mod
+	Oberon.OutStub.Mod
 	Oberon.Mail.Mod	# Mail
 	FTP.Tool Oberon.FTPDocs.Mod	# FTP
 	Finger.Tool Oberon.Finger.Mod	# Finger

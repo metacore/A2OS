@@ -8,6 +8,7 @@ MODULE Sockets;	(** AUTHOR "G.F.";  PURPOSE "Interface to Unix sockets" *)
 (*	2000.02.18	g.f.	adapted to Solaris 8	*)
 (*	2001.01.06	g.f.	[c] - flag for new compiler	*)
 (*	2007.07.06	g.f.	IP address format converted to IP.Adr *)
+(*  	2020.04.06  PDR     perror on socket failure*)
 
 IMPORT S := SYSTEM, Unix, Trace, IP;
 
@@ -277,6 +278,9 @@ VAR
 	VAR s: INTEGER;
 	BEGIN
 		s := socket( af, typ, protocol );
+	        IF s = -1 THEN
+        	    Unix.Perror( "Sockets.Socket" )
+	        END; 
 		RETURN s
 	END Socket;
 

@@ -1,7 +1,7 @@
 (* Aos, Copyright 2001, Pieter Muller, ETH Zurich *)
 
 MODULE TCP;   (** AUTHOR "pjm, mvt, G.F."; PURPOSE "TCP protocol"; *)
-
+(*  2020.04.06  PDR     fixing Open for IPv6*) 
 
 IMPORT Out := KernelLog, IP, Streams,  Unix, Sockets, Objects;
 
@@ -93,12 +93,13 @@ TYPE
 					Use TCP.NilPort for lport to automatically assign an unused local port.*)
 				PROCEDURE Open*( lport: SIGNED32;  fip: IP.Adr;  fport: SIGNED32;  VAR res: INTEGER );
 				VAR
-					localAdr, foreignAdr: Sockets.SocketAdr;
+					localAdr, foreignAdr: Sockets.SocketAdr; af: INTEGER; 
 				BEGIN {EXCLUSIVE}
 					ASSERT( (state = Unused) & (lport >= 0) & (lport < 10000H) & (fport >= 0) & (fport < 10000H) );
-					IF trace THEN  Out.String( "Open connection " )  END;
-					socket := Sockets.Socket( Unix.AFINET, Unix.SockStream, Unix.IpProtoTCP );
-					IF socket # 0 THEN
+			                    IF trace THEN Out.String( "Open connection fip.usedProtocol=" ); Out.Int(fip.usedProtocol, 1) END;
+			                    IF fip.usedProtocol = IP.IPv6 THEN af := Unix.AFINET6 ELSE af := Unix.AFINET END;
+			                    socket := Sockets.Socket( af, Unix.SockStream, Unix.IpProtoTCP );
+			                    IF socket # -1 THEN 						
 						IF (~IP.IsNilAdr( fip )) & (fport # NilPort) THEN
 							IF trace THEN  Out.String( "(inout) " )  END;
 							(* active open (connect) *)
@@ -118,13 +119,13 @@ TYPE
 							IF trace THEN  Out.String( "(listen) " )  END;
 							(* passive open (listen) *)
 							ASSERT( (fport = NilPort) & (IP.IsNilAdr( fip )) );
-							localAdr := Sockets.NewSocketAdr( IP.NilAdr, lport );
+							localAdr := Sockets.NewSocketAdr( fip, lport ); 
 							IF Sockets.Bind( socket, localAdr ) THEN
 								localAdr := Sockets.GetSockName( socket );
 								SELF.lport := Sockets.GetPortNumber( localAdr );
 								IF Sockets.Listen( socket ) THEN
 									IGNORE Sockets.SetLinger( socket );
-									SELF.fip := IP.NilAdr;
+									SELF.fip := fip;
 									state := Listen;  res := Ok
 								ELSE  Sockets.Close( socket );  res := NotConnected
 								END

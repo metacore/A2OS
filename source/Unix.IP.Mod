@@ -2,6 +2,8 @@
 
 MODULE IP;   (** AUTHOR "pjm, mvt, eb, G.F."; PURPOSE "IP (v4 and v6)"; *)
 
+(*  2020.04.06  PDR     added Nil4Adr*, Nil6Adr* for using when it matters*) 
+
 IMPORT S := SYSTEM, KernelLog, Strings, Network;
 
 CONST
@@ -78,7 +80,7 @@ TYPE
 
 VAR
 	(* IP *)
-	NilAdr*: Adr;   (* To check if an IP address is NIL use IsNilAdr instead *)
+	NilAdr*, Nil4Adr*, Nil6Adr*: Adr;   (* To check if an IP address is NIL use IsNilAdr instead *) 	
 	preferredProtocol*: SIGNED32;   (* Preferred IP protocol *)
 
 	(** Is address not yet specified *)
@@ -634,8 +636,11 @@ VAR
 
 
 BEGIN
-	(* NilAdr *)
-	NilAdr.ipv4Adr := NilAdrIPv4;
+	(* NilAdrs *)
+	Nil4Adr := NilAdr;
+        Nil4Adr.usedProtocol := IPv4;
+        Nil6Adr := NilAdr;
+        Nil6Adr.usedProtocol := IPv6;
 	SetIPv6AdrNil( NilAdr );
 	NilAdr.usedProtocol := NilAdrIdent;
 END IP.

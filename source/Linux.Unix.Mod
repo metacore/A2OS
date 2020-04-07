@@ -6,6 +6,7 @@ MODULE Unix;   (* Josef Templ, 5.3.90	SVR4 system calls *)  (** Linux x86 versio
 (*	2002.06.27	g.f.	TmDesc fixed,  new: Utime, Mktime *)
 (*	2006.07.31	g.f.	shared memory support added *)
 (*	2007.04.13	g.f.	Thread priorities added *)
+(*  	2020.04.06  P	DR     corrected AFINET6* = 10 not 26*) 
 
 IMPORT S := SYSTEM, Glue, Trace;
 
@@ -185,7 +186,7 @@ CONST
 CONST
 	(* domain *)
 		AFINET* = 2;
-		AFINET6* = 26;
+		AFINET6* = 10;
 
 		PFINET* = AFINET;
 		PFINET6* = AFINET6;

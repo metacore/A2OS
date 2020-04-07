@@ -27,6 +27,7 @@ CONST
 	SelectionColor = 65376; 
 	SelectionColorInterclick01 = SIGNED32(4294901856); 
 	SelectionColorInterclick02 = SIGNED32(4278190176); 
+	TextViewMinimalDelay = 30; 
 	HLOver* = 0; 
 	HLUnder* = 1; 
 	HLWave* = 2; 
@@ -418,6 +419,7 @@ VAR
 	StrTextView: Strings.String; 
 	DefaultStyle: POINTER TO RECORD 
 	END; 
+	DefaultMinimalUpdateDelay* := 30: SIGNED32; 
 
 	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; value, currentSize: SIZE; VAR newSize: SIZE); 
 	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
@@ -427,6 +429,7 @@ VAR
 	PROCEDURE ^ CheckFont(style: SyntaxHighlighter.Style; font: WMGraphics.Font; VAR fontCache: FontCache); 
 	PROCEDURE ^ InitStrings; 
 	PROCEDURE ^ InitPrototypes; 
+	PROCEDURE ^ SetDefaultMinimalUpdateDelay(c: Commands.Context); 
 	PROCEDURE ^ EnablePiemenu*; 
 	PROCEDURE ^ DisablePiemenu*; 
 	PROCEDURE ^ TextViewFactory*(): XML.Element; 

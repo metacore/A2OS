@@ -130,7 +130,7 @@ CONST
 	ThreadHigh* = 99; 
 	NumPriorities* = 99; 
 	AFINET* = 2; 
-	AFINET6* = 26; 
+	AFINET6* = 10; 
 	PFINET* = AFINET; 
 	PFINET6* = AFINET6; 
 	SockStream* = 1; 

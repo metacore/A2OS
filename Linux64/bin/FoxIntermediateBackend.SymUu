@@ -218,7 +218,7 @@ TYPE
 		module: Sections.Module; 
 		moduleScope: SyntaxTree.ModuleScope; 
 		awaitProcCounter, labelId, constId, caseId: SIGNED32; 
-		hiddenPointerType: SyntaxTree.RecordType; 
+		hiddenPointerType, anyRecordType: SyntaxTree.RecordType; 
 		delegatePointerType: SyntaxTree.RecordType; 
 		checker: SemanticChecker.Checker; 
 		backend: IntermediateBackend; 

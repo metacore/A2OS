@@ -37,7 +37,7 @@ TYPE
 
 	InterfaceHandler* = PROCEDURE {DELEGATE}(int: Interface); 
 VAR 
-	NilAdr*: Adr; 
+	NilAdr*, Nil4Adr*, Nil6Adr*: Adr; 
 	preferredProtocol*: SIGNED32; 
 
 	PROCEDURE ^ IsNilAdr*(adr: Adr): BOOLEAN; 

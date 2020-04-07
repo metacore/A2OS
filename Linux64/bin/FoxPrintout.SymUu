@@ -47,6 +47,7 @@ TYPE
 		PROCEDURE ^ VisitAddressType*(x: SyntaxTree.AddressType); 
 		PROCEDURE ^ VisitObjectType*(x: SyntaxTree.ObjectType); 
 		PROCEDURE ^ VisitAnyType*(x: SyntaxTree.AnyType); 
+		PROCEDURE ^ VisitAnyRecordType*(x: SyntaxTree.AnyRecordType); 
 		PROCEDURE ^ VisitMathArrayType*(x: SyntaxTree.MathArrayType); 
 		PROCEDURE ^ PointerFlags(x: SyntaxTree.PointerType); 
 		PROCEDURE ^ ObjectFlags(rec: SyntaxTree.RecordType; x: SyntaxTree.PointerType); 

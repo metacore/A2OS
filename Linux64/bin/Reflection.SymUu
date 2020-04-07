@@ -63,7 +63,7 @@ CONST
 	sfTypeDeclaration* = 0F4X; 
 	sfModule* = 0FFX; 
 TYPE 
-	Name = ARRAY 256 OF CHAR; 
+	Name* = ARRAY 256 OF CHAR; 
 
 	Meta* = RECORD 
 		module-: Modules.Module; 

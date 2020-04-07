@@ -81,6 +81,7 @@ TYPE
 		PROCEDURE ^ Body(scope: SyntaxTree.ProcedureScope): SyntaxTree.Body; 
 		PROCEDURE ^ BodyProcedure(parentScope: SyntaxTree.Scope): SyntaxTree.Procedure; 
 		PROCEDURE ^ ProcedureType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.ProcedureType; 
+		PROCEDURE ^ AnyType(position: Position): SyntaxTree.Type; 
 		PROCEDURE ^ ObjectType(position: Position; name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
 		PROCEDURE ^ CellType(position: Position; name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope; isCellNet: BOOLEAN): SyntaxTree.Type; 
 		PROCEDURE ^ PointerType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.PointerType; 

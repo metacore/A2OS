@@ -61,6 +61,7 @@ TYPE
 		PROCEDURE ^ VisitBasicType*(x: BasicType); 
 		PROCEDURE ^ VisitByteType*(x: ByteType); 
 		PROCEDURE ^ VisitAnyType*(x: AnyType); 
+		PROCEDURE ^ VisitAnyRecordType*(x: AnyRecordType); 
 		PROCEDURE ^ VisitObjectType*(x: ObjectType); 
 		PROCEDURE ^ VisitNilType*(x: NilType); 
 		PROCEDURE ^ VisitAddressType*(x: AddressType); 
@@ -241,6 +242,14 @@ TYPE
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 		PROCEDURE ^ IsPointer*(): BOOLEAN; 
 	END AnyType; 
+
+	AnyRecordType* = OBJECT (BasicType)
+
+		PROCEDURE ^  & InitAnyRecordType(sizeInBits: SIZE); 
+		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
+		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
+		PROCEDURE ^ IsRecordType*(): BOOLEAN; 
+	END AnyRecordType; 
 
 	ByteType* = OBJECT (BasicType)
 
@@ -1664,6 +1673,7 @@ VAR
 	PROCEDURE ^ NewType*(): Type; 
 	PROCEDURE ^ NewByteType*(sizeInBits: SIZE): ByteType; 
 	PROCEDURE ^ NewAnyType*(sizeInBits: SIZE): AnyType; 
+	PROCEDURE ^ NewAnyRecordType*(): AnyRecordType; 
 	PROCEDURE ^ NewObjectType*(sizeInBits: SIZE): ObjectType; 
 	PROCEDURE ^ NewNilType*(sizeInBits: SIZE): NilType; 
 	PROCEDURE ^ NewAddressType*(sizeInBits: SIZE): AddressType; 

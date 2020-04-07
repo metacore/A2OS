@@ -1837,8 +1837,8 @@ BEGIN
 	(* initialize empty free page stack *)
 	NewDirectPage(pageStackAdr); ASSERT(pageStackAdr # NilAdr);
 	SYSTEM.PUT (pageStackAdr+NodeSP, ADDRESS(MinSP));
-	SYSTEM.PUT (pageStackAdr+NodeNext, NIL);
-	SYSTEM.PUT (pageStackAdr+NodePrev, NIL);
+	SYSTEM.PUT (pageStackAdr+NodeNext, ADDRESS(NilAdr));
+	SYSTEM.PUT (pageStackAdr+NodePrev, ADDRESS(NilAdr));
 	(* free low pages *)
 	freeLowPage := NilAdr; freeLowPages := 0;
 	i := lTop DIV PS; j := LowAdr DIV PS;

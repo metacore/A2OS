@@ -196,7 +196,7 @@ ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
 	GuiApplicationsMini.zip GuiApplications.zip Fun.zip Contributions.zip Build.zip EFI.zip
 	Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
 	KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip FunSrc.zip BuildSrc.zip
-	ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
+	ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip IBMPlexFonts.zip ~
 
 FSTools.Watch TEMP ~
 FSTools.Unmount TEMP ~
@@ -315,7 +315,7 @@ ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
 	GuiApplicationsMini.zip GuiApplications.zip Fun.zip Contributions.zip Build.zip EFI.zip
 	Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
 	KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip FunSrc.zip BuildSrc.zip
-	ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
+	ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip IBMPlexFonts.zip ~
 
 FSTools.Watch TEMP ~
 FSTools.Unmount TEMP ~

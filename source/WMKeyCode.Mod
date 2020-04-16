@@ -11,7 +11,9 @@ TYPE
 		PROCEDURE &New*(c : WMRestorable.Context);
 		BEGIN
 			Init(300, 32, FALSE);
-			canvas.Fill(WMRectangles.MakeRect(0,0, img.width, img.height), SIGNED32(0FFFFFFFFH), WMGraphics.ModeCopy);
+			canvas.Fill(WMRectangles.MakeRect(0, 0, GetWidth(), GetHeight()), WMGraphics.White, WMGraphics.ModeCopy);
+			Invalidate(WMRectangles.MakeRect(0, 0, GetWidth(), GetHeight()));
+			canvas.SetColor(WMGraphics.Black);
 			SetTitle(Strings.NewString("Key Code Display"));
 			IF c # NIL THEN
 				WMRestorable.AddByContext(SELF, c)
@@ -35,7 +37,7 @@ TYPE
 		BEGIN
 			font := canvas.GetFont();
 			x := 3; y := 14;
-			canvas.Fill(WMRectangles.MakeRect(0,0, img.width, img.height), SIGNED32(0FFFFFFFFH), WMGraphics.ModeCopy);
+			canvas.Fill(WMRectangles.MakeRect(0, 0, GetWidth(), GetHeight()), WMGraphics.White, WMGraphics.ModeCopy);
 			IF keysym # 0 THEN
 				WriteString("Key: ");
 				GetFlagsString(flags, t); WriteString(t);
@@ -48,7 +50,7 @@ TYPE
 				WriteString(t);
 				WriteString(" ("); GetKeysymString(keysym, t); WriteString(t); WriteString(")");
 			END;
-			Invalidate(WMRectangles.MakeRect(0,0, img.width, img.height))
+			Invalidate(WMRectangles.MakeRect(0, 0, GetWidth(), GetHeight()));
 		END KeyEvent;
 
 		PROCEDURE Handle*(VAR x : WMMessages.Message);

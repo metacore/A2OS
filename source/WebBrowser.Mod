@@ -6,7 +6,7 @@ IMPORT
 	Modules, WMRestorable, XML, WMRectangles, WMMessages, Commands, Files;
 
 CONST
-	HomePage = "http://bluebottle.ethz.ch";
+	HomePage = "http://cas.inf.ethz.ch/projects/a2";
 	BrowserTitle = "BimBrowser";
 	BookmarkPage = "file://bookmarks.html"; (* This URL is loaded when pressing the "Bookmarks"-button *)
 	BookmarkFile = "bookmarks.html"; (* New bookmarks are appended to this file *)

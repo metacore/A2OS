@@ -1729,7 +1729,7 @@ BEGIN
 	text.ReleaseWrite;
 	(* call correct loader *)
 	CASE format OF
-	| 0:	LoadOberonText(text, fileName, res);
+	| 0: LoadOberonText(text, fileName, res);
 	| 1: LoadText(text, fileName, res);
 	| 2: LoadUTF8(text, fileName, res);
 	ELSE
@@ -1743,7 +1743,7 @@ VAR reader : Streams.Reader; decoder : Codecs.TextDecoder; fstring : ARRAY 64 OF
 BEGIN
 	reader := Codecs.OpenInputStream(fileName);
 	IF (reader # NIL) THEN
-		reader.String(fstring);
+		reader.Ln(fstring);
 		i := ORD(fstring[0]);
 		IF (i = 0F0H) OR (i = 0F7H) OR (i = 01H) THEN
 			COPY("Oberon", format); (* Oberon File Format *)
@@ -1751,7 +1751,9 @@ BEGIN
 			(* possibly an XML, check further,  check IF just an XML or BB Format *)
 			Strings.UpperCase(fstring);
 			IF Strings.Match("<?XML VERSION=*", fstring) THEN
-				IF Strings.Match("*<?BLUEBOTTLE FORMAT*", fstring) THEN
+				reader.Ln(fstring);
+				Strings.UpperCase(fstring);
+				IF Strings.Match("<?BLUEBOTTLE FORMAT*", fstring) THEN
 					COPY("BBT", format); (* Bluebottle File Format *)
 				ELSE
 					COPY("UTF-8", format); (* XML - treat as UTF-8 *)

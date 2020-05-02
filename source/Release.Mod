@@ -1,4 +1,3 @@
-
 MODULE Release; (** AUTHOR "staubesv"; PURPOSE "Release build tool"; *)
 (**
  *
@@ -726,7 +725,7 @@ TYPE
 			tw.String("~");
 			tw.Update;
 
-			TextUtilities.StoreOberonText(text, filename, res);
+			TextUtilities.StoreText(text, filename, res);
 		END GenerateToolFile;
 
 		(* Generate a XML file describing the packages use by WMInstaller.Mod *)

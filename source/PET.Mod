@@ -15,7 +15,7 @@ MODULE PET; (** AUTHOR "TF, PL"; PURPOSE "Programmer's Editing Tool"; *)
  *	CTRL-S:		Store current page
  *
  *	CTRL-I:	Toggle interactive Interface Finder
- * 
+ *
  *	CTRL-M:	Toggle visibility of sidepanel
  *
  *	CTRL-H:		Compile file opened in current page
@@ -515,7 +515,7 @@ TYPE
 		autoCodecFormat: ARRAY 128 OF CHAR;
 
 		name: Filename; (* name of tab (filename without path *)
-			
+
 		filename : Filename; (* Filename including path *)
 
 		options : CompilerOptions;
@@ -876,7 +876,7 @@ TYPE
 			END;
 			wrap := ~wrap;
 		END ToggleWrap;
-		
+
 		PROCEDURE ToggleExtInterface;
 		VAR ctx:Commands.Context; res:INTEGER; msg:ARRAY 32 OF CHAR;
 		BEGIN
@@ -917,7 +917,7 @@ TYPE
 
 
 		PROCEDURE HandleShortcut(ucs : SIZE; flags : SET; keysym : SIZE) : BOOLEAN;
-		VAR pos : SIZE; 
+		VAR pos : SIZE;
 
 			PROCEDURE HandlePreviousNext(forward : BOOLEAN);
 			BEGIN
@@ -1352,7 +1352,7 @@ TYPE
 			ELSIF sender = compileBtn THEN
 				IF currentPage # NIL THEN
 					IF (settings.backupOnCompile) THEN
-						TextUtilities.StoreOberonText(currentPage.editor.text, BackupOnCompileFilename, res);
+						TextUtilities.StoreText(currentPage.editor.text, BackupOnCompileFilename, res);
 						IF (res = 0) THEN
 							KernelLog.String("PET: Backup stored in "); KernelLog.String(BackupOnCompileFilename); KernelLog.Ln;
 						ELSE

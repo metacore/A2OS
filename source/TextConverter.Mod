@@ -38,4 +38,11 @@ BEGIN
 	Convert (diagnostics, context.arg, TextUtilities.ExportUTF8);
 END UTF8;
 
+PROCEDURE BBT* (context: Commands.Context);
+VAR diagnostics: Diagnostics.StreamDiagnostics;
+BEGIN
+	NEW (diagnostics, context.error);
+	Convert (diagnostics, context.arg, TextUtilities.StoreText);
+END BBT;
+
 END TextConverter.

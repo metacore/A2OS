@@ -1,7 +1,6 @@
 MODULE TextUtilities;	(** AUTHOR "TF"; PURPOSE "Utilities for the Unicode text system"; *)
 
 IMPORT
-	SYSTEM, (* for Oberon Text colors *)
 	Configuration, Commands, Codecs, FP1616,
 	KernelLog, Texts, Streams, Files, UTF8Strings, XML, XMLScanner, XMLParser, XMLObjects, Repositories, Strings, WMGraphics,
 	UnicodeProperties;
@@ -762,6 +761,7 @@ TYPE
 		o : Texts.ObjectPiece; attr: Texts.Attributes; fi : Texts.FontInfo;
 		stylename, pstylename: ARRAY 64 OF CHAR;
 		link : Texts.Link;
+		defaultFont: WMGraphics.Font;
 
 		PROCEDURE Error(CONST x : ARRAY OF CHAR);
 		BEGIN
@@ -819,7 +819,7 @@ TYPE
 			IF (attr = NIL) THEN NEW(attr); END;
 			attr.voff := 0; attr.color := 0000000FFH; attr.bgcolor := 000000000H;
 			IF (attr.fontInfo = NIL) THEN NEW(fi); attr.fontInfo := fi; END;
-			attr.fontInfo.name := "Oberon"; attr.fontInfo.size := 10; attr.fontInfo.style := {};
+			COPY(defaultFont.name, attr.fontInfo.name); attr.fontInfo.size := defaultFont.size; attr.fontInfo.style := {};
 			IF (stylename = "Bold") THEN attr.fontInfo.style := {0};
 			ELSIF (stylename = "Highlight") THEN attr.fontInfo.style := {1};
 			ELSIF (stylename = "Assertion") THEN attr.fontInfo.style := {0}; attr.color := 00000FFFFH;
@@ -927,6 +927,7 @@ TYPE
 			d := parser.Parse();
 
 			IF errors THEN RETURN END;
+			defaultFont := WMGraphics.GetDefaultFont( );
 			OpenXML(d);
 			res := 0;
 		END Open;
@@ -1027,9 +1028,11 @@ TYPE
 
 		(* Set the default  attribute values *)
 		PROCEDURE Init;
+		VAR defaultFont: WMGraphics.Font;
 		BEGIN
-			dfFamily := "Oberon";
-			dfSize := 10;
+			defaultFont := WMGraphics.GetDefaultFont( );
+			COPY(defaultFont.name, dfFamily);
+			dfSize := defaultFont.size;
 			dfStyle := 0;
 			dfVoff := 0;
 			dfColor := 0000000FFH;

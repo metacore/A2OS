@@ -927,7 +927,6 @@ TYPE
 			d := parser.Parse();
 
 			IF errors THEN RETURN END;
-			defaultFont := WMGraphics.GetDefaultFont( );
 			OpenXML(d);
 			res := 0;
 		END Open;
@@ -937,6 +936,7 @@ TYPE
 		BEGIN
 			errors := FALSE;
 			doc := d;
+			defaultFont := WMGraphics.GetDefaultFont( );
 			NEW(text);
 			text.AcquireWrite;
 

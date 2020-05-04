@@ -87,37 +87,43 @@ To update: Configuration.Init ~
 				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
 				<Setting name="Style" value=""/>
 			</Section>
-			<Section name="BoldFont">
+			<Section name="Bold">
 				<Setting name="Name" value=""/>
 				<Setting name="Size" value=""/>
 				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
 				<Setting name="Style" value=""/>
 			</Section>
-			<Section name="MonospaceFont">
+			<Section name="Monospace">
+				<Setting name="Name" value="IBMPlexMono"/>
+				<Setting name="Size" value=""/>
+				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
+				<Setting name="Style" value=""/>
+			</Section>
+			<Section name="Serif">
+				<Setting name="Name" value="IBMPlexSerif"/>
+				<Setting name="Size" value=""/>
+				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
+				<Setting name="Style" value=""/>
+			</Section>
+			<Section name="SansSerif">
+				<Setting name="Name" value="IBMPlexSans"/>
+				<Setting name="Size" value=""/>
+				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
+				<Setting name="Style" value=""/>
+			</Section>
+			<Section name="Fantasy">
 				<Setting name="Name" value=""/>
 				<Setting name="Size" value=""/>
 				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
 				<Setting name="Style" value=""/>
 			</Section>
-			<Section name="SerifFont">
+			<Section name="Cursive">
 				<Setting name="Name" value=""/>
 				<Setting name="Size" value=""/>
 				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
 				<Setting name="Style" value=""/>
 			</Section>
-			<Section name="SansSerifFont">
-				<Setting name="Name" value=""/>
-				<Setting name="Size" value=""/>
-				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
-				<Setting name="Style" value=""/>
-			</Section>
-			<Section name="CursiveFont">
-				<Setting name="Name" value=""/>
-				<Setting name="Size" value=""/>
-				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
-				<Setting name="Style" value=""/>
-			</Section>
-			<Section name="CasualFont">
+			<Section name="Casual">
 				<Setting name="Name" value=""/>
 				<Setting name="Size" value=""/>
 				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->

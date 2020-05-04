@@ -1,6 +1,6 @@
 MODULE HTMLTransformer;	(** AUTHOR "Simon L. Keel"; PURPOSE "transforming HTML to BB-text"; *)
 
-IMPORT
+IMPORT Configuration,
 	WebBrowserComponents, XMLTransformer,
 	Strings, XML, XMLObjects, DynamicStrings, UTF8Strings, WMGraphics, KernelLog, WMEvents, WMCharCodes,
 	WMComponents, WMRectangles, WMTextView, TextUtilities, Texts, WMStandardComponents,
@@ -15,7 +15,6 @@ CONST
 	defCursive = "ComicSansMS";
 	defFantasy = "Arial";
 	defMonospace = "CourierNew";
-	defaultFont = "Oberon"; (* the default browser-font is defSerif; defaultFont is only used, if defSerif doesn't exist! *)
 
 	(* current text is *)
 	cText = 0;
@@ -33,6 +32,7 @@ VAR
 	cursive : ARRAY 64 OF CHAR;
 	fantasy : ARRAY 64 OF CHAR;
 	monospace : ARRAY 64 OF CHAR;
+	defaultFont : ARRAY 64 OF CHAR; (* the default browser-font is defSerif; defaultFont is only used, if defSerif doesn't exist! *)
 
 TYPE
 	String = Strings.String;
@@ -3426,10 +3426,25 @@ BEGIN
 	END;
 END GetCharEnt;
 
+VAR res: INTEGER; systemFont: WMGraphics.Font;
 BEGIN
+	systemFont := WMGraphics.GetDefaultFont();
+	COPY( systemFont.name, defaultFont );
+	Configuration.Get("WindowManager.FontManager.Serif.Name", serif, res);
+	IF (res # Configuration.Ok) OR (serif = "") THEN serif := defaultFont; END;
+	Configuration.Get("WindowManager.FontManager.SansSerif.Name", sansSerif, res);
+	IF (res # Configuration.Ok) OR (sansSerif = "") THEN sansSerif := defaultFont; END;
+	Configuration.Get("WindowManager.FontManager.Cursive.Name", cursive, res);
+	IF (res # Configuration.Ok) OR (cursive = "") THEN cursive := defaultFont; END;
+	Configuration.Get("WindowManager.FontManager.Fantasy.Name", fantasy, res);
+	IF (res # Configuration.Ok) OR (fantasy = "") THEN fantasy := defaultFont; END;
+	Configuration.Get("WindowManager.FontManager.Monospace.Name", monospace, res);
+	IF (res # Configuration.Ok) OR (monospace = "") THEN monospace := defaultFont; END;
+(*
 	IF FontExists(defSerif) THEN serif := defSerif; ELSE serif := defaultFont END;
 	IF FontExists(defSansSerif) THEN sansSerif := defSansSerif; ELSE sansSerif := defaultFont END;
 	IF FontExists(defCursive) THEN cursive := defCursive; ELSE cursive := defaultFont END;
 	IF FontExists(defFantasy) THEN fantasy := defFantasy; ELSE fantasy := defaultFont END;
 	IF FontExists(defMonospace) THEN monospace := defMonospace; ELSE monospace := defaultFont END;
+*)
 END HTMLTransformer.

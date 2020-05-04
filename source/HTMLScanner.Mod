@@ -66,7 +66,7 @@ TYPE
 			NextCh();
 			(* remove byte order marker (bom) *)
 			WHILE (ORD(nextCh) = 0EFH) OR (ORD(nextCh) = 0BBH) OR (ORD(nextCh) = 0BFH) OR
-				(ORD(nextCh) = 0FFH) OR (ORD(nextCh) = 0FEH) OR (ORD(nextCh) = 000H) DO
+				(ORD(nextCh) = 0FFH) OR (ORD(nextCh) = 0FEH) OR ( nextCh = 0X ) & ( sym # Eof ) DO
 					NextCh();
 			END;
 		END Init;

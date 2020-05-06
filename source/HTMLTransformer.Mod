@@ -875,15 +875,21 @@ TYPE
 				ELSIF name^="MENU" THEN
 					ul();
 				ELSIF name^="META" THEN
-					s := GetElemAttributeValue(elem, "content", TRUE);
+					s := GetElemAttributeValue(elem, "charset", TRUE);
 					IF s#NIL THEN
-						pos := Strings.Pos("charset", s^);
-						IF pos # -1 THEN
-							pos := Strings.IndexOfByte('=', pos+7, s^) + 1;
-							IF pos < Strings.Length(s^) THEN
-								s := Strings.Substring2(pos, s^);
-								charsetConv := GetCharsetConverter(s^);
-								charset := s;
+						charsetConv := GetCharsetConverter(s^);
+						charset := s;
+					ELSE
+						s := GetElemAttributeValue(elem, "content", TRUE);
+						IF s#NIL THEN
+							pos := Strings.Pos("charset", s^);
+							IF pos # -1 THEN
+								pos := Strings.IndexOfByte('=', pos+7, s^) + 1;
+								IF pos < Strings.Length(s^) THEN
+									s := Strings.Substring2(pos, s^);
+									charsetConv := GetCharsetConverter(s^);
+									charset := s;
+								END;
 							END;
 						END;
 					END;

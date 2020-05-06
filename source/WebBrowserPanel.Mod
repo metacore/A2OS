@@ -209,11 +209,13 @@ TYPE
 		VAR
 			sharpPos : SIZE;
 			wrp : WMTextView.LinkWrapper;
-			sequencer : Messages.MsgSequencer;
+			(*sequencer : Messages.MsgSequencer;*)
 		BEGIN
 			Init;
+(*
 			NEW(sequencer, Handle);
 			SetSequencer(sequencer);
+*)
 			takesFocus.Set(FALSE);
 			SELF.rc := rc;
 			SELF.width := width;

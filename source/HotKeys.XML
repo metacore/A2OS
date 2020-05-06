@@ -87,7 +87,7 @@
 	<HotKey name="Run" keys="CTRL+R" command="HotKeysCommands.EnterCommand"/>
 
 	<!-- Example: Apply text style to currently selected text -->
-	<HotKey name="Bold" keys="SHIFT+DELETE" command="WMTextTool.SetFontStyle Bold"/>
+	<!--HotKey name="Bold" keys="SHIFT+DELETE" command="WMTextTool.SetFontStyle Bold"/-->
 	
 	<!-- Example: Misc -->
 	<HotKey name="Clear LogWindow" keys="META+CTRL+O" command="HotKeysCommands.ClearLog"/>	

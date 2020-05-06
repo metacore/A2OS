@@ -10,11 +10,11 @@ CONST
 	verbose = TRUE;
 	(* default generic font families *)
 		(* Note: All font-names are case-sensitive! *)
-	defSerif = "TimesNewRoman";
-	defSansSerif = "Arial";
-	defCursive = "ComicSansMS";
-	defFantasy = "Arial";
-	defMonospace = "CourierNew";
+(*	defSerif = "TimesNewRoman";*)
+(*	defSansSerif = "Arial";*)
+(*	defCursive = "ComicSansMS";*)
+(*	defFantasy = "Arial";*)
+(*	defMonospace = "CourierNew";*)
 
 	(* current text is *)
 	cText = 0;
@@ -32,7 +32,7 @@ VAR
 	cursive : ARRAY 64 OF CHAR;
 	fantasy : ARRAY 64 OF CHAR;
 	monospace : ARRAY 64 OF CHAR;
-	defaultFont : ARRAY 64 OF CHAR; (* the default browser-font is defSerif; defaultFont is only used, if defSerif doesn't exist! *)
+	defaultFont : ARRAY 64 OF CHAR; (* the default browser-font is serif; defaultFont is only used, if serif doesn't exist! *)
 
 TYPE
 	String = Strings.String;
@@ -878,7 +878,7 @@ TYPE
 					s := GetElemAttributeValue(elem, "content", TRUE);
 					IF s#NIL THEN
 						pos := Strings.Pos("charset", s^);
-						IF i # -1 THEN
+						IF pos # -1 THEN
 							pos := Strings.IndexOfByte('=', pos+7, s^) + 1;
 							IF pos < Strings.Length(s^) THEN
 								s := Strings.Substring2(pos, s^);

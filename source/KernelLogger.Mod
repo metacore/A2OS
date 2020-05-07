@@ -1,7 +1,7 @@
 MODULE KernelLogger; (** AUTHOR "TF"; PURPOSE "Periodically copy kernel log buffer into text"; *)
 
 IMPORT
-	SYSTEM, KernelLog, Texts, TextUtilities, Kernel, Modules;
+	KernelLog, Texts, TextUtilities, Kernel, Modules, Configuration;
 
 CONST
 	BufSize = SIGNED32(8192) * 8; (* Kernel buffer size *)
@@ -52,15 +52,15 @@ TYPE
 
 	BEGIN {ACTIVE}
 		(* pre loading the fonts so traps can be displayed even when the disk is causing the trap *)
-		tw.SetFontName("Courier"); tw.String("Log started");
-		tw.SetFontName("Oberon"); tw.Ln;
+		tw.SetFontName(monospace); tw.String("Log started");
+		tw.SetFontName(default); tw.Ln;
 		WHILE alive DO
 			bufPos := 0; added := FALSE;
 			LOOP
 				ch := Get();
 				IF ch # 0X THEN
-					IF ch = 0EX THEN tw.SetFontName("Courier"); tw.SetFontColor(SIGNED32(0800000FFH));
-					ELSIF ch = 0FX THEN tw.SetFontName("Oberon"); tw.SetFontColor(0FFH);
+					IF ch = 0EX THEN tw.SetFontName(monospace); tw.SetFontColor(SIGNED32(0800000FFH));
+					ELSIF ch = 0FX THEN tw.SetFontName(default); tw.SetFontColor(0FFH);
 					ELSIF ch = 0DX THEN (* ignore CR character - this approximates the CRLF -> LF *)
 					ELSE tw.Char(ch); added := TRUE;
 					END;
@@ -143,7 +143,12 @@ BEGIN
 	END
 END Cleanup;
 
+VAR monospace, default : ARRAY 256 OF CHAR; res: INTEGER;
 BEGIN
+	Configuration.Get("WindowManager.FontManager.DefaultFont.Name", default, res);
+	Configuration.Get("WindowManager.FontManager.Monospace.Name", monospace, res);
+	IF (res # Configuration.Ok) OR (monospace = "") THEN monospace := default; END;
+
 	NEW(kernelLog);
 	Start;
 	Modules.InstallTermHandler(Cleanup);

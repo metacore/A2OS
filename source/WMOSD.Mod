@@ -20,7 +20,6 @@ IMPORT
 CONST
 
 	(* Font settings *)
-	DefaultFontName = "Oberon";
 	DefaultFontSize = 24;
 	DefaultFontStyle = {};
 
@@ -57,19 +56,16 @@ TYPE
 		END IsHit;
 
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
-		VAR font : WMGraphics.Font;
+		VAR defaulFont, font : WMGraphics.Font;
 		BEGIN
 			NEW(label);
 			label.alignment.Set(WMComponents.AlignClient); label.fillColor.Set(DefaultBgFillColor);
 			label.alignH.Set(WMGraphics.AlignCenter); label.alignV.Set(WMGraphics.AlignCenter);
 			label.textColor.Set(WMGraphics.White);
-
-			font := WMGraphics.GetFont(DefaultFontName, DefaultFontSize, DefaultFontStyle);
-			IF font # NIL THEN
-				label.SetFont(font);
-			ELSE
-				KernelLog.String("Font "); KernelLog.String(DefaultFontName); KernelLog.String(" not found."); KernelLog.Ln;
-			END;
+			
+			defaulFont := WMGraphics.GetDefaultFont();
+			font := WMGraphics.GetFont(defaulFont.name, DefaultFontSize, DefaultFontStyle);
+			label.SetFont(font);
 
 			RETURN label;
 		END CreateForm;

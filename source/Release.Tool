@@ -2053,9 +2053,6 @@ PACKAGE TrueTypeFonts ARCHIVE "TrueTypeFonts.zip" SOURCE "" DESCRIPTION "True-ty
 	Vera.ttf VeraBd.ttf VeraBI.ttf VeraI.ttf
 	VeraMo.ttf VeraMoBd.ttf VeraMoBI.ttf VeraMoI.ttf
 	VeraSe.ttf VeraSeBd.ttf
-END
-
-PACKAGE IBMPlexFonts ARCHIVE "IBMPlexFonts.zip" SOURCE "" DESCRIPTION "IBM Plex True-type fonts"
 	IBMPlexLicense.txt
 	IBMPlexSerif.ttf IBMPlexSerif_i.ttf
 	IBMPlexSerif_bd.ttf	IBMPlexSerif_bi.ttf

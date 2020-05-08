@@ -23,7 +23,7 @@ System.Show Done. ~ System.Ln ~
 System.Ln ~ System.Show Create build directory and build WinA2... ~ System.Ln ~
 Release.Build
 	--path="WINA2:/WinA2Mini/bin/" --build --zip --zipMethod=0
-	--exclude="Applications GuiApplications Education EFI Fun Testing Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts CjkFonts IBMPlexFonts Pr3Fonts Pr6Fonts"
+	--exclude="Applications GuiApplications Education EFI Fun Testing Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts CjkFonts Pr3Fonts Pr6Fonts"
 	Win32
 ~
 

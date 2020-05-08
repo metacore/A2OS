@@ -3436,15 +3436,15 @@ VAR res: INTEGER; systemFont: WMGraphics.Font;
 BEGIN
 	systemFont := WMGraphics.GetDefaultFont();
 	COPY( systemFont.name, defaultFont );
-	Configuration.Get("WindowManager.FontManager.Serif.Name", serif, res);
+	Configuration.Get("WindowManager.FontManager.Fonts.Serif.Name", serif, res);
 	IF (res # Configuration.Ok) OR (serif = "") THEN serif := defaultFont; END;
-	Configuration.Get("WindowManager.FontManager.SansSerif.Name", sansSerif, res);
+	Configuration.Get("WindowManager.FontManager.Fonts.SansSerif.Name", sansSerif, res);
 	IF (res # Configuration.Ok) OR (sansSerif = "") THEN sansSerif := defaultFont; END;
-	Configuration.Get("WindowManager.FontManager.Cursive.Name", cursive, res);
+	Configuration.Get("WindowManager.FontManager.Fonts.Cursive.Name", cursive, res);
 	IF (res # Configuration.Ok) OR (cursive = "") THEN cursive := defaultFont; END;
-	Configuration.Get("WindowManager.FontManager.Fantasy.Name", fantasy, res);
+	Configuration.Get("WindowManager.FontManager.Fonts.Fantasy.Name", fantasy, res);
 	IF (res # Configuration.Ok) OR (fantasy = "") THEN fantasy := defaultFont; END;
-	Configuration.Get("WindowManager.FontManager.Monospace.Name", monospace, res);
+	Configuration.Get("WindowManager.FontManager.Fonts.Monospace.Name", monospace, res);
 	IF (res # Configuration.Ok) OR (monospace = "") THEN monospace := defaultFont; END;
 (*
 	IF FontExists(defSerif) THEN serif := defSerif; ELSE serif := defaultFont END;

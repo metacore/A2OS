@@ -146,7 +146,7 @@ END Cleanup;
 VAR monospace, default : ARRAY 256 OF CHAR; res: INTEGER;
 BEGIN
 	Configuration.Get("WindowManager.FontManager.DefaultFont.Name", default, res);
-	Configuration.Get("WindowManager.FontManager.Monospace.Name", monospace, res);
+	Configuration.Get("WindowManager.FontManager.Fonts.Monospace.Name", monospace, res);
 	IF (res # Configuration.Ok) OR (monospace = "") THEN monospace := default; END;
 
 	NEW(kernelLog);

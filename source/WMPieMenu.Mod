@@ -258,7 +258,10 @@ TYPE
 				canvas.DrawImage(26, 26, bgBitmap, WMGraphics.ModeSrcOverDst)
 			END;
 			(* caption *)
-			font := WMGraphics.GetFont("Oberon", 14, {0}); canvas.SetColor(0FFH); canvas.SetFont(font);
+			font := canvas.GetFont();
+			font := WMGraphics.GetFont(font.name, font.size, {WMGraphics.FontBold});
+			canvas.SetFont(font);
+			canvas.SetColor(0FFH);
 			IF images[0] # NIL THEN
 				canvas.DrawImage(x + (InnerRadius + OuterRadius) DIV 2 - images[0].width DIV 2, y - images[0].height DIV 2, images[0], WMGraphics.ModeSrcOverDst)
 			ELSIF texts[0] # NIL THEN

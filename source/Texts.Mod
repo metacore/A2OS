@@ -1416,7 +1416,11 @@ BEGIN
 			IF (str # NIL) & (str^ = "character-style") THEN					(* character styles *)
 				NEW(cStyle);
 				str := ptr(XML.Element).GetAttributeValue("name"); IF str # NIL THEN COPY(str^, cStyle.name) END;
-				str := ptr(XML.Element).GetAttributeValue("font-family"); IF str # NIL THEN COPY(str^, cStyle.family) END;
+				str := ptr(XML.Element).GetAttributeValue("font-family");
+				IF ( str # NIL ) & ( str^ # "") THEN COPY(str^, cStyle.family);
+				ELSE
+					COPY(defaultAttributes.fontInfo.name, cStyle.family);
+				END;
 				str := ptr(XML.Element).GetAttributeValue("font-style");
 				IF str # NIL THEN
 					IF (str^ = "0") THEN cStyle.style := {};
@@ -1426,7 +1430,13 @@ BEGIN
 					ELSE cStyle.style := {};
 					END;
 				END;
-				str := ptr(XML.Element).GetAttributeValue("font-size"); IF str # NIL THEN Strings.StrToFloat(str^, tempReal); cStyle.size := FP1616.FloatToFixp(SHORT(tempReal)); END;
+				str := ptr(XML.Element).GetAttributeValue("font-size");
+				TRACE( str^ );
+				IF ( str # NIL ) & ( str^ # "" ) THEN
+					Strings.StrToFloat(str^, tempReal); cStyle.size := FP1616.FloatToFixp(SHORT(tempReal));
+				ELSE
+					cStyle.size := FP1616.FloatToFixp( FLOAT32(defaultAttributes.fontInfo.size));
+				END;
 				str := ptr(XML.Element).GetAttributeValue("leading"); IF str # NIL THEN Strings.StrToFloat(str^, tempReal); cStyle.leading := FP1616.FloatToFixp(SHORT(tempReal)); END;
 				str := ptr(XML.Element).GetAttributeValue("baseline-shift"); IF str # NIL THEN Strings.StrToFloat(str^, tempReal); cStyle.baselineShift := FP1616.FloatToFixp(SHORT(tempReal)); END;
 				str := ptr(XML.Element).GetAttributeValue("color"); IF str # NIL THEN Strings.HexStrToInt(str^, tempInt, tempRes); cStyle.color := tempInt; END;
@@ -1529,6 +1539,7 @@ END InitDefaultAttributes;
 
 
 BEGIN
+	InitDefaultAttributes;
 	NEW(pStyles, 4); nofPStyles := 0;
 	NEW(cStyles, 4); nofCStyles := 0;
 	InitDefaultStyles;
@@ -1541,6 +1552,5 @@ BEGIN
 
 	forceUTF := FALSE;
 	unforceUTF := TRUE;
-	InitDefaultAttributes;
 END Texts.
 

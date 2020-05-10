@@ -1431,7 +1431,6 @@ BEGIN
 					END;
 				END;
 				str := ptr(XML.Element).GetAttributeValue("font-size");
-				TRACE( str^ );
 				IF ( str # NIL ) & ( str^ # "" ) THEN
 					Strings.StrToFloat(str^, tempReal); cStyle.size := FP1616.FloatToFixp(SHORT(tempReal));
 				ELSE

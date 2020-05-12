@@ -84,59 +84,55 @@ To update: Configuration.Init ~
 			<Section name="DefaultFont">
 				<Setting name="Name" value="IBMPlexSans"/>
 				<Setting name="Size" value="14"/>
-				<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
 				<Setting name="Style" value=""/>
 			</Section>
-			<Section name="Fonts">
-				<Section name="Bold">
-					<Setting name="Name" value=""/>
-					<Setting name="Size" value=""/>
-					<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
-					<Setting name="Style" value=""/>
+
+<!-- System Fonts -->
+			<Section name="SystemFonts">
+				<Section name="Default">
+					<Setting name="Name" value="IBMPlexSans"/>
+					<Setting name="Size" value="14"/>
+					<!-- Setting name="Italic" value="" / -->  <!-- italic - <empty>|TRUE|FALSE -->
+					<!-- Setting name="FontWeight" value / --> <!-- font weight - <empty>|Regular|Bold -->
 				</Section>
 				<Section name="Monospace">
 					<Setting name="Name" value="IBMPlexMono"/>
-					<Setting name="Size" value=""/>
-					<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
-					<Setting name="Style" value=""/>
+					<Setting name="Size" value="14"/>
+					<!-- Setting name="Italic" value="" / -->
+					<!-- Setting name="FontWeight" value / -->
 				</Section>
 				<Section name="Serif">
 					<Setting name="Name" value="IBMPlexSerif"/>
-					<Setting name="Size" value=""/>
-					<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
-					<Setting name="Style" value=""/>
+					<Setting name="Size" value="14"/>
+					<!-- Setting name="Italic" value="" / -->
+					<!-- Setting name="FontWeight" value / -->
 				</Section>
 				<Section name="SansSerif">
 					<Setting name="Name" value="IBMPlexSans"/>
-					<Setting name="Size" value=""/>
-					<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
-					<Setting name="Style" value=""/>
+					<Setting name="Size" value="14"/>
+					<!-- Setting name="Italic" value="" / -->
+					<!-- Setting name="FontWeight" value / -->
 				</Section>
 				<Section name="Console">
 					<Setting name="Name" value="Courier"/>
-					<Setting name="Size" value="10"/>
-					<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
-					<Setting name="Style" value=""/>
+					<Setting name="Size" value="12"/>
+					<!-- Setting name="Italic" value="" / -->
+					<!-- Setting name="FontWeight" value / -->
 				</Section>
-				<Section name="Fantasy">
+				<!-- Section name="Fantasy">
 					<Setting name="Name" value=""/>
 					<Setting name="Size" value=""/>
-					<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
-					<Setting name="Style" value=""/>
-				</Section>
-				<Section name="Cursive">
+					<Setting name="Italic" value="" />
+					<Setting name="FontWeight" value />
+				</Section -->
+				<!-- Section name="Cursive">
 					<Setting name="Name" value=""/>
 					<Setting name="Size" value=""/>
-					<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
-					<Setting name="Style" value=""/>
-				</Section>
-				<Section name="Casual">
-					<Setting name="Name" value=""/>
-					<Setting name="Size" value=""/>
-					<!-- font style - <empty>|Regular|Bold|Italic|BoldItalic -->
-					<Setting name="Style" value=""/>
-				</Section>
+					<Setting name="Italic" value="" />
+					<Setting name="FontWeight" value />
+				</Section -->
 			</Section>
+
 			<Section name="FontLoaders">
 				<Section name="OberonFonts">
 					<Setting name="Exact" value="WMOberonFonts.LoadExactFont"/>

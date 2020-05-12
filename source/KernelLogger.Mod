@@ -145,10 +145,12 @@ END Cleanup;
 
 VAR monospace, default : ARRAY 256 OF CHAR; res: INTEGER;
 BEGIN
-	Configuration.Get("WindowManager.FontManager.DefaultFont.Name", default, res);
-	Configuration.Get("WindowManager.FontManager.Fonts.Monospace.Name", monospace, res);
+	Configuration.Get("WindowManager.FontManager.SystemFonts.Default.Name", default, res);
+	IF (res # Configuration.Ok) OR (default = "") THEN
+		Configuration.Get("WindowManager.FontManager.DefaultFont.Name", default, res);
+	END;
+	Configuration.Get("WindowManager.FontManager.SystemFonts.Monospace.Name", monospace, res);
 	IF (res # Configuration.Ok) OR (monospace = "") THEN monospace := default; END;
-
 	NEW(kernelLog);
 	Start;
 	Modules.InstallTermHandler(Cleanup);

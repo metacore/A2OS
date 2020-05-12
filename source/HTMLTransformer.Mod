@@ -1,6 +1,6 @@
 MODULE HTMLTransformer;	(** AUTHOR "Simon L. Keel"; PURPOSE "transforming HTML to BB-text"; *)
 
-IMPORT Configuration,
+IMPORT
 	WebBrowserComponents, XMLTransformer,
 	Strings, XML, XMLObjects, DynamicStrings, UTF8Strings, WMGraphics, KernelLog, WMEvents, WMCharCodes,
 	WMComponents, WMRectangles, WMTextView, TextUtilities, Texts, WMStandardComponents,
@@ -8,13 +8,6 @@ IMPORT Configuration,
 
 CONST
 	verbose = TRUE;
-	(* default generic font families *)
-		(* Note: All font-names are case-sensitive! *)
-(*	defSerif = "TimesNewRoman";*)
-(*	defSansSerif = "Arial";*)
-(*	defCursive = "ComicSansMS";*)
-(*	defFantasy = "Arial";*)
-(*	defMonospace = "CourierNew";*)
 
 	(* current text is *)
 	cText = 0;
@@ -3435,22 +3428,21 @@ END GetCharEnt;
 VAR res: INTEGER; systemFont: WMGraphics.Font;
 BEGIN
 	systemFont := WMGraphics.GetDefaultFont();
-	COPY( systemFont.name, defaultFont );
-	Configuration.Get("WindowManager.FontManager.Fonts.Serif.Name", serif, res);
-	IF (res # Configuration.Ok) OR (serif = "") THEN serif := defaultFont; END;
-	Configuration.Get("WindowManager.FontManager.Fonts.SansSerif.Name", sansSerif, res);
-	IF (res # Configuration.Ok) OR (sansSerif = "") THEN sansSerif := defaultFont; END;
-	Configuration.Get("WindowManager.FontManager.Fonts.Cursive.Name", cursive, res);
-	IF (res # Configuration.Ok) OR (cursive = "") THEN cursive := defaultFont; END;
-	Configuration.Get("WindowManager.FontManager.Fonts.Fantasy.Name", fantasy, res);
-	IF (res # Configuration.Ok) OR (fantasy = "") THEN fantasy := defaultFont; END;
-	Configuration.Get("WindowManager.FontManager.Fonts.Monospace.Name", monospace, res);
-	IF (res # Configuration.Ok) OR (monospace = "") THEN monospace := defaultFont; END;
-(*
-	IF FontExists(defSerif) THEN serif := defSerif; ELSE serif := defaultFont END;
-	IF FontExists(defSansSerif) THEN sansSerif := defSansSerif; ELSE sansSerif := defaultFont END;
-	IF FontExists(defCursive) THEN cursive := defCursive; ELSE cursive := defaultFont END;
-	IF FontExists(defFantasy) THEN fantasy := defFantasy; ELSE fantasy := defaultFont END;
-	IF FontExists(defMonospace) THEN monospace := defMonospace; ELSE monospace := defaultFont END;
-*)
+	COPY(systemFont.name, defaultFont);
+
+	IF ~WMGraphics.GetSystemFontFamily("Serif", serif) THEN
+		serif := defaultFont;
+	END;
+	IF ~WMGraphics.GetSystemFontFamily("SansSerif", sansSerif) THEN
+		sansSerif := defaultFont;
+	END;
+	IF ~WMGraphics.GetSystemFontFamily("Cursive", cursive) THEN
+		cursive := defaultFont;
+	END;
+	IF ~WMGraphics.GetSystemFontFamily("Fantasy", fantasy) THEN
+		fantasy := defaultFont;
+	END;
+	IF ~WMGraphics.GetSystemFontFamily("Monospace", monospace) THEN
+		monospace := defaultFont;
+	END;
 END HTMLTransformer.

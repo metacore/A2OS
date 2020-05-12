@@ -2,7 +2,7 @@ MODULE WMGraphics;	(** AUTHOR "TF"; PURPOSE "Generic Graphic Support"; *)
 
 IMPORT
 	Kernel, Rectangles := WMRectangles, Raster, KernelLog, UTF8Strings, Strings, RasterScale := WMRasterScale,
-	Codecs, Files, Streams, Reals;
+	Codecs, Files, Streams, Reals, Configuration;
 
 CONST
 	(** Copy Modes *)
@@ -924,6 +924,91 @@ BEGIN { EXCLUSIVE }
 	END
 END InstallFontManager;
 
+CONST pathToFonts = "WindowManager.FontManager.SystemFonts";
+PROCEDURE GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR family: ARRAY OF CHAR): BOOLEAN;
+VAR key: ARRAY 256 OF CHAR; res: INTEGER;
+BEGIN
+	family := "";
+	COPY(pathToFonts, key);
+	Strings.Append(key, ".");
+	Strings.Append(key, systemName);
+	Strings.Append(key, ".Name");
+	Configuration.Get(key, family, res);
+	IF (res = Configuration.Ok) & (family # "") THEN RETURN TRUE;	END;
+	RETURN FALSE;
+END GetSystemFontFamily;
+
+PROCEDURE GetSystemFontSize*(CONST systemName: ARRAY OF CHAR; VAR size: SIZE) : BOOLEAN;
+VAR key: ARRAY 256 OF CHAR; int: SIGNED32; res: INTEGER;
+BEGIN
+	size := 0;
+	COPY(pathToFonts, key);
+	Strings.Append(key, ".");
+	Strings.Append(key, systemName);
+	Strings.Append(key, ".Size");
+	Configuration.GetInteger(key, int, res);
+	IF (res = Configuration.Ok) & (int # 0) THEN
+		size := int;
+		RETURN TRUE;
+	END;
+	RETURN FALSE;
+END GetSystemFontSize;
+
+PROCEDURE GetSystemFont*(CONST name: ARRAY OF CHAR; VAR font: Font): BOOLEAN;
+VAR key, family := "": ARRAY 256 OF CHAR; fontWeigh: ARRAY 16 OF CHAR;
+VAR res: INTEGER; size := 0: SIGNED32; style := {}: SET; italic := FALSE: BOOLEAN;
+BEGIN
+	font := NIL;
+	COPY(pathToFonts, key);
+	IF Configuration.GetSection(key) # NIL THEN
+		Strings.Append(key, ".");
+		Strings.Append(key, name);
+		Strings.Append(key, ".Name");
+
+		Configuration.Get(key, family, res);
+		IF (res = Configuration.Ok) & (family # "") THEN
+			COPY(pathToFonts, key);
+			Strings.Append(key, ".");
+			Strings.Append(key, name);
+			Strings.Append(key, ".Size");
+			Configuration.GetInteger(key, size, res);
+			IF (res # Configuration.Ok) OR (size < 1) THEN
+				Configuration.GetInteger("WindowManager.FontManager.SystemFonts.Default.Size", size, res);
+				IF (res # Configuration.Ok) OR (size < 1) THEN
+					Configuration.GetInteger("WindowManager.FontManager.DefaultFont.Size", size, res);
+					IF (res # Configuration.Ok) OR (size < 1) THEN
+						size := 14;
+					END;
+				END;
+			END;
+
+			COPY(pathToFonts, key);
+			Strings.Append(key, ".");
+			Strings.Append(key, name);
+			Strings.Append(key, ".Italic");
+
+			Configuration.GetBoolean(key, italic, res);
+
+			COPY(pathToFonts, key);
+			Strings.Append(key, ".");
+			Strings.Append(key, name);
+			Strings.Append(key, ".FontWeight");
+
+			Configuration.Get(key, fontWeigh, res);
+
+			IF fontWeigh = "Bold" THEN
+				style := {FontBold};
+			END;
+			IF italic THEN
+				INCL(style, FontItalic);
+			END;
+
+			IF fontManager # NIL THEN font := fontManager.GetFont(family, size, style) END;
+		END;
+	END;
+	RETURN font # NIL;
+END GetSystemFont;
+
 (*Workaround:
 	If the font with a weight other than Bold is required, use a full name of the file (for ttf-fonts) with empty style.
 	For example: GetFont( "IBMPlexSans-SemiBold", 24, {} );
@@ -938,7 +1023,7 @@ BEGIN { EXCLUSIVE }
 END GetFont;
 
 (** Render the fallback case of the character char to canvas at x, y (baseline) *)
-PROCEDURE FBRenderChar*(canvas : Canvas ; x, y : Real; char : Char32);
+PROCEDURE FBRenderChar*(canvas : Canvas; x, y : Real; char : Char32);
 VAR i, w, h : SIZE; f : Font; found : BOOLEAN; str : ARRAY 16 OF CHAR; r: Rectangles.Rectangle;
 BEGIN
 	i := 0; found := FALSE;

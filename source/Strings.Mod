@@ -45,6 +45,14 @@ TYPE
 			res := Ok;
 		END Add;
 
+		(* remove last n characters *)
+		PROCEDURE Shorten*(n : SIZE);
+		BEGIN
+			DEC(length, n);
+			IF length < 0 THEN length := 0 END;
+			IF length > 0 THEN data[length - 1] := 0X ELSE data[0] := 0X END
+		END Shorten;
+
 		(** resets the length of the string to 0. The buffer is reused*)
 		PROCEDURE Clear*;
 		BEGIN

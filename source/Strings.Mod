@@ -48,6 +48,7 @@ TYPE
 		(* remove last n characters *)
 		PROCEDURE Shorten*(n : SIZE);
 		BEGIN
+			IF w # NIL THEN w.Update END;
 			DEC(length, n);
 			IF length < 0 THEN length := 0 END;
 			IF length > 0 THEN data[length - 1] := 0X ELSE data[0] := 0X END
@@ -81,6 +82,15 @@ TYPE
 			IF w # NIL THEN w.Update END;
 			RETURN data
 		END GetString;
+
+		PROCEDURE GetStringCopy*(): String;
+		VAR new: String;
+		BEGIN
+			IF w # NIL THEN w.Update END;
+			NEW(new, length + 1);
+			COPY(data^, new^);
+			RETURN new
+		END GetStringCopy;
 
 		PROCEDURE Write*(out : Streams.Writer);
 		BEGIN

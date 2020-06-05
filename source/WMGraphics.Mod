@@ -151,6 +151,11 @@ TYPE
 		BEGIN
 			RETURN NIL
 		END GetFont;
+
+		PROCEDURE GetSystemFont*(CONST name : ARRAY OF CHAR) : Font;
+		BEGIN
+			RETURN NIL;
+		END GetSystemFont;
 	END FontManager;
 
 	CanvasState* = RECORD
@@ -270,107 +275,107 @@ TYPE
 		VAR t, xi, mi, xf, mf, dt2, ds2 : SIZE; r: Rectangles.Rectangle;
 
 
-		(* clipped bresenham algorithm according to
-			Bresenham's Line Generation Algorithm with Built-in Clipping, Yevgeny P. Kuzmin, 1995
-		*)
-		PROCEDURE ClippedLine(x0,y0,x1,y1: SIZE; r: Rectangle; color : Color; mode : INTEGER);
-		VAR
-			dsx,dsy,stx,sty,xd,yd,dx2,dy2,rem,term,e: SIZE;
-			tmp: SIGNED64;
-			rev,setx: BOOLEAN;
-		BEGIN
-			(* standardization && trivial reject *)
-			IF( x1 - x0 > 0 ) THEN
-				IF ( x0 > r.r) OR (x1 < r.l ) THEN RETURN END;
-				stx := 1;
-			ELSE
-				IF ( x1 > r.r) OR ( x0 < r.l ) THEN RETURN END;
-				stx := -1;
-				x0 :=-x0; x1 :=-x1;
-				r.l :=-r.l; r.r :=-r.r;
-				Swap(r.l,r.r);
-			END;
-
-			IF ( y1 - y0 > 0 ) THEN
-				IF ( y0 > r.b) OR (y1 < r.t ) THEN RETURN END;
-				sty:=1;
-			ELSE
-				IF ( y1 > r.b) OR (y0 < r.t ) THEN RETURN END;
-				sty :=-1;
-				y0 :=-y0; y1 :=-y1;
-				r.t :=-r.t; r.b :=-r.b;
-				Swap(r.t,r.b);
-			END;
-
-			dsx := x1-x0; dsy := y1-y0;
-			IF ( dsx < dsy ) THEN
-				rev := TRUE;
-				Swap(x0,y0); Swap(x1,y1); Swap(dsx,dsy);
-				Swap(r.l,r.t); Swap(r.r,r.b); Swap(stx,sty);
-			ELSE
-				rev := FALSE;
-			END;
-
-			(* Bresenham's set up *)
-			dx2 := 2*dsx; dy2 := 2*dsy;
-			xd := x0; yd :=y0;
-			e := 2*dsy-dsx; term := x1;
-			setx := TRUE;
-			IF (y0 < r.t) THEN
-				(* window horizontal entry *)
-				tmp := SIGNED64(dx2) *(r.t-y0)-dsx;
-				INC(xd,SIZE(tmp DIV dy2));
-				rem := SIZE(tmp MOD dy2);
-				IF ( xd>r.r ) THEN RETURN END;
-				IF ( xd+1>=r.l ) THEN
-					yd := r.t; DEC(e,rem+dsx);
-					IF (rem>0 ) THEN INC(xd); INC(e,dy2) END;
-					setx := FALSE;
+			(* clipped bresenham algorithm according to
+				Bresenham's Line Generation Algorithm with Built-in Clipping, Yevgeny P. Kuzmin, 1995
+			*)
+			PROCEDURE ClippedLine(x0,y0,x1,y1: SIZE; r: Rectangle; color : Color; mode : INTEGER);
+			VAR
+				dsx,dsy,stx,sty,xd,yd,dx2,dy2,rem,term,e: SIZE;
+				tmp: SIGNED64;
+				rev,setx: BOOLEAN;
+			BEGIN
+				(* standardization && trivial reject *)
+				IF( x1 - x0 > 0 ) THEN
+					IF ( x0 > r.r) OR (x1 < r.l ) THEN RETURN END;
+					stx := 1;
+				ELSE
+					IF ( x1 > r.r) OR ( x0 < r.l ) THEN RETURN END;
+					stx := -1;
+					x0 :=-x0; x1 :=-x1;
+					r.l :=-r.l; r.r :=-r.r;
+					Swap(r.l,r.r);
 				END;
-			END;
 
-			IF setx & ( x0 < r.l )  THEN
-				(* window vertical entry *)
-				tmp := SIGNED64(dy2) * (r.l-x0);
-				INC(yd, SIZE(tmp DIV dx2));
-				rem := SIZE(tmp MOD dx2);
-				IF ( yd>r.b) OR (yd=r.b) & (rem>=dsx) THEN RETURN END;
-				xd :=r.l; INC(e,rem);
-				IF( rem>=dsx ) THEN INC(yd); DEC(e,dx2) END;
-			END;
+				IF ( y1 - y0 > 0 ) THEN
+					IF ( y0 > r.b) OR (y1 < r.t ) THEN RETURN END;
+					sty:=1;
+				ELSE
+					IF ( y1 > r.b) OR (y0 < r.t ) THEN RETURN END;
+					sty :=-1;
+					y0 :=-y0; y1 :=-y1;
+					r.t :=-r.t; r.b :=-r.b;
+					Swap(r.t,r.b);
+				END;
 
-			IF ( y1 > r.b )  THEN
-				(* window exit *)
-				tmp := SIGNED64(dx2)*(r.b-y0)+dsx;
-				term := x0+SIZE(tmp DIV dy2);
-				rem := SIZE(tmp MOD dy2);
-				IF ( rem=0 ) THEN DEC(term) END;
-			END;
-			IF ( term>r.r) THEN term := r.r; END;
-			INC(term);
-			IF ( sty =-1 ) THEN yd := -yd END;
+				dsx := x1-x0; dsy := y1-y0;
+				IF ( dsx < dsy ) THEN
+					rev := TRUE;
+					Swap(x0,y0); Swap(x1,y1); Swap(dsx,dsy);
+					Swap(r.l,r.t); Swap(r.r,r.b); Swap(stx,sty);
+				ELSE
+					rev := FALSE;
+				END;
 
-			(* reverse transformation *)
-			IF ( stx =-1 ) THEN xd := -xd; term := -term; END;
-			DEC(dx2,dy2);
-
-			(* Bresenham's line drawing *)
-			IF rev THEN
-				WHILE ( xd # term ) DO
-					SetPixel(yd, xd, color, mode);
-					IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2)
-					ELSE INC(xd, stx); INC(e, dy2);
+				(* Bresenham's set up *)
+				dx2 := 2*dsx; dy2 := 2*dsy;
+				xd := x0; yd :=y0;
+				e := 2*dsy-dsx; term := x1;
+				setx := TRUE;
+				IF (y0 < r.t) THEN
+					(* window horizontal entry *)
+					tmp := SIGNED64(dx2) *(r.t-y0)-dsx;
+					INC(xd,SIZE(tmp DIV dy2));
+					rem := SIZE(tmp MOD dy2);
+					IF ( xd>r.r ) THEN RETURN END;
+					IF ( xd+1>=r.l ) THEN
+						yd := r.t; DEC(e,rem+dsx);
+						IF (rem>0 ) THEN INC(xd); INC(e,dy2) END;
+						setx := FALSE;
 					END;
 				END;
-			ELSE
-				WHILE ( xd # term ) DO (* Bresenham's line drawing *)
-						SetPixel(xd,yd, color, mode);
-					IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2)
-					ELSE INC(xd, stx); INC(e, dy2);
+
+				IF setx & ( x0 < r.l )  THEN
+					(* window vertical entry *)
+					tmp := SIGNED64(dy2) * (r.l-x0);
+					INC(yd, SIZE(tmp DIV dx2));
+					rem := SIZE(tmp MOD dx2);
+					IF ( yd>r.b) OR (yd=r.b) & (rem>=dsx) THEN RETURN END;
+					xd :=r.l; INC(e,rem);
+					IF( rem>=dsx ) THEN INC(yd); DEC(e,dx2) END;
+				END;
+
+				IF ( y1 > r.b )  THEN
+					(* window exit *)
+					tmp := SIGNED64(dx2)*(r.b-y0)+dsx;
+					term := x0+SIZE(tmp DIV dy2);
+					rem := SIZE(tmp MOD dy2);
+					IF ( rem=0 ) THEN DEC(term) END;
+				END;
+				IF ( term>r.r) THEN term := r.r; END;
+				INC(term);
+				IF ( sty =-1 ) THEN yd := -yd END;
+
+				(* reverse transformation *)
+				IF ( stx =-1 ) THEN xd := -xd; term := -term; END;
+				DEC(dx2,dy2);
+
+				(* Bresenham's line drawing *)
+				IF rev THEN
+					WHILE ( xd # term ) DO
+						SetPixel(yd, xd, color, mode);
+						IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2)
+						ELSE INC(xd, stx); INC(e, dy2);
+						END;
+					END;
+				ELSE
+					WHILE ( xd # term ) DO (* Bresenham's line drawing *)
+							SetPixel(xd,yd, color, mode);
+						IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2)
+						ELSE INC(xd, stx); INC(e, dy2);
+						END;
 					END;
 				END;
-			END;
-		END ClippedLine;
+			END ClippedLine;
 
 		BEGIN
 			IF y0 = y1 THEN (* horizontal case *)
@@ -955,57 +960,9 @@ BEGIN
 END GetSystemFontSize;
 
 PROCEDURE GetSystemFont*(CONST name: ARRAY OF CHAR; VAR font: Font): BOOLEAN;
-VAR key, family := "": ARRAY 256 OF CHAR; fontWeigh: ARRAY 16 OF CHAR;
-VAR res: INTEGER; size := 0: SIGNED32; style := {}: SET; italic := FALSE: BOOLEAN;
-BEGIN
+BEGIN { EXCLUSIVE }
 	font := NIL;
-	COPY(pathToFonts, key);
-	IF Configuration.GetSection(key) # NIL THEN
-		Strings.Append(key, ".");
-		Strings.Append(key, name);
-		Strings.Append(key, ".Name");
-
-		Configuration.Get(key, family, res);
-		IF (res = Configuration.Ok) & (family # "") THEN
-			COPY(pathToFonts, key);
-			Strings.Append(key, ".");
-			Strings.Append(key, name);
-			Strings.Append(key, ".Size");
-			Configuration.GetInteger(key, size, res);
-			IF (res # Configuration.Ok) OR (size < 1) THEN
-				Configuration.GetInteger("WindowManager.FontManager.SystemFonts.Default.Size", size, res);
-				IF (res # Configuration.Ok) OR (size < 1) THEN
-					Configuration.GetInteger("WindowManager.FontManager.DefaultFont.Size", size, res);
-					IF (res # Configuration.Ok) OR (size < 1) THEN
-						size := 14;
-					END;
-				END;
-			END;
-
-			COPY(pathToFonts, key);
-			Strings.Append(key, ".");
-			Strings.Append(key, name);
-			Strings.Append(key, ".Italic");
-
-			Configuration.GetBoolean(key, italic, res);
-
-			COPY(pathToFonts, key);
-			Strings.Append(key, ".");
-			Strings.Append(key, name);
-			Strings.Append(key, ".FontWeight");
-
-			Configuration.Get(key, fontWeigh, res);
-
-			IF fontWeigh = "Bold" THEN
-				style := {FontBold};
-			END;
-			IF italic THEN
-				INCL(style, FontItalic);
-			END;
-
-			IF fontManager # NIL THEN font := fontManager.GetFont(family, size, style) END;
-		END;
-	END;
+	IF fontManager # NIL THEN font := fontManager.GetSystemFont(name) END;
 	RETURN font # NIL;
 END GetSystemFont;
 

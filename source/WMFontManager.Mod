@@ -11,7 +11,18 @@ TYPE
 		name* : String;
 		size* : SIZE;
 		style* : SET;
+
+		PROCEDURE &Init*;
+		BEGIN
+			name := NIL;
+			size := 0;
+			style := {};
+		END Init;
 	END FontInfo;
+
+	FontAlias = ARRAY 32 OF CHAR;
+	FontInfoArray = POINTER TO ARRAY OF FontInfo;
+	FontAliasArray = POINTER TO ARRAY OF FontAlias;
 
 	FontFactory = PROCEDURE(info : FontInfo) : WMGraphics.Font;
 
@@ -41,11 +52,16 @@ TYPE
 		defaultFontSize : SIGNED32;
 		defaultFontStyle : SET;
 
+		systemFontInfo : FontInfoArray;
+		systemFontAlias : FontAliasArray;
+		nofSystemFonts : SIZE;
+
 		PROCEDURE &Init*;
 		VAR t : WMGraphics.Font;
 		BEGIN
 			NEW(fontCache);
 			defaultFontName := "Oberon"; defaultFontSize := 14; defaultFontStyle := {};
+			nofSystemFonts := 0;
 			GetConfig;
 			defaultFont := WMDefaultFont.LoadDefaultFont(); (* fallback case *)
 			defaultFont.size := defaultFontSize;
@@ -99,7 +115,7 @@ TYPE
 		VAR
 			section, e : XML.Element;
 			p : ANY; enum: XMLObjects.Enumerator;
-			string : ARRAY 16 OF CHAR; res : INTEGER;
+			string : ARRAY 16 OF CHAR; res : INTEGER; count: SIZE;
 
 			PROCEDURE Error;
 			BEGIN KernelLog.String("WindowManager.FontManager subsection missing in Configuration. Running on defaults"); KernelLog.Ln
@@ -122,7 +138,23 @@ TYPE
 				Configuration.Get("WindowManager.FontManager.DefaultFont.Size", string, res);
 				IF (res = Configuration.Ok) THEN Strings.StrToInt(string, defaultFontSize); END;
 			ELSE Error;
-			END
+			END;
+
+			section := Configuration.GetSection("WindowManager.FontManager.SystemFonts");
+			IF (section # NIL) THEN
+				enum := section.GetContents();
+				count := section.GetNumberOfContents();
+				IF count > 0 THEN
+					NEW(systemFontAlias, count);
+					NEW(systemFontInfo, count);
+				END;
+				WHILE enum.HasMoreElements() DO
+					p := enum.GetNext();
+					IF p IS XML.Element THEN
+						AddSystemFont(SELF, p(XML.Element));
+					END;
+				END;
+			END;
 		END GetConfig;
 
 		PROCEDURE Load(ln : String; fi : FontInfo) : WMGraphics.Font;
@@ -188,9 +220,100 @@ TYPE
 			RETURN font
 		END GetFont;
 
+		PROCEDURE GetSystemFont*(CONST alias : ARRAY OF CHAR) : WMGraphics.Font;
+		VAR i : SIZE; fontInfo: FontInfo;
+		BEGIN
+			IF nofSystemFonts > 0 THEN
+				i := 0;
+				WHILE (i < nofSystemFonts) DO
+					IF systemFontAlias[i] = alias THEN
+						fontInfo := systemFontInfo[i];
+						RETURN GetFont(fontInfo.name^, fontInfo.size, fontInfo.style);
+					END;
+					INC(i);
+				END;
+			END;
+			RETURN NIL;
+		END GetSystemFont;
+
 	END FontManager;
 
 VAR fm : FontManager;
+
+	PROCEDURE AddSystemFont(manager: FontManager; section: XML.Element);
+	VAR settings: XMLObjects.Enumerator; setting: XML.Element; alias, string: String;
+	VAR fontInfo: FontInfo; stringValue: ARRAY 64 OF CHAR; p: ANY;
+
+		PROCEDURE GetStringValue(element: XML.Element; CONST key: ARRAY OF CHAR; VAR value: ARRAY OF CHAR);
+		VAR string: Strings.String;
+		BEGIN
+			value := "";
+			string := element.GetAttributeValue(key);
+			IF (string # NIL) THEN
+				COPY(string^, value);
+				Strings.UpperCase(value);
+				Strings.TrimWS(value);
+			END;
+		END GetStringValue;
+
+	BEGIN
+		string := section.GetName();
+		IF (string # NIL) & (string^ = "Section") THEN
+			alias := section.GetAttributeValue("name"); (* known font name *)
+			IF (alias # NIL) & (alias^ # "") THEN
+				settings := section.GetContents();
+				NEW(fontInfo);
+				WHILE settings.HasMoreElements() DO
+					p := settings.GetNext();
+					IF p IS XML.Element THEN
+						setting := p(XML.Element);
+						string := setting.GetName();
+						IF (string # NIL) & (string^ = "Setting") THEN
+							GetStringValue(setting, "name", stringValue);
+							IF (stringValue = "NAME") THEN (*!FONTFAMILY*)
+								string := setting.GetAttributeValue("value");
+								IF (string = NIL) OR (string^ = "") THEN
+									RETURN;
+								END;
+								fontInfo.name := Strings.NewString(string^);
+							ELSIF (stringValue = "SIZE") THEN
+								GetStringValue(setting, "value", stringValue);
+								IF stringValue # "*" THEN
+									Strings.StrToSize(stringValue, fontInfo.size);
+								ELSE
+									(*! not implemented  *)
+								END;
+								IF fontInfo.size < 1 THEN
+									fontInfo.size := manager.defaultFontSize;
+								END;
+							ELSIF (stringValue = "ITALIC") THEN
+								GetStringValue(setting, "value", stringValue);
+								IF (stringValue = "TRUE") THEN
+									INCL(fontInfo.style, WMGraphics.FontItalic);
+								ELSE
+									EXCL(fontInfo.style, WMGraphics.FontItalic);
+								END;
+							ELSIF (stringValue = "FONTWEIGHT") THEN
+								GetStringValue(setting, "value", stringValue);
+								IF stringValue = "BOLD" THEN
+									INCL(fontInfo.style, WMGraphics.FontBold);
+(*!									fontInfo.weight := WMGraphics.FontWeight.Bold;*)
+								ELSE
+									EXCL(fontInfo.style, WMGraphics.FontBold);
+(*!									fontInfo.weight := WMGraphics.FontWeight.Normal; *)
+								END;
+							END;
+						END;
+					END;
+				END;
+			END;
+		END;
+		IF (fontInfo # NIL) & (fontInfo.name # NIL) THEN
+			COPY(alias^, manager.systemFontAlias[manager.nofSystemFonts]);
+			manager.systemFontInfo[manager.nofSystemFonts] := fontInfo;
+			INC(manager.nofSystemFonts);
+		END;
+	END AddSystemFont;
 
 PROCEDURE Install*;
 END Install;

@@ -193,8 +193,6 @@ TYPE
 VAR fm : FontManager;
 
 PROCEDURE Install*;
-BEGIN
-	fm.GetConfig();
 END Install;
 
 PROCEDURE Load;

@@ -242,7 +242,7 @@ VAR fm : FontManager;
 
 	PROCEDURE AddSystemFont(manager: FontManager; section: XML.Element);
 	VAR settings: XMLObjects.Enumerator; setting: XML.Element; alias, string: String;
-	VAR fontInfo: FontInfo; stringValue: ARRAY 64 OF CHAR; p: ANY;
+	VAR fontInfo := NIL: FontInfo; stringValue: ARRAY 64 OF CHAR; p: ANY;
 
 		PROCEDURE GetStringValue(element: XML.Element; CONST key: ARRAY OF CHAR; VAR value: ARRAY OF CHAR);
 		VAR string: Strings.String;

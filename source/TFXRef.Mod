@@ -12,7 +12,7 @@ CONST
 	KindUse = 3;
 TYPE
 	Range = RECORD
-		a, b : SIGNED32;
+		a, b : SIZE;
 		kind : SIGNED32;
 		no : TS.NamedObject;
 	END;
@@ -93,7 +93,7 @@ VAR
 	currentAuthor : ARRAY 128 OF CHAR;
 	currentPurpose : ARRAY 4096 OF CHAR;
 
-PROCEDURE MakeRange(from, to, kind : SIGNED32; no : TS.NamedObject);
+PROCEDURE MakeRange(from, to: SIZE; kind : SIGNED32; no : TS.NamedObject);
 BEGIN
 	ranges[from].kind := kind;
 	ranges[from].a := from;
@@ -194,7 +194,7 @@ VAR no: TS.NamedObject;
 	s : ARRAY 64 OF CHAR;
 	m : TS.Module;
 	te : TS.ExpressionList;
-	lastpos : SIGNED32;
+	lastpos : SIZE;
 
 	PROCEDURE Check(id : TS.Ident; no : TS.NamedObject);
 	BEGIN
@@ -611,7 +611,7 @@ END DumpLocalUses;
 PROCEDURE GenerateModule(module : TS.Module; r : Streams.Reader; out : Streams.Writer);
 VAR ch : CHAR;
 	w : Streams.Writer;
-	currentRange, pos, nextEnd : SIGNED32;
+	currentRange, pos, nextEnd : SIZE;
 	inRange, inComment, lastInRange : BOOLEAN;
 	token : ARRAY 1024 OF CHAR;
 	filename, scopePath, name, path : ARRAY 1024 OF CHAR;

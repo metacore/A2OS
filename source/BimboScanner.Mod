@@ -1,11 +1,10 @@
 MODULE BimboScanner;
 
 IMPORT
-	Trace, Texts, Streams, UTF8Strings, Strings;
+	Texts, Streams, UTF8Strings, Strings;
 
 CONST
 	Eot* = 0X;
-	ObjectMarker = 020X;
 	LF = 0AX;
 
 	(* numtyp values *)
@@ -98,7 +97,7 @@ TYPE
 	Scanner* = OBJECT
 		VAR
 			buffer: Strings.String;
-			pos-: SIGNED32;	(*pos in buffer*)
+			pos-: SIZE;	(*pos in buffer*)
 			ch-: CHAR;	(**look-ahead *)
 			str-: ARRAY 1024 OF CHAR;
 			sym- : SIGNED32;
@@ -107,8 +106,8 @@ TYPE
 			longintval-: SIGNED64;
 			realval-: FLOAT32;
 			lrlval-: FLOAT64;
-			numStartPos, numEndPos: SIGNED32;
-			lastpos-, curpos-, errpos-: SIGNED32;	(*pos in text*)
+			numStartPos, numEndPos: SIZE;
+			lastpos-, curpos-, errpos-: SIZE;	(*pos in text*)
 			isNummer: BOOLEAN;
 			commentStr- : StringMaker;
 			cw : Streams.Writer;
@@ -456,7 +455,7 @@ TYPE
 
 	END Scanner;
 
-PROCEDURE InitWithText*(t: Texts.Text; pos: SIGNED32): Scanner;
+PROCEDURE InitWithText*(t: Texts.Text; pos: SIZE): Scanner;
 	VAR buffer: Strings.String; len, i, j: SIZE; ch: INTEGER; r: Texts.TextReader;
 	bytesPerChar: SIGNED32;
 	s : Scanner;

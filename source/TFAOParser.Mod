@@ -8,7 +8,7 @@ TYPE
 	VAR s : S.Scanner;
 
 		m* : TS.Module;
-		pos  : SIGNED32;
+		pos  : SIZE;
 		comments : TS.Comments;
 		lastStatement : TS.Statement;
 
@@ -26,7 +26,7 @@ TYPE
 		END CommentToStructure;
 
 		PROCEDURE Next;
-		VAR lpos : SIGNED32;
+		VAR lpos : SIZE;
 		BEGIN
 			s.Next;
 			lpos := s.pos;
@@ -282,7 +282,7 @@ TYPE
 
 		PROCEDURE Object(CONST name : ARRAY OF CHAR) :  TS.Class;
 		VAR
-			pos: SIGNED32;
+			pos: SIZE;
 			qualident: TS.Designator;
 			class : TS.Class;
 			body : TS.Statement;
@@ -368,7 +368,7 @@ TYPE
 		END Set;
 
 		PROCEDURE Factor():TS.Expression;
-		VAR sym, pos : SIGNED32;
+		VAR sym : SIGNED32; pos : SIZE;
 			ex : TS.Expression;
 		BEGIN
 			sym := s.sym; pos := s.pos;
@@ -392,7 +392,7 @@ TYPE
 		PROCEDURE Term() : TS.Expression;
 		VAR exa, exb : TS.Expression;
 			op : SIGNED32;
-			pos : SIGNED32;
+			pos : SIZE;
 		BEGIN
 			pos := s.pos;
 			exa := Factor();

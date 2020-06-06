@@ -79,7 +79,7 @@ TYPE
 
 	Position* = RECORD
 		valid* : BOOLEAN;
-		a*, b* : SIGNED32;
+		a*, b* : SIZE;
 	END;
 
 	Comment* = POINTER TO RECORD

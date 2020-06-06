@@ -131,7 +131,7 @@ VAR no, co : TS.NamedObject;
 	s : ARRAY 64 OF CHAR;
 	m : TS.Module;
 	te : TS.ExpressionList;
-	lastpos : SIGNED32;
+	lastpos : SIZE;
 BEGIN
 	first := TRUE;
 	curScope := scope;

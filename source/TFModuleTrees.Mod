@@ -273,7 +273,7 @@ TYPE
 			references : Reference;
 			errorHighlights, tempHighlights: CurrentHighlights;
 			singleSuggestion : TS.NamedObject;
-			suggestionStart : SIGNED32;
+			suggestionStart : SIZE;
 
 			cursorScope : TS.Scope;
 			cursorIsFirstLevelScope : BOOLEAN;
@@ -777,7 +777,7 @@ TYPE
 
 		PROCEDURE SelectRangeHandler(sender, data: ANY);
 		VAR
-			a, b, ch : SIGNED32;
+			a, b: SIZE; ch : SIGNED32;
 			r : Texts.TextReader;
 		BEGIN
 			IF currentNode = NIL THEN RETURN END;
@@ -863,7 +863,7 @@ TYPE
 			END
 		END NextUseHandler;
 
-		PROCEDURE GetTextInfo(CONST name: ARRAY OF CHAR; fp, tp: SIGNED32; color: SIGNED32; style: SET; def : TS.NamedObject): TextInfo;
+		PROCEDURE GetTextInfo(CONST name: ARRAY OF CHAR; fp, tp: SIZE; color: WMGraphics.Color; style: SET; def : TS.NamedObject): TextInfo;
 		VAR newInfo: TextInfo; font: WMGraphics.Font;
 		BEGIN
 			NEW(newInfo); newInfo.next := definitions; definitions := newInfo;
@@ -942,7 +942,7 @@ TYPE
 			END
 		END TraverseProcDecl;
 
-		PROCEDURE MakeReference(no : TS.NamedObject; from, to : SIGNED32);
+		PROCEDURE MakeReference(no : TS.NamedObject; from, to : SIZE);
 		VAR nr : Reference;
 		BEGIN
 			NEW(nr); nr.next := references; references := nr;
@@ -952,9 +952,9 @@ TYPE
 		PROCEDURE UnknownIdentifierError(scope: TS.Scope; first : BOOLEAN; ident : TS.Ident);
 		VAR s : ARRAY 1024 OF CHAR;
 			cur : CurrentHighlights;
-			color : SIGNED32;
+			color : WMGraphics.Color;
 			suggestions : TS.ObjectList;
-			nofSuggestions : SIGNED32;
+			nofSuggestions : SIZE;
 		BEGIN
 			color := SIGNED32(0FF000080H);
 			TS.s.GetString(ident.name, s);
@@ -1100,7 +1100,7 @@ TYPE
 		PROCEDURE FindScopeByPos(pos : SIGNED32);
 		VAR cur : TextInfo;
 			cand, scope : TS.NamedObject;
-			candDist, dist : SIGNED32;
+			candDist, dist : SIZE;
 		BEGIN
 			cur := definitions;
 			scope := NIL;
@@ -1223,7 +1223,7 @@ TYPE
 			lastVarType : TS.Type;
 
 			PROCEDURE CheckExpressionList(e : TS.ExpressionList; sig : TS.ProcedureSignature; scope : TS.Scope);
-			VAR i, a, b : SIGNED32; nr, f : Reference;
+			VAR i, a, b : SIZE; nr, f : Reference;
 			BEGIN
 				i := 0;
 				f := NIL;
@@ -1249,7 +1249,7 @@ TYPE
 				END
 			END CheckExpressionList;
 
-			PROCEDURE GetDesignatorRange(d : TS.Designator; VAR a, b : SIGNED32);
+			PROCEDURE GetDesignatorRange(d : TS.Designator; VAR a, b : SIZE);
 			BEGIN
 				IF d IS TS.Ident THEN
 					IF (a = -1) OR (d(TS.Ident).pos.a < a) THEN a := d(TS.Ident).pos.a END;
@@ -1262,8 +1262,8 @@ TYPE
 				END
 			END GetDesignatorRange;
 
-			PROCEDURE GetExpressionRange(e : TS.Expression; VAR a, b : SIGNED32);
-			VAR ta, tb : SIGNED32;
+			PROCEDURE GetExpressionRange(e : TS.Expression; VAR a, b : SIZE);
+			VAR ta, tb : SIZE;
 			BEGIN
 				ta := -1; tb := -1; IF e =  NIL THEN RETURN END;
 				IF e.kind = TS.ExpressionPrimitive THEN
@@ -1338,7 +1338,7 @@ TYPE
 				s : ARRAY 64 OF CHAR;
 				m : TS.Module;
 				te : TS.ExpressionList;
-				lastpos : SIGNED32;
+				lastpos : SIZE;
 
 				PROCEDURE SetReference(id : TS.Ident; no : TS.NamedObject);
 				BEGIN

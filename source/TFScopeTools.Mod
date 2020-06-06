@@ -41,7 +41,7 @@ BEGIN
 END FindType;
 
 PROCEDURE DealiaseType*(t : TS.Type) : TS.Type;
-VAR pos : SIGNED32;
+VAR pos : SIZE;
 BEGIN
 	pos := -1;
 	IF t = NIL THEN RETURN NIL END;

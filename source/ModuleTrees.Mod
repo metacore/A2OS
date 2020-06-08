@@ -937,6 +937,8 @@ TYPE
 					AddObject(parent, type.object, anonymous, TRUE);
 				ELSIF type.procedure # NIL THEN
 					AddProcedure(parent, type.procedure);
+				ELSIF type.any # NIL THEN
+					AddAnyType(parent, type.any);
 				END;
 			END;
 		END AddType;
@@ -976,6 +978,21 @@ TYPE
 			END;
 		END AddFieldDecl;
 
+		PROCEDURE AddAnyType(parent: WMTrees.TreeNode; any: ModuleParser.Any);
+		VAR newNode: WMTrees.TreeNode;
+		BEGIN
+			IF any # NIL THEN
+				newNode := NewNode(parent, Strings.NewString("ANY"));
+				IF any IS ModuleParser.AnyPointer THEN
+					AddPostfixToCaption(newNode, Strings.NewString(" POINTER"));
+				ELSIF any IS ModuleParser.AnyRecord THEN
+					AddPostfixToCaption(newNode, Strings.NewString(" RECORD"));
+				ELSIF any IS ModuleParser.AnyObject THEN
+					AddPostfixToCaption(newNode, Strings.NewString(" OBJECT"));
+				END;
+			END;
+		END AddAnyType;
+		
 		PROCEDURE AddPointer(parent: WMTrees.TreeNode; pointer: ModuleParser.Pointer);
 		VAR newNode: WMTrees.TreeNode;
 		BEGIN

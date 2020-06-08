@@ -734,9 +734,26 @@ TYPE
 					AddCell(parent, type.cell, anonymous)
 				ELSIF type.port # NIL THEN
 					AddPort(parent, type.port);
+				ELSIF type.any # NIL THEN
+					AddAnyType(parent, type.any);
 				END;
 			END;
 		END AddType;
+
+		PROCEDURE AddAnyType(parent: WMTrees.TreeNode; any: ModuleParser.Any);
+		VAR newNode: WMTrees.TreeNode;
+		BEGIN
+			IF any # NIL THEN
+				newNode := NewNode(parent, Strings.NewString("ANY"));
+				IF any IS ModuleParser.AnyPointer THEN
+					AddPostfixToCaption(newNode, Strings.NewString(" POINTER"));
+				ELSIF any IS ModuleParser.AnyRecord THEN
+					AddPostfixToCaption(newNode, Strings.NewString(" RECORD"));
+				ELSIF any IS ModuleParser.AnyObject THEN
+					AddPostfixToCaption(newNode, Strings.NewString(" OBJECT"));
+				END;
+			END;
+		END AddAnyType;
 
 		PROCEDURE AddRecord(parent: WMTrees.TreeNode; record: ModuleParser.Record; anonymous, addSuperRecords: BOOLEAN);
 		VAR p: WMTrees.TreeNode;

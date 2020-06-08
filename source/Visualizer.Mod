@@ -413,6 +413,15 @@ TYPE
 				out.String("PROCEDURE ");
 				IF (type.procedure.delegate) THEN out.String("[DELEGATE] "); END;
 				FormalPars(type.procedure.formalPars);
+			ELSIF (type.any # NIL) THEN
+				out.String("ANY");
+				IF type.any IS ModuleParser.AnyPointer THEN
+					out.String(" POINTER");
+				ELSIF type.any IS ModuleParser.AnyRecord THEN
+					out.String(" RECORD");
+				ELSIF type.any IS ModuleParser.AnyObject THEN
+					out.String(" OBJECT");
+				END;				
 			END;
 		END Type;
 
@@ -536,6 +545,15 @@ TYPE
 						out.String("| PROCEDURE ");
 						IF (typeDecl.type.procedure.delegate) THEN out.String("[DELEGATE] "); END;
 						FormalPars(typeDecl.type.procedure.formalPars);
+					ELSIF (typeDecl.type.any # NIL) THEN
+						out.String("| ANY");
+						IF typeDecl.type.any IS ModuleParser.AnyPointer THEN
+							out.String(" POINTER");
+						ELSIF typeDecl.type.any IS ModuleParser.AnyRecord THEN
+							out.String(" RECORD");
+						ELSIF typeDecl.type.any IS ModuleParser.AnyObject THEN
+							out.String(" OBJECT");
+						END;						
 					END;
 					out.String('}"'); out.Ln;
 					Indent(indent + 4); out.String("]"); out.Ln;

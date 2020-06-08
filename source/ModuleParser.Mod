@@ -96,6 +96,7 @@ TYPE
 		cell*: Cell;
 		port*: Port;
 		procedure*: Procedure;
+		any*: Any;
 	END Type;
 
 	Array* = OBJECT(Node)
@@ -104,6 +105,18 @@ TYPE
 		len*: InfoItem;
 		base*: Type;
 	END Array;
+
+	Any* = OBJECT(Node)
+	END Any;
+
+	AnyRecord* =  OBJECT(Any)
+	END AnyRecord;
+
+	AnyObject* = OBJECT(Any)
+	END AnyObject;
+
+	AnyPointer* = OBJECT(Any)
+	END AnyPointer;
 
 	Record* = OBJECT(Node)
 	VAR
@@ -1053,6 +1066,7 @@ TYPE
 		BEGIN
 			CASE token.symbol OF
 			| FoxScanner.Array: NextToken; NEW(type.array, type); ArrayP(type.array);
+			| FoxScanner.Any: NextToken; AnyP(type);
 			| FoxScanner.Record: NextToken; NEW(type.record, type); RecordP(type.record);
 			| FoxScanner.Pointer: NextToken; NEW(type.pointer, type); PointerP(type.pointer);
 			| FoxScanner.Object: NextToken; NEW(type.object, type); ObjectP(type.object);
@@ -1100,6 +1114,19 @@ TYPE
 				END;
 			END;
 		END ArrayP;
+
+		PROCEDURE AnyP(type: Type);
+		BEGIN
+			IF token.symbol = FoxScanner.Record THEN
+				type.any := NEW AnyRecord(type);
+			ELSIF token.symbol = FoxScanner.Object THEN
+				type.any := NEW AnyObject(type);
+			ELSIF token.symbol = FoxScanner.Pointer THEN
+				type.any := NEW AnyPointer(type);
+			ELSE
+				type.any := NEW Any(type);
+			END;
+		END AnyP;
 
 		PROCEDURE RecordP(record: Record);
 		VAR procDecl: ProcDecl;

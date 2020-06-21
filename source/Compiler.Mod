@@ -345,7 +345,7 @@ TYPE
 			ELSE
 				compilerOptions.frontend := Frontend.GetFrontendByName(name);
 				IF (compilerOptions.frontend = NIL)  THEN
-					Error("backend could not be installed"); result := FALSE;
+					Error("frontend could not be installed"); result := FALSE;
 				END;
 			END;
 		ELSE compilerOptions.frontend := Frontend.GetFrontendByName(DefaultFrontend);

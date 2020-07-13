@@ -1227,7 +1227,7 @@ VAR
 			INC( i )
 		END;
 
-		i := j + 1;  sysPath[i] := 0X;  COPY( sysPath, searchPath ); IGNORE Kernel32.GetTempPath( LEN( tempPath ), tempPath ); IGNORE Kernel32.SetCurrentDirectory( workPath );
+		i := j + 1;  sysPath[i] := 0X;  COPY( sysPath, searchPath ); IGNORE Kernel32.GetTempPath( LEN( tempPath ), tempPath ); IGNORE Kernel32.SetCurrentDirectory( sysPath );
 
 		notifications := NIL;
 	END Init;

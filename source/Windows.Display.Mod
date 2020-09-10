@@ -567,7 +567,6 @@ VAR
 		
 		(*KernelLog.String("HandleKey, ch, key="); KernelLog.Int(ORD(ch),10); KernelLog.Hex(key,10); KernelLog.Bits(msg.flags,0,32); KernelLog.Ln;*)
 
-		ch := 0X;
 		IF  (key = AosInputs.KsF8) & (maximized IN win.state) & ~fullscreen (*ALEX 2005.11.30*) THEN
 			DoSomethingOddWithWindow(win);
 			RETURN

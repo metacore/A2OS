@@ -1333,8 +1333,8 @@ BEGIN
 	traceDisplay := FALSE;
 	format := Displays.color8888;
 	InitMod();  Modules.InstallTermHandler( Shutdown );  KeyHandled := FALSE;
-	CapsLockOn := (User32.GetKeyState(0x14) MOD 0x10000 ) # 0;
-	NumLockOn := (User32.GetKeyState(0x90) MOD 0x10000 ) # 0;
+	CapsLockOn := ODD(User32.GetKeyState(0x14));
+	NumLockOn := ODD(User32.GetKeyState(0x90));
 	Init_keyCodesToLowerUpperControlChars;
 END Display.
 

@@ -229,6 +229,7 @@ VAR
 
 	KeyHandled: BOOLEAN;
 	CapsLockOn: BOOLEAN;
+	NumLockOn: BOOLEAN;
 
 	fullscreen: BOOLEAN;   (*ALEX 2005.11.30*)
 
@@ -686,6 +687,7 @@ VAR
 		ControlChar(188,44,60); (* button ,*)
 		ControlChar(190,46,62); (* button . *)
 		ControlChar(191,47,63); (* button / *)
+		ControlChar(220,92,124); (* button \ *)
 			
 		keyCodesToLowerUpperControlChars := a;
 		
@@ -1330,7 +1332,9 @@ VAR traceDisplay: BOOLEAN;
 BEGIN
 	traceDisplay := FALSE;
 	format := Displays.color8888;
-	InitMod();  Modules.InstallTermHandler( Shutdown );  KeyHandled := FALSE; CapsLockOn := FALSE;
+	InitMod();  Modules.InstallTermHandler( Shutdown );  KeyHandled := FALSE;
+	CapsLockOn := (User32.GetKeyState(0x14) MOD 0x10000 ) # 0;
+	NumLockOn := (User32.GetKeyState(0x90) MOD 0x10000 ) # 0;
 	Init_keyCodesToLowerUpperControlChars;
 END Display.
 

@@ -151,6 +151,10 @@ VAR
 	loopAddAXAX*, loopAddARAR*, loopAddAZAZ*, loopAddALZALZ*: BinaryAAALoop;
 	loopSubAXAX*, loopSubARAR*, loopSubAZAZ*, loopSubALZALZ*: BinaryAAALoop;
 	loopEMulAXAX*, loopEMulARAR*, loopEMulAZAZ*, loopEMulALZALZ*: BinaryAAALoop;
+	
+	loopEMulAXAB*: BinaryAAALoop;
+	loopSumAXAB*: BinaryAASLoop;
+	
 	loopMatMulAXAX*, loopMatMulARAR*: BinaryAASLoop;
 	loopMatMulIncAXAX*, loopMatMulIncARAR*: BinaryAASLoop;
 	loopMulAXSX*, loopMulARSR*, loopMulAZSZ*, loopMulALZSLZ*: BinaryASALoop;
@@ -187,6 +191,8 @@ VAR
 		loopAddARAR := AddARARLoop; loopSubARAR := SubARARLoop; loopEMulARAR := EMulARARLoop; loopMatMulAXAX := MatMulAXAXLoop;
 		loopAddAZAZ := AddAZAZLoop; loopAddALZALZ := AddALZALZLoop; loopSubAZAZ := SubAZAZLoop; loopSubALZALZ := SubALZALZLoop;
 		loopEMulAZAZ := EMulAZAZLoop; loopEMulALZALZ := EMulALZALZLoop;
+		loopEMulAXAB := EMulAXABLoop;
+		loopSumAXAB := SumAXABLoop;
 		loopMatMulIncAXAX := MatMulIncAXAXLoop;
 		loopMatMulARAR := MatMulARARLoop;  loopMulAXSX := MulAXSXLoop;
 		loopIncMulAXSX := IncMulAXSXLoop;
@@ -3047,6 +3053,65 @@ Sufficient (but not necessary) conditions:
 										SIZEOF( COMPLEX64 ), loopEMulALZALZ );
 		RETURN RESULT
 	END ".*";
+
+(** FLOAT64 handled by boolean map *)
+	PROCEDURE EMulAXABLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	VAR lval: FLOAT64; rval: BOOLEAN; (*decode/convert boolean from 1 and 0*)
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );  
+			IF ~rval THEN lval:=0.0 END;
+			SYSTEM.PUT( dadr, lval);
+			INC( ladr, linc );  INC( radr, rinc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END EMulAXABLoop;
+
+	OPERATOR ".*"*(CONST left: ARRAY [?] OF FLOAT64; CONST right: ARRAY [?] OF BOOLEAN): ARRAY {UNSAFE} [?] OF FLOAT64;
+	BEGIN
+		ApplyBinaryAAAOp( RESULT, left, right,
+										SIZEOF( FLOAT64 ), loopEMulAXAB );
+		RETURN RESULT
+	END ".*";
+
+	(*conditional sum of Float64*)
+	PROCEDURE SumAXABLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
+	VAR lval, val: FLOAT64; rval: BOOLEAN; (*decode/convert boolean from 1 and 0*)
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );  
+			IF rval THEN val:=val+lval END;
+			INC( ladr, linc );  INC( radr, rinc );  DEC( len );
+		END;
+		SYSTEM.PUT(dadr,val);
+	END SumAXABLoop;
+
+	(*sum of elements left[?] conditional on right[?]=TRUE*)
+	OPERATOR "+*"*(CONST left: ARRAY [?] OF FLOAT64; CONST right: ARRAY [?] OF BOOLEAN): FLOAT64;
+	VAR dest: FLOAT64;
+	BEGIN
+		dest:=0;
+		ApplyBinaryAASOp( ADDRESSOF(dest), left, right, loopSumAXAB );
+		RETURN dest
+	END "+*";
+	
+	(** count BOOLEAN "TRUE" values *)
+	PROCEDURE SumABLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
+	VAR lval:BOOLEAN; dval: SIZE;
+	BEGIN
+		SYSTEM.GET( dadr, dval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  IF lval THEN INC(dval) END;  INC( ladr, linc );  DEC( len );
+		END;
+		SYSTEM.PUT( dadr, dval );
+	END SumABLoop;
+
+	OPERATOR "SUM"*( CONST left: ARRAY [ ? ] OF BOOLEAN ): SIZE;
+	VAR val: SIZE;
+	BEGIN
+		val := 0;  ApplyUnaryASOp( ADDRESSOF( val ), left , SumABLoop );
+		RETURN val;
+	END "SUM";
+
 
 	(*** element-wise multiply and add array x array -> array  ********************************************************************)
 

@@ -228,8 +228,6 @@ VAR
 	format* : SIGNED8;
 
 	KeyHandled: BOOLEAN;
-	CapsLockOn: BOOLEAN;
-	NumLockOn: BOOLEAN;
 
 	fullscreen: BOOLEAN;   (*ALEX 2005.11.30*)
 
@@ -535,54 +533,42 @@ VAR
 		END
 	END HandleChar;
 
-	PROCEDURE DoSomethingOddWithWindow( win: Window );
-	VAR rect: User32.Rect;  ret: Kernel32.BOOL;
-	BEGIN
-		IF win.frame THEN
-			ret :=
-				User32.SetWindowLong( win.hWnd, User32.GWLStyle,
-														 SIGNED32(SET(User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) + SET(12582912 (* WScaption *) ) ) );
-			ret := User32.GetWindowRect( win.hWnd, rect );
-			ret :=
-				User32.SetWindowRgn( win.hWnd,
-													    GDI32.CreateRectRgn( rect.left, rect.bottom, rect.right, rect.top (* +User32.GetSystemMetrics(User32.SMCYCaption) *) ),
-													    1 );
-		ELSE
-			ret :=
-				User32.SetWindowLong( win.hWnd, User32.GWLStyle,
-														 SIGNED32(SET(User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) - SET(12582912 (* WScaption *) ) ) );
-			ret := User32.GetWindowRect( win.hWnd, rect );
-			ret :=
-				User32.SetWindowRgn( win.hWnd,
-													    GDI32.CreateRectRgn( rect.left, rect.bottom, rect.right, rect.top (* -User32.GetSystemMetrics(User32.SMCYCaption)*) ),
-													    1 );
-		END;
-		win.frame := ~win.frame;
-	END DoSomethingOddWithWindow;
-
-	(* default handler for WMKeyDown or WMKeyUp messages *)
+(* default handler for WMKeyDown or WMKeyUp messages *)
 	PROCEDURE HandleKey( win: Window;  wParam: User32.WParam;  lParam: User32.LParam );
-	VAR ch: CHAR; msg: AosInputs.KeyboardMsg; key : SIGNED32; repeatCount : SIGNED32;
+	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg;  key : SIGNED32; rect: User32.Rect;  ret: Kernel32.BOOL;
 	BEGIN
 		DecomposeKeyEvent( SIGNED32(wParam), SIGNED32(lParam), ch, key, FALSE );
-		
-		(*KernelLog.String("HandleKey, ch, key="); KernelLog.Int(ORD(ch),10); KernelLog.Hex(key,10); KernelLog.Bits(msg.flags,0,32); KernelLog.Ln;*)
 
 		IF  (key = AosInputs.KsF8) & (maximized IN win.state) & ~fullscreen (*ALEX 2005.11.30*) THEN
-			DoSomethingOddWithWindow(win);
-			RETURN
+			IF win.frame THEN
+				ret :=
+					User32.SetWindowLong( win.hWnd, User32.GWLStyle,
+															 SIGNED32(SET(User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) + SET(12582912 (* WScaption *) ) ) );
+				ret := User32.GetWindowRect( win.hWnd, rect );
+				ret :=
+					User32.SetWindowRgn( win.hWnd,
+														    GDI32.CreateRectRgn( rect.left, rect.bottom, rect.right, rect.top (* +User32.GetSystemMetrics(User32.SMCYCaption) *) ),
+														    1 );
+
+			ELSE
+				ret :=
+					User32.SetWindowLong( win.hWnd, User32.GWLStyle,
+															 SIGNED32(SET(User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) - SET(12582912 (* WScaption *) ) ) );
+
+				ret := User32.GetWindowRect( win.hWnd, rect );
+				ret :=
+					User32.SetWindowRgn( win.hWnd,
+														    GDI32.CreateRectRgn( rect.left, rect.bottom, rect.right, rect.top (* -User32.GetSystemMetrics(User32.SMCYCaption)*) ),
+														    1 );
+
+			END;
+			win.frame := ~win.frame;  RETURN;
 		END;
 
 		GetKeyFlags(msg.flags);
 		IF (msg.flags * AosInputs.Ctrl # {}) & (msg.flags * AosInputs.Alt = {}) & (VK0 <= wParam) & (wParam <= VK9) THEN
 			(* Same behaviour as AOS *)
 			ch := CHR(wParam); key := SIGNED32(wParam);
-		END;
-		
-		IF (msg.flags = {}) & (key = AosInputs.KsCapsLock) THEN
-			CapsLockOn := ~CapsLockOn;
-			KeyHandled := TRUE; 
-			RETURN
 		END;
 
 		IF (AosInputs.LeftAlt IN msg.flags) & (AosInputs.LeftShift IN msg.flags) THEN
@@ -602,132 +588,20 @@ VAR
 
 		(* ch := TranslateKey(wParam, FALSE);  *)
 		(*IF ch # 0X THEN*)
-		repeatCount := SIGNED32(lParam) MOD ASH( 1, 16 );
-
-		HandleCharDigit(msg,SIGNED32(wParam));
-		
-		(*KernelLog.String("HandleCharDigit wParam, msg.ch, msg.keysym = "); KernelLog.Int(wParam, 10); KernelLog.Char(msg.ch); KernelLog.Int(msg.keysym, 10); KernelLog.Ln;*)
-		
+		lParam := lParam MOD ASH( 1, 16 );
 		IF (msg.keysym # 0) OR (msg.ch # 0X)  THEN
-			(*KernelLog.String("HandleKey set KeyHandled to TRUE"); KernelLog.Ln;*)
+			(*
+		KernelLog.String("HandleKey, ch, keysm="); KernelLog.Int(ORD(ch),10); KernelLog.Hex(msg.keysym,10); KernelLog.Bits(msg.flags,0,32); KernelLog.Ln;
+		*)
+
 			KeyHandled := TRUE;
-			WHILE repeatCount > 0 DO
-				AosInputs.keyboard.Handle( msg );
-				(*Displays.WriteChar(win, ch); *)
-				DEC( repeatCount )
+			WHILE lParam > 0 DO AosInputs.keyboard.Handle( msg );
+				(*Displays.WriteChar(win, ch); *) DEC( lParam )
 			END;
-		ELSE
-			KeyHandled := FALSE;
-			(*KernelLog.String("HandleKey set KeyHandled to FALSE"); KernelLog.Ln;*)
+
+		ELSE KeyHandled := FALSE;
 		END;
 	END HandleKey;
-
-	(* flags: shift = 1, capslock = 2, control = 4 *)
-	CONST NumVirtualKeys = 256;
-
-	TYPE KeyCodesToLowerUpperControlCharsType = ARRAY NumVirtualKeys + 1 OF ARRAY 8 OF UNSIGNED16; 
-	VAR keyCodesToLowerUpperControlChars : KeyCodesToLowerUpperControlCharsType;
-	
-	PROCEDURE Init_keyCodesToLowerUpperControlChars;
-	VAR i : UNSIGNED8; a : KeyCodesToLowerUpperControlCharsType; shift, caps, ctrl : UNSIGNED8;
-		
-		PROCEDURE Digit(keyCode: UNSIGNED8; shifted : UNSIGNED8); 
-		BEGIN
-			a[keyCode][shift] := shifted;
-			a[keyCode][shift + caps] := shifted;
-			a[keyCode][ctrl+shift] := keyCode;
-			a[keyCode][ctrl+caps+shift] := keyCode;
-		END Digit;
-
-	  	PROCEDURE ControlChar(virtualKeyCode, normal, shifted : UNSIGNED8);
-		BEGIN
-			a[virtualKeyCode][0] := normal; 
-			a[virtualKeyCode][shift] := shifted; 
-			a[virtualKeyCode][caps] := shifted; 
-			a[virtualKeyCode][caps + shift] := normal; 
-			a[virtualKeyCode][ctrl] := normal;
-			a[virtualKeyCode][ctrl + shift ] := normal;
-			a[virtualKeyCode][ctrl + caps] := normal;
-			a[virtualKeyCode][ctrl + caps + shift] := normal
-		END ControlChar;
-		
-	BEGIN 
-		shift := 1;
-		caps := 2; 
-		ctrl := 4;
-		FOR i := 65 TO 90 DO (* A..Z = 041H ..  05AH *)
-			a[i][0] := i + 32; 	
-			a[i][shift] := i;
-			a[i][caps] := i;
-			a[i][caps + shift] := i + 32;
-			a[i][ctrl] := i - 64;
-			a[i][ctrl + shift ] := i - 64;
-			a[i][ctrl + caps] := i - 64;
-			a[i][ctrl + caps + shift] := i - 64;
-		END; 	
-		
-		Digit(48,41); (* 030H - button 0 *)
-		Digit(49,33); (* button 1 *)
-		Digit(50,64); (* button 2 *) 
-		Digit(51,35); (* button 3 *)
-		Digit(52,36); (* button 4 *)			
-		Digit(53,37); (* button 5 *)
-		Digit(54,94); (* button 6 *)
-		Digit(55,38); (* button 7 *)
-		Digit(56,42); (* button 8 *)
-		Digit(57,40); (* button 9 *)
-
-  		ControlChar(192, 96, 126); (* button ` = jo *)
-		ControlChar(219,91,123); (* button [ *)
-		ControlChar(221,93,125); (* button ] *)
-		ControlChar(189,45,95); (* button - *)
-		ControlChar(187,61,43); (* button =*)
-		ControlChar(186,59,58); (* button : *)
-		ControlChar(222,39,34); (* button '*)
-		ControlChar(188,44,60); (* button ,*)
-		ControlChar(190,46,62); (* button . *)
-		ControlChar(191,47,63); (* button / *)
-		ControlChar(220,92,124); (* button \ *)
-			
-		keyCodesToLowerUpperControlChars := a;
-		
-	END Init_keyCodesToLowerUpperControlChars;
-	
-	PROCEDURE HandleCharDigit(VAR msg : AosInputs.KeyboardMsg; virtualKeyCode: SIGNED32);
-	VAR ShiftCapsCtrl : UNSIGNED8;
-	  (* virtual key codes = https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes *)
-		ord : SIGNED32; 
-	BEGIN
-		(* a = 97, z = 122, A = 65, Z = 90 
-		   
-		KernelLog.String("UchtiShiftICapsLock: "); KernelLog.Int(ORD(msg.ch),0); KernelLog.Ln;
-		RETURN;*)
-	
-		IF msg.flags * AosInputs.Alt # {} THEN
-			(*KernelLog.String("HandleCharDigit: avoiding processing Alt-key combination"); KernelLog.Ln;*)
-			RETURN
-		END;
-			
-		IF msg.flags * AosInputs.Shift # {} THEN 
-			INC(ShiftCapsCtrl,1)
-		END;
-		IF CapsLockOn THEN
-			INC(ShiftCapsCtrl,2)
-		END;
-		IF msg.flags * AosInputs.Ctrl # {} THEN
-			INC(ShiftCapsCtrl,4)
-		END;
-		
-		IF virtualKeyCode < NumVirtualKeys THEN
-			ord := keyCodesToLowerUpperControlChars[virtualKeyCode][ShiftCapsCtrl]
-		END;
-		IF ord # 0 THEN
-			msg.ch := CHR(ord);
-			msg.keysym := ord;
-			(*KernelLog.String("HandleCharDigit end"); KernelLog.Ln;*)
-			RETURN
-		END
-	END HandleCharDigit; 
 
 	(* default handler for WMKeyDown or WMKeyUp messages *)
 	PROCEDURE HandleKeyUp( win: Window;  wParam: User32.WParam;  lParam: User32.LParam );
@@ -945,7 +819,7 @@ VAR
 
 	PROCEDURE {WINAPI} WindowProc( hwnd: User32.HWND;  uMsg: SIGNED32;  wParam: User32.WParam;
 															    lParam: User32.LParam ): User32.LResult;
-	VAR win {UNTRACED}: Window;  dbh {UNTRACED}: DEV_BROADCAST_HDRP; dbv  {UNTRACED}: DEV_BROADCAST_VOLUMEP;
+	VAR win {UNTRACED}: Window;  dbh {UNTRACED}: DEV_BROADCAST_HDRP; dbv  {UNTRACED}: DEV_BROADCAST_VOLUMEP; i: SIGNED32;
 	BEGIN
 
 		IF uMsg = WM_DEVICECHANGE THEN
@@ -1333,9 +1207,6 @@ BEGIN
 	traceDisplay := FALSE;
 	format := Displays.color8888;
 	InitMod();  Modules.InstallTermHandler( Shutdown );  KeyHandled := FALSE;
-	CapsLockOn := ODD(User32.GetKeyState(0x14));
-	NumLockOn := ODD(User32.GetKeyState(0x90));
-	Init_keyCodesToLowerUpperControlChars;
 END Display.
 
 Aos.Call Display.Install 1024 768 ~
@@ -2421,5 +2292,3 @@ Const IDLE_PRIORITY_CLASS = &H40
 Const HIGH_PRIORITY_CLASS = &H80
 Const REALTIME_PRIORITY_CLASS = &H100
 *)
-
-

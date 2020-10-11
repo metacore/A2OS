@@ -597,6 +597,7 @@ To update: Configuration.Init ~
 			<Section name="SyntaxHighlighter">
 				<!-- Map file extension to SyntaxHighlighter name -->
 				<Setting name="MOD" value="Oberon"/>
+				<Setting name="mod" value="oberon"/>
 				<Setting name ="MDF" value="DataflowOberon"/>
 					<Setting name="MOS" value="Oberon"/>
 				<Setting name="XML" value="XML"/>

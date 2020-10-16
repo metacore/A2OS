@@ -1,4 +1,4 @@
-MODULE VolumeNabla;	(**  AUTHOR "ph"; PURPOSE "";  **)
+MODULE VolumeNabla;	(**  AUTHOR "Patrick Hunziker 2008"; PURPOSE "Nabla operators";  **)
 
 (*see overview of Del in cartesian and spherical coordinates in wikipedia:
 http://en.wikipedia.org/wiki/Del_in_cylindrical_and_spherical_coordinates *)
@@ -38,7 +38,10 @@ BEGIN
 	CASE sampling OF
 		centered:
 			RESULT[.., .. , 1..LEN( RESULT, 2 ) - 2] := 0.5 * sf[.., .. , 2..LEN( RESULT, 2 ) - 1];
-			RESULT[.., .. , 1..LEN( RESULT, 2 ) - 2] := RESULT[.., .. , 1..LEN( RESULT, 2 ) - 2] - 0.5 * sf[.., .. , 0..LEN( RESULT, 2 ) - 3];
+			(*RESULT[.., .. , 1..LEN( RESULT, 2 ) - 2] := RESULT[.., .. , 1..LEN( RESULT, 2 ) - 2] - 0.5 * sf[.., .. , 0..LEN( RESULT, 2 ) - 3];*)
+						
+			RESULT[.., .. , 1..LEN( RESULT, 2 ) - 2] := DECMUL(0.5, sf[.., .. , 0..LEN( RESULT, 2 ) - 3]);(*! but, INCMUL may not be part of FoxArrayOptimized SSE procedures => slower ??*)
+
 			RESULT[.., .., 0]:= sf[.., ..,1]-sf[..,..,0];
 			RESULT[..,..,LEN(RESULT,2)-1]:=sf[..,.. ,LEN( sf, 2 ) - 1]-sf[..,.. ,LEN( sf, 2 ) - 2];
 		| nearestneighbour:
@@ -57,7 +60,8 @@ BEGIN
 	CASE sampling OF
 	centered:
 			RESULT[.. , 1..LEN( RESULT, 1 ) - 2] := 0.5 * sf[.. , 2..LEN( RESULT, 1 ) - 1];
-			RESULT[ .. , 1..LEN( RESULT, 1 ) - 2] := RESULT[ .. , 1..LEN( RESULT, 1 ) - 2] - 0.5 * sf[.. , 0..LEN( RESULT, 1 ) - 3];
+			(*RESULT[ .. , 1..LEN( RESULT, 1 ) - 2] := RESULT[ .. , 1..LEN( RESULT, 1 ) - 2] - 0.5 * sf[.. , 0..LEN( RESULT, 1 ) - 3];*)
+			RESULT[ .. , 1..LEN( RESULT, 1 ) - 2] := DECMUL(0.5, sf[.. , 0..LEN( RESULT, 1 ) - 3]);(*! but, INCMUL may not be part of FoxArrayOptimized SSE procedures => slower ??*)
 			RESULT[ .., 0]:= sf[..,1]-sf[..,0];
 			RESULT[ .., LEN(RESULT,1)-1]:=sf[.. ,LEN( sf, 1 ) - 1]-sf[.. ,LEN( sf, 1 ) - 2];
 	|nearestneighbour:
@@ -76,7 +80,8 @@ BEGIN
 	CASE sampling OF
 	centered:
 		RESULT[ 1..LEN( RESULT, 0 ) - 2] := 0.5 * sf[ 2..LEN( RESULT, 0 ) - 1];
-		RESULT[1..LEN( RESULT, 0 ) - 2] := RESULT[1..LEN( RESULT, 0 ) - 2] - 0.5 * sf[ 0..LEN( RESULT, 0 ) - 3];
+		(*RESULT[1..LEN( RESULT, 0 ) - 2] := RESULT[1..LEN( RESULT, 0 ) - 2] - 0.5 * sf[ 0..LEN( RESULT, 0 ) - 3];*)
+		RESULT[1..LEN( RESULT, 0 ) - 2] := DECMUL(0.5, sf[ 0..LEN( RESULT, 0 ) - 3]);(*! but, INCMUL may not be part of FoxArrayOptimized SSE procedures => slower ??*)
 		RESULT[ 0]:= sf[1]-sf[0];
 		RESULT[LEN(RESULT,0)-1]:=sf[LEN( sf, 0 ) - 1]-sf[LEN( sf, 0 ) - 2];
 	|nearestneighbour:
@@ -101,14 +106,20 @@ END Grad;
 (*directional derivative is derivative along u; corresponds to inner product of partial derivative with vector u = <d/dx, d/dy, d/dz> * <ux, uy, uz>  *)
 PROCEDURE DirectionalDerivative*(CONST sf:ScalarField; CONST u: VectorField; sampling:SIGNED32):ScalarField;
 BEGIN
-	RETURN u[x].*dx(sf, sampling) + u[y].*dy(sf, sampling) + u[z].*dz(sf, sampling)
+	RESULT:=u[x].*dx(sf, sampling);
+	RESULT:=RESULT + u[y].*dy(sf, sampling);
+	RESULT:=RESULT + u[z].*dz(sf, sampling);
+	RETURN RESULT
 END DirectionalDerivative;
 
 (** Divergence operator *)
 PROCEDURE Div*(CONST vf:VectorField; sampling:SIGNED32):ScalarField;
 BEGIN
 	IF LEN(RESULT)=0 THEN NEW(RESULT, LEN(vf,1), LEN(vf,2), LEN(vf,3)) END;
-	RETURN dx(vf[x,..,..,..],sampling) + dy(vf[y,..,..,..], sampling) + dz(vf[z,..,..,..], sampling);
+	RESULT:=dx(vf[x,..,..,..],sampling);
+	RESULT:=RESULT+dy(vf[y,..,..,..], sampling);
+	RESULT:=RESULT+dz(vf[z,..,..,..], sampling);
+	RETURN RESULT;
 END Div;
 
 (** Rotation or Curl operator *)
@@ -125,10 +136,11 @@ END Rot;
 PROCEDURE Laplacian*(CONST sf:ScalarField; sampling:SIGNED32): ScalarField;
 BEGIN
 	IF  LEN(RESULT,0)=0 THEN NEW(RESULT, LEN(sf)); END;
-	RETURN dx(dx(sf, sampling),sampling) + dy(dy(sf, sampling),sampling) + dz(dz(sf, sampling),sampling)
+	RESULT:=dx(dx(sf, sampling),sampling);
+	RESULT:=RESULT+dy(dy(sf, sampling),sampling);
+	RESULT:=RESULT+dz(dz(sf, sampling),sampling);
+	RETURN RESULT
 END Laplacian;
-
-
 
 (** http://en.wikipedia.org/wiki/Del   - not yet implemented *)
 (* Del can also be applied to a vector field with the result being a tensor.
@@ -185,4 +197,4 @@ END VectorHessian;
 
 END VolumeNabla.
 
-SystemTools.FreeDownTo VolumeNabla ~
+System.FreeDownTo VolumeNabla ~

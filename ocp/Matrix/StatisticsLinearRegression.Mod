@@ -8,7 +8,7 @@ a SVD based least squares solver for least squares computation (in all types off
 or a Krylov based solver may help.
 *)
 
-IMPORT MatrixBase, MatrixLeastSquares, StatisticsFunctions, Util:=MatrixUtilities, Streams, Random, KernelLog, StatisticsBase;
+IMPORT MatrixBase, MatrixLeastSquares, StatisticsFunctions, Util:=MatrixUtilities, Streams, Random, KernelLog, StatisticsBase, Reals;
 
 (* http://en.wikipedia.org/wiki/Linear_regression *)
 (**
@@ -36,7 +36,7 @@ TYPE Matrix*=MatrixBase.Matrix;
 	Scalar*=MatrixBase.Datatype;
 
 VAR w: Streams.Writer;
-	random:Random.Generator;
+	random:Random.Sequence;
 
 (**
 y = Xb + e
@@ -211,21 +211,25 @@ END Significance;
 The Theil-Sen estimator is a simple robust estimation technique that determine the slope of a dataset
 as the median of the slopes of the lines through pairs of sample points.
 It has similar statistical efficiency properties to simple regression but is much less sensitive to outliers.
-Note that at current, this implementation limits the search to MIN(200, N/2) pairs for efficiency reasons, while a full algorithm may consider all pairs and is therefore O(N*N) with added sorting.
+Note that at current, this implementation limits the search to MIN(600, N/2) pairs for efficiency reasons, while a full algorithm may consider all pairs and is therefore O(N*N) with added sorting.
 see http://en.wikipedia.org/wiki/Theil%E2%80%93Sen_estimator for  details
 **)
 PROCEDURE TheilSenEstimator*(CONST x: Vector; CONST y: Vector; VAR b, intercept: Scalar; VAR e: Vector);
-VAR slopes: Vector; i,j,j0,len:SIZE; dx, dy: Scalar;
+CONST MaxPairs=600;
+VAR slopes: Vector; i,j,j0,len:SIZE; dx, dy, slope: Scalar;
 BEGIN
-	len:=MIN (200, LEN(x,0) DIV 2);
+	(*len:=MIN (MaxPairs, LEN(x,0) DIV 2);*)
+	len:=MaxPairs;
 	NEW(slopes, len);
-	i:=0; j:=0;
+	i:=0; j:=random.Dice(SIGNED32(LEN(x,0) DIV 2));
 	WHILE i<len DO
 		j0:=j;	(*choose sample pairs; extremal point pairs or random pairs could be used *)
 		j:=(j0 + LEN(x,0) DIV 4 +random.Dice(SIGNED32(LEN(x,0)) DIV 2)) MOD LEN(x,0); (*have some minimal distance*)
 		dx:=x[j]-x[j0];
 		dy:=y[j]-y[j0];
-		IF dx#0 THEN slopes[i]:=dy/dx; INC(i) END;
+		(*IF (dx#0) THEN slope:=dy/dx; INC(i) END;*)
+		slope:=dy/dx;
+		IF ~Reals.IsNaNL(slope) THEN slopes[i]:=slope; INC(i) END;(*also avoids NaN in input data*)
 	END;
 	b := StatisticsBase.DestructiveMedian(slopes);
 	(*
@@ -466,4 +470,4 @@ StatisticsLinearRegression.Test~
 StatisticsLinearRegression.TestGLM~
 StatisticsLinearRegression.TestEngine~
 StatisticsLinearRegression.TestFprobability~
-SystemTools.FreeDownTo StatisticsFunctions StatisticsLinearRegression ~
+System.FreeDownTo StatisticsLinearRegression ~

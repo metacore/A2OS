@@ -123,7 +123,7 @@ TYPE Window*= OBJECT (WM.BufferWindow)
 		graph.curves:=NIL;
 		FOR i:=0 TO n-1 DO
 			NEW(curve); curve.next:=graph.curves;  graph.curves:=curve;
-			curve.linecol:= (i * 011000000H +077FF00H-i*01100H+ 077H)(SIGNED32);
+			curve.linecol:= SIGNED32(i * 011000000H +077FF00H-i*01100H+ 077H);
 		END;
 	END AllocateCurves;
 
@@ -464,7 +464,7 @@ WMMatrixGraph.Test
 WMMatrixGraph.Test2
 WMMatrixGraph.Test3
 WMMatrixGraph.Test4
-SystemTools.FreeDownTo  WMMatrixGraph ~
+System.FreeDownTo  WMMatrixGraph ~
 
 WMMatrixGraph.RemoveWindows ~ (*close and remove all matrix windows*)
 WMMatrixGraph.RemoveWindows 5 ~ (* close and remove a number of matrix windows*)

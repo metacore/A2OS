@@ -43,24 +43,27 @@ END ProdS;
 
 PROCEDURE Mean*(CONST X: Array): Datatype;
 BEGIN
-	RETURN SUM(X)/ProdS(LEN(X))
+	(*RETURN SUM(X)/ProdS(LEN(X))*)
+	RETURN SUM(X)/Count(X)
 END Mean;
 
 PROCEDURE MeanSquare*(CONST X: Array): Datatype;
 BEGIN
-	RETURN X+*X / ProdS(LEN(X))
+	(*RETURN X+*X / ProdS(LEN(X))*)
+	RETURN X+*X / Count(X)
 END MeanSquare;
 
 PROCEDURE RMS*(CONST X: Array): Datatype; (*root mean square*)
 BEGIN
 	IF DIM(X)=0 THEN RETURN 0 (*!TBD: apply to other structures ? or TRAP ?*)
-	ELSE RETURN MathL.sqrt(X+*X / ProdS(LEN(X)))
+	ELSE RETURN MathL.sqrt(X+*X / Count(X))
+	(*ELSE RETURN MathL.sqrt(X+*X / ProdS(LEN(X)))*)
 	END;
 END RMS;
 
-PROCEDURE KSmallest( VAR a: Vector;  n, k: SIZE ): Datatype;
+PROCEDURE KSmallest*( VAR a: Vector; (* n,*) k: SIZE ): Datatype;
 (** caution: modifies a , Algorithm by N.Wirth / Hoare, cf. N. Wirth: Algorithms & Datastructures. *)
-VAR i, j, l, m: SIZE;  x: Datatype;
+VAR i, j, l, m, n: SIZE;  x: Datatype;
 
 	PROCEDURE swap( VAR x, y: Datatype );
 	VAR z: FLOAT64;
@@ -69,6 +72,7 @@ VAR i, j, l, m: SIZE;  x: Datatype;
 	END swap;
 
 BEGIN
+	n:=LEN(a,0);
 	l := 0;  m := n - 1;
 	WHILE (l < m) DO
 		x := a[k];  i := l;  j := m;
@@ -111,8 +115,8 @@ PROCEDURE QSort*(VAR X : Vector);
  VAR len:SIZE;
  BEGIN
  	len:=LEN(v1,0);
-	IF ODD( len ) THEN RETURN KSmallest( v1, len, len DIV 2 )
-	ELSE RETURN (KSmallest( v1, len, len DIV 2 - 1 ) + KSmallest( v1, len, len DIV 2 )) / 2
+	IF ODD( len ) THEN RETURN KSmallest( v1, (*len,*) len DIV 2 )
+	ELSE RETURN (KSmallest( v1, (*len,*) len DIV 2 - 1 ) + KSmallest( v1, (*len,*) len DIV 2 )) / 2
 	END
  END DestructiveMedian;
 
@@ -128,7 +132,7 @@ PROCEDURE QSort*(VAR X : Vector);
  VAR diff:Array;
  BEGIN
  	 diff:=v-Mean(v);
- 	 RETURN (diff+*diff) / ProdS(LEN(v))
+ 	 RETURN (diff+*diff) / Count(v)
  END Variance;
 
  (** of full data *)
@@ -143,7 +147,7 @@ PROCEDURE QSort*(VAR X : Vector);
  VAR diff:Array;
  BEGIN
  	 diff:=v-Mean(v);
- 	 RETURN (diff+*diff) / (ProdS(LEN(v))-1)
+ 	 RETURN (diff+*diff) / (Count(v)-1)
  END EstimatedVariance;
 
  (** subset of data , divisor is (N-1)*)
@@ -159,7 +163,7 @@ PROCEDURE QSort*(VAR X : Vector);
 	BEGIN
 		sigma:=StandardDeviation(X);
 		x1:=X-Mean(X);
-		RETURN  ((x1 .* x1) +* x1) / (sigma*sigma*sigma)/ ProdS(LEN(X))
+		RETURN  ((x1 .* x1) +* x1) / (sigma*sigma*sigma)/ Count(X)
 	END Skewness;
 
 PROCEDURE Kurtosis*(CONST X : Array) : Datatype;
@@ -170,7 +174,7 @@ PROCEDURE Kurtosis*(CONST X : Array) : Datatype;
 		variance:=Variance(X);
 		x1:=X-Mean(X);
 		x2:=x1.*x1;
-		RETURN (x2 +* x2) / (variance*variance) / ProdS(LEN(X)) - 3;
+		RETURN (x2 +* x2) / (variance*variance) / Count(X) - 3;
 	END Kurtosis;
 
 PROCEDURE Normalize*(CONST a: Array):Array;

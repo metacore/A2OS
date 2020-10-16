@@ -95,8 +95,8 @@ TYPE Window*= OBJECT (WM.BufferWindow)
 			bounds := WMGraphics.MakeRectangle(0, 0, GetWidth(), GetHeight());
 		END;
 		IF LEN(m,0)>0 THEN
-			model.m:=m;
-			(* model.m:=ALIAS OF m; *)(* no-copy version *)
+			(*model.m:=m;*)
+			 model.m:=ALIAS OF m; (*! no-copy version *)
 			max:=MAX(m); min:=MIN(m); IF min<0 THEN type:=signed ELSE type:=0 END;;
 			offset:=0;
 			IF max#min THEN gain:= 255/MAX( ABS(max),ABS(min));
@@ -303,7 +303,7 @@ END WMMatrix.
 WMMatrix.RemoveWindows ~ (*close and remove all matrix windows*)
 WMMatrix.RemoveWindows 5 ~ (* close and remove a number of matrix windows*)
 
-SystemTools.FreeDownTo WMMatrix~
+System.FreeDownTo WMMatrix~
 SystemTools.CollectGarbage
 
 --------------example application of LUT --------------

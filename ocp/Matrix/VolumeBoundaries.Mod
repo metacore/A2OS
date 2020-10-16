@@ -23,7 +23,7 @@ When imposed on an ordinary or a partial differential equation, it is a specific
 
 IMPORT MatrixBase, MatrixUtilities, VolumeMorphology, Files, Streams;
 
-CONST GridNotFound=123;
+CONST GridNotFound*=123;
 
 TYPE
 	BinaryVolume* = ARRAY [*,*,*] OF BOOLEAN;
@@ -33,22 +33,25 @@ TYPE
 
 	VolumeContainer* = POINTER TO RECORD
 		v*, outside*: BinaryVolume;   (* volume itself *)
-		N0*,N1*,N2*: SIGNED32; (* volume sizes *)
-		nElements*: SIGNED32; (* count of (TRUE) elements of v *)
+		N0*,N1*,N2*: SIZE; (* volume sizes *)
+		nElements*: SIZE; (* count of (TRUE) elements of v *)
 		outerShell*: BinaryVolume; (* outer surface of the volume*)
 		innerShell*: BinaryVolume; (* inner surface of the volume*)
+		vNoShell*:BinaryVolume;
 		name*: ARRAY 512 OF CHAR;
 	END;
 
 	VolumeDomain* = OBJECT
 	VAR
 		volumes*: ARRAY [*] OF VolumeContainer;
-		index*: SIGNED32; (* current container index *)
-		pInlet*, pOutlet*, rho*, dt*: MatrixBase.Datatype;
-		dyeInlet*: PROCEDURE(sizeY,sizeZ,y,z: SIGNED32): BOOLEAN;
+		index*: SIZE; (* current container index *)
+		rho*, dt*: MatrixBase.Datatype;
+		pInlet*, pOutlet*, 
+		vInlet*: MatrixBase.Datatype;
+		dyeInlet*: PROCEDURE(sizeY,sizeZ,y,z: SIZE): BOOLEAN;(*!TBD: extend to 3d coordinates, include dependent code*)
 
 		PROCEDURE &Init*(CONST names: ARRAY OF ARRAY OF CHAR; pInlet,pOutlet,rho,dt: MatrixBase.Datatype);
-		VAR i:SIGNED32;
+		VAR i:SIZE;
 		BEGIN
 			SELF.pInlet := pInlet;
 			SELF.pOutlet:=pOutlet;
@@ -74,6 +77,7 @@ TYPE
 			vc.outerShell := FindOuterSurface(vc.v);
 			vc.innerShell := FindInnerSurface(vc.v);
 			vc.outside := ~vc.v;
+			vc.vNoShell:= vc.v & ~vc.innerShell;
 			vc.nElements:=TrueCount(vc.v);
 		END ComputeVolumeContainer;
 
@@ -81,7 +85,7 @@ TYPE
 		This is not perfect for Nabla operators that take 3 elements into account	*)
 		PROCEDURE ZeroBoundaryGradient*(VAR p: Volume);
 		VAR
-			k,N0,N1,N2: SIGNED32;
+			k,N0,N1,N2: SIZE;
 			vc: VolumeContainer;
 		BEGIN
 			N0 := LEN(p,0);
@@ -91,7 +95,7 @@ TYPE
 				IF (N0 = volumes[k].N0) & (N1 = volumes[k].N1) & (N2 = volumes[k].N2) THEN
 					index := k;
 					vc := volumes[k];
-					NeumannBC2(p, vc.v, vc.innerShell, vc.outerShell); (* apply zero gradient pressure on boundary *)
+					NeumannBC2(p, vc.v, vc.innerShell, vc.outerShell); (* apply zero pressure gradient on boundary *)
 					RETURN;
 				END;
 			END;
@@ -100,7 +104,7 @@ TYPE
 
 		PROCEDURE FlowBoundaries*(VAR field: Volume);
 		VAR
-			k,N0,N1,N2: SIGNED32;
+			k,N0,N1,N2: SIZE;
 			vc: VolumeContainer;
 		BEGIN
 			N0 := LEN(field,0);
@@ -110,8 +114,9 @@ TYPE
 				IF (N0 = volumes[k].N0) & (N1 = volumes[k].N1) & (N2 = volumes[k].N2) THEN
 					index := k;
 					vc := volumes[k];
-					DirichletBC(field, vc.innerShell, 0);	 (* set field to zero at inner surface *)
-					DirichletBC(field, vc.outside, 0);  (* set field to zero outside the domain *)
+					(*DirichletBC(field, vc.innerShell, 0);	 (* set field to zero at inner surface *)
+					DirichletBC(field, vc.outside, 0); *) (* set field to zero outside the domain *)
+					DirichletBC(field, vc.vNoShell,0);
 					RETURN;
 				END;
 			END;
@@ -162,7 +167,7 @@ TYPE
 		-on locations with external pressure boundary conditions, and in solid, no change*)
 		PROCEDURE PressureBoundariesPDT*(VAR pdt: Volume);
 		VAR
-			k,N0,N1,N2: SIGNED32;
+			k,N0,N1,N2: SIZE;
 			vc: VolumeContainer;
 		BEGIN
 			N0 := LEN(pdt,0);
@@ -173,7 +178,8 @@ TYPE
 				IF (N0 = volumes[k].N0) & (N1 = volumes[k].N1) & (N2 = volumes[k].N2) THEN
 					index := k;
 					vc := volumes[k];
-					DirichletBC(pdt, vc.outside, 0);  (* no pressure update outside the domain v *)
+					(*DirichletBC(pdt, vc.outside, 0); *) (* no pressure update outside the domain v *)
+					DirichletBC(pdt, vc.v,0);
 					pdt[..,..,0]:=0; (* no pressure update on inlet, as pressure there is an external boundary condition*)
 					pdt[..,..,N2-1]:=0; (*no pressure update on outlet, as pressure there is an external boundary condition*)
 					(*NeumannBC2(pdt, vc.v, vc.innerShell, vc.outerShell); (* outer shell mirrors inner shell. Expensive for boundary used in multigrid. *)*)
@@ -186,8 +192,10 @@ TYPE
 
 		PROCEDURE SoluteBoundaries*(VAR field: Volume); (* avoid presence of solute to outside a channel. TO DO: do not suppress, but bring the material diffused outside inwards again, to avoid loss. *)
 		VAR
-			i,j,k,N0,N1,N2: SIGNED32;
+			i,j,k,N0,N1,N2: SIZE;
+			len:ARRAY[3] OF SIZE;
 		BEGIN
+			len:= LEN(field);
 			N0 := LEN(field,0);
 			N1 := LEN(field,1);
 			N2 := LEN(field,2);
@@ -195,9 +203,9 @@ TYPE
 				IF (N0 = volumes[k].N0) & (N1 = volumes[k].N1) & (N2 = volumes[k].N2) THEN
 					index := k;
 					 (* for triple/double helix *)
-					FOR i:=0 TO LEN(field, 0)-1 DO
-						FOR j:=0 TO LEN(field,1)-1 DO
-							IF dyeInlet(LEN(field,0), LEN(field,1), i,j) THEN
+					FOR i:=0 TO len[0]-1 DO
+						FOR j:=0 TO len[1]-1 DO
+							IF dyeInlet(len[0], len[1], i,j) THEN
 								field[i,j, 0 ]:=1; (*inlet condition*)
 							ELSE
 								field[i,j, 0 ]:=0;
@@ -205,7 +213,8 @@ TYPE
 						END;
 					END;
 					(*!to do: outlet condition: = black hole ?*)
-					DirichletBC(field, volumes[k].outside, 0);  (* set field to zero outside the domain *)
+					(*DirichletBC(field, volumes[k].outside, 0);*)  (* set field to zero outside the domain *)
+					DirichletBC(field, volumes[k].v,0);
 					ZeroBoundaryGradient(field); (* by establishing a zero solute gradient accross the wall, contents will not diffuse out *)
 					RETURN;
 				END;
@@ -215,7 +224,7 @@ TYPE
 
 		PROCEDURE SoluteBoundaries0*(VAR field: Volume); (* along Z for initialization *)
 		VAR
-			i,j,k,N0,N1,N2: SIGNED32;
+			i,j,k,N0,N1,N2: SIZE;
 		BEGIN
 			N0 := LEN(field,0);
 			N1 := LEN(field,1);
@@ -232,7 +241,8 @@ TYPE
 							END;
 						END;
 					END;
-					DirichletBC(field, volumes[k].outside, 0);  (* set field to zero outside the domain *)
+					(*DirichletBC(field, volumes[k].outside, 0);*)  (* set field to zero outside the domain *)
+					DirichletBC(field, volumes[k].v,0);
 					ZeroBoundaryGradient(field); (* by establishing a zero solute gradient accross the wall, contents will not diffuse out *)
 					RETURN;
 				END;
@@ -241,9 +251,9 @@ TYPE
 		END SoluteBoundaries0;
 
 
-	PROCEDURE CountElements*(CONST field: Volume):SIGNED32; (* avoid presence of solute to outside a channel. TO DO: do not suppress, but bring the material diffused outside inwards again, to avoid loss. *)
+	PROCEDURE CountElements*(CONST field: Volume):SIZE; 
 		VAR
-			k,N0,N1,N2: SIGNED32;
+			k,N0,N1,N2: SIZE;
 		BEGIN
 			N0 := LEN(field,0);
 			N1 := LEN(field,1);
@@ -267,7 +277,7 @@ BEGIN
 END Sqr;
 
 
-PROCEDURE DyeInlet(sizeZ,sizeY,z,y: SIGNED32): BOOLEAN;
+PROCEDURE DyeInlet(sizeZ,sizeY,z,y: SIZE): BOOLEAN;
 CONST radius=0.055 * 2.8;
 BEGIN
 	RETURN Sqr(y-sizeY/2) + Sqr(z - sizeZ/2) < Sqr(radius*sizeY) (*? >= ?*)
@@ -313,7 +323,7 @@ END NeumannBC;
 
 PROCEDURE NeumannBC1(VAR p: ScalarField; CONST volume, innerSurface, outerSurface: BinaryVolume);
 VAR
-	k0,k1,k2: SIGNED32;
+	k0,k1,k2: SIZE;
 	tmp: ScalarField; (* as a local variable, tmp is always allocated again => move to object*)
 	e:  MatrixBase.Datatype;
 BEGIN
@@ -330,13 +340,16 @@ BEGIN
 	END;
 	p := VolumeMorphology.SimpleDilation(p,{});		(* as a side effect, this will also change p inside the domain, which is not desirable, and thus has be reconstructed from tmp*)
 
-	DirichletBC(p, ~outerSurface, 0);
+	(*DirichletBC(p, ~outerSurface, 0);*)
+	DirichletBC(p, outerSurface,0);
 	e := SUM(p)/TrueCount(outerSurface);
 
-	DirichletBC(tmp, ~volume, 0);	 (* keep tmp values only inside the volume *)
+	(*DirichletBC(tmp, ~volume, 0);*)	 (* keep tmp values only inside the volume *)
+	DirichletBC(tmp, volume, 0); 
 	p := tmp + p;
 
-	DirichletBC(p, ~(volume OR outerSurface), e);
+	(*DirichletBC(p, ~(volume OR outerSurface), e);*)
+	DirichletBC(p, volume OR outerSurface, e); 
 END NeumannBC1;
 
 (**
@@ -346,7 +359,7 @@ END NeumannBC1;
 *)
 PROCEDURE NeumannBC2(VAR p: ScalarField; CONST volume, innerSurface, outerSurface: BinaryVolume);
 VAR
-	k0,k1,k2, kk0,kk1,kk2,count: SIGNED32;
+	k0,k1,k2, kk0,kk1,kk2,count: SIZE;
 	q: MatrixBase.Datatype;
 BEGIN
 	FOR k0:=1 TO LEN(outerSurface,0)-2 DO
@@ -368,8 +381,8 @@ BEGIN
 	END;
 END NeumannBC2;
 
-PROCEDURE ForAll2(CONST x: ARRAY [?] OF MatrixBase.Datatype; y: ARRAY [?] OF BOOLEAN; func: PROCEDURE{DELEGATE}(v: MatrixBase.Datatype; w:BOOLEAN): MatrixBase.Datatype): ARRAY [?] OF MatrixBase.Datatype;
-VAR i: SIGNED32;
+PROCEDURE ForAll2(CONST x: ARRAY [?] OF MatrixBase.Datatype; CONST y: ARRAY [?] OF BOOLEAN; func: PROCEDURE{DELEGATE}(v: MatrixBase.Datatype; w:BOOLEAN): MatrixBase.Datatype): ARRAY [?] OF MatrixBase.Datatype;
+VAR i: SIZE;
 BEGIN
 	IF DIM(x) = 1 THEN (* last level of recursion *)
 		FOR i := 0 TO LEN(x,0)-1 DO
@@ -384,28 +397,47 @@ BEGIN
 END ForAll2;
 
 (**
-	Sets values of scalar field "u" to "u0" in points defined by "volume" : u(volume) := u0;
+	Sets values of scalar field "u" to "u0" in points defined by "volume" : u(~volume) := u0;
 *)
+
+(* "volume" indicates TRUE=>values are kept; FALSE=> values are replaced by u0 *)
 PROCEDURE DirichletBC*(VAR u: ScalarField; CONST volume: BinaryVolume; u0: MatrixBase.Datatype);
 VAR
-	k0,k1,k2: SIGNED32;
+	k0,k1,k2: SIZE;
+	len,lenVol: ARRAY [3] OF SIZE;
+	vol: ARRAY[?] OF BOOLEAN;
+	uu: ARRAY[?] OF MatrixBase.Datatype;
 BEGIN
-	FOR k0:=0 TO LEN(volume,0)-1 DO
-		FOR k1:=0 TO LEN(volume,1)-1 DO
-			FOR k2:=0 TO LEN(volume,2)-1 DO
-				IF volume[k0,k1,k2] THEN	u[k0,k1,k2] := u0 END;
+	len:=LEN(u);
+	lenVol:=LEN(volume);
+	ASSERT(lenVol=len,200);
+	IF u0=0 THEN
+		u:= u .* volume; (* apply boolean map, setting "FALSE" locations to zero *)
+	ELSE 
+		FOR k0:=0 TO len[0]-1 DO
+			FOR k1:=0 TO len[1]-1 DO
+				FOR k2:=0 TO len[2]-1 DO
+					IF ~volume[k0,k1,k2] THEN u[k0,k1,k2] := u0 END;(* otherwise, keep original values *)
+				END;
 			END;
 		END;
 	END;
+	(*
+	uu:=AliasOfReshape(u,[len[0]*len[1]*len[2]]);
+	vol:=AliasOfReshapeB(volume,[len[0]*len[1]*len[2]]);
+	FOR k0:=0 TO len[0]*len[1]*len[2]-1 DO
+		IF ~vol[k0] THEN uu[k0] := u0 END;		
+	END;
+	*)
 END DirichletBC;
 
 (**
 Number of nonzero elements in binary volume
 s: binary volume
 *)
-PROCEDURE TrueCount*(s: BinaryVolume): SIGNED32;
+PROCEDURE TrueCount*(CONST s: BinaryVolume): SIZE;
 VAR
-	k0,k1,k2,n: SIGNED32;
+	k0,k1,k2,n: SIZE;
 BEGIN
 	n := 0;
 	FOR k0:=0 TO LEN(s,0)-1 DO
@@ -419,10 +451,25 @@ BEGIN
 	RETURN n;
 END TrueCount;
 
+(*non-allocating*)
+PROCEDURE AliasOfReshape(CONST x: ARRAY [?] OF FLOAT64; CONST newSize: ARRAY [*] OF SIZE): ARRAY [?] OF FLOAT64;
+BEGIN
+	RESULT := ALIAS OF x;
+	RESULT := RESHAPE(RESULT,newSize);
+	RETURN RESULT;
+END AliasOfReshape;
+
+PROCEDURE AliasOfReshapeB(CONST x: ARRAY [?] OF BOOLEAN; CONST newSize: ARRAY [*] OF SIZE): ARRAY [?] OF BOOLEAN;
+BEGIN
+	RESULT := ALIAS OF x;
+	RESULT := RESHAPE(RESULT,newSize);
+	RETURN RESULT;
+END AliasOfReshapeB;
+
 END VolumeBoundaries.
 
 
-SystemTools.FreeDownTo VolumeBoundaries ~
+System.FreeDownTo VolumeBoundaries ~
 
 
 

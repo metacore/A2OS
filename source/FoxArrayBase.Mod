@@ -48,7 +48,7 @@ CONST
 
 	ArrayAlignment=16;
 
-	TensorFlag = 0;  RangeFlag = 1;  TemporaryFlag = 2;
+	TensorFlag* = 0;  RangeFlag* = 1;  TemporaryFlag* = 2;
 
 	down = 0;  up = 1;   (* memory copy modes *)
 
@@ -106,7 +106,7 @@ TYPE
 		elementSize*: SIZE;
 	END;
 
-	Tensor = POINTER TO ArrayDescriptor;
+	Tensor* = POINTER TO ArrayDescriptor;
 
 	UnsafeArray*= POINTER {UNSAFE,UNTRACED} TO RECORD(ArrayDescriptor)
 		lens*: ARRAY 8 OF LenInc;
@@ -336,7 +336,7 @@ VAR
 		END;
 	END Report;
 
-	PROCEDURE GetArrayDesc( dim: SIZE ): Tensor;
+	PROCEDURE GetArrayDesc*( dim: SIZE ): Tensor;
 	VAR (* t: TensorType;  *) ptr: Tensor;
 		p0: T0;
 		p1: T1; p2: T2; p3: T3; p4: T4; p5: T5; p6: T6; p7: T7; p8: T8;

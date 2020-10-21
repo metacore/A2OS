@@ -1,6 +1,6 @@
 MODULE FoxBinaryCode; (** AUTHOR ""; PURPOSE ""; *)
 
-IMPORT Basic := FoxBasic, Sections := FoxSections, Streams, ObjectFile, BitSets;
+IMPORT Basic := FoxBasic, Sections := FoxSections, Streams, ObjectFile, BitSets, Reals, SYSTEM;
 
 CONST
 	Absolute*=ObjectFile.Absolute;
@@ -623,6 +623,7 @@ TYPE
 	CONST Exponent = 8; Significant = 23;
 	VAR result: SIGNED32; VAR exponent, i: INTEGER;
 	BEGIN
+		IF Reals.IsNaN(value) THEN RETURN SYSTEM.VAL(SIGNED32, value) END;
 		(*! NaN code missing, we need an extra - machine specific - functionality for that  / cf. Streams.NaNCode *)
 		IF value = 0 THEN RETURN 0 END;
 		result := 0; exponent := 0;
@@ -641,6 +642,7 @@ TYPE
 	CONST Exponent = 11; Significant = 52;
 	VAR result: SIGNED64; VAR exponent, i: INTEGER;
 	BEGIN
+		IF Reals.IsNaNL(value) THEN RETURN SYSTEM.VAL(SIGNED64, value) END;
 		(*! NaN code missing, we need an extra - machine specific - functionality for that  / cf. Streams.NaNCode *)
 		IF value = 0 THEN RETURN 0 END;
 		result := 0; exponent := 0;

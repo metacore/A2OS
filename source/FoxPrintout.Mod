@@ -376,6 +376,9 @@ TYPE
 				END;
 			ELSE
 				Keyword("RECORD ");
+				IF x.modifiers # NIL THEN
+					Modifiers(x.modifiers);
+				END;
 				IF (x.baseType # NIL) THEN
 					w.String( "(" );
 					IF (x.baseType IS SyntaxTree.RecordType) & (x.baseType(SyntaxTree.RecordType).pointerType # NIL) THEN

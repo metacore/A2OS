@@ -1157,15 +1157,18 @@ TYPE
 
 
 	PROCEDURE AddSearchPath*( context: Commands.Context );
-	VAR name: Files.FileName;  i, j: SIGNED32;  ch : CHAR;
+	VAR name,full: Files.FileName;  i, j: SIGNED32;  ch : CHAR;
 	BEGIN
 		IF context.arg.GetString( name ) THEN
 			CleanPath( name );
+			IF Unix.realpath(ADDRESS OF name,ADDRESS OF full) = NIL THEN (* failed *)
+				COPY(name, full);
+			END; 
 			i := 0;  j := 0;
 			WHILE searchPath[i] # 0X DO  INC( i )  END;
 			searchPath[i] := Separator;  INC( i );
 			REPEAT
-				ch := name[j];  searchPath[i] := ch;
+				ch := full[j];  searchPath[i] := ch;
 				INC( j );  INC( i );
 			UNTIL ch = 0X;
 		END;

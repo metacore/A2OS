@@ -325,7 +325,7 @@ BEGIN
 	InitStrings;
 END WMInterpreterShell.
 
-WMShell.Open ~
+WMInterpreterShell.Open ~
 
-System.Free WMShell ~
-System.Free WMShell Shell ~
+System.Free WMInterpreterShell ~
+System.Free WMInterpreterShell InterpreterShell ~

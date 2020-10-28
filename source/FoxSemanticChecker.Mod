@@ -3866,12 +3866,12 @@ TYPE
 				parameter0: SyntaxTree.Expression;
 				symbolDesignator: SyntaxTree.Expression;
 			BEGIN
-				IF (numberActualParameters # 1) OR (numberFormalParameters # 1) OR (procedureType.returnType = NIL) THEN
+				IF (numberActualParameters # 1) OR (numberFormalParameters # 1) (* OR (procedureType.returnType = NIL)*)  THEN
 					RETURN FALSE;
 				END;
 				formalType := procedureType.firstParameter.type.resolved;
-				returnType := procedureType.returnType.resolved;
-				IF ~returnType.SameType(formalType) THEN
+				returnType := Resolved(procedureType.returnType);
+				IF (returnType # NIL) & ~returnType.SameType(formalType) THEN
 					RETURN FALSE;
 				END;
 				parameter0 := actualParameters.GetExpression(0);
@@ -6672,7 +6672,7 @@ TYPE
 			procedureType: SyntaxTree.ProcedureType;
 			leftType, rightType: SyntaxTree.Type;
 			identifierNumber: SIGNED32;  position: Position;
-			hasReturnType, mustBeUnary, mustBeBinary, mustReturnBoolean, mustReturnInteger, mustHaveEquitypedOperands: BOOLEAN;
+			returnTypeForbidden, returnTypeRequired, mustBeUnary, mustBeBinary, mustReturnBoolean, mustReturnInteger, mustHaveEquitypedOperands: BOOLEAN;
 			modifiers: SyntaxTree.Modifier;
 
 			(** whether a type is locally defined in the current module scope
@@ -6735,7 +6735,8 @@ TYPE
 						They might be used for intersection, union, complement of custom object types *)
 
 						(* defaults *)
-						hasReturnType := TRUE;
+						returnTypeForbidden := FALSE;
+						returnTypeRequired := TRUE;
 						mustBeUnary := FALSE;
 						mustBeBinary := FALSE;
 						mustReturnBoolean := FALSE;
@@ -6761,14 +6762,14 @@ TYPE
 						| Scanner.And, Scanner.Or: mustBeBinary := TRUE;
 						| Scanner.Not: mustBeUnary := TRUE
 						| Scanner.Plus, Scanner.Minus: (* unary and binary *)
-						| Scanner.Becomes: mustBeBinary := TRUE; hasReturnType := FALSE;
+						| Scanner.Becomes: mustBeBinary := TRUE; returnTypeRequired := FALSE; returnTypeForbidden := TRUE;
 						| Scanner.Transpose: mustBeUnary := TRUE;
 						| Global.Conversion: mustBeUnary := TRUE; (* TODO: get rid of return type? *)
 						| Global.DotTimesPlus: mustBeBinary := TRUE;
 						| Global.AtMulDec, Global.AtMulInc: mustBeBinary := TRUE;
 						| Global.DecMul, Global.IncMul: mustBeBinary := TRUE;
-						| Global.Dec, Global.Inc: hasReturnType := FALSE; (* unary and binary *)
-						| Global.Excl, Global.Incl:hasReturnType := FALSE;
+						| Global.Dec, Global.Inc: returnTypeRequired := FALSE; returnTypeForbidden := TRUE; (* unary and binary *)
+						| Global.Excl, Global.Incl: returnTypeRequired := FALSE; returnTypeForbidden := TRUE;
 						| Global.Abs: mustBeUnary := TRUE;
 						| Global.Ash: (* TODO: arity? *)
 						| Global.Cap: (* TODO: arity? *)
@@ -6780,13 +6781,13 @@ TYPE
 						| Global.Max, Global.Min: (* unary and binary *)
 						| Global.Odd: (* TODO: arity? *)
 						| Global.Sum: (* TODO: arity? *)
-						| Global.All: (* TODO: arity? *)
+						| Global.All: (* TODO: arity? *) returnTypeRequired := FALSE;
 						| Global.Re, Global.Im:
 						| Global.Dim: mustBeUnary := TRUE; mustReturnInteger := TRUE;
 						| Scanner.Alias:
 						| Global.Reshape:
 						| Scanner.GreaterGreater, Scanner.LessLess:
-							mustBeBinary := TRUE; hasReturnType := FALSE;
+							mustBeBinary := TRUE; returnTypeRequired := FALSE;
 						| Scanner.GreaterGreaterQ, Scanner.LessLessQ:
 							mustBeBinary := TRUE; mustReturnBoolean := TRUE;
 						| Global.Indexer:
@@ -6810,9 +6811,9 @@ TYPE
 						END;
 
 						(* check return type *)
-						IF hasReturnType THEN
-							IF procedureType.returnType = NIL THEN
-								Error(operator.position, "return type required")
+						IF procedureType.returnType # NIL THEN
+							IF returnTypeForbidden THEN
+								Error(operator.position, "return type not allowed")
 							ELSIF mustReturnBoolean THEN
 								IF ~(procedureType.returnType.resolved IS SyntaxTree.BooleanType) THEN
 									Error(operator.position,"return type is not Boolean")
@@ -6822,8 +6823,8 @@ TYPE
 									Error(operator.position,"return type is no size type")
 								END
 							END
-						ELSIF procedureType.returnType # NIL THEN
-							Error(operator.position, "return type not allowed")
+						ELSIF returnTypeRequired THEN
+							Error(operator.position, "return type required")
 						END
 					END
 				END
@@ -8449,8 +8450,11 @@ TYPE
 											END;
 											IF ~SameType(thisParameter.type, thatParameter.type) THEN
 												operandsAreEqual := FALSE;
-												IF TypeDistance(system, thisParameter.type, thatParameter.type, thisParameter.kind = SyntaxTree.VarParameter) =Infinity THEN
+												VAR dist := TypeDistance(system, thisParameter.type, thatParameter.type, thisParameter.kind = SyntaxTree.VarParameter);
+												IF dist =Infinity THEN
 													operandsAreCompatible := FALSE
+												ELSIF (thisParameter.type.resolved IS SyntaxTree.ProcedureType) & (dist # 0) THEN
+													operandsAreCompatible := FALSE													
 												END
 											END;
 											thisParameter := thisParameter.nextParameter;
@@ -9110,16 +9114,22 @@ TYPE
 			formalParameter := procedureType.firstParameter;
 			rightParameter := right.firstParameter;
 			result := 0;
+			IF (procedureType.returnType = NIL) # (right.returnType = NIL) THEN
+				INC(result);
+			END;
 			IF right.isDelegate & ~procedureType.isDelegate THEN
 				INC(result);
 			ELSIF procedureType.isDelegate & ~right.isDelegate THEN
 				result := Infinity;
 			END;
+			
 
 			(*! taken from paco, seems to not be 100% correct, check (in particular array part -> length of arrays??) *)
 			WHILE (formalParameter # NIL) & (result # Infinity) DO
 				distance := TypeDistance(system,rightParameter.type.resolved,formalParameter.type.resolved,formalParameter.kind = SyntaxTree.VarParameter);
 				IF distance = Infinity THEN
+					result := Infinity;
+				ELSIF (formalParameter.type.resolved IS SyntaxTree.ProcedureType) & (distance # 0 ) THEN
 					result := Infinity;
 				ELSE
 					INC(result,distance);

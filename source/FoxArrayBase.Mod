@@ -15,6 +15,16 @@ TYPE
 	GenericUnaryAALoopX = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: FLOAT64): FLOAT64 );
 	GenericUnaryAALoopZ = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: COMPLEX32): COMPLEX32 );
 	GenericUnaryAALoopLZ = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: COMPLEX64): COMPLEX64 );
+	GenericUnaryALoopS = PROCEDURE ( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE} (x: SIGNED8));
+	GenericUnaryALoopI = PROCEDURE ( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE} (x: SIGNED16) );
+	GenericUnaryALoopL = PROCEDURE ( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE} (x: SIGNED32) );
+	GenericUnaryALoopH = PROCEDURE ( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE} (x: SIGNED64) );
+	GenericUnaryALoopR = PROCEDURE ( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE} (x: FLOAT32) );
+	GenericUnaryALoopX = PROCEDURE ( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE} (x: FLOAT64) );
+	GenericUnaryALoopZ = PROCEDURE ( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE} (x: COMPLEX32) );
+	GenericUnaryALoopLZ = PROCEDURE ( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE} (x: COMPLEX64) );
+
+	UnaryALoop = PROCEDURE ( ladr: ADDRESS; linc, len: SIZE );
 	UnaryAALoop = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	UnaryASLoop = PROCEDURE ( ladr, dadr: ADDRESS; linc, len: SIZE );
 	UnarySALoop = PROCEDURE ( ladr, dadr: ADDRESS; dinc, len: SIZE );
@@ -519,6 +529,298 @@ Sufficient (but not necessary) conditions:
 	END AllocateTemp;
 
 	(*** procedures to traverse arrays and apply operators *)
+		
+	(** apply unary operator to array *)
+	PROCEDURE ApplyGenericUnaryAOpS(CONST left: UnsafeArrayT;  Loop: GenericUnaryALoopS; op: PROCEDURE {DELEGATE} (x: SIGNED8) );
+	VAR loopd, looplen, loopli: SIZE;  glen: SIZE;
+	VAR dim: SIZE;
+			
+		PROCEDURE Traverse( dim: SIZE;  ladr: ADDRESS );
+		VAR len: SIZE;  linc: SIZE;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, loopli, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );  INC( dim );
+				WHILE (len > 0) DO Traverse( dim, ladr );  INC( ladr, linc );  DEC( len );  END;
+			END;
+		END Traverse;
+
+	BEGIN
+	
+	
+		dim := GetDim( left );
+		IF debug THEN Report( "A: left", left );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		IF conservative THEN glen := 0 END;
+		FindPattern1( left, dim, loopd, looplen, loopli );  
+		Traverse( 0, GetAdr( left ) );
+		IF conservative THEN
+			looplen := 1;
+			WHILE (dim > 0) DO
+				looplen := looplen * GetLen( left, dim - 1 );  DEC( dim );
+			END;
+			ASSERT( looplen = glen );
+		END;
+
+	END ApplyGenericUnaryAOpS;
+	
+
+	(** apply unary operator to array *)
+	PROCEDURE ApplyGenericUnaryAOpI(CONST left: UnsafeArrayT;  Loop: GenericUnaryALoopI; op: PROCEDURE {DELEGATE} (x: SIGNED16) );
+	VAR loopd, looplen, loopli: SIZE;  glen: SIZE;
+	VAR dim: SIZE;
+			
+		PROCEDURE Traverse( dim: SIZE;  ladr: ADDRESS );
+		VAR len: SIZE;  linc: SIZE;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, loopli, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );  INC( dim );
+				WHILE (len > 0) DO Traverse( dim, ladr );  INC( ladr, linc );  DEC( len );  END;
+			END;
+		END Traverse;
+
+	BEGIN
+	
+	
+		dim := GetDim( left );
+		IF debug THEN Report( "A: left", left );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		IF conservative THEN glen := 0 END;
+		FindPattern1( left, dim, loopd, looplen, loopli );  
+		Traverse( 0, GetAdr( left ) );
+		IF conservative THEN
+			looplen := 1;
+			WHILE (dim > 0) DO
+				looplen := looplen * GetLen( left, dim - 1 );  DEC( dim );
+			END;
+			ASSERT( looplen = glen );
+		END;
+
+	END ApplyGenericUnaryAOpI;
+	
+	(** apply unary operator to array *)
+	PROCEDURE ApplyGenericUnaryAOpL(CONST left: UnsafeArrayT;  Loop: GenericUnaryALoopL; op: PROCEDURE {DELEGATE} (x: SIGNED32) );
+	VAR loopd, looplen, loopli: SIZE;  glen: SIZE;
+	VAR dim: SIZE;
+			
+		PROCEDURE Traverse( dim: SIZE;  ladr: ADDRESS );
+		VAR len: SIZE;  linc: SIZE;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, loopli, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );  INC( dim );
+				WHILE (len > 0) DO Traverse( dim, ladr );  INC( ladr, linc );  DEC( len );  END;
+			END;
+		END Traverse;
+
+	BEGIN
+	
+	
+		dim := GetDim( left );
+		IF debug THEN Report( "A: left", left );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		IF conservative THEN glen := 0 END;
+		FindPattern1( left, dim, loopd, looplen, loopli );  
+		Traverse( 0, GetAdr( left ) );
+		IF conservative THEN
+			looplen := 1;
+			WHILE (dim > 0) DO
+				looplen := looplen * GetLen( left, dim - 1 );  DEC( dim );
+			END;
+			ASSERT( looplen = glen );
+		END;
+
+	END ApplyGenericUnaryAOpL;
+	
+	(** apply unary operator to array *)
+	PROCEDURE ApplyGenericUnaryAOpH(CONST left: UnsafeArrayT;  Loop: GenericUnaryALoopH; op: PROCEDURE {DELEGATE} (x: SIGNED64) );
+	VAR loopd, looplen, loopli: SIZE;  glen: SIZE;
+	VAR dim: SIZE;
+			
+		PROCEDURE Traverse( dim: SIZE;  ladr: ADDRESS );
+		VAR len: SIZE;  linc: SIZE;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, loopli, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );  INC( dim );
+				WHILE (len > 0) DO Traverse( dim, ladr );  INC( ladr, linc );  DEC( len );  END;
+			END;
+		END Traverse;
+
+	BEGIN
+	
+	
+		dim := GetDim( left );
+		IF debug THEN Report( "A: left", left );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		IF conservative THEN glen := 0 END;
+		FindPattern1( left, dim, loopd, looplen, loopli );  
+		Traverse( 0, GetAdr( left ) );
+		IF conservative THEN
+			looplen := 1;
+			WHILE (dim > 0) DO
+				looplen := looplen * GetLen( left, dim - 1 );  DEC( dim );
+			END;
+			ASSERT( looplen = glen );
+		END;
+
+	END ApplyGenericUnaryAOpH;
+	
+	(** apply unary operator to array *)
+	PROCEDURE ApplyGenericUnaryAOpR(CONST left: UnsafeArrayT;  Loop: GenericUnaryALoopR; op: PROCEDURE {DELEGATE} (x: FLOAT32) );
+	VAR loopd, looplen, loopli: SIZE;  glen: SIZE;
+	VAR dim: SIZE;
+			
+		PROCEDURE Traverse( dim: SIZE;  ladr: ADDRESS );
+		VAR len: SIZE;  linc: SIZE;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, loopli, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );  INC( dim );
+				WHILE (len > 0) DO Traverse( dim, ladr );  INC( ladr, linc );  DEC( len );  END;
+			END;
+		END Traverse;
+
+	BEGIN
+	
+	
+		dim := GetDim( left );
+		IF debug THEN Report( "A: left", left );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		IF conservative THEN glen := 0 END;
+		FindPattern1( left, dim, loopd, looplen, loopli );  
+		Traverse( 0, GetAdr( left ) );
+		IF conservative THEN
+			looplen := 1;
+			WHILE (dim > 0) DO
+				looplen := looplen * GetLen( left, dim - 1 );  DEC( dim );
+			END;
+			ASSERT( looplen = glen );
+		END;
+
+	END ApplyGenericUnaryAOpR;
+	
+	(** apply unary operator to array *)
+	PROCEDURE ApplyGenericUnaryAOpX(CONST left: UnsafeArrayT;  Loop: GenericUnaryALoopX; op: PROCEDURE {DELEGATE} (x: FLOAT64) );
+	VAR loopd, looplen, loopli: SIZE;  glen: SIZE;
+	VAR dim: SIZE;
+			
+		PROCEDURE Traverse( dim: SIZE;  ladr: ADDRESS );
+		VAR len: SIZE;  linc: SIZE;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, loopli, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );  INC( dim );
+				WHILE (len > 0) DO Traverse( dim, ladr );  INC( ladr, linc );  DEC( len );  END;
+			END;
+		END Traverse;
+
+	BEGIN
+	
+	
+		dim := GetDim( left );
+		IF debug THEN Report( "A: left", left );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		IF conservative THEN glen := 0 END;
+		FindPattern1( left, dim, loopd, looplen, loopli );  
+		Traverse( 0, GetAdr( left ) );
+		IF conservative THEN
+			looplen := 1;
+			WHILE (dim > 0) DO
+				looplen := looplen * GetLen( left, dim - 1 );  DEC( dim );
+			END;
+			ASSERT( looplen = glen );
+		END;
+
+	END ApplyGenericUnaryAOpX;
+	
+	(** apply unary operator to array *)
+	PROCEDURE ApplyGenericUnaryAOpZ(CONST left: UnsafeArrayT;  Loop: GenericUnaryALoopZ; op: PROCEDURE {DELEGATE} (x: COMPLEX32) );
+	VAR loopd, looplen, loopli: SIZE;  glen: SIZE;
+	VAR dim: SIZE;
+			
+		PROCEDURE Traverse( dim: SIZE;  ladr: ADDRESS );
+		VAR len: SIZE;  linc: SIZE;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, loopli, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );  INC( dim );
+				WHILE (len > 0) DO Traverse( dim, ladr );  INC( ladr, linc );  DEC( len );  END;
+			END;
+		END Traverse;
+
+	BEGIN
+	
+	
+		dim := GetDim( left );
+		IF debug THEN Report( "A: left", left );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		IF conservative THEN glen := 0 END;
+		FindPattern1( left, dim, loopd, looplen, loopli );  
+		Traverse( 0, GetAdr( left ) );
+		IF conservative THEN
+			looplen := 1;
+			WHILE (dim > 0) DO
+				looplen := looplen * GetLen( left, dim - 1 );  DEC( dim );
+			END;
+			ASSERT( looplen = glen );
+		END;
+
+	END ApplyGenericUnaryAOpZ;
+	
+	(** apply unary operator to array *)
+	PROCEDURE ApplyGenericUnaryAOpLZ(CONST left: UnsafeArrayT;  Loop: GenericUnaryALoopLZ; op: PROCEDURE {DELEGATE} (x: COMPLEX64) );
+	VAR loopd, looplen, loopli: SIZE;  glen: SIZE;
+	VAR dim: SIZE;
+			
+		PROCEDURE Traverse( dim: SIZE;  ladr: ADDRESS );
+		VAR len: SIZE;  linc: SIZE;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, loopli, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );  INC( dim );
+				WHILE (len > 0) DO Traverse( dim, ladr );  INC( ladr, linc );  DEC( len );  END;
+			END;
+		END Traverse;
+
+	BEGIN
+	
+	
+		dim := GetDim( left );
+		IF debug THEN Report( "A: left", left );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		IF conservative THEN glen := 0 END;
+		FindPattern1( left, dim, loopd, looplen, loopli );  
+		Traverse( 0, GetAdr( left ) );
+		IF conservative THEN
+			looplen := 1;
+			WHILE (dim > 0) DO
+				looplen := looplen * GetLen( left, dim - 1 );  DEC( dim );
+			END;
+			ASSERT( looplen = glen );
+		END;
+
+	END ApplyGenericUnaryAOpLZ;
+	
+
+	
 
 	(** apply unary operator to array:  array SIGNED8 -> array SIGNED8 *)
 	PROCEDURE ApplyGenericUnaryAAOpS(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE {DELEGATE} (x: SIGNED8): SIGNED8 );
@@ -863,6 +1165,40 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 	END ApplyGenericUnaryAAOpLZ;
+
+
+	(** apply unary operator to array *)
+	PROCEDURE ApplyUnaryAOp*(CONST left: UnsafeArrayT; Loop: UnaryALoop );
+	VAR loopd, looplen, loopli: SIZE;  glen: SIZE;
+	VAR dim: SIZE;
+
+		PROCEDURE Traverse( dim: SIZE;  ladr: ADDRESS );
+		VAR len: SIZE;  linc: SIZE;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, loopli, looplen );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );  INC( dim );
+				WHILE (len > 0) DO Traverse( dim, ladr );  INC( ladr, linc );  DEC( len );  END;
+			END;
+		END Traverse;
+
+	BEGIN
+		dim := GetDim( left );
+		IF debug THEN Report( "A: left", left );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		IF conservative THEN glen := 0 END;
+		FindPattern1( left, dim, loopd, looplen, loopli );  Traverse( 0, GetAdr( left ) );
+		IF conservative THEN
+			looplen := 1;
+			WHILE (dim > 0) DO
+				looplen := looplen * GetLen( left, dim - 1 );  DEC( dim );
+			END;
+			ASSERT( looplen = glen );
+		END;
+	END ApplyUnaryAOp;
+	
 
 (** apply unary operator to array:  array -> array *)
 	PROCEDURE ApplyUnaryAAOp*(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE;
@@ -2007,6 +2343,93 @@ Sufficient (but not necessary) conditions:
 		ApplyUnaryAAOp(RESULT, src,SIZEOF( BOOLEAN ), NotLoopAB );
 		RETURN RESULT
 	END "~";
+
+
+	(*** monadic generic (A) -> void  ********************************************************************)
+
+(** SIGNED8 *)
+	PROCEDURE GenericLoopS0( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED8) );
+	VAR lval: SIGNED8;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  op(lval); INC( ladr, linc );
+			DEC( len );
+		END;
+	END GenericLoopS0;
+
+(** SIGNED16 *)
+	PROCEDURE GenericLoopI0( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED16));
+	VAR lval: SIGNED16;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  op(lval);  INC( ladr, linc );
+			DEC( len );
+		END;
+	END GenericLoopI0;
+
+(** SIGNED32 *)
+	PROCEDURE GenericLoopL0( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED32) );
+	VAR lval: SIGNED32;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  op(lval);  INC( ladr, linc );
+			DEC( len );
+		END;
+	END GenericLoopL0;
+
+(** SIGNED64 *)
+	PROCEDURE GenericLoopH0( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED64) );
+	VAR lval: SIGNED64;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  op(lval);  INC( ladr, linc );
+			DEC( len );
+		END;
+	END GenericLoopH0;
+
+(** FLOAT32 *)
+	PROCEDURE GenericLoopR0( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: FLOAT32) );
+	VAR lval: FLOAT32;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  op(lval);  INC( ladr, linc );
+			DEC( len );
+		END;
+	END GenericLoopR0;
+
+(** FLOAT64 *)
+	PROCEDURE GenericLoopX0( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE} (x: FLOAT64) );
+	VAR lval: FLOAT64;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  op(lval);  INC( ladr, linc );
+			DEC( len );
+		END;
+	END GenericLoopX0;
+
+(** COMPLEX32 *)
+	PROCEDURE GenericLoopZ0( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: COMPLEX32));
+	VAR lval,dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: COMPLEX32 END;
+	BEGIN
+		WHILE (len > 0) DO
+			lval := ladr;
+			op(lval.val);
+			INC( ladr, linc );
+			DEC( len );
+		END;
+	END GenericLoopZ0;
+
+(** COMPLEX64 *)
+	PROCEDURE GenericLoopLZ0( ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE} (x: COMPLEX64) );
+	VAR lval,dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: COMPLEX64 END;
+	BEGIN
+		WHILE (len > 0) DO
+			lval := ladr;
+			op (lval.val);
+			INC( ladr, linc );
+			DEC( len );
+		END;
+	END GenericLoopLZ0;
 
 	(*** monadic generic (A) -> -A  ********************************************************************)
 
@@ -10757,6 +11180,47 @@ TYPE
 		RETURN RESULT;
 	END "ALL";
 
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF SIGNED8; op: PROCEDURE {DELEGATE}(x: SIGNED8));
+	BEGIN
+		ApplyGenericUnaryAOpS(x, GenericLoopS0,op);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF SIGNED16; op: PROCEDURE {DELEGATE} (x: SIGNED16));
+	BEGIN
+		ApplyGenericUnaryAOpI(x,GenericLoopI0,op);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF SIGNED32; op: PROCEDURE {DELEGATE}(x: SIGNED32));
+	BEGIN
+		ApplyGenericUnaryAOpL(x,GenericLoopL0,op);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF SIGNED64; op: PROCEDURE {DELEGATE}(x: SIGNED64)); (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAOpH(x,GenericLoopH0,op);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF FLOAT32; op: PROCEDURE {DELEGATE}(x: FLOAT32)); (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAOpR(x,GenericLoopR0,op);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF FLOAT64; op: PROCEDURE {DELEGATE}(x: FLOAT64)); (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAOpX(x,GenericLoopX0,op);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF COMPLEX32; op: PROCEDURE {DELEGATE}(x: COMPLEX32)); (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAOpZ(x,GenericLoopZ0,op);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF COMPLEX64; op: PROCEDURE {DELEGATE}(x: COMPLEX64)); (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAOpLZ(x,GenericLoopLZ0,op);
+	END "ALL";
+
+
 	OPERATOR "ALL"*(CONST x: ARRAY [?] OF SIGNED8; map: PROCEDURE( ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY {UNSAFE}[?]  OF SIGNED8;
 	VAR elementSize: SIZE;
 	BEGIN
@@ -10811,6 +11275,55 @@ TYPE
 	BEGIN
 		ApplyUnaryAAOp(RESULT,x,GetSize(x),map);
 		RETURN RESULT;
+	END "ALL";
+
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF SIGNED8; map: PROCEDURE( ladr: ADDRESS; linc, len: SIZE));
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAOp(x,map);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF SIGNED16; map: PROCEDURE( ladr: ADDRESS; linc, len: SIZE));
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAOp(x,map);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF SIGNED32; map: PROCEDURE( ladr: ADDRESS; linc, len: SIZE));
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAOp(x,map);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF SIGNED64; map: PROCEDURE( ladr: ADDRESS; linc, len: SIZE));
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAOp(x,map);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF FLOAT32; map: PROCEDURE( ladr: ADDRESS; linc, len: SIZE));
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAOp(x,map);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF FLOAT64; map: PROCEDURE( ladr: ADDRESS; linc, len: SIZE));
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAOp(x,map);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF COMPLEX32; map: PROCEDURE( ladr: ADDRESS; linc, len: SIZE));
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAOp(x,map);
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF COMPLEX64; map: PROCEDURE( ladr: ADDRESS; linc, len: SIZE));
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAOp(x,map);
 	END "ALL";
 
 

@@ -48,7 +48,7 @@ TYPE
 	HashTable  = ARRAY PRIME OF
 		RECORD
 			ucs32: Char32;
-			encodings: SET64;
+			encodings: SET;
 			ch: ARRAY SIGNED8(Encodings.HIGH) + 1 OF CHAR;
 		END;
 
@@ -552,7 +552,7 @@ VAR
 	koi8r, koi8u, cp1250, cp1251, cp866, iso88595: StaticTable;
 	hash: HashTable;
 	bFirst: BOOLEAN;
-	setInitDone: SET64;
+	setInitDone: SET;
 	nCollisions: SIZE;
 	ucs32Min, ucs32Max: Char32;
 

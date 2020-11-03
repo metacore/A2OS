@@ -139,13 +139,16 @@ VAR
 			WHILE i > 7 DO  d[i] := CHR( l MOD 10 + ORD( "0" ) );  l := l DIV 10;  DEC( i )  END;
 			WHILE i >= 0 DO d[i] := CHR( h MOD 10 + ORD( "0" ) );  h := h DIV 10;  DEC( i )  END;
 
-			Char( d[0] ); Char( "." );
+			Char( d[0] );
 			m := 15;
 			WHILE (m>0) & (d[m] = '0') DO
 				DEC(m)
 			END;
-			FOR i := 1 TO m DO
-				Char( d[i] );
+			IF m > 0 THEN (* do not output decimal point without the fractional part *)
+				Char( "." );
+				FOR i := 1 TO m DO
+					Char( d[i] );
+				END;
 			END;
 			IF e # 0 THEN
 				IF e < 0 THEN

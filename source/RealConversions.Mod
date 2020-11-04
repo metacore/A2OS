@@ -139,18 +139,13 @@ VAR
 			WHILE i > 7 DO  d[i] := CHR( l MOD 10 + ORD( "0" ) );  l := l DIV 10;  DEC( i )  END;
 			WHILE i >= 0 DO d[i] := CHR( h MOD 10 + ORD( "0" ) );  h := h DIV 10;  DEC( i )  END;
 
-			Char( d[0] );
+			Char( d[0] ); Char( "." );
 			m := 15;
 			WHILE (m>0) & (d[m] = '0') DO
 				DEC(m)
 			END;
-			IF m > 0 THEN (* output decimal point when fractional part is not zero *)
-				Char( "." );
-				FOR i := 1 TO m DO
-					Char( d[i] );
-				END;
-			ELSIF e = 0 THEN (* add ".0" when both fractional part and exponent are zero *)
-				Char( "." ); Char( "0" );
+			FOR i := 1 TO m DO
+				Char( d[i] );
 			END;
 			IF e # 0 THEN
 				IF e < 0 THEN

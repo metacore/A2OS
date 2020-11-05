@@ -22,6 +22,7 @@ CONST
 	CR = 0DX;  LF = 0AX;  TAB = 9X;  SP = 20X;
 
 TYPE
+	Char32* = SIGNED32;
 	Position* = SIGNED64; (* position in the stream *)
 
 	(** Any stream output procedure or method. *)
@@ -103,6 +104,29 @@ TYPE
 			END;
 			IF res = Ok THEN buf[tail] := x;  INC( tail ) END
 		END Char;
+
+	(** Encode one unicode codepoint into one well-formed UTF-8 character *)
+		PROCEDURE UTF8Char*( c: Char32 ): BOOLEAN;
+		BEGIN
+			IF c <= 0x7F THEN
+					Char( CHR( c ) );
+			ELSIF ( c <= 0x7FF ) THEN
+					Char( CHR( SHR( c, 6 ) + 0xC0 ) );
+					Char( CHR( c MOD 0x40 + 0x80 ) );
+			ELSIF ( c <= 0xD7FF ) OR ( 0xE000 <= c ) & ( c <= 0xFFFF ) THEN
+					Char( CHR( SHR( c, 12 ) + 0xE0 ) );
+					Char( CHR( SHR( c,  6 ) MOD 0x40 + 0x80 ) );
+					Char( CHR( c MOD 0x40 + 0x80 ) );
+			ELSIF ( 0xFFFF < c ) & ( c <= 0x10FFFF ) THEN
+					Char( CHR( SHR( c, 18 ) + 0xF0 ) );
+					Char( CHR( SHR( c, 12 ) MOD 0x40 + 0x80 ) );
+					Char( CHR( SHR( c,  6 ) MOD 0x40 + 0x80 ) );
+					Char( CHR( c MOD 0x40 + 0x80 ) );
+			ELSE
+					RETURN FALSE;
+			END;
+			RETURN TRUE;
+		END UTF8Char;
 
 	(** Write len bytes from x, starting at ofs. *)
 		PROCEDURE Bytes*(CONST x: ARRAY OF CHAR;  ofs, len: SIZE );
@@ -510,6 +534,27 @@ TYPE
 			IF (head = tail) & (res = Ok) THEN head := 0;  receive( buf^, 0, LEN( buf ), 1, tail, res );  INC( received, tail ) END;
 			IF res = Ok THEN x := buf[head];  INC( head ) ELSE x := 0X END
 		END Char;
+
+	(** Decode one well-formed UTF-8 character into one unicode codepoint *)
+		PROCEDURE UTF8Char*( VAR ucs: Char32 ): BOOLEAN; (*! UNSAFE *)
+		VAR ch: Char32;
+		BEGIN
+			ch := ORD32( Get( ) );
+
+			IF ch < 0x80 THEN
+				ucs := ch;
+				RETURN TRUE;
+			ELSIF ch < 0xE0 THEN
+				ucs := LSH( ch MOD 0x20, 6 ) + ORD32( Get( ) ) MOD 0x40;
+				RETURN ucs >= 0x0080;
+			ELSIF ch < 0xF0 THEN
+				ucs := LSH( ch MOD 0x10, 12 ) + LSH( ORD32( Get( ) ) MOD 0x40, 6 ) + ORD32( Get( ) ) MOD 0x40;
+				RETURN ucs >= 0x0800;
+			ELSE
+				ucs := LSH( ch MOD 8, 18 ) + LSH( ORD32( Get( ) ) MOD 0x40, 12 ) + LSH( ORD32( Get( ) ) MOD 0x40, 6 ) + ORD32( Get( ) ) MOD 0x40;
+				RETURN ucs >= 0x010000;
+			END;
+		END UTF8Char;
 
 	(** Like Read, but return result. Return 0X if no success (e.g. file ended) *)
 		PROCEDURE Get*( ): CHAR;

@@ -25,8 +25,7 @@ BEGIN
 	context.out.String( buffer );
 	context.out.Ln;
 
-	stopWatch.Reset( );
-	stopWatch.Start( );
+	stopWatch.Restart( );
 
 		VAR stopWatchIntToStr := stopWatch.StartNew( );
 			Strings.IntToStr( MAX( SIGNED64 ), buffer );
@@ -35,15 +34,15 @@ BEGIN
 		VAR stopWatchStrToHInt := stopWatch.StartNew( );
 			Strings.StrToHInt( buffer, i64 );
 		stopWatchStrToHInt.Stop( );
-		
+
 		VAR stopWatchStartNew := stopWatch.StartNew( );
 			IGNORE stopWatchStartNew .StartNew( );
 		stopWatchStartNew.Stop( );
-		
+
 		VAR stopWatchMethodCall := stopWatch.StartNew( );
 			r.P( );
 		stopWatchMethodCall.Stop;
-	
+
 	stopWatch.Stop();
 
 	Stopwatch.ToString( stopWatch.Elapsed( ), buffer );

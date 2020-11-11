@@ -5,7 +5,7 @@
 MODULE PrecisionTimer;
 
 IMPORT
-	SYSTEM, Kernel32, KernelLog;
+	Kernel32, KernelLog;
 
 TYPE
 	Counter* = SIGNED64;
@@ -16,10 +16,10 @@ CONST
 		Query timer counter in ticks
 	*)
 	PROCEDURE GetCounter*(): Counter;
-	VAR counter: Counter;
+	VAR counter: Kernel32.LargeInteger;
 	BEGIN
-		IF Kernel32.QueryPerformanceCounter(SYSTEM.VAL(Kernel32.LargeInteger,counter)) # 0 THEN
-			RETURN counter;
+		IF Kernel32.QueryPerformanceCounter(counter) # 0 THEN
+			RETURN counter.QuadPart;
 		ELSE
 			RETURN 0;
 		END;
@@ -29,10 +29,10 @@ CONST
 		Query timer tick frequency in Hz
 	*)
 	PROCEDURE GetFrequency*(): Counter;
-	VAR frequencyInHz: Counter;
+	VAR frequencyInHz: Kernel32.LargeInteger;
 	BEGIN
-		IF Kernel32.QueryPerformanceFrequency(SYSTEM.VAL(Kernel32.LargeInteger,frequencyInHz)) # 0 THEN
-			RETURN frequencyInHz;
+		IF Kernel32.QueryPerformanceFrequency(frequencyInHz) # 0 THEN
+			RETURN frequencyInHz.QuadPart;
 		ELSE
 			RETURN 0;
 		END;
@@ -47,4 +47,4 @@ BEGIN
 	InitMod;
 END PrecisionTimer.
 
-System.Free PrecisionTimer ~
+System.FreeDownTo PrecisionTimer ~

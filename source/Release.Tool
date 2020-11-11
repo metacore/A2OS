@@ -764,6 +764,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	WIN { Windows.PrecisionTimer.Mod Windows.HostLibs.Mod Windows.WinApplications.Mod }
 	UNIX { Unix.PrecisionTimer.Mod Unix.HostLibs.Mod }
+	UNIX, WIN { Stopwatch.Mod }
 
 	NATIVE {
 		DriverDatabase.Mod DriverDatabase.XML

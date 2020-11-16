@@ -60,7 +60,7 @@ BEGIN
 	IF (res = 0) THEN
 		text.AcquireRead;
 		pos := TextUtilities.Pos(searchString, 0, text);
-		WHILE (pos > 0) DO
+		WHILE (pos # -1) DO
 			INC(nbrOfHits);
 			pos := TextUtilities.Pos(searchString, pos + 1, text);
 		END;
@@ -109,10 +109,10 @@ BEGIN
 	IF (res = 0) THEN
 		text.AcquireWrite;
 		pos := TextUtilities.Pos(replaceString, 0, text);
-		IF (pos > 0) THEN INC(stats.nofConflicts); conflict := TRUE; END;
+		IF (pos # -1) THEN INC(stats.nofConflicts); conflict := TRUE; END;
 
 		pos := TextUtilities.Pos(searchString, 0, text);
-		WHILE (pos > 0) DO
+		WHILE (pos # -1) DO
 			INC(replaceCount);
 			Replace(pos, searchStringLen, replaceString);
 			pos := TextUtilities.Pos(searchString, pos + replaceStringLen, text);

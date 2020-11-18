@@ -5,7 +5,6 @@ CONST TicksPerMillisecond = Counter(10000);
 CONST TicksPerSecond = TicksPerMillisecond * 1000;
 CONST TicksPerMinute = TicksPerSecond * 60;
 CONST TicksPerHour = TicksPerMinute * 60;
-CONST TicksPerDay = TicksPerHour * 24;
 
 VAR Frequency- := PrecisionTimer.GetFrequency(): Counter;
 VAR TicksDivFrequency := FLOAT64(TicksPerSecond) / Frequency: FLOAT64;
@@ -91,7 +90,6 @@ TYPE
 
 	BEGIN
 		i := 0;
-		Append( SIGNED32( aTicks DIV TicksPerDay ), 3, date, i ); date[ i ] := " "; INC( i );
 		Append( SIGNED32( aTicks DIV TicksPerHour MOD 24 ), 2, date, i ); date[ i ] := ":"; INC( i );
 		Append( SIGNED32( aTicks DIV TicksPerMinute MOD 60 ), 2, date, i ); date[ i ] := ":"; INC( i );
 		Append( SIGNED32( aTicks DIV TicksPerSecond MOD 60 ), 2, date, i ); date[ i ] := ":"; INC( i );

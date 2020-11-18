@@ -117,7 +117,7 @@ TYPE
 					Char( CHR( SHR( c, 12 ) + 0xE0 ) );
 					Char( CHR( SHR( c,  6 ) MOD 0x40 + 0x80 ) );
 					Char( CHR( c MOD 0x40 + 0x80 ) );
-			ELSIF ( 0xFFFF < c ) & ( c <= 0x10FFFF ) THEN
+			ELSIF ( c <= 0x10FFFF ) THEN
 					Char( CHR( SHR( c, 18 ) + 0xF0 ) );
 					Char( CHR( SHR( c, 12 ) MOD 0x40 + 0x80 ) );
 					Char( CHR( SHR( c,  6 ) MOD 0x40 + 0x80 ) );
@@ -537,23 +537,31 @@ TYPE
 
 	(** Decode one well-formed UTF-8 character into one unicode codepoint *)
 		PROCEDURE UTF8Char*( VAR ucs: Char32 ): BOOLEAN; (*! UNSAFE *)
-		VAR ch: Char32;
+		VAR u32: Char32; isValid: BOOLEAN;
 		BEGIN
-			ch := ORD32( Get( ) );
+			isValid := FALSE;
+			ucs := 0; (* EOF *)
 
-			IF ch < 0x80 THEN
-				ucs := ch;
-				RETURN TRUE;
-			ELSIF ch < 0xE0 THEN
-				ucs := LSH( ch MOD 0x20, 6 ) + ORD32( Get( ) ) MOD 0x40;
-				RETURN ucs >= 0x0080;
-			ELSIF ch < 0xF0 THEN
-				ucs := LSH( ch MOD 0x10, 12 ) + LSH( ORD32( Get( ) ) MOD 0x40, 6 ) + ORD32( Get( ) ) MOD 0x40;
-				RETURN ucs >= 0x0800;
-			ELSE
-				ucs := LSH( ch MOD 8, 18 ) + LSH( ORD32( Get( ) ) MOD 0x40, 12 ) + LSH( ORD32( Get( ) ) MOD 0x40, 6 ) + ORD32( Get( ) ) MOD 0x40;
-				RETURN ucs >= 0x010000;
+			u32 := ORD32( Get( ) );
+			IF ( res = Ok ) THEN
+				IF ( u32 < 0x80 ) THEN (* len = 1 *)
+					isValid := TRUE;
+				ELSIF ( u32 < 0xE0 ) THEN (* 0x80 + 0x40 + 0x20 *)
+					u32 := LSH( u32 MOD 0x20, 6 ) + ORD32( Get( ) ) MOD 0x40;
+					isValid := u32 >= 0x0080;
+				ELSIF ( u32 < 0xF0 ) THEN (* 0x80 + 0x40 + 0x20 + 0x10 *)
+					u32 := LSH( u32 MOD 0x10, 12 ) + LSH( ORD32( Get( ) ) MOD 0x40, 6 ) + ORD32( Get( ) ) MOD 0x40;
+					isValid := u32 >= 0x0800;
+				ELSE (* len = 4 *)
+					u32 := LSH( u32 MOD 8, 18 ) + LSH( ORD32( Get( ) ) MOD 0x40, 12 ) + LSH( ORD32( Get( ) ) MOD 0x40, 6 ) + ORD32( Get( ) ) MOD 0x40;
+					isValid := u32 >= 0x010000;
+				END;
 			END;
+			IF isValid & ( res = Ok ) THEN
+				ucs := u32;
+				RETURN TRUE;
+			END;
+			RETURN FALSE;
 		END UTF8Char;
 
 	(** Like Read, but return result. Return 0X if no success (e.g. file ended) *)
@@ -744,7 +752,6 @@ TYPE
 		(** -- Read formatted data (uses Peek for one character lookahead) -- *)
 
 	 (** Read an integer value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
-
 		PROCEDURE Int*( VAR x: SIGNED32;  hex: BOOLEAN );
 		VAR vd, vh: SIGNED32; sgn, d: INTEGER;  ch: CHAR;  ok: BOOLEAN;
 		BEGIN
@@ -768,7 +775,6 @@ TYPE
 		END Int;
 
 	 (** Read a huge integer value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
-
 		PROCEDURE HInt*( VAR x: SIGNED64;  hex: BOOLEAN );
 		VAR vd, vh: SIGNED64; sgn, d: INTEGER;  ch: CHAR;  ok: BOOLEAN;
 		BEGIN
@@ -792,7 +798,6 @@ TYPE
 		END HInt;
 
 	 (** Read a size value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
-
 		PROCEDURE Size*( VAR x: SIZE;  hex: BOOLEAN );
 		VAR vd, vh: SIZE; d: INTEGER;  ch: CHAR;  ok: BOOLEAN;
 		BEGIN

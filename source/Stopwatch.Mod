@@ -12,72 +12,72 @@ VAR TicksDivFrequency := FLOAT64(TicksPerSecond) / Frequency: FLOAT64;
 TYPE
 	Counter* = PrecisionTimer.Counter;
 
-	T* = OBJECT
-        VAR elapsed, startTimeStamp: Counter;
-        VAR isAlive-: BOOLEAN;
+	T* = RECORD
+		elapsed, startTimeStamp: Counter;
+		isAlive-: BOOLEAN;
 
-        PROCEDURE & Reset*( );
-        BEGIN
-            elapsed := 0;
-            startTimeStamp := 0;
-            isAlive := FALSE;
-        END Reset;
+		PROCEDURE & Reset*( );
+		BEGIN
+			elapsed := 0;
+			startTimeStamp := 0;
+			isAlive := FALSE;
+		END Reset;
 
-        PROCEDURE Start*( );
-        BEGIN
-            IF ~isAlive THEN
-                startTimeStamp := PrecisionTimer.GetCounter( );
-                isAlive := TRUE;
-            END;
-        END Start;
+		PROCEDURE Start*( );
+		BEGIN
+			IF ~isAlive THEN
+				startTimeStamp := PrecisionTimer.GetCounter( );
+				isAlive := TRUE;
+			END;
+		END Start;
 
-        PROCEDURE Restart*( );
-        BEGIN
-            elapsed := 0;
-            startTimeStamp := PrecisionTimer.GetCounter( );
-            isAlive := TRUE;
-        END Restart;
+		PROCEDURE Restart*( );
+		BEGIN
+			elapsed := 0;
+			startTimeStamp := PrecisionTimer.GetCounter( );
+			isAlive := TRUE;
+		END Restart;
 
-        PROCEDURE StartNew*( ): T;
-			VAR t: T;
-        BEGIN
-            t := NEW T( );
-            t.Start( );
-            RETURN t;
-        END StartNew;
+		PROCEDURE StartNew*( ): T;
+		BEGIN
+			RESULT.Start( );
+			RETURN RESULT;
+		END StartNew;
 
-        PROCEDURE Stop*( );
-        BEGIN
-            IF isAlive THEN
-                isAlive := FALSE;
-                INC( elapsed, PrecisionTimer.GetCounter( ) - startTimeStamp );
-                IF elapsed < 0 THEN
-                    elapsed := 0;
-                END;
-            END;
-        END Stop;
+		PROCEDURE Stop*( );
+		BEGIN
+			IF isAlive THEN
+				isAlive := FALSE;
+				INC( elapsed, PrecisionTimer.GetCounter( ) - startTimeStamp );
+				IF elapsed < 0 THEN
+					elapsed := 0;
+				END;
+			END;
+		END Stop;
 
-        PROCEDURE Elapsed*( ): Counter;
-        BEGIN
+		PROCEDURE Elapsed*( ): Counter;
+		BEGIN
 			RETURN ENTIERH( ElapsedTicks() * TicksDivFrequency );
-        END Elapsed
+		END Elapsed
 
-        PROCEDURE ElapsedMilliseconds*( ): Counter;
-        BEGIN
-            RETURN ENTIERH( ElapsedTicks( ) * TicksDivFrequency ) DIV TicksPerMillisecond;
-        END ElapsedMilliseconds;
+		PROCEDURE ElapsedMilliseconds*( ): Counter;
+		BEGIN
+			RETURN ENTIERH( ElapsedTicks( ) * TicksDivFrequency ) DIV TicksPerMillisecond;
+		END ElapsedMilliseconds;
 
-        PROCEDURE ElapsedTicks*( ): Counter;
-        BEGIN
-            IF isAlive THEN
-                RETURN elapsed + ( PrecisionTimer.GetCounter() - startTimeStamp );
-            END;
-            RETURN elapsed;
-        END ElapsedTicks;
-    END T;
+		PROCEDURE ElapsedTicks*( ): Counter;
+		BEGIN
+			IF isAlive THEN
+				RETURN elapsed + ( PrecisionTimer.GetCounter() - startTimeStamp );
+			END;
+			RETURN elapsed;
+		END ElapsedTicks;
+
+    END (* T *);
 
 	PROCEDURE ToString*( aTicks: Counter; VAR date: ARRAY OF CHAR );
 	VAR i: SIZE;
+
 		PROCEDURE Append ( v: SIGNED32; len: SIZE; VAR s: ARRAY OF CHAR; VAR pos: SIZE );
 		VAR i: SIZE;
 		BEGIN

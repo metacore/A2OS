@@ -10,11 +10,11 @@ TYPE
 
 PROCEDURE Do*(context: Commands.Context);
 VAR buffer: ARRAY 256 OF CHAR;
-VAR i64: Stopwatch.Counter;
+VAR i64: SIGNED64;
 VAR r: R;
 BEGIN
 	VAR timer := NEW Kernel.Timer( );
-	VAR stopWatch := NEW Stopwatch.T( );
+	VAR stopWatch: Stopwatch.T;
 	stopWatch.Start( );
 		timer.Sleep( 100 );
 	stopWatch.Stop( );
@@ -36,7 +36,7 @@ BEGIN
 		stopWatchStrToHInt.Stop( );
 
 		VAR stopWatchStartNew := stopWatch.StartNew( );
-			IGNORE stopWatchStartNew .StartNew( );
+			IGNORE stopWatchStartNew.StartNew( );
 		stopWatchStartNew.Stop( );
 
 		VAR stopWatchMethodCall := stopWatch.StartNew( );
@@ -74,4 +74,4 @@ END Do;
 END TestStopwath.Do~
 
 
-System.FreeDownTo TestStopwath~
+System.Free TestStopwath~

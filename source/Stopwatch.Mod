@@ -34,8 +34,8 @@ TYPE
 
 		PROCEDURE Restart*( );
 		BEGIN
-			elapsed := 0;
 			started := PrecisionTimer.GetCounter( );
+			elapsed := 0;
 			isAlive := TRUE;
 		END Restart;
 
@@ -56,7 +56,7 @@ TYPE
 		BEGIN
 			VAR current := PrecisionTimer.GetCounter( );
 			IF isAlive THEN
-				INC( elapsed,  current - started );
+				INC( elapsed, current - started );
 				IF elapsed < 0 THEN
 					elapsed := 0;
 				END;

@@ -456,6 +456,9 @@ TYPE
 						Flag(Global.NameUntraced, first);
 						FlagEnd(first);
 				END;
+				IF x.varReturn THEN
+					Keyword("VAR ");
+				END;
 				Type(x.returnType)
 			END;
 			IF info & (x.returnParameter # NIL) THEN
@@ -1289,6 +1292,9 @@ TYPE
 						first := TRUE;
 						Flag(Global.NameUntraced, first);
 						FlagEnd(first);
+					END;
+					IF type.varReturn THEN
+						Keyword("VAR ");
 					END;
 					Type(type.returnType);
 				END;

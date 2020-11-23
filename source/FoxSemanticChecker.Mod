@@ -3444,9 +3444,15 @@ TYPE
 					actualParameters.AddExpression(expression);
 				END;
 			END;
-			IF rhs # NIL THEN actualParameters.AddExpression(rhs) END;
 
 			op := FindOperator(recordType, SyntaxTree.NewIdentifier("[]"), actualParameters);
+			IF rhs # NIL THEN 
+				IF (op = NIL) OR ~op.type(SyntaxTree.ProcedureType).varReturn THEN				
+					actualParameters.AddExpression(rhs);
+					op := FindOperator(recordType, SyntaxTree.NewIdentifier("[]"), actualParameters);
+					END;
+ 		END;
+				
 			IF op # NIL THEN
 				designator := left(SyntaxTree.Designator);
 				IF pointer THEN designator := NewDereferenceDesignator(Basic.invalidPosition, designator,designator) END;

@@ -1350,6 +1350,9 @@ TYPE
 						Flag(Global.NameUntraced, first);
 						FlagEnd(first);
 					END;
+					IF type.varReturn THEN
+						Keyword("VAR ");
+					END;
 					Type(type.returnType);
 				END;
 				IF info & (type.returnParameter # NIL) THEN

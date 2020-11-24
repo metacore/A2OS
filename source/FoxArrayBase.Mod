@@ -8856,7 +8856,7 @@ TYPE
 		ApplyUnarySAOp( dest, ADDRESSOF( right ), AssignSBABLoop );
 	END ":=";
 
-(** SIGNED8*)
+(** SIGNED8/UNSIGNED8/CHAR *)
 	PROCEDURE AssignSSASLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR lval: SIGNED8;
 	BEGIN
@@ -8869,7 +8869,17 @@ TYPE
 		ApplyUnarySAOp( dest, ADDRESSOF( right ), AssignSSASLoop );
 	END ":=";
 
-(**SIGNED16 *)
+	OPERATOR ":="*(VAR dest: ARRAY {UNSAFE} [?] OF UNSIGNED8; right: UNSIGNED8);
+	BEGIN
+		ApplyUnarySAOp( dest, ADDRESSOF( right ), AssignSSASLoop );
+	END ":=";
+
+	OPERATOR ":="*(VAR dest: ARRAY {UNSAFE} [?] OF CHAR; right: CHAR);
+	BEGIN
+		ApplyUnarySAOp( dest, ADDRESSOF( right ), AssignSSASLoop );
+	END ":=";
+
+(** SIGNED16/UNSIGNED16 *)
 	PROCEDURE AssignSIAILoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR lval: SIGNED16;
 	BEGIN
@@ -8882,7 +8892,12 @@ TYPE
 		ApplyUnarySAOp( dest, ADDRESSOF( right ), AssignSIAILoop );
 	END ":=";
 
-(** SIGNED32 *)
+	OPERATOR ":="*(VAR dest: ARRAY {UNSAFE} [?] OF UNSIGNED16; right: UNSIGNED16);
+	BEGIN
+		ApplyUnarySAOp( dest, ADDRESSOF( right ), AssignSIAILoop );
+	END ":=";
+
+(** SIGNED32/UNSIGNED32 *)
 	PROCEDURE AssignSLALLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR lval: SIGNED32;
 	BEGIN
@@ -8891,6 +8906,11 @@ TYPE
 	END AssignSLALLoop;
 
 	OPERATOR ":="*(VAR dest: ARRAY {UNSAFE} [?] OF SIGNED32; right: SIGNED32);
+	BEGIN
+		ApplyUnarySAOp(dest, ADDRESSOF( right ), AssignSLALLoop );
+	END ":=";
+
+	OPERATOR ":="*(VAR dest: ARRAY {UNSAFE} [?] OF UNSIGNED32; right: UNSIGNED32);
 	BEGIN
 		ApplyUnarySAOp(dest, ADDRESSOF( right ), AssignSLALLoop );
 	END ":=";
@@ -8908,7 +8928,7 @@ TYPE
 		ApplyUnarySAOp(dest, ADDRESSOF( right ), AssignSYAYLoop );
 	END ":=";
 
-(** SIGNED64 *)
+(** SIGNED64/UNSIGNED64 *)
 	PROCEDURE AssignSHAHLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: SIGNED64 END;	lval: SIGNED64;
 	BEGIN
@@ -8922,6 +8942,11 @@ TYPE
 	END AssignSHAHLoop;
 
 	OPERATOR ":="*(VAR dest: ARRAY {UNSAFE} [?] OF SIGNED64; right: SIGNED64);
+	BEGIN
+		ApplyUnarySAOp(dest, ADDRESSOF( right ), AssignSHAHLoop );
+	END ":=";
+
+	OPERATOR ":="*(VAR dest: ARRAY {UNSAFE} [?] OF UNSIGNED64; right: UNSIGNED64);
 	BEGIN
 		ApplyUnarySAOp(dest, ADDRESSOF( right ), AssignSHAHLoop );
 	END ":=";

@@ -1781,6 +1781,7 @@ TYPE
 			stackAlignment-: SIZE;
 			parametersOffset-: SIZE; (* stack parameter offset -- in units of addresses: one pointer = 1 *)
 			varReturn-: BOOLEAN;
+			isConst-: BOOLEAN;
 
 		PROCEDURE & InitProcedureType( position: Position; scope: Scope);
 		BEGIN
@@ -1800,6 +1801,7 @@ TYPE
 			isNested := FALSE;
 			selfParameterInObject := NIL;
 			varReturn := FALSE;
+			isConst := FALSE;
 		END InitProcedureType;
 
 		PROCEDURE SetNoReturn*(noReturn: BOOLEAN);
@@ -1866,6 +1868,11 @@ TYPE
 		BEGIN
 			varReturn := b;
 		END SetVarReturn;
+		
+		PROCEDURE SetConst*(b: BOOLEAN);
+		BEGIN
+			isConst := b;
+		END SetConst;
 
 		PROCEDURE AddParameter*(p: Parameter);
 		BEGIN

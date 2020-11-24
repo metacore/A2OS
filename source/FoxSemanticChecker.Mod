@@ -2940,12 +2940,14 @@ TYPE
 			nothing to be resolved
 		**)
 		PROCEDURE ResolveSelfDesignator(x: SyntaxTree.SelfDesignator): SyntaxTree.Expression;
-		VAR scope: SyntaxTree.Scope; record: SyntaxTree.RecordType; type: SyntaxTree.Type; cell: SyntaxTree.CellType;
+		VAR scope: SyntaxTree.Scope; record: SyntaxTree.RecordType; type: SyntaxTree.Type; cell: SyntaxTree.CellType; e: SyntaxTree.Expression;
 		BEGIN
 			(* check if in record scope *)
 			scope := currentScope;
 			IF (scope IS SyntaxTree.ProcedureScope) & (scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).selfParameter # NIL) THEN
-					RETURN NewSymbolDesignator(x.position, x, NIL, scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).selfParameter);
+					e := NewSymbolDesignator(x.position, x, NIL, scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).selfParameter);
+					e.SetAssignable(~ scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).isConst);
+					RETURN e;
 			END;
 
 			WHILE (scope # NIL) & ~(scope IS SyntaxTree.RecordScope) &~(scope IS SyntaxTree.CellScope) DO
@@ -2963,7 +2965,9 @@ TYPE
 					x.SetType(type);
 				ELSE
 					x.SetType(record);
-					x.SetAssignable(TRUE); (* var parameter *)
+					IF ~(scope IS SyntaxTree.ProcedureScope) OR ~scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).isConst THEN
+						x.SetAssignable(TRUE); (* var parameter *)
+					END; 
 				END;
 			END;
 			RETURN x;
@@ -3047,7 +3051,7 @@ TYPE
 			END;
 
 			assignable := (left = NIL) OR left.assignable OR (left IS SyntaxTree.DereferenceDesignator)
-				OR (left IS SyntaxTree.SelfDesignator)
+				OR (left IS SyntaxTree.SelfDesignator) 
 				OR (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Import);
 
 			IF (currentScope # NIL) & (symbol.scope.ownerModule # currentScope.ownerModule) THEN
@@ -6557,7 +6561,11 @@ TYPE
 						selfParameter.SetAccess(SyntaxTree.Hidden);
 						procedureType.SetSelfParameterInObject(selfParameter);
 					ELSIF (procedureType.selfParameter = NIL) THEN
-						selfParameter := SyntaxTree.NewParameter(procedure.position,procedureType,Global.SelfParameterName,SyntaxTree.VarParameter);
+						IF procedureType.isConst THEN
+							selfParameter := SyntaxTree.NewParameter(procedure.position,procedureType,Global.SelfParameterName,SyntaxTree.ConstParameter);
+						ELSE
+							selfParameter := SyntaxTree.NewParameter(procedure.position,procedureType,Global.SelfParameterName,SyntaxTree.VarParameter);
+						END;
 						IF (record.typeDeclaration = NIL) THEN
 							selfParameter.SetType(record);
 						ELSE

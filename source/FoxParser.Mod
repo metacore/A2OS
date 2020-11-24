@@ -1954,7 +1954,7 @@ TYPE
 			recentCommentItem := symbol
 		END CommentWithPart;
 
-		(** ProcedureDeclaration = 'procedure' ['^'|'&'|'~'|'-'|Flags ['-']] IdentifierDefinition [FormalParameters] (';' DeclarationSequence [Body] 'end' Identifier | 'extern' ConstExpression ';').
+		(** ProcedureDeclaration = 'procedure' ['^'] ['const'] ['&'|'~'|'-'|Flags ['-']] IdentifierDefinition [FormalParameters] (';' DeclarationSequence [Body] 'end' Identifier | 'extern' ConstExpression ';').
 			Forward declarations ignored.
 		**)
 		PROCEDURE ProcedureDeclaration( parentScope: SyntaxTree.Scope);
@@ -1967,6 +1967,7 @@ TYPE
 			isConstructor: BOOLEAN;
 			isFinalizer: BOOLEAN;
 			isInline: BOOLEAN;
+			isConst: BOOLEAN;
 			modifiers: SyntaxTree.Modifier;
 			forwardDeclaration: BOOLEAN;
 			parameter: SyntaxTree.Parameter;
@@ -1986,6 +1987,10 @@ TYPE
 			IF Optional( Scanner.Arrow) THEN (* ignore forward declarations *)
 				forwardDeclaration := TRUE;
 			ELSE forwardDeclaration := FALSE;
+			END;
+
+			IF Optional( Scanner.Const) THEN
+				isConst := TRUE; 
 			END;
 
 			IF Optional( Scanner.And ) THEN  (* constructor *)
@@ -2038,6 +2043,7 @@ TYPE
 			procedure.SetAccess(access);
 
 			procedureType.SetModifiers(modifiers);
+			procedureType.SetConst(isConst);
 			procedure.SetType(procedureType);
 			IF Optional(Scanner.LeftParenthesis) THEN FormalParameters( procedureType, procedureScope) END;
 

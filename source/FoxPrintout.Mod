@@ -1241,7 +1241,11 @@ TYPE
 					w.String("^ ");
 				END;
 
+
 				type := x.type(SyntaxTree.ProcedureType);
+				IF type.isConst THEN
+					Keyword("CONST ");
+				END;
 
 				first := TRUE;
 				IF type.stackAlignment > 1 THEN Value(Global.NameStackAligned,type.stackAlignment,first) END;

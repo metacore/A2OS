@@ -433,7 +433,7 @@ TYPE
 				Char( CHR( SHR( ucs, 12 ) + 0xE0 ) );
 				Char( CHR( SHR( ucs,  6 ) MOD 0x40 + 0x80 ) );
 				Char( CHR( ucs MOD 0x40 + 0x80 ) );
-			ELSIF ( UNSIGNED32( ucs ) <= 0x10FFFF ) THEN
+			ELSIF ( 0xFFFF < UNSIGNED32( ucs ) ) & ( UNSIGNED32( ucs ) <= 0x10FFFF ) THEN
 				Char( CHR( SHR( ucs, 18 ) + 0xF0 ) );
 				Char( CHR( SHR( ucs, 12 ) MOD 0x40 + 0x80 ) );
 				Char( CHR( SHR( ucs,  6 ) MOD 0x40 + 0x80 ) );

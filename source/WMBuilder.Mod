@@ -7,8 +7,8 @@ IMPORT
 	WMTrees, WMInspectionComponents, WMDialogs, Models;
 
 CONST
-	WindowWidth = 128; WindowHeight = 320;
-	EditWindowWidth = 640; EditWindowHeight = 480;
+	WindowWidth = 130; WindowHeight = 320;
+	EditWindowWidth = 400; EditWindowHeight = 320;
 
 	Invalid = MIN(SIGNED32);
 
@@ -416,12 +416,13 @@ TYPE
 		PROCEDURE TraverseNodes(parent : WMTrees.TreeNode);
 		VAR n : WMTrees.TreeNode;
 		BEGIN
-			ASSERT(parent # NIL);
-			UpdateNodeColor(parent);
-			n := tree.GetChildren(parent);
-			WHILE (n # NIL) DO
-				TraverseNodes(n);
-				n := tree.GetNextSibling(n);
+			IF parent # NIL THEN
+				UpdateNodeColor(parent);
+				n := tree.GetChildren(parent);
+				WHILE (n # NIL) DO
+					TraverseNodes(n);
+					n := tree.GetNextSibling(n);
+				END;
 			END;
 		END TraverseNodes;
 
@@ -687,7 +688,7 @@ TYPE
 		PROCEDURE &Init;
 		BEGIN
 			offsetX := 0; offsetY := 0;
-			deltaX := 5; deltaY := 5;
+			deltaX := 4; deltaY := 4;
 			nX := 8; nY := 4;
 		END Init;
 
@@ -1367,7 +1368,7 @@ TYPE
 			enableSnapI := enableSnap.Get();
 
 			NEW(showHelperLines, NIL, Strings.NewString("HelperLines"), NIL); properties.Add(showHelperLines);
-			showHelperLines.Set(TRUE);
+			showHelperLines.Set(FALSE);
 			showHelperLinesI := showHelperLines.Get();
 
 			NEW(showFrames, NIL, Strings.NewString("Frames"), NIL); properties.Add(showFrames);
@@ -1379,6 +1380,7 @@ TYPE
 			NEW(panel);
 			panel.SetName("VisualComponent");
 			panel.alignment.Set(WMComponents.AlignClient);
+			panel.fillColor.Set(0CCCCCCFFH);
 			panel.takesFocus.Set(FALSE);
 			AddContent(panel);
 
@@ -2565,19 +2567,19 @@ TYPE
 
 			NEW(windowList);
 
-			NEW(componentWindow, 250, 300, FALSE);
+			NEW(componentWindow, 320, 200, FALSE);
 			componentWindow.SetIcon(WMGraphics.LoadImage("WMBuilder.tar://repositories.png", TRUE));
-			WMWindowManager.ExtAddWindow(componentWindow, 20, 100, {WMWindowManager.FlagFrame, WMWindowManager.FlagHidden});
+			WMWindowManager.ExtAddWindow(componentWindow, 580, 100, {WMWindowManager.FlagFrame, WMWindowManager.FlagHidden});
 
-			NEW(propertyWindow, 600, 400, FALSE);
+			NEW(propertyWindow, 640, 350, FALSE);
 			propertyWindow.SetIcon(WMGraphics.LoadImage("WMBuilder.tar://properties.png", TRUE));
-			WMWindowManager.ExtAddWindow(propertyWindow, 600, 100, {WMWindowManager.FlagFrame, WMWindowManager.FlagHidden});
+			WMWindowManager.ExtAddWindow(propertyWindow, 580, 350, {WMWindowManager.FlagFrame, WMWindowManager.FlagHidden});
 
 			NEW(componentTree);
 			componentTree.fillColor.Set(WMGraphics.White);
 			componentTree.treeView.onClickNode.Add(HandleNodeClicked);
 			componentTree.treeView.SetExtContextMenuHandler(HandleNodeContextMenu);
-			NEW(componentTreeWindow, "Structure", componentTree, 20, 600, 250, 200, FALSE);
+			NEW(componentTreeWindow, "Structure", componentTree, 920, 100, 300, 200, FALSE);
 			componentTreeWindow.SetIcon(WMGraphics.LoadImage("WMBuilder.tar://structure.png", TRUE));
 
 			IF (c # NIL) THEN
@@ -2586,7 +2588,7 @@ TYPE
 					LoadWindows(c.appData(XML.Element));
 				END;
 			ELSE
-				WMWindowManager.DefaultAddWindow(SELF);
+				WMWindowManager.ExtAddWindow(SELF, 10, 100, {WMWindowManager.FlagFrame, WMWindowManager.FlagClose, WMWindowManager.FlagMinimize});
 			END;
 		END New;
 
@@ -3073,17 +3075,17 @@ TYPE
 		END UpdateFramePosition;
 
 		PROCEDURE Load(CONST filename : ARRAY OF CHAR; VAR res : INTEGER);
-		VAR window : EditWindow; content : XML.Content; panel : WMStandardComponents.Panel; width, height : SIZE;
+		VAR window : EditWindow; content : XML.Content; panel : WMComponents.VisualComponent; width, height : SIZE;
 		BEGIN
 			content := WMComponents.Load(filename);
-			IF (content # NIL) & (content IS WMStandardComponents.Panel) THEN
-				panel := content (WMStandardComponents.Panel);
+			IF (content # NIL) & (content IS WMComponents.VisualComponent) THEN
+				panel := content (WMComponents.VisualComponent);
 				width := panel.bounds.GetWidth(); height := panel.bounds.GetHeight();
 				IF (width > 0) & (height > 0) THEN
 					NEW(window, SELF, width, height, FALSE);
 					window.SetIcon(WMGraphics.LoadImage("WMBuilder.tar://edit.png", TRUE));
 					window.SetTitle(Strings.NewString(filename));
-					WMWindowManager.AddWindow(window, 100, 100);
+					WMWindowManager.AddWindow(window, 160, 100);
 					windowList.Add(window);
 					window.editor.SetPanel(panel);
 					COPY(filename, window.filename);
@@ -3096,7 +3098,7 @@ TYPE
 				NEW(window, SELF, EditWindowWidth, EditWindowHeight, FALSE);
 				window.SetIcon(WMGraphics.LoadImage("WMBuilder.tar://edit.png", TRUE));
 				window.SetTitle(Strings.NewString(filename));
-				WMWindowManager.AddWindow(window, 100, 100);
+				WMWindowManager.AddWindow(window, 160, 100);
 				COPY(filename, window.filename);
 				windowList.Add(window);
 				SetActiveEditor(window);

@@ -721,7 +721,7 @@ BEGIN
 END ShowDevice;
 
 PROCEDURE ShowTable( context : Commands.Context; disk: Lib.Disk; table: Disks.PartitionTable; verbose: BOOLEAN);
-VAR j: SIZE; r: FLOAT64; ugly : ARRAY 10 OF CHAR; temp : ARRAY 128 OF CHAR; ignore : SIGNED32;
+VAR j: SIZE; r: FLOAT64; ugly : ARRAY 16 OF CHAR; temp : ARRAY 128 OF CHAR; ignore : SIGNED32;
 BEGIN
 	FOR j := 0 TO LEN(table)-1 DO
 		r := (table[j].size * 1.0D0 * disk.device.blockSize) / (1024*1024); (* M *)

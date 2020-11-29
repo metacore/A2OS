@@ -1044,7 +1044,7 @@ TYPE
 	END PDFCreator;
 
 PROCEDURE WriteReal(w : Streams.Writer; val : FLOAT32);
-VAR s : ARRAY 10 OF CHAR;
+VAR s : ARRAY 16 OF CHAR;
 BEGIN
 	Strings.FloatToStr(val, 0, 5, 0, s);
 	w.String(s)

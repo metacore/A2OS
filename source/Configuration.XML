@@ -195,18 +195,22 @@ To update: Configuration.Init ~
 
 		<Section name="Encoder">
 			<Section name="Text">
-				<Setting name="Oberon" value="TextUtilities.OberonEncoderFactory"/>
 				<Setting name="BBT" value="TextUtilities.BluebottleEncoderFactory"/>
-				<Setting name="UTF-8" value="TextUtilities.UTF8EncoderFactory"/>
-				<Setting name="HEX" value="TextUtilities.HEXEncoderFactory"/>
-				<Setting name="ISO8859-1" value="TextUtilities.ISO88591EncoderFactory"/>
-				<Setting name="ISO-8859-5" value="CyrillicUtilities.ISO88595EncoderFactory"/>
-				<Setting name="KOI8-R" value="CyrillicUtilities.KOI8REncoderFactory"/>
-				<Setting name="KOI8-U" value="CyrillicUtilities.KOI8UEncoderFactory"/>
 				<Setting name="CP1250" value="CyrillicUtilities.CP1250EncoderFactory"/>
 				<Setting name="CP1251" value="CyrillicUtilities.CP1251EncoderFactory"/>
  				<Setting name="CP866" value="CyrillicUtilities.CP866EncoderFactory"/>
+				<Setting name="HEX" value="TextUtilities.HEXEncoderFactory"/>
+				<Setting name="ISO-8859-5" value="CyrillicUtilities.ISO88595EncoderFactory"/>
+				<Setting name="ISO8859-1" value="TextUtilities.ISO88591EncoderFactory"/>
+				<Setting name="KOI8-R" value="CyrillicUtilities.KOI8REncoderFactory"/>
+				<Setting name="KOI8-U" value="CyrillicUtilities.KOI8UEncoderFactory"/>
+				<Setting name="Oberon" value="TextUtilities.OberonEncoderFactory"/>
 				<Setting name="ODT" value="OpenDocument.TextEncoderFactory"/>
+				<Setting name="UTF-8" value="TextUtilities.UTF8EncoderFactory"/>
+				<Setting name="UTF-16BE" value="TextUtilities.UTF16BEEncoderFactory"/>
+				<Setting name="UTF-16LE" value="TextUtilities.UTF16LEEncoderFactory"/>
+				<Setting name="UTF-32BE" value="TextUtilities.UTF32BEEncoderFactory"/>
+				<Setting name="UTF-32LE" value="TextUtilities.UTF32LEEncoderFactory"/>
 			</Section>
 			<Section name="Image">
 				<Setting name="BMP" value="BMPCodec.EncoderFactory"/>
@@ -221,18 +225,22 @@ To update: Configuration.Init ~
 
 		<Section name="Decoder">
 			<Section name="Text">
-				<Setting name="Oberon" value="TextUtilities.OberonDecoderFactory"/>
 				<Setting name="BBT" value="TextUtilities.BluebottleDecoderFactory"/>
-				<Setting name="UTF-8" value="TextUtilities.UTF8DecoderFactory"/>
-				<Setting name="HEX" value="TextUtilities.HEXDecoderFactory"/>
-				<Setting name="ISO8859-1" value="TextUtilities.ISO88591DecoderFactory"/>
-				<Setting name="ISO-8859-5" value="CyrillicUtilities.ISO88595DecoderFactory"/>
-				<Setting name="KOI8-R" value="CyrillicUtilities.KOI8RDecoderFactory"/>
-				<Setting name="KOI8-U" value="CyrillicUtilities.KOI8UDecoderFactory"/>
 				<Setting name="CP1250" value="CyrillicUtilities.CP1250DecoderFactory"/>
 				<Setting name="CP1251" value="CyrillicUtilities.CP1251DecoderFactory"/>
 				<Setting name="CP866" value="CyrillicUtilities.CP866DecoderFactory"/>
+				<Setting name="HEX" value="TextUtilities.HEXDecoderFactory"/>
+				<Setting name="ISO-8859-5" value="CyrillicUtilities.ISO88595DecoderFactory"/>
+				<Setting name="ISO8859-1" value="TextUtilities.ISO88591DecoderFactory"/>
+				<Setting name="KOI8-R" value="CyrillicUtilities.KOI8RDecoderFactory"/>
+				<Setting name="KOI8-U" value="CyrillicUtilities.KOI8UDecoderFactory"/>
+				<Setting name="Oberon" value="TextUtilities.OberonDecoderFactory"/>
 				<Setting name="ODT" value="OpenDocument.TextDecoderFactory"/>
+				<Setting name="UTF-8" value="TextUtilities.UTF8DecoderFactory"/>
+				<Setting name="UTF-16BE" value="TextUtilities.UTF16BEDecoderFactory"/>
+				<Setting name="UTF-16LE" value="TextUtilities.UTF16LEDecoderFactory"/>
+				<Setting name="UTF-32BE" value="TextUtilities.UTF32BEDecoderFactory"/>
+				<Setting name="UTF-32LE" value="TextUtilities.UTF32LEDecoderFactory"/>
 			</Section>
 			<Section name="Image">
 				<Setting name="JP2" value="JPEG2000Decoder.Factory"/>

@@ -10,6 +10,7 @@ CONST
 	FileNotFound* = Files.FileNotFound;
 	FileCreationError* = 2;
 	CodecNotFound* = 3;
+	StreamNotAvailable* = 4;
 
 	CR = 0DX; LF = 0AX; TAB = 09X;
 
@@ -25,6 +26,7 @@ TYPE
 	Char32 = Texts.Char32;
 	Text = Texts.Text;
 	LoaderProc* = PROCEDURE {DELEGATE} (text : Text; filename : ARRAY OF CHAR; VAR res : INTEGER);
+	Format* = ARRAY 128 OF CHAR;
 
 TYPE
 	FormatDescriptor = OBJECT
@@ -42,7 +44,7 @@ TYPE
 	VAR text : Texts.Text;
 		ucs32buf : POINTER TO ARRAY OF SIGNED32;
 		fontName : ARRAY 32 OF CHAR;
-		fontSize: SIZE; x, fontVOff : SIGNED32; fontColor, fontBgColor: WMGraphics.Color;
+		fontSize: SIZE; fontVOff : SIGNED32; fontColor, fontBgColor: WMGraphics.Color;
 		fontStyle : SET;
 		currentAttributes- : Texts.Attributes;
 		oldBytes : ARRAY 7 OF CHAR;
@@ -770,17 +772,8 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE GetUTF8Char(r : Streams.Reader; VAR u : Texts.Char32; VAR pos : SIZE) : BOOLEAN;
-		VAR ch : ARRAY 8 OF CHAR; i : SIZE;
-		BEGIN
-			ch[0] := r.Get(); INC(pos);
-			FOR i := 1 TO ORD(UTF8Strings.CodeLength[ORD(ch[0])]) - 1 DO ch[i] := r.Get(); INC(pos) END;
-			i := 0;
-			RETURN UTF8Strings.DecodeChar(ch, i, u)
-		END GetUTF8Char;
-
 		PROCEDURE InsertPiece(charContent : XML.CDataSect);
-		VAR i, m: SIZE; tpos: SIZE; res : INTEGER; ch, last : Texts.Char32; tempUCS32 : ARRAY 1024 OF Texts.Char32;
+		VAR i, m : SIZE; res : INTEGER; ch, last : Texts.Char32; tempUCS32 : ARRAY 1024 OF Texts.Char32;
 			oldpos, len : SIZE;
 			r, sr : Streams.StringReader; token : ARRAY 256 OF CHAR;
 			tempInt: SIGNED32;
@@ -796,19 +789,16 @@ TYPE
 
 			oldpos := text.GetLength();
 			len := charContent.GetLength();
-			tpos := 0;
-			REPEAT
-				IF GetUTF8Char(r, ch, tpos) THEN
-					IF i = m  THEN tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32); i := 0 END;
-					IF (last # ORD(CR)) OR (ch # ORD(LF)) THEN
-						IF ch = ORD(CR) THEN tempUCS32[i] := ORD(LF)
-						ELSE tempUCS32[i] := ch
-						END;
-						INC(i)
+			WHILE r.UTF8Char(ch) DO
+				IF i = m  THEN tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32); i := 0 END;
+				IF (last # ORD(CR)) OR (ch # ORD(LF)) THEN
+					IF ch = ORD(CR) THEN tempUCS32[i] := ORD(LF)
+					ELSE tempUCS32[i] := ch
 					END;
-					last := ch;
-				END
-			UNTIL (tpos >= len) OR (r.res # Streams.Ok);
+					INC(i)
+				END;
+				last := ch;
+			END;
 			tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32);
 
 			(* get style from the System *)
@@ -1329,7 +1319,7 @@ TYPE
 		END Error;
 
 		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
-		VAR i, m: SIGNED32;
+		VAR i, m: SIZE;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : Texts.Char32;
 		BEGIN
@@ -1345,18 +1335,16 @@ TYPE
 			text.AcquireWrite;
 			m := LEN(tempUCS32) - 1;
 			i := 0;
-			REPEAT
-				IF GetUTF8Char(in, ch) THEN
-					IF i = m  THEN tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32); i := 0 END;
-					IF (last # ORD(CR)) OR (ch # ORD(LF)) THEN
-						IF ch = ORD(CR) THEN tempUCS32[i] := ORD(LF)
-						ELSE tempUCS32[i] := ch
-						END;
-						INC(i)
+			WHILE in.UTF8Char(ch) DO
+				IF i = m  THEN tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32); i := 0 END;
+				IF (last # ORD(CR)) OR (ch # ORD(LF)) THEN
+					IF ch = ORD(CR) THEN tempUCS32[i] := ORD(LF)
+					ELSE tempUCS32[i] := ch
 					END;
-					last := ch
-				END
-			UNTIL (in.res # Streams.Ok);
+					INC(i)
+				END;
+				last := ch
+			END;
 			tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32);
 
 			(* Set this text explicitly to UTF, which allows it to be reformatted by the bidi formatter *)
@@ -1383,15 +1371,15 @@ TYPE
 		END Open;
 
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : INTEGER);
-		VAR r : Texts.TextReader; ch : Texts.Char32; i, p : SIZE; resstr : ARRAY 7 OF CHAR;
+		VAR r : Texts.TextReader; ch : Texts.Char32; i : SIZE;
 		BEGIN
 			res := -1;
 			text.AcquireRead;
 
 			NEW(r, text);
 			FOR i := 0 TO text.GetLength() - 1 DO
-				r.ReadCh(ch); p := 0;
-				IF (ch > 0) & UTF8Strings.EncodeChar(ch, resstr, p) THEN out.String(resstr) END
+				r.ReadCh(ch);
+				IF (ch > 0) & out.UTF8Char(ch) THEN END
 			END;
 			out.Update;
 
@@ -1400,6 +1388,229 @@ TYPE
 		END WriteText;
 
 	END UTF8Encoder;
+
+	UTF16Decoder = OBJECT(Codecs.TextDecoder)
+	VAR errors : BOOLEAN; byteOrder: Streams.ByteOrder;
+		text : Texts.Text;
+
+		PROCEDURE & InitUTF16Decoder( order: Streams.ByteOrder );
+		BEGIN
+			SELF.byteOrder := order;
+		END InitUTF16Decoder;
+
+		PROCEDURE Error(CONST x : ARRAY OF CHAR);
+		BEGIN
+			KernelLog.String("UTF-16 Decoder Error: ");
+			KernelLog.String(x); KernelLog.Ln;
+			errors := TRUE
+		END Error;
+
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
+		VAR i, m: SIZE; bom: ARRAY 2 OF CHAR;
+			tempUCS32 : ARRAY 1024 OF Char32;
+			ucs, last : Texts.Char32;
+		BEGIN
+			errors := FALSE;
+			res := -1;
+			IF in = NIL THEN Error("Input Stream is NIL"); RETURN; END;
+
+			in.Bytes(bom, 0, 2, i);
+			IF (i = 2) & (bom[0] = 0FFX) & (bom[1] = 0FEX) THEN
+				(*in.SetByteOrder(Streams.ByteOrder.LittleEndian);*)
+			ELSIF (i = 2) & (bom[0] = 0FEX) & (bom[1] = 0FFX) THEN
+				(*in.SetByteOrder(Streams.ByteOrder.BigEndian);*)
+			ELSE
+				(*in.SetByteOrder(Streams.ByteOrder.LittleEndian);*)
+				in.SetPos(0);
+			END;
+			in.SetByteOrder(byteOrder);
+
+			NEW(text);
+			text.AcquireWrite;
+			m := LEN(tempUCS32) - 1;
+			i := 0;
+
+			WHILE in.UTF16Char(ucs) DO
+				IF i = m THEN tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32); i := 0 END;
+				IF (last # ORD(CR)) OR (ucs # ORD(LF)) THEN
+					IF ucs = ORD(CR) THEN tempUCS32[i] := ORD(LF)
+					ELSE tempUCS32[i] := ucs
+					END;
+					INC(i)
+				END;
+				last := ucs
+			END;
+			tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32);
+
+			(* Set this text explicitly to UTF, which allows it to be reformatted by the bidi formatter *)
+			text.SetUTF(TRUE);
+			res := 0;
+			text.ReleaseWrite
+		END Open;
+
+		PROCEDURE GetText*() : Texts.Text;
+		BEGIN
+			RETURN text;
+		END GetText;
+
+	END UTF16Decoder;
+
+	UTF16Encoder = OBJECT(Codecs.TextEncoder)
+	VAR out: Streams.Writer;
+		byteOrder: Streams.ByteOrder;
+
+		PROCEDURE & InitUTF16Encoder( order: Streams.ByteOrder );
+		BEGIN
+			SELF.byteOrder := order;
+		END InitUTF16Encoder;
+
+		PROCEDURE Open*(out : Streams.Writer);
+		BEGIN
+			IF out = NIL THEN KernelLog.String("UTF-16 Encoder Error: output stream is NIL");
+			ELSE SELF.out := out;
+			END;
+		END Open;
+
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : INTEGER);
+		VAR r : Texts.TextReader; ch : Texts.Char32; i : SIZE;
+		BEGIN
+			res := -1;
+			text.AcquireRead;
+
+			NEW(r, text);
+
+			(* write bom *)
+			IF byteOrder = Streams.ByteOrder.LittleEndian THEN
+				out.Char(0FFX);	out.Char(0FEX);
+			ELSE
+				out.Char(0FEX); out.Char(0FFX);
+			END;
+			out.SetByteOrder(byteOrder);
+
+			i := 0;
+			WHILE i < text.GetLength() DO
+				r.ReadCh(ch);
+				IF (ch > 0) & out.UTF16Char(ch) THEN END;
+				INC(i);
+			END;
+			out.Update;
+
+			text.ReleaseRead;
+			res := 0;
+		END WriteText;
+
+	END UTF16Encoder;
+
+	UTF32Decoder = OBJECT(Codecs.TextDecoder)
+	VAR errors : BOOLEAN;
+		text : Texts.Text;
+		byteOrder : Streams.ByteOrder;
+
+		PROCEDURE & InitUTF32Decoder( order: Streams.ByteOrder );
+		BEGIN
+			SELF.byteOrder := order;
+		END InitUTF32Decoder;
+
+		PROCEDURE Error(CONST x : ARRAY OF CHAR);
+		BEGIN
+			KernelLog.String("UTF-32 Decoder Error: ");
+			KernelLog.String(x); KernelLog.Ln;
+			errors := TRUE
+		END Error;
+
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
+		VAR i, m: SIZE; bom: ARRAY 4 OF CHAR;
+			tempUCS32 : ARRAY 1024 OF Char32;
+			ucs, last : Texts.Char32;
+		BEGIN
+			errors := FALSE;
+			res := -1;
+			IF in = NIL THEN Error("Input Stream is NIL"); RETURN; END;
+
+			in.Bytes(bom, 0, 4, i);
+
+			IF (i = 4) & (bom[0] = 0FFX) & (bom[1] = 0FEX) & (bom[2] = 00X) & (bom[3] = 00X) THEN (*UTF32LE*)
+				(*in.SetByteOrder(Streams.ByteOrder.LittleEndian);*)
+			ELSIF (i = 4) & (bom[0] = 00X) & (bom[1] = 00X) & (bom[2] = 0FEX) & (bom[3] = 0FFX) THEN (*UTF32BE*)
+				(*in.SetByteOrder(Streams.ByteOrder.BigEndian);*)
+			ELSE
+				(*in.SetByteOrder(Streams.ByteOrder.LittleEndian);*)
+				in.SetPos(0);
+			END;
+			in.SetByteOrder(byteOrder);
+
+			NEW(text);
+			text.AcquireWrite;
+			m := LEN(tempUCS32) - 1;
+			i := 0;
+
+			WHILE in.UTF32Char(ucs) DO
+				IF i = m THEN tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32); i := 0 END;
+				IF (last # ORD(CR)) OR (ucs # ORD(LF)) THEN
+					IF ucs = ORD(CR) THEN tempUCS32[i] := ORD(LF)
+					ELSE tempUCS32[i] := ucs
+					END;
+					INC(i)
+				END;
+				last := ucs
+			END;
+			tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32);
+
+			(* Set this text explicitly to UTF, which allows it to be reformatted by the bidi formatter *)
+			text.SetUTF(TRUE);
+			res := 0;
+			text.ReleaseWrite
+		END Open;
+
+		PROCEDURE GetText*() : Texts.Text;
+		BEGIN
+			RETURN text;
+		END GetText;
+
+	END UTF32Decoder;
+
+	UTF32Encoder = OBJECT(Codecs.TextEncoder)
+	VAR out: Streams.Writer;
+		byteOrder : Streams.ByteOrder;
+
+		PROCEDURE & InitUTF32Encoder( order: Streams.ByteOrder );
+		BEGIN
+			SELF.byteOrder := order;
+		END InitUTF32Encoder;
+
+		PROCEDURE Open*(out : Streams.Writer);
+		BEGIN
+			IF out = NIL THEN KernelLog.String("UTF-32 Encoder Error: output stream is NIL");
+			ELSE SELF.out := out;
+			END;
+		END Open;
+
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : INTEGER);
+		VAR r : Texts.TextReader; ch : Texts.Char32; i : SIZE;
+		BEGIN
+			res := -1;
+			text.AcquireRead;
+			NEW(r, text);
+
+			(* write bom *)
+			IF byteOrder = Streams.ByteOrder.LittleEndian THEN
+				out.Char(0FFX);	out.Char(0FEX); out.Char(0X); out.Char(0X);
+			ELSE
+				out.Char(0X); out.Char(0X); out.Char(0FEX); out.Char(0FFX);
+			END;
+			out.SetByteOrder(byteOrder);
+
+			FOR i := 0 TO text.GetLength() - 1 DO
+				r.ReadCh(ch);
+				IF (ch > 0) & out.UTF32Char(ch) THEN END
+			END;
+			out.Update;
+
+			text.ReleaseRead;
+			res := 0;
+		END WriteText;
+
+	END UTF32Encoder;
 
 	ISO88591Decoder = OBJECT(Codecs.TextDecoder)
 	VAR errors : BOOLEAN;
@@ -1702,7 +1913,7 @@ END CountWhitespace;
 
 (** Procedure to load File without explicit given Format - appropriate Format will be chosen automaticaly *)
 PROCEDURE LoadAuto*(text: Text; CONST fileName: ARRAY OF CHAR; VAR format: SIGNED32; VAR res: INTEGER);
-VAR f : Files.File; re : Files.Reader; ri: Files.Rider; ch: CHAR; fstring: ARRAY 64 OF CHAR; i: SIGNED32;
+VAR f : Files.File; re : Files.Reader; fstring: ARRAY 64 OF CHAR; i: SIZE;
 BEGIN
 	(* KernelLog.String("Auto Format.... "); KernelLog.Ln; *)
 	text.AcquireWrite;
@@ -1710,16 +1921,14 @@ BEGIN
 	f := Files.Old(fileName);
 	IF f # NIL THEN
 		Files.OpenReader(re, f, 0);
-		f.Set(ri, 0);
-		f.Read(ri, ch); i := ORD(ch);
-		IF (i = 0F0H) OR (i = 0F7H) OR (i = 01H) THEN				(* Oberon File Format *)
+		re.Bytes(fstring, 0, LEN(fstring), i);
+		IF (fstring[0] = 0F0X) OR (fstring[0] = 0F7X) OR (fstring[0] = 01X) THEN				(* Oberon File Format *)
 			format := 0;
-		ELSIF (i = 03CH) THEN										(* possibly an XML, check further *)
+		ELSE
+			fstring[ MIN( i, LEN(fstring) - 1 ) ] := 0X;
 			(* check IF just an XML or BB Format *)
-			f.Set(ri, 0);
-			Files.ReadString(ri, fstring);
 			Strings.UpperCase(fstring);
-			IF Strings.Match("<?XML VERSION=*", fstring) THEN
+			IF Strings.Match("*<?XML VERSION=*", fstring) THEN
 				IF Strings.Match("*<?BLUEBOTTLE FORMAT*", fstring) THEN
 					format := 1;										(* Bluebottle File Format *)
 				ELSE
@@ -1728,8 +1937,6 @@ BEGIN
 			ELSE
 				format := 2;											(* Text/Other - treat as UTF-8 *)
 			END;
-		ELSE														(* Neither Oberon nor XML/BB *)
-			format := 2;
 		END;
 	END;
 	text.ReleaseWrite;
@@ -1744,22 +1951,32 @@ BEGIN
 END LoadAuto;
 
 (** Procedure to get decoder for the given file - appropriate Format will be chosen automaticaly *)
-PROCEDURE DecodeAuto*( CONST fileName: ARRAY OF CHAR; VAR format: ARRAY OF CHAR): Codecs.TextDecoder;
-VAR reader : Streams.Reader; decoder : Codecs.TextDecoder; fstring : ARRAY 64 OF CHAR; i : SIGNED32;
+PROCEDURE DetectTextStream*(in: Streams.Reader; VAR format: ARRAY OF CHAR; VAR res: INTEGER);
+VAR pos: Streams.Position; fstring : ARRAY 64 OF CHAR; i : SIZE;
 BEGIN
-	reader := Codecs.OpenInputStream(fileName);
-	IF (reader # NIL) THEN
-		reader.Ln(fstring);
-		i := ORD(fstring[0]);
-		IF (i = 0F0H) OR (i = 0F7H) OR (i = 01H) THEN
+	COPY("", format);
+	IF (in # NIL) THEN
+		pos := in.Pos();
+		in.Bytes(fstring, 0, LEN(fstring), i);
+		in.SetPos(pos);
+
+		IF (i > 3) & (fstring[0] = 00X) & (fstring[1] = 00X) & (fstring[2] = 0FEX) & (fstring[3] = 0FFX) THEN
+			COPY("UTF-32BE", format);
+		ELSIF (i > 3) & (fstring[0] = 0FFX) & (fstring[1] = 0FEX) & (fstring[2] = 00X) & (fstring[3] = 00X) THEN
+			COPY("UTF-32LE", format);
+		ELSIF (i > 1) & (fstring[0] = 0FEX) & (fstring[1] = 0FFX) THEN
+			COPY("UTF-16BE", format);
+		ELSIF (i > 1) & (fstring[0] = 0FFX) & (fstring[1] = 0FEX) THEN
+			COPY("UTF-16LE", format);
+		ELSIF (i > 2) & (fstring[0] = 0EFX) & (fstring[1] = 0BBX) & (fstring[2] = 0BFX) THEN
+			COPY("UTF-8", format);
+		ELSIF (fstring[0] = 0F0X) OR (fstring[0] = 0F7X) OR (fstring[0] = 01X) THEN
 			COPY("Oberon", format); (* Oberon File Format *)
-		ELSIF (i = 03CH) THEN
-			(* possibly an XML, check further,  check IF just an XML or BB Format *)
+		ELSE
+			fstring[ MIN( i, LEN(fstring) - 1 ) ] := 0X;
 			Strings.UpperCase(fstring);
-			IF Strings.Match("<?XML VERSION=*", fstring) THEN
-				reader.Ln(fstring);
-				Strings.UpperCase(fstring);
-				IF Strings.Match("<?BLUEBOTTLE FORMAT*", fstring) THEN
+			IF Strings.Match("*<?XML VERSION=*", fstring) THEN
+				IF Strings.Match("*<?BLUEBOTTLE FORMAT*", fstring) THEN
 					COPY("BBT", format); (* Bluebottle File Format *)
 				ELSE
 					COPY("UTF-8", format); (* XML - treat as UTF-8 *)
@@ -1767,39 +1984,60 @@ BEGIN
 			ELSE
 				COPY("UTF-8", format); (* Text/Other - treat as UTF-8 *)
 			END;
-		ELSE
-			COPY("UTF-8", format); (* Neither Oberon nor XML/BB *)
 		END;
+		res := Ok;
 	ELSE
-		COPY("", format); (* Could not open input stream *)
+		res := StreamNotAvailable;
+	END;
+END DetectTextStream;
+
+PROCEDURE DecodeAuto*( CONST fileName: ARRAY OF CHAR; VAR format: ARRAY OF CHAR): Codecs.TextDecoder;
+VAR reader : Streams.Reader; decoder : Codecs.TextDecoder; res: INTEGER;
+BEGIN
+	reader := Codecs.OpenInputStream(fileName);
+	IF (reader # NIL) THEN
+		DetectTextStream(reader, format, res);
 	END;
 	decoder := Codecs.GetTextDecoder(format);
 	RETURN decoder;
 END DecodeAuto;
 
 (** Load text using codecs *)
-PROCEDURE Load*(text : Text; CONST filename, format : ARRAY OF CHAR; VAR res : INTEGER);
-VAR decoder : Codecs.TextDecoder; in: Streams.Reader; t : Text;
+PROCEDURE LoadTextStream*(in: Streams.Reader; CONST format: ARRAY OF CHAR; VAR res: INTEGER): Text;
+VAR decoder : Codecs.TextDecoder;
 BEGIN
-	ASSERT(text # NIL);
-	decoder := Codecs.GetTextDecoder(format);
-	IF (decoder # NIL) THEN
-		in := Codecs.OpenInputStream(filename);
-		IF ( in # NIL) THEN
+	IF (in # NIL) THEN
+		decoder := Codecs.GetTextDecoder(format);
+		IF (decoder # NIL) THEN
 			decoder.Open(in, res);
 			IF (res = Ok) THEN
-				t := decoder.GetText();
-				t.AcquireRead;
-				text.AcquireWrite;
-				text.CopyFromText(t, 0, t.GetLength(), 0);
-				text.ReleaseWrite;
-				t.ReleaseRead;
+				RETURN decoder.GetText();
 			END;
 		ELSE
-			res := FileNotFound;
+			res := CodecNotFound;
 		END;
 	ELSE
-		res := CodecNotFound;
+		res := StreamNotAvailable;
+	END;
+END LoadTextStream;
+
+(** Load text using codecs *)
+PROCEDURE Load*(text : Text; CONST filename, format : ARRAY OF CHAR; VAR res : INTEGER);
+VAR in: Streams.Reader; t : Text;
+BEGIN
+	ASSERT(text # NIL);
+	in := Codecs.OpenInputStream(filename);
+	IF (in # NIL) THEN
+		t := LoadTextStream(in, format, res);
+		IF (res = Ok) THEN
+			t.AcquireRead;
+			text.AcquireWrite;
+			text.CopyFromText(t, 0, t.GetLength(), 0);
+			text.ReleaseWrite;
+			t.ReleaseRead;
+		END;
+	ELSE
+		res := FileNotFound;
 	END;
 END Load;
 
@@ -1814,6 +2052,26 @@ PROCEDURE LoadUTF8*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : INTEG
 BEGIN
 	Load(text, filename, "UTF-8", res)
 END LoadUTF8;
+
+PROCEDURE LoadUTF16LE*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : INTEGER);
+BEGIN
+	Load(text, filename, "UTF-16LE", res)
+END LoadUTF16LE;
+
+PROCEDURE LoadUTF16BE*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : INTEGER);
+BEGIN
+	Load(text, filename, "UTF-16BE", res)
+END LoadUTF16BE;
+
+PROCEDURE LoadUTF32LE*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : INTEGER);
+BEGIN
+	Load(text, filename, "UTF-32LE", res)
+END LoadUTF32LE;
+
+PROCEDURE LoadUTF32BE*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : INTEGER);
+BEGIN
+	Load(text, filename, "UTF-32BE", res)
+END LoadUTF32BE;
 
 (** import text in UCS16 format *)
 PROCEDURE LoadUCS16*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : INTEGER);
@@ -1896,6 +2154,30 @@ PROCEDURE ExportUTF8*(text : Text; CONST fileName : ARRAY OF CHAR; VAR res : INT
 BEGIN
 	Store(text, fileName, "UTF-8", res)
 END ExportUTF8;
+
+(** Export text in UTF16LE format Objects and attributes are lost *)
+PROCEDURE ExportUTF16LE*(text : Text; CONST fileName : ARRAY OF CHAR; VAR res : INTEGER);
+BEGIN
+	Store(text, fileName, "UTF-16LE", res)
+END ExportUTF16LE;
+
+(** Export text in UTF16BE format Objects and attributes are lost *)
+PROCEDURE ExportUTF16BE*(text : Text; CONST fileName : ARRAY OF CHAR; VAR res : INTEGER);
+BEGIN
+	Store(text, fileName, "UTF-16BE", res)
+END ExportUTF16BE;
+
+(** Export text in UTF32LE format Objects and attributes are lost *)
+PROCEDURE ExportUTF32LE*(text : Text; CONST fileName : ARRAY OF CHAR; VAR res : INTEGER);
+BEGIN
+	Store(text, fileName, "UTF-32LE", res)
+END ExportUTF32LE;
+
+(** Export text in UTF8 format Objects and attributes are lost *)
+PROCEDURE ExportUTF32BE*(text : Text; CONST fileName : ARRAY OF CHAR; VAR res : INTEGER);
+BEGIN
+	Store(text, fileName, "UTF-32BE", res)
+END ExportUTF32BE;
 
 (** Export text in Oberon format Objects are lost *)
 PROCEDURE StoreOberonText*(text : Text; CONST fileName: ARRAY OF CHAR; VAR res : INTEGER);
@@ -2000,7 +2282,7 @@ END SubTextToStr;
 (** insert utf8 string into text *)
 PROCEDURE StrToText*(text : Text; pos : SIZE; CONST string : ARRAY OF CHAR);
 VAR r : Streams.StringReader;
-	i, m: SIGNED32;
+	i, m: SIZE;
 	tempUCS32 : ARRAY 1024 OF Char32;
 	ch, last : Texts.Char32;
 BEGIN
@@ -2009,18 +2291,16 @@ BEGIN
 	m := LEN(tempUCS32) - 1;
 	r.Set(string);
 	i := 0;
-	REPEAT
-		IF GetUTF8Char(r, ch) THEN
-			IF i = m THEN tempUCS32[i] := 0; text.InsertUCS32(pos, tempUCS32); INC(pos, m); i := 0 END;
-			IF (last # ORD(CR)) OR (ch # ORD(LF)) THEN
-				IF ch = ORD(CR) THEN tempUCS32[i] := ORD(LF)
-				ELSE tempUCS32[i] := ch
-				END;
-				INC(i)
+	WHILE r.UTF8Char(ch) DO
+		IF i = m THEN tempUCS32[i] := 0; text.InsertUCS32(pos, tempUCS32); INC(pos, m); i := 0 END;
+		IF (last # ORD(CR)) OR (ch # ORD(LF)) THEN
+			IF ch = ORD(CR) THEN tempUCS32[i] := ORD(LF)
+			ELSE tempUCS32[i] := ch
 			END;
-			last := ch
-		END
-	UNTIL (r.res # Streams.Ok);
+			INC(i)
+		END;
+		last := ch
+	END;
 	tempUCS32[i] := 0; text.InsertUCS32(pos, tempUCS32);
 	text.ReleaseWrite
 END StrToText;
@@ -2066,18 +2346,13 @@ BEGIN
 END ToOberonFont;
 
 PROCEDURE GetUTF8Char*(r : Streams.Reader; VAR u : Texts.Char32) : BOOLEAN;
-VAR ch : ARRAY 8 OF CHAR; i : SIZE;
 BEGIN
-	ch[0] := r.Get();
-	FOR i := 1 TO ORD(UTF8Strings.CodeLength[ORD(ch[0])]) - 1 DO ch[i] := r.Get() END;
-	i := 0;
-	RETURN UTF8Strings.DecodeChar(ch, i, u)
+	RETURN r.UTF8Char(u);
 END GetUTF8Char;
 
 PROCEDURE WriteUTF8Char*(w : Streams.Writer; ch : Char32);
-VAR str : ARRAY 8 OF CHAR; i : SIZE;
 BEGIN
-	i := 0; IF UTF8Strings.EncodeChar(ch, str, i) THEN w.Bytes(str, 0, i) END
+	IGNORE w.UTF8Char(ch);
 END WriteUTF8Char;
 
 (* Style to Attribute Converter *)
@@ -2507,6 +2782,48 @@ BEGIN
 	NEW(p);
 	RETURN p
 END UTF8EncoderFactory;
+
+(* UTF-16 File Format *)
+PROCEDURE UTF16LEDecoderFactory*() : Codecs.TextDecoder;
+BEGIN
+	RETURN NEW UTF16Decoder(Streams.ByteOrder.LittleEndian);
+END UTF16LEDecoderFactory;
+
+PROCEDURE UTF16BEDecoderFactory*() : Codecs.TextDecoder;
+BEGIN
+	RETURN NEW UTF16Decoder(Streams.ByteOrder.BigEndian);
+END UTF16BEDecoderFactory;
+
+PROCEDURE UTF16LEEncoderFactory*() : Codecs.TextEncoder;
+BEGIN
+	RETURN NEW UTF16Encoder(Streams.ByteOrder.LittleEndian);
+END UTF16LEEncoderFactory;
+
+PROCEDURE UTF16BEEncoderFactory*() : Codecs.TextEncoder;
+BEGIN
+	RETURN NEW UTF16Encoder(Streams.ByteOrder.BigEndian);
+END UTF16BEEncoderFactory;
+
+(* UTF-32 File Format *)
+PROCEDURE UTF32LEDecoderFactory*() : Codecs.TextDecoder;
+BEGIN
+	RETURN NEW UTF32Decoder(Streams.ByteOrder.LittleEndian);
+END UTF32LEDecoderFactory;
+
+PROCEDURE UTF32BEDecoderFactory*() : Codecs.TextDecoder;
+BEGIN
+	RETURN NEW UTF32Decoder(Streams.ByteOrder.BigEndian);
+END UTF32BEDecoderFactory;
+
+PROCEDURE UTF32LEEncoderFactory*() : Codecs.TextEncoder;
+BEGIN
+	RETURN NEW UTF32Encoder(Streams.ByteOrder.LittleEndian);
+END UTF32LEEncoderFactory;
+
+PROCEDURE UTF32BEEncoderFactory*() : Codecs.TextEncoder;
+BEGIN
+	RETURN NEW UTF32Encoder(Streams.ByteOrder.BigEndian);
+END UTF32BEEncoderFactory;
 
 (* ISO8859-1 File Format *)
 PROCEDURE ISO88591DecoderFactory*() : Codecs.TextDecoder;

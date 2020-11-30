@@ -1327,8 +1327,12 @@ TYPE
 			res := -1;
 			IF in = NIL THEN Error("Input Stream is NIL"); RETURN; END;
 			SELF.in := in;
-			IF (in.Get() # 0EFX) OR (in.Get() # 0BBX) OR (in.Get() # 0BFX) THEN (* skip utf-8 bom *)
-				in.SetPos(0);
+			IF in.Peek() = 0EFX THEN (* skip utf-8 bom *)
+				in.SkipBytes(1);
+				IF in.Peek() = 0BBX THEN
+					in.SkipBytes(1);
+					IF in.Peek() = 0BFX THEN in.SkipBytes(1); END;
+				END;
 			END;
 
 			NEW(text);

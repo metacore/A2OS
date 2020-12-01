@@ -1327,18 +1327,15 @@ TYPE
 			res := -1;
 			IF in = NIL THEN Error("Input Stream is NIL"); RETURN; END;
 			SELF.in := in;
-			IF in.Peek() = 0EFX THEN (* skip utf-8 bom *)
-				in.SkipBytes(1);
-				IF in.Peek() = 0BBX THEN
-					in.SkipBytes(1);
-					IF in.Peek() = 0BFX THEN in.SkipBytes(1); END;
-				END;
-			END;
 
 			NEW(text);
 			text.AcquireWrite;
 			m := LEN(tempUCS32) - 1;
 			i := 0;
+
+			IF in.UTF8Char(ch) & ( ch # 0FEFFH ) THEN (* skip bom *)
+				tempUCS32[i] := ch; INC(i);
+			END;
 			WHILE in.UTF8Char(ch) DO
 				IF i = m  THEN tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32); i := 0 END;
 				IF (last # ORD(CR)) OR (ch # ORD(LF)) THEN
@@ -1410,7 +1407,7 @@ TYPE
 		END Error;
 
 		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
-		VAR i, m: SIZE; bom: ARRAY 2 OF CHAR;
+		VAR i, m: SIZE;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ucs, last : Texts.Char32;
 		BEGIN
@@ -1418,22 +1415,15 @@ TYPE
 			res := -1;
 			IF in = NIL THEN Error("Input Stream is NIL"); RETURN; END;
 
-			in.Bytes(bom, 0, 2, i);
-			IF (i = 2) & (bom[0] = 0FFX) & (bom[1] = 0FEX) THEN
-				(*in.SetByteOrder(Streams.ByteOrder.LittleEndian);*)
-			ELSIF (i = 2) & (bom[0] = 0FEX) & (bom[1] = 0FFX) THEN
-				(*in.SetByteOrder(Streams.ByteOrder.BigEndian);*)
-			ELSE
-				(*in.SetByteOrder(Streams.ByteOrder.LittleEndian);*)
-				in.SetPos(0);
-			END;
-			in.SetByteOrder(byteOrder);
-
 			NEW(text);
 			text.AcquireWrite;
 			m := LEN(tempUCS32) - 1;
 			i := 0;
 
+			in.SetByteOrder(byteOrder);
+			IF in.UTF16Char(ucs) & ( ucs # 0FEFFH ) THEN (* skip bom *)
+				tempUCS32[i] := ucs; INC(i);
+			END;
 			WHILE in.UTF16Char(ucs) DO
 				IF i = m THEN tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32); i := 0 END;
 				IF (last # ORD(CR)) OR (ucs # ORD(LF)) THEN
@@ -1483,19 +1473,11 @@ TYPE
 
 			NEW(r, text);
 
-			(* write bom *)
-			IF byteOrder = Streams.ByteOrder.LittleEndian THEN
-				out.Char(0FFX);	out.Char(0FEX);
-			ELSE
-				out.Char(0FEX); out.Char(0FFX);
-			END;
 			out.SetByteOrder(byteOrder);
-
-			i := 0;
-			WHILE i < text.GetLength() DO
+			IF out.UTF16Char(0FEFFH) THEN END; (* write bom *)
+			FOR i := 0 TO text.GetLength() - 1 DO
 				r.ReadCh(ch);
 				IF (ch > 0) & out.UTF16Char(ch) THEN END;
-				INC(i);
 			END;
 			out.Update;
 
@@ -1523,7 +1505,7 @@ TYPE
 		END Error;
 
 		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
-		VAR i, m: SIZE; bom: ARRAY 4 OF CHAR;
+		VAR i, m: SIZE;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ucs, last : Texts.Char32;
 		BEGIN
@@ -1531,23 +1513,15 @@ TYPE
 			res := -1;
 			IF in = NIL THEN Error("Input Stream is NIL"); RETURN; END;
 
-			in.Bytes(bom, 0, 4, i);
-
-			IF (i = 4) & (bom[0] = 0FFX) & (bom[1] = 0FEX) & (bom[2] = 00X) & (bom[3] = 00X) THEN (*UTF32LE*)
-				(*in.SetByteOrder(Streams.ByteOrder.LittleEndian);*)
-			ELSIF (i = 4) & (bom[0] = 00X) & (bom[1] = 00X) & (bom[2] = 0FEX) & (bom[3] = 0FFX) THEN (*UTF32BE*)
-				(*in.SetByteOrder(Streams.ByteOrder.BigEndian);*)
-			ELSE
-				(*in.SetByteOrder(Streams.ByteOrder.LittleEndian);*)
-				in.SetPos(0);
-			END;
-			in.SetByteOrder(byteOrder);
-
 			NEW(text);
 			text.AcquireWrite;
 			m := LEN(tempUCS32) - 1;
 			i := 0;
 
+			in.SetByteOrder(byteOrder);
+			IF in.UTF32Char(ucs) & ( ucs # 0FEFFH ) THEN (* skip bom *)
+				tempUCS32[i] := ucs; INC(i);
+			END;
 			WHILE in.UTF32Char(ucs) DO
 				IF i = m THEN tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32); i := 0 END;
 				IF (last # ORD(CR)) OR (ucs # ORD(LF)) THEN
@@ -1596,14 +1570,8 @@ TYPE
 			text.AcquireRead;
 			NEW(r, text);
 
-			(* write bom *)
-			IF byteOrder = Streams.ByteOrder.LittleEndian THEN
-				out.Char(0FFX);	out.Char(0FEX); out.Char(0X); out.Char(0X);
-			ELSE
-				out.Char(0X); out.Char(0X); out.Char(0FEX); out.Char(0FFX);
-			END;
 			out.SetByteOrder(byteOrder);
-
+			IF out.UTF32Char(0FEFFH) THEN END; (* write bom *)
 			FOR i := 0 TO text.GetLength() - 1 DO
 				r.ReadCh(ch);
 				IF (ch > 0) & out.UTF32Char(ch) THEN END

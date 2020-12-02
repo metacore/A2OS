@@ -8,12 +8,86 @@ TYPE
 	Datatype*=MatrixBase.Datatype;
 	Array*=ARRAY[?] OF Datatype;
 
-PROCEDURE SameDimension(VAR a:Array; CONST len:ARRAY [*] OF SIZE);
-	BEGIN
-		IF (DIM(a)#LEN(len,0)) OR (LEN(a)#len) THEN
-			NEW(a,len)
+VAR arrayFunctionsPool:=NEW ArrayFunctionsPool:ArrayFunctionsPool;
+
+TYPE ArrayFunctionsPool=OBJECT
+	VAR pool,f:ArrayFunction;
+	PROCEDURE Get():ArrayFunction;
+	BEGIN {EXCLUSIVE} (*can we circumvent locking here ?*)
+		IF pool#NIL THEN 
+			f:=pool; pool:=f.next; f.next:=NIL;
+		ELSE 
+			NEW(f);
 		END;
-	END SameDimension;
+		RETURN f
+	END Get;
+	
+	PROCEDURE Put(f:ArrayFunction);
+	BEGIN {EXCLUSIVE}
+		IF f#NIL THEN f.next:=pool; pool:=f END;
+	END Put;
+END ArrayFunctionsPool;
+
+TYPE ArrayFunction= OBJECT 
+	VAR min,max,sum:REAL;
+		next:ArrayFunction;(*linked list*)
+	PROCEDURE &Init;
+	BEGIN
+		sum:=0;
+		min:=MAX(Datatype);
+		max:=MIN(Datatype);
+	END Init;
+	
+	PROCEDURE AddAbs(x:REAL)(*:REAL*);
+	BEGIN
+		sum:=sum+ABS(x);
+		(*RETURN x*)
+	END AddAbs;
+
+	PROCEDURE MaxAbs(x:REAL)(*:REAL*);
+	BEGIN
+		max:=MAX(max,ABS(x));
+		(*RETURN x*)
+	END MaxAbs;
+
+	PROCEDURE MinAbs(x:REAL)(*:REAL*);
+	BEGIN
+		min:=MIN(min,ABS(x));
+		(*RETURN x*)
+	END MinAbs;
+	
+	END ArrayFunction;
+
+PROCEDURE HasSize*(CONST a: Array; CONST size: ARRAY [*] OF SIZE):BOOLEAN;
+VAR i:SIZE;
+BEGIN
+	IF (DIM(a)#LEN(size,0)) THEN RETURN FALSE
+	ELSE
+		FOR i:=0 TO DIM(a)-1 DO
+			IF LEN(a,i)#size[i] THEN RETURN FALSE END;
+		END;
+		RETURN TRUE;
+	END;
+END HasSize;
+
+PROCEDURE MakeSize*(VAR a:Array; CONST len:ARRAY [*] OF SIZE);
+	BEGIN
+		IF ~HasSize(a,len) THEN	NEW(a,len) (*ELSE a:=0*) END;(*? fill with zeros or not ?*)
+	END MakeSize;
+	
+PROCEDURE SameSize*(CONST a,b: Array):BOOLEAN;
+VAR i:SIZE;
+BEGIN
+	IF (DIM(a)#DIM(b)) OR (DIM(a)=0) THEN RETURN FALSE
+	ELSE
+		FOR i:=0 TO DIM(a)-1 DO
+			IF LEN(a,i)#LEN(b,i) THEN RETURN FALSE END;
+		END;
+		RETURN TRUE;
+	END;
+END SameSize;
+
+
 
 PROCEDURE Count*(CONST a: Array):SIZE;
 VAR i:SIZE; res:SIZE;
@@ -41,16 +115,57 @@ BEGIN
 	RETURN Datatype(x);
 END ProdS;
 
+PROCEDURE MinAbs*(CONST a:ARRAY[?] OF Datatype):Datatype; (*is VAR instead of CONST because of performance limitation of compiler*)
+VAR f:ArrayFunction; res:Datatype;
+BEGIN
+	f:=arrayFunctionsPool.Get();(*?what is the impact of locking on performance ?*)
+	f.Init; 
+	f.MinAbs(a);(*redundant assignment, is compiler limitation*)
+	res:=f.min;
+	arrayFunctionsPool.Put(f);(*?what is the impact of locking on performance ?*)
+	RETURN res
+END MinAbs;
+
+PROCEDURE MaxAbs*(CONST a:ARRAY[?] OF Datatype):Datatype; (*is VAR instead of CONST because of performance limitation of compiler*)
+VAR f:ArrayFunction; res:Datatype;
+BEGIN
+	f:=arrayFunctionsPool.Get();
+	f.Init; 
+	(*a:=*)f.MaxAbs(a);(*redundant assignment, is compiler limitation*)
+	res:=f.max;
+	arrayFunctionsPool.Put(f);
+	RETURN res
+END MaxAbs;
+
+PROCEDURE SumAbs*(CONST a:ARRAY[?] OF Datatype):Datatype; (*is VAR instead of CONST because of performance limitation of compiler*)
+VAR f:ArrayFunction; res:Datatype;
+BEGIN
+	f:=arrayFunctionsPool.Get();
+	f.Init; 
+	(*a:=*)f.AddAbs(a);(*redundant assignment, is compiler limitation*)
+	res:=f.sum;
+	arrayFunctionsPool.Put(f);
+	RETURN res
+END SumAbs;
+
 PROCEDURE Mean*(CONST X: Array): Datatype;
+VAR cnt: SIZE;
 BEGIN
 	(*RETURN SUM(X)/ProdS(LEN(X))*)
-	RETURN SUM(X)/Count(X)
+	cnt:=Count(X);
+	IF cnt=0 THEN RETURN 0 (*? or NaN  ?*)
+	ELSE RETURN SUM(X)/Count(X)
+	END;
 END Mean;
 
 PROCEDURE MeanSquare*(CONST X: Array): Datatype;
+VAR cnt: SIZE;
 BEGIN
 	(*RETURN X+*X / ProdS(LEN(X))*)
-	RETURN X+*X / Count(X)
+	cnt:=Count(X);
+	IF cnt=0 THEN RETURN 0 (*? or NaN  ?*)
+	ELSE RETURN X+*X/Count(X)
+	END;
 END MeanSquare;
 
 PROCEDURE RMS*(CONST X: Array): Datatype; (*root mean square*)
@@ -176,6 +291,48 @@ PROCEDURE Kurtosis*(CONST X : Array) : Datatype;
 		x2:=x1.*x1;
 		RETURN (x2 +* x2) / (variance*variance) / Count(X) - 3;
 	END Kurtosis;
+	
+
+(* possi ble solution for sum abs:
+MODULE Test; 
+
+IMPORT Commands;
+
+TYPE Summer*= OBJECT
+	VAR sum:REAL;
+	PROCEDURE &Init*;
+	BEGIN
+		sum:=0;
+	END Init;
+	
+	PROCEDURE AddAbs(x:REAL):REAL;
+	BEGIN
+		sum:=sum+ABS(x);
+		RETURN x
+	END AddAbs;
+	
+	END Summer;
+	
+PROCEDURE Do*(c:Commands.Context);
+	VAR a: ARRAY [*] OF REAL;
+		summer:Summer;
+	BEGIN
+		a:=[-1,-1,-1,1,1,1];
+		NEW(summer);
+		a:=summer.AddAbs(a);
+		c.out.FloatFix(summer.sum,10,4,0); c.out.Ln; c.out.Update;
+		
+	END Do;
+	
+
+
+END Test.
+
+Test.Do ~
+
+*)
+
+
 
 PROCEDURE Normalize*(CONST a: Array):Array;
 VAR N:SIZE; sd: Datatype;
@@ -271,6 +428,20 @@ BEGIN
 	MatrixUtilities.OutVector(v);
 END TestSort;
 
+PROCEDURE TestSumAbs*;
+VAR v:Vector; sumAbs,minAbs,maxAbs:Datatype; count, i:SIZE;
+BEGIN
+	NEW(v,10000);
+	FOR i:=0 TO LEN(v,0)-1 DO IF ODD(i) THEN v[i]:=0.5 ELSE v[i]:=-1.5 END END;
+	sumAbs:=SumAbs(v);
+	minAbs:=MinAbs(v);
+	maxAbs:=MaxAbs(v);
+	count:=Count(v);
+	TRACE(sumAbs,minAbs,maxAbs);
+	HALT(200)
+END TestSumAbs;
+
+
 PROCEDURE TestMedian*;
 VAR v:Vector; zero: Datatype;
 BEGIN
@@ -305,6 +476,10 @@ BEGIN
 	ASSERT(Variance([1,2,3,4,5])= ([1,2,3,4,5]-3)+*([1,2,3,4,5]-3)/5, 204);
 	ASSERT(EstimatedVariance([1,2,3,4,5])= ([1,2,3,4,5]-3)+*([1,2,3,4,5]-3)/4, 205);
 	ASSERT(ABS(StandardDeviation(Normalize([1,2,3,4,5]))-1)<TestTolerance, 206);
+	ASSERT(SumAbs([-1,1,-3,2])=7, 207);
+	ASSERT(MinAbs([-1,1,-3,2])=1, 208);
+	ASSERT(MaxAbs([-1,1,-3,2])=3, 209); 
+	
 	v:=[5,2,1,4,3]; QSort(v); ASSERT(v=[1,2,3,4,5], 207);
 END Test;
 
@@ -312,6 +487,7 @@ END Test;
 END StatisticsBase.
 
 StatisticsBase.TestSort ~
+StatisticsBase.TestSumAbs ~
 StatisticsBase.TestMedian ~
 StatisticsBase.TestSoftMax ~
 

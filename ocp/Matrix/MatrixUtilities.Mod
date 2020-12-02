@@ -4,7 +4,6 @@ IMPORT Rand:=Random, MatrixBase, ComplexMathL, KernelLog, Strings, Reals, Stream
 
 TYPE 
 	
-	Bytes2=ARRAY 2 OF CHAR;
 	Datatype* = MatrixBase.Datatype;  
 	Matrix* = MatrixBase.Matrix;  Vector* = MatrixBase.Vector;  Tensor*=ARRAY[?] OF Datatype;
 	IntVector*= ARRAY [*] OF SIZE; IntMatrix= ARRAY [*,*] OF SIGNED32; IntTensor*=ARRAY[?] OF SIGNED32;
@@ -865,11 +864,21 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	END StoreSize;
 	
 	PROCEDURE ReadLR*(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
-	VAR i:SIZE;
+	VAR i,j,k:SIZE;
 	BEGIN
 		ASSERT(DIM(t)>0);
 		IF  DIM(t)=1 THEN 
 			FOR i:=0 TO LEN(t,0)-1 DO R.RawLReal(t[i]) END;
+		ELSIF DIM(t)=2 THEN (*performance*)
+			FOR j:=0 TO LEN(t,0)-1 DO
+				FOR i:=0 TO LEN(t,1)-1 DO R.RawLReal(t[j,i]) END;
+			END;
+		ELSIF DIM(t)=3 THEN
+			FOR k:=0 TO LEN(t,0)-1 DO
+				FOR j:=0 TO LEN(t,1)-1 DO
+					FOR i:=0 TO LEN(t,2)-1 DO R.RawLReal(t[k,j,i]) END;
+				END;
+			END;
 		ELSE
 			FOR i:=0 TO LEN(t,0)-1 DO ReadLR(R, t[i,?]) END;
 		END;
@@ -909,11 +918,21 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	END ReadUInt8;
 	
 	PROCEDURE ReadInt*(R:Streams.Reader; VAR t: ARRAY [?] OF SIGNED16);
-	VAR i:SIZE;
+	VAR i,j,k:SIZE;
 	BEGIN
 		ASSERT(DIM(t)>0);
 		IF  DIM(t)=1 THEN 
 			FOR i:=0 TO LEN(t,0)-1 DO R.RawInt(t[i]) END;
+		ELSIF DIM(t)=2 THEN (*performance*)
+			FOR j:=0 TO LEN(t,0)-1 DO
+				FOR i:=0 TO LEN(t,1)-1 DO R.RawInt(t[j,i]) END;
+			END;
+		ELSIF DIM(t)=3 THEN (*performance*)
+			FOR k:=0 TO LEN(t,0)-1 DO
+				FOR j:=0 TO LEN(t,1)-1 DO
+					FOR i:=0 TO LEN(t,2)-1 DO R.RawInt(t[k,j,i]) END;
+				END;
+			END;
 		ELSE
 			FOR i:=0 TO LEN(t,0)-1 DO ReadInt(R, t[i,?]) END;
 		END;
@@ -977,8 +996,6 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	(*parse header of .MtA files storing an ARRAY [?] OF Datatype, or ARRAY [*{*}] OF Datatype*)
 	PROCEDURE ParseHeader*(r:Streams.Reader; VAR version, datatype: SIGNED32; VAR len: ARRAY [*] OF SIZE);
 	VAR 
-		i, j, k:SIGNED32;
-		dontcare: BOOLEAN;
 		structure, datatypeString, versionString, comment: ARRAY 8 OF CHAR;
 	BEGIN
 		IF r.GetString(structure) & r.GetString(versionString) &	r.GetString(datatypeString) THEN
@@ -1002,6 +1019,8 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 			ELSIF version=2 THEN len:=GetSizeVectorV2(r);
 			ELSE HALT(200);
 			END;
+		ELSE
+			TRACE("failed ParseHeader", structure, datatypeString, versionString, comment); HALT(203)
 		END;
 		r.SkipLn;
 	END ParseHeader;
@@ -1200,6 +1219,30 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		ELSE RETURN NoFit
 		END;
 	END SizeMatch;
+	
+	PROCEDURE SameSize*(CONST a,b: Tensor):BOOLEAN;
+	VAR i:SIZE;
+	BEGIN
+		IF (DIM(a)#DIM(b)) OR (DIM(a)=0) THEN RETURN FALSE
+		ELSE
+			FOR i:=0 TO DIM(a)-1 DO
+				IF LEN(a,i)#LEN(b,i) THEN RETURN FALSE END;
+			END;
+			RETURN TRUE;
+		END;
+	END SameSize;
+
+	PROCEDURE HasSize*(CONST a: Tensor; CONST size: ARRAY [*] OF SIZE):BOOLEAN;
+	VAR i:SIZE;
+	BEGIN
+		IF (DIM(a)#LEN(size,0)) THEN RETURN FALSE
+		ELSE
+			FOR i:=0 TO DIM(a)-1 DO
+				IF LEN(a,i)#size[i] THEN RETURN FALSE END;
+			END;
+			RETURN TRUE;
+		END;
+	END HasSize;
 
 	PROCEDURE NewMatrix*(rows,cols:SIZE):Matrix;
 	VAR m:Matrix;
@@ -1270,7 +1313,7 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	*)
 	
 	PROCEDURE Test*;
-	VAR t,t1:Tensor; len:ARRAY [*]OF SIZE; i:SIGNED32;
+	VAR t:Tensor; len:ARRAY [*]OF SIZE; i:SIGNED32;
 		f:Files.File; w:Files.Writer; r:Files.Reader;
 	BEGIN
 		NEW(len,0);

@@ -197,7 +197,7 @@ TYPE
 				state.PC := Machine.CurrentPC();
 			ELSIF ConcurrentGC THEN
 				suspended := TRUE;
-				Suspend(SELF);
+				IF ~Suspend(SELF) THEN RETURN END;
 			END;
 
 			sb := stackBottom;
@@ -1298,13 +1298,21 @@ BEGIN
 END GetCpuCycles;
 
 (* suspend and store state *)
-PROCEDURE Suspend(p: Process);
-VAR res: INTEGER;
+PROCEDURE Suspend(p: Process): BOOLEAN;
+VAR res: INTEGER; mode: INTEGER; error: INTEGER;
 BEGIN{UNTRACKED}
 	res := Kernel32.SuspendThread(p.handle);
-	ASSERT(res >= 0);
+	IF res < 0 THEN
+		mode := p.mode;
+		error := Kernel32.GetLastError();
+		Trace.String("failed supend thread: mode="); Trace.Int(mode,0); Trace.Ln;
+		Trace.String("failed supend thread: error="); Trace.Int(error,0); Trace.Ln;
+		HALT(100); (* can remove this to continue execution *)
+		RETURN FALSE;
+	END;
 	p.state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
 	res := Kernel32.GetThreadContext( p.handle, p.state );
+	RETURN TRUE;
 END Suspend;
 
 PROCEDURE Resume(p: Process);
@@ -1322,7 +1330,7 @@ BEGIN{UNTRACKED}
 	WHILE p # NIL DO
 		cur := p(Process);
 		IF (cur # r) & ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.gcContext.nextPos >= 0) THEN
-			Suspend(cur);
+			ASSERT(Suspend(cur));
 			cur.mode := Suspended
 		END;
 		p := p.next

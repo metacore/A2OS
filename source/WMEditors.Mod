@@ -1176,7 +1176,7 @@ TYPE
 
 	END TextField;
 
-	NumberField= OBJECT (TextField)
+	NumberField* = OBJECT (TextField)
 	VAR
 		fractionalDigits-: WMProperties.Int32Property;
 		unitModel-: WMProperties.ReferenceProperty;

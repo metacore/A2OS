@@ -1,10 +1,11 @@
 MODULE WMBuilder; (** AUTHOR "staubesv"; PURPOSE "GUI builder"; *)
 
 IMPORT
-	Modules, Kernel, KernelLog, Streams, Commands, Inputs, Strings, Files, XML, XMLObjects, XMLScanner, XMLParser,
+	Modules, Kernel, KernelLog, Streams, Commands, Inputs, Strings, UTF8Strings, Files, XML, XMLObjects, XMLScanner, XMLParser,
 	Math, Repositories, WMRepositories, WMUtilities,
 	WMRectangles, WMGraphics, WMMessages, WMWindowManager, WMRestorable, WMProperties, WMComponents, WMStandardComponents, WMEditors,
-	WMTrees, WMInspectionComponents, WMDialogs, Models;
+	WMTrees, WMInspectionComponents, WMDialogs, Models,
+	StringCollections := GenericCollections(Strings.String, LessString);
 
 CONST
 	WindowWidth = 130; WindowHeight = 320;
@@ -495,6 +496,320 @@ TYPE
 		END SetInsertAtObj;
 
 	END ComponentTree;
+
+	CodeMode = ENUM
+		cmImport,
+		cmVar,
+		cmWire
+	END;
+
+	ComponentCode = OBJECT(WMComponents.VisualComponent)
+	VAR
+		rootComponent : Repositories.Component;
+		moduleName : Strings.String;
+		editor : WMEditors.Editor;
+		importList: StringCollections.Vector;
+
+		PROCEDURE &Init*;
+		BEGIN
+			Init^;
+
+			NEW(importList);
+
+			moduleName := Strings.NewString("Untitled");
+
+			NEW(editor);
+			editor.alignment.Set(WMComponents.AlignClient);
+			editor.fillColor.Set(WMGraphics.White);
+			editor.alignment.Set(WMComponents.AlignClient);
+			editor.multiLine.Set(TRUE);
+			editor.tv.textAlignV.Set(WMGraphics.AlignLeft);
+			editor.tv.showBorder.Set(TRUE);
+			AddContent(editor);
+
+		END Init;
+
+		PROCEDURE SetComponent(rootComponent : Repositories.Component);
+		BEGIN
+			SELF.rootComponent := rootComponent;
+			Refresh(NIL, NIL);
+			Invalidate;
+		END SetComponent;
+
+		PROCEDURE SetModuleName(moduleName : Strings.String);
+		BEGIN
+			SELF.moduleName := moduleName;
+			Refresh(NIL, NIL);
+			Invalidate;
+		END SetModuleName;
+
+		PROCEDURE Refresh(sender, data : ANY);
+		VAR
+			buffer : Strings.Buffer;
+		BEGIN
+
+			NEW(buffer, 1024);
+
+			WriteModule(buffer.GetWriter());
+
+			editor.SetAsString(buffer.GetString()^);
+
+		END Refresh;
+
+		PROCEDURE WriteModule(w: Streams.Writer);
+		BEGIN
+
+			w.String("module "); w.String(moduleName^); w.Char(';'); w.Ln; w.Ln;
+
+			WriteModuleImports(w);
+
+			WriteModuleTypes(w);
+
+			WriteModuleProcs(w);
+
+			w.String("end "); w.String(moduleName^); w.Char('.'); w.Ln; w.Ln;
+
+		END WriteModule;
+
+		PROCEDURE WriteModuleImports(w: Streams.Writer);
+		VAR
+			module : Strings.String;
+			i : SIZE;
+		BEGIN
+
+			importList.Reset;
+
+			IGNORE importList.Add(
+				Strings.NewString("ComponentItemCollections := GenericCollections(ComponentItem, LessComponentItem)"));
+			IGNORE importList.Add(Strings.NewString("XML"));
+			IGNORE importList.Add(Strings.NewString("Strings"));
+			IGNORE importList.Add(Strings.NewString("UTF8Strings"));
+			IGNORE importList.Add(Strings.NewString("WMComponents"));
+			IGNORE importList.Add(Strings.NewString("WMWindowManager"));
+
+			w.String("import"); w.Ln;
+
+			IF (rootComponent # NIL) THEN
+				TraverseComponent(rootComponent, CodeMode.cmImport, NIL)
+			END;
+
+			importList.SetSorted(TRUE);
+
+			w.Char(9X);
+			FOR i := 0 TO importList.Count() - 1 DO
+				importList.Get(i, module); w.String(module^);
+				IF i # importList.Count() - 1 THEN w.String(", ") ELSE w.Char(';') END
+			END;
+			w.Ln; w.Ln;
+
+		END WriteModuleImports;
+
+		PROCEDURE WriteModuleTypes(w: Streams.Writer);
+		BEGIN
+
+			w.String("type"); w.Ln;
+
+			w.Char(9X); w.String("ComponentItem = record"); w.Ln;
+			w.Char(9X); w.Char(9X); w.String("uid : array 32 of char;"); w.Ln;
+			w.Char(9X); w.Char(9X); w.String("component : WMComponents.Component;"); w.Ln;
+			w.Char(9X); w.String("end;"); w.Ln; w.Ln;
+
+			WriteWindow(w);
+
+		END WriteModuleTypes;
+
+		PROCEDURE WriteWindow(w: Streams.Writer);
+		BEGIN
+
+			w.Char(9X); w.String(moduleName^);	w.String("Window* = object(WMComponents.FormWindow)"); w.Ln;
+
+			WriteWindowVariables(w);
+
+			WriteWindowProcs(w);
+
+			w.Char(9X); w.String("end "); w.String(moduleName^); w.String("Window"); w.Char(';'); w.Ln; w.Ln;
+
+		END WriteWindow;
+
+		PROCEDURE WriteWindowVariables(w: Streams.Writer);
+		VAR
+			bufferVariables : Strings.Buffer;
+		BEGIN
+
+			NEW(bufferVariables, 1024);
+
+			w.Char(9X); w.String("var"); w.Ln;
+
+			w.Char(9X); w.Char(9X); w.String("vc : WMComponents.VisualComponent;"); w.Ln; w.Ln;
+
+			IF (rootComponent # NIL) THEN
+				TraverseComponent(rootComponent, CodeMode.cmVar, bufferVariables.GetWriter());
+			END;
+
+			w.String(bufferVariables.GetString()^); w.Ln;
+
+		END WriteWindowVariables;
+
+		PROCEDURE WriteWindowProcs(writer: Streams.Writer);
+		VAR
+			bufferWires : Strings.Buffer;
+		BEGIN
+
+			NEW(bufferWires, 1024);
+
+			writer.Char(9X); writer.String("procedure &New*;"); writer.Ln;
+
+			writer.Char(9X); writer.String("var"); writer.Ln;
+
+			writer.Char(9X); writer.Char(9X); writer.String("content : XML.Content;"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("components : ComponentItemCollections.Vector;"); writer.Ln;
+
+			writer.Char(9X); writer.String("begin"); writer.Ln;
+
+			writer.Char(9X); writer.Char(9X); writer.String('content := WMComponents.Load("');
+			writer.String(moduleName^); writer.String('.XML");'); writer.Ln;
+
+			writer.Char(9X); writer.Char(9X);
+			writer.String("if (content # nil) & (content is WMComponents.VisualComponent) then"); writer.Ln; writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.Char(9X);
+			writer.String("vc := content(WMComponents.VisualComponent);"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.Char(9X);
+			writer.String("Init(vc.bounds.GetWidth(), vc.bounds.GetHeight(), false);"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.Char(9X);
+			writer.String("SetContent(vc);"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.Char(9X);
+			writer.String("new(components);"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.Char(9X);
+			writer.String("vc.Traverse(CollectComponents, components);"); writer.Ln; writer.Ln;
+
+			IF (rootComponent # NIL) THEN
+				TraverseComponent(rootComponent, CodeMode.cmWire, bufferWires.GetWriter());
+			END;
+
+			writer.String(bufferWires.GetString()^);
+			writer.Char(9X); writer.Char(9X); writer.String("end;"); writer.Ln;
+
+			writer.Char(9X); writer.String("end New;"); writer.Ln; writer.Ln;
+
+			writer.Char(9X); writer.String("procedure CollectComponents(content: XML.Content; data: any);"); writer.Ln;
+			writer.Char(9X); writer.String("var"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("uid: Strings.String;"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("component: WMComponents.Component;"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("rec: ComponentItem;"); writer.Ln;
+			writer.Char(9X); writer.String("begin"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("if content is WMComponents.Component then"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.Char(9X);
+			writer.String("component := content(WMComponents.Component);"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.Char(9X);
+			writer.String("uid := component.uid.Get();"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.Char(9X);
+			writer.String('if (uid # nil) & (uid^ # "") then'); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.Char(9X); writer.Char(9X);
+			writer.String("copy(uid^, rec.uid); rec.component := component;"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.Char(9X); writer.Char(9X);
+			writer.String("ignore data(ComponentItemCollections.Vector).Add(rec);"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.Char(9X);
+			writer.String("end"); writer.Ln;
+			writer.Char(9X); writer.Char(9X);
+			writer.String("end"); writer.Ln;
+			writer.Char(9X); writer.String("end CollectComponents;"); writer.Ln; writer.Ln;
+
+			writer.Char(9X); writer.String("procedure GetComponent(components: ComponentItemCollections.Vector; const uid: array of char): WMComponents.Component;"); writer.Ln;
+			writer.Char(9X); writer.String("var"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("rec: ComponentItem;"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("i: size;"); writer.Ln;
+			writer.Char(9X); writer.String("begin"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("copy(uid, rec.uid);"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("i := components.IndexOf(rec);"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("assert(i >= 0);"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("components.Get(i, rec);"); writer.Ln;
+			writer.Char(9X); writer.Char(9X); writer.String("return rec.component"); writer.Ln;
+			writer.Char(9X); writer.String("end GetComponent;"); writer.Ln; writer.Ln;
+
+		END WriteWindowProcs;
+
+		PROCEDURE WriteModuleProcs(writer: Streams.Writer);
+		BEGIN
+			writer.String("procedure LessComponentItem(l, r: ComponentItem): boolean;"); writer.Ln;
+			writer.String("begin"); writer.Ln;
+			writer.Char(9X); writer.String("return UTF8Strings.Compare(l.uid, r.uid) < 0"); writer.Ln;
+			writer.String("end LessComponentItem;"); writer.Ln; writer.Ln;
+
+			writer.String("procedure Do*;"); writer.Ln;
+			writer.String("var"); writer.Ln;
+			writer.Char(9X); writer.String("w: UntitledWindow;"); writer.Ln;
+			writer.String("begin"); writer.Ln;
+			writer.Char(9X); writer.String("new(w);"); writer.Ln;
+			writer.Char(9X); writer.String("WMWindowManager.DefaultAddWindow(w);"); writer.Ln;
+			writer.String("end Do;"); writer.Ln; writer.Ln;
+
+		END WriteModuleProcs;
+
+		PROCEDURE PostprocessGenerator(CONST generator : ARRAY OF CHAR) : Strings.String;
+		VAR
+			i: SIZE;
+		BEGIN
+			RESULT := Strings.NewString(generator);
+			i := Strings.Pos(".New", RESULT^);
+			IF i >= 0 THEN
+				Strings.Delete(RESULT^, i + 1, 3)
+			END;
+			i := Strings.Pos(".Gen", RESULT^);
+			IF i >= 0 THEN
+				Strings.Delete(RESULT^, i + 1, 3)
+			END;
+			RETURN RESULT
+		END PostprocessGenerator;
+
+		PROCEDURE TraverseComponent(component : Repositories.Component; mode : CodeMode; writer : Streams.Writer);
+		VAR
+			uid, generator : Strings.String;
+			enum : XMLObjects.Enumerator;
+			p : ANY;
+			strings : Strings.StringArray;
+
+		BEGIN
+			IF ~((component IS WMComponents.Component) & (component(WMComponents.Component).internal)) THEN
+				generator := component.GetAttributeValue("generator");
+				CASE mode OF
+				| CodeMode.cmImport :
+					IF (generator # NIL) & (generator^ # "") THEN
+						strings := Strings.Split(generator^, '.');
+						IF importList.IndexOf(strings[0]) = -1 THEN
+							IGNORE importList.Add(strings[0])
+						END
+					END;
+				| CodeMode.cmVar :
+					uid := component(WMComponents.Component).uid.Get();
+					IF (uid # NIL) & (uid^ # "") THEN
+						writer.Char(9X); writer.Char(9X); writer.String(uid^); writer.String(" : ");
+						generator := PostprocessGenerator(generator^);
+						writer.String(generator^); writer.Char(';'); writer.Ln;
+					END;
+				| CodeMode.cmWire :
+					uid := component(WMComponents.Component).uid.Get();
+					IF (uid # NIL) & (uid^ # "") THEN
+						writer.Char(9X); writer.Char(9X); writer.Char(9X); writer.String(uid^); writer.String(' := GetComponent(components, "');
+						generator := PostprocessGenerator(generator^);
+						writer.String(uid^); writer.String('")('); writer.String(generator^); writer.String(');');
+						writer.Ln;
+					END;
+				ELSE
+
+				END;
+
+			END;
+
+			enum := component.GetContents();
+			WHILE enum.HasMoreElements() DO
+				p := enum.GetNext();
+				IF (p IS Repositories.Component) THEN
+					TraverseComponent(p(Repositories.Component), mode, writer);
+				END;
+			END;
+		END TraverseComponent;
+
+	END ComponentCode;
 
 TYPE
 
@@ -1482,6 +1797,7 @@ TYPE
 				panel.Invalidate;
 				IF (owner # NIL) THEN
 					IF (owner.componentTree # NIL) THEN owner.componentTree.Refresh(NIL, NIL); END;
+					IF (owner.componentCode # NIL) THEN owner.componentCode.Refresh(NIL, NIL); END;
 					IF (owner.propertyWindow # NIL) THEN owner.propertyWindow.SetComponent(SELF, NIL); END;
 				END;
 			END;
@@ -1493,7 +1809,10 @@ TYPE
 				selection.ToFront;
 				UpdateFramePosition;
 				panel.Invalidate;
-				IF (owner # NIL) & (owner.componentTree # NIL) THEN owner.componentTree.Refresh(NIL, NIL); END;
+				IF (owner # NIL) THEN
+					IF (owner.componentTree # NIL) THEN owner.componentTree.Refresh(NIL, NIL); END;
+					IF (owner.componentCode # NIL) THEN owner.componentCode.Refresh(NIL, NIL); END;
+				END;
 			END;
 		END ToFront;
 
@@ -1521,7 +1840,10 @@ TYPE
 			ELSE
 				insertObjAt.AddContent(c);
 			END;
-			IF (owner # NIL) & (owner.componentTree # NIL) THEN owner.componentTree.Refresh(NIL, NIL); END;
+			IF (owner # NIL) THEN
+				IF (owner.componentTree # NIL) THEN owner.componentTree.Refresh(NIL, NIL); END;
+				IF (owner.componentCode # NIL) THEN owner.componentCode.Refresh(NIL, NIL); END;
+			END;
 		END AddComponent;
 
 		PROCEDURE Select(c : Repositories.Component);
@@ -2030,7 +2352,10 @@ TYPE
 						Invalidate;
 					END;
 				END;
-				IF (owner # NIL) & (owner.componentTree # NIL) THEN owner.componentTree.Refresh(NIL, NIL); END;
+				IF (owner # NIL) THEN
+					IF (owner.componentTree # NIL) THEN owner.componentTree.Refresh(NIL, NIL); END;
+					IF (owner.componentCode # NIL) THEN owner.componentCode.Refresh(NIL, NIL); END;
+				END;
 			END Paste;
 
 			PROCEDURE SelectAll;
@@ -2074,7 +2399,10 @@ TYPE
 				selection.Delete;
 				CheckSelection;
 				CheckSelectionFrame;
-				IF (owner # NIL) & (owner.componentTree # NIL) THEN owner.componentTree.Refresh(NIL, NIL); END;
+				IF (owner # NIL) THEN
+					IF (owner.componentTree # NIL) THEN owner.componentTree.Refresh(NIL, NIL); END;
+					IF (owner.componentCode # NIL) THEN owner.componentCode.Refresh(NIL, NIL); END;
+				END;
 				panel.Invalidate;
 			ELSIF ControlKey(flags) & (ucs = 01H) THEN (* CTRL-A *)
 				SelectAll;
@@ -2541,9 +2869,12 @@ TYPE
 
 		componentTree : ComponentTree;
 
+		componentCode : ComponentCode;
+
 		windowList : WindowList;
 		componentWindow : ComponentWindow;
 		componentTreeWindow : HelperWindow;
+		componentCodeWindow : HelperWindow;
 		propertyWindow : PropertyWindow;
 
 		windowInfo : WMWindowManager.WindowInfo;
@@ -2581,6 +2912,10 @@ TYPE
 			componentTree.treeView.SetExtContextMenuHandler(HandleNodeContextMenu);
 			NEW(componentTreeWindow, "Structure", componentTree, 920, 100, 300, 200, FALSE);
 			componentTreeWindow.SetIcon(WMGraphics.LoadImage("WMBuilder.tar://structure.png", TRUE));
+
+			NEW(componentCode);
+			NEW(componentCodeWindow, "Code", componentCode, 10, 470, 550, 230, FALSE);
+			componentCodeWindow.SetIcon(WMGraphics.LoadImage("WMBuilder.tar://structure.png", TRUE));
 
 			IF (c # NIL) THEN
 				WMRestorable.AddByContext(SELF, c);
@@ -2761,6 +3096,7 @@ TYPE
 			ASSERT(window # NIL);
 			windowList.SetActive(window);
 			componentTree.SetComponent(window.editor.panel, window.editor.selection);
+			componentCode.SetComponent(window.editor.panel);
 			toggleSnapGridBtn.SetPressed(window.editor.showSnapGrid.Get());
 			toggleHelperLinesBtn.SetPressed(window.editor.showHelperLines.Get());
 			toggleFramesBtn.SetPressed(window.editor.showFrames.Get());
@@ -2858,6 +3194,7 @@ TYPE
 				IF (c # NIL) THEN
 					w.editor.AddComponent(c, 0, 0);
 					componentTree.Refresh(NIL, NIL);
+					componentCode.Refresh(NIL, NIL);
 				END;
 			END;
 		END HandleAddBtn;
@@ -2908,6 +3245,7 @@ TYPE
 			IF (w # NIL) THEN
 				w.editor.Delete;
 				componentTree.Refresh(NIL, NIL);
+				componentCode.Refresh(NIL, NIL);
 			END;
 		END HandleDeleteBtn;
 
@@ -2918,6 +3256,7 @@ TYPE
 			IF (w # NIL) THEN
 				w.editor.ToFront;
 				componentTree.Refresh(NIL, NIL);
+				componentCode.Refresh(NIL, NIL);
 			END;
 		END HandleToFrontBtn;
 
@@ -3196,6 +3535,7 @@ TYPE
 			END;
 			componentWindow.Close;
 			componentTreeWindow.Close;
+			componentCodeWindow.Close;
 			propertyWindow.Close;
 			Close^;
 			DecCount;
@@ -3412,6 +3752,11 @@ BEGIN
 	ignore := Repositories.ThisRepository("Models");
 	ignore := Repositories.ThisRepository("Shapes");
 END LoadRepositories;
+
+PROCEDURE LessString(l, r: Strings.String): BOOLEAN;
+BEGIN
+	RETURN UTF8Strings.Compare(l^, r^) < 0
+END LessString;
 
 PROCEDURE GetId() : SIGNED32;
 BEGIN {EXCLUSIVE}

@@ -487,6 +487,9 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	# TV card interface
 	TVDriver.Mod
+	
+	# Generics
+	GenericCollections.Mod
 
 END
 

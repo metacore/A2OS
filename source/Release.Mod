@@ -2521,6 +2521,18 @@ PROCEDURE GetModuleInfo(
 		END;
 	END SkipProperties;
 
+	PROCEDURE SkipGenericParameters (in : Streams.Reader);
+	VAR ch : CHAR;
+	BEGIN
+		in.SkipWhitespace;
+		ch := in.Peek();
+		IF ch = "(" THEN
+			in.Char(ch);
+			REPEAT
+				in.Char(ch);
+			UNTIL (ch = ")") OR (in.res # Streams.Ok)
+		END;
+	END SkipGenericParameters;
 
 	PROCEDURE GetIdentifier(in : Streams.Reader; VAR identifier : ARRAY OF CHAR);
 	VAR ch : CHAR; i : SIZE;
@@ -2575,6 +2587,7 @@ PROCEDURE GetModuleInfo(
 			IF (name # "") THEN
 				SkipComments(in);
 				GetContext(in, "I", "N", context, diagnostics, error);
+				SkipGenericParameters(in);
 				in.Char(ch);
 				IF ~error & (ch # ";") THEN
 					error := TRUE;
@@ -2634,6 +2647,7 @@ PROCEDURE GetModuleInfo(
 					END;
 
 					SkipComments(in);
+					SkipGenericParameters(in);
 					in.Char(ch);
 					IF (ch = ",") THEN
 						(* continue *)
@@ -3494,7 +3508,7 @@ Release.Build Bios32 ~
 
 Release.Build --path="../Test/" -b Bios32 ~
 
-Release.Build --path="../Test/" --xml Bios32 ~
+Release.Build --path="../NewAos/" --xml Bios32 ~
 
 Release.CheckFiles -f=C2Release.Tool ../../CF/trunk/source/*.* ~
 

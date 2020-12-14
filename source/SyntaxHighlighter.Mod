@@ -86,6 +86,7 @@ CONST
 		Subtype_Decimal* = 0;
 		Subtype_Hex* = 1;
 		Subtype_Float* = 2;
+		Subtype_Binary* = 3;
 	Subtype_Char* = 3;
 
 
@@ -1272,29 +1273,55 @@ BEGIN {EXCLUSIVE}
 END GetHighlighter;
 
 PROCEDURE GetTokenType(VAR token : Token);
-VAR i : SIZE; tokenDone : BOOLEAN;
+VAR i : SIZE; tokenDone, binPrefix, hexPrefix : BOOLEAN;
 BEGIN
 	token.type := Type_Identifier;
 	IF ('0' <= token.value[0]) & (token.value[0] <= '9') THEN
 		token.type := Type_Number;
-		i := 0; tokenDone := FALSE;
+		i := 0; tokenDone := FALSE; binPrefix := FALSE; hexPrefix := FALSE;
 		WHILE (token.value[i] # 0X) & (i < LEN(token.value)) DO
 			IF ~tokenDone & (token.type = Type_Number) THEN
 				CASE token.value[i] OF
-					|'0'..'9': (* do nothing here *)
-					|'A'..'F':
-						IF (token.subtype = Subtype_Decimal) THEN token.subtype := Subtype_Hex;
+					|'0'..'9':
+						IF binPrefix & (token.value[i] > "1") THEN
+							token.type := Type_Invalid;
+						END;
+					|'a'..'f', 'A'..'F':
+						IF (token.subtype = Subtype_Decimal) THEN
+							IF (i = 1) & (token.value[i] = "b") THEN
+								binPrefix := TRUE; token.subtype := Subtype_Binary;
+							ELSE
+								token.subtype := Subtype_Hex;
+							END;
 						ELSIF (token.subtype = Subtype_Float) & (token.value[i] # "E") THEN token.type := Type_Identifier;
 						END;
 					|'X':
 						IF (token.subtype = Subtype_Decimal) OR (token.subtype = Subtype_Hex) THEN
-							token.subtype := Subtype_Char; tokenDone := TRUE;
+							IF ~binPrefix & ~hexPrefix THEN
+								token.subtype := Subtype_Char; tokenDone := TRUE;
+							ELSE
+								token.type := Type_Invalid;
+							END;
 						ELSE
 							token.type := Type_Identifier;
 						END;
 					|'h', 'H':
 						IF (token.subtype = Subtype_Decimal) OR (token.subtype = Subtype_Hex) THEN
-							token.subtype := Subtype_Hex; tokenDone := TRUE;
+							IF ~binPrefix & ~hexPrefix THEN
+								token.subtype := Subtype_Hex; tokenDone := TRUE;
+							ELSE
+								token.type := Type_Invalid;
+							END;
+						ELSE
+							token.type := Type_Identifier;
+						END;
+					|'x':
+						IF (token.subtype = Subtype_Decimal) THEN
+							IF (i = 1) THEN
+								hexPrefix := TRUE; token.subtype := Subtype_Hex;
+							ELSE
+								token.type := Type_Invalid;
+							END;
 						ELSE
 							token.type := Type_Identifier;
 						END;

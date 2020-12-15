@@ -1288,11 +1288,12 @@ BEGIN
 						END;
 					|'a'..'f', 'A'..'F':
 						IF (token.subtype = Subtype_Decimal) THEN
-							IF (i = 1) & (token.value[i] = "b") THEN
+							IF (i = 1) & (token.value[1] = "b") & (token.value[0] = "0") THEN
 								binPrefix := TRUE; token.subtype := Subtype_Binary;
 							ELSE
 								token.subtype := Subtype_Hex;
 							END;
+						ELSIF (token.subtype = Subtype_Binary) THEN token.type := Type_Invalid;
 						ELSIF (token.subtype = Subtype_Float) & (token.value[i] # "E") THEN token.type := Type_Identifier;
 						END;
 					|'X':
@@ -1317,7 +1318,7 @@ BEGIN
 						END;
 					|'x':
 						IF (token.subtype = Subtype_Decimal) THEN
-							IF (i = 1) THEN
+							IF (i = 1) & (token.value[0] = "0") THEN
 								hexPrefix := TRUE; token.subtype := Subtype_Hex;
 							ELSE
 								token.type := Type_Invalid;
@@ -1337,6 +1338,7 @@ BEGIN
 			END;
 			INC(i);
 		END;
+		IF (token.subtype = Subtype_Hex) & ~tokenDone & ~hexPrefix THEN token.type := Type_Invalid; END;
 	END;
 END GetTokenType;
 

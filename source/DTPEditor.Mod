@@ -2056,7 +2056,7 @@ TYPE
 
 		PROCEDURE InitFieldValues;
 		VAR doc : DTPData.Document;
-			fieldContent : ARRAY 8 OF CHAR;
+			fieldContent : ARRAY 32 OF CHAR;
 		BEGIN
 			IF theCaller.currentDocument = NIL THEN			(* no document open yet *)
 				dwe.SetAsString("210");

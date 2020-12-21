@@ -5,7 +5,7 @@ MODULE CryptoPrimes;
 		Copyright of the original:    <-- middle click here
 *)
 
-IMPORT B := CryptoBigNumbers, Out := KernelLog;
+IMPORT B := CryptoBigNumbers, Log := KernelLog;
 
 CONST
 	N = 2048;
@@ -24,19 +24,19 @@ VAR
 		checks := Checks( bits ); i := 1;
 		LOOP
 			p := ProbablePrime( bits );
-			Out.Char( '.' );
+			Log.Char( '.' );
 			IF IsPrime( p, checks, FALSE ) THEN
-				Out.Char( 'P' );
-				IF ~safe THEN  Out.Ln;  RETURN p
+				Log.Char( 'P' );
+				IF ~safe THEN  Log.Ln;  RETURN p
 				ELSE
-					Out.Int( i, 0 );  INC( i );
+					Log.Int( i, 0 );  INC( i );
 					(* for "safe prime" generation, check that (p-1)/2 is prime. *)
 					B.Copy( p, t );  t.Shift( -1 );
 					IF IsPrime( t, checks, FALSE ) THEN
-						Out.String( " (safe prime)" ); Out.Ln;
+						Log.String( " (safe prime)" ); Log.Ln;
 						RETURN p
 					END;
-					Out.String( " (not safe)" ); Out.Ln;
+					Log.String( " (not safe)" ); Log.Ln;
 				END
 			END;
 		END

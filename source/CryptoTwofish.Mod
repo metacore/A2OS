@@ -4,7 +4,7 @@ MODULE CryptoTwofish;   (** Twofish en/decryption *)
 		2002.07.22	g.f.
  *)
 
-IMPORT S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
+IMPORT Ciphers := CryptoCiphers, U := CryptoUtils;
 
 CONST
 	N = 16;
@@ -19,15 +19,16 @@ VAR
 
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
-			VAR keybits: SIGNED32;
+			VAR 
+				keybits: SIZE;
 				sbox: ARRAY 4 OF SIGNED32;
 				subkeys: ARRAY 8 + 2*N OF SIGNED32;
 				iv: Block;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32 );
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIZE );
 				CONST step = 02020202H;  bump = 01010101H;
 				VAR
-					i, A, B, m, nsub: SIGNED32;
+					i: SIZE;  A, B, m, nsub: SIGNED32;
 					k32e, k32o: ARRAY 4 OF SIGNED32;   (* even/odd key dwords *)
 				BEGIN
 					InitKey^( src, keybits );  SELF.keybits := keybits;
@@ -36,7 +37,7 @@ TYPE
 						ELSE  k32e[i DIV 2] := U.IntFromBufferLE( src, i*4 )
 						END
 					END;
-					m := keybits DIV 64 - 1;
+					m := SIGNED32( keybits DIV 64 - 1 );
 					FOR i := 0 TO m DO
 						(* compute S-box keys using (12,8) Reed-Solomon code over GF(256) *)
 						sbox[m - i] := Encode( k32e[i], k32o[i] );   (* reverse order *)
@@ -44,8 +45,8 @@ TYPE
 					nsub := 8 + N*2;
 					FOR i := 0 TO nsub DIV 2 - 1 DO
 						(* compute round subkeys for PHT *)
-						A := F32( S.VAL( SET32, i*step ), k32e, keybits );  			 (* A uses even key dwords *)
-						B := ROT( F32( S.VAL( SET32, i*step + bump ), k32o, keybits ), 8 );   (* B uses odd  key dwords *)
+						A := F32( SET32( i*step ), k32e, keybits );  			 (* A uses even key dwords *)
+						B := ROT( F32( SET32( i*step + bump ), k32o, keybits ), 8 );   (* B uses odd  key dwords *)
 						subkeys[i*2] := A + B;   							(* combine with a PHT *)
 						subkeys[i*2 + 1] := ROT( A + 2*B, 9 );
 					END
@@ -81,22 +82,22 @@ TYPE
 				BEGIN
 					(* copy in the block, add whitening *)
 					FOR i := 0 TO 3 DO
-						x[i] := U.SetFromBufferLE( buf, pos + i*4 ) / S.VAL( SET32, subkeys[i] );
+						x[i] := U.SetFromBufferLE( buf, pos + i*4 ) / SET32( subkeys[i] );
 						IF mode = Ciphers.CBC THEN  x[i] := x[i] / iv[i]  END
 					END;
 					(* main Twofish encryption loop *)
 					FOR r := 0 TO N - 1 DO
 						t0 := F32( x[0], sbox, keybits );
 						t1 := F32( ROT( x[1], 8 ), sbox, keybits );
-						x[2] := ROT( x[2] / S.VAL( SET32, t0 + t1 + subkeys[8 + 2*r] ), -1 );
-						x[3] := ROT( x[3], 1 ) / S.VAL( SET32, t0 + t1*2 + subkeys[8 + 2*r + 1] );
+						x[2] := ROT( x[2] / SET32( t0 + t1 + subkeys[8 + 2*r] ), -1 );
+						x[3] := ROT( x[3], 1 ) / SET32( t0 + t1*2 + subkeys[8 + 2*r + 1] );
 						IF r < N - 1 THEN  (* unswap, except for last round *)
 							s0 := x[0];  x[0] := x[2];  x[2] := s0;  s1 := x[1];  x[1] := x[3];  x[3] := s1;
 						END
 					END;
 					(* copy out, with whitening *)
 					FOR i := 0 TO 3 DO
-						x[i] := x[i] / S.VAL( SET32, subkeys[4 + i] );  U.SetToBufferLE( x[i], buf, pos + i*4 );
+						x[i] := x[i] / SET32( subkeys[4 + i] );  U.SetToBufferLE( x[i], buf, pos + i*4 );
 						IF mode = Ciphers.CBC THEN  iv[i] := x[i]  END
 					END;
 				END EncryptBlock;
@@ -107,14 +108,14 @@ TYPE
 					(* copy in the block, add whitening *)
 					FOR i := 0 TO 3 DO
 						x0[i] := U.SetFromBufferLE( buf, pos + i*4 );
-						x[i] := x0[i] / S.VAL( SET32, subkeys[4 + i] );
+						x[i] := x0[i] / SET32( subkeys[4 + i] );
 					END;
 					(* main Twofish decryption loop *)
 					FOR r := N - 1 TO 0 BY -1 DO
 						t0 := F32( x[0], sbox, keybits );
 						t1 := F32( ROT( x[1], 8 ), sbox, keybits );
-						x[2] := ROT( x[2], 1 );  x[2] := x[2] / S.VAL( SET32, t0 + t1 + subkeys[8 + 2*r] );
-						x[3] := ROT( x[3] / S.VAL( SET32, t0 + t1*2 + subkeys[8 + 2*r + 1] ), -1 );
+						x[2] := ROT( x[2], 1 );  x[2] := x[2] / SET32( t0 + t1 + subkeys[8 + 2*r] );
+						x[3] := ROT( x[3] / SET32( t0 + t1*2 + subkeys[8 + 2*r + 1] ), -1 );
 						IF r > 0 THEN  (* unswap, except for last round *)
 							s0 := x[0];  x[0] := x[2];  x[2] := s0;
 							s1 := x[1];  x[1] := x[3];  x[3] := s1;
@@ -122,7 +123,7 @@ TYPE
 					END;
 					(* copy out, with whitening *)
 					FOR i := 0 TO 3 DO
-						x[i] := x[i] / S.VAL( SET32, subkeys[i] );
+						x[i] := x[i] / SET32( subkeys[i] );
 						IF mode = Ciphers.CBC THEN  x[i] := x[i] / iv[i];  iv[i] := x0[i]  END;
 						U.SetToBufferLE( x[i], buf, pos + i*4 );
 					END;
@@ -154,42 +155,42 @@ CONST
 
 	PROCEDURE m1( x: SIGNED32 ): SET32;
 	BEGIN
-		RETURN S.VAL( SET32, x )
+		RETURN SET32( x )
 	END m1;
 
 	PROCEDURE mx( x: SIGNED32 ): SET32;
 	VAR t: SET32;
 	BEGIN
-		t := S.VAL( SET32, x DIV 4 );
+		t := SET32( x DIV 4 );
 		IF ODD( x DIV 2 ) THEN  t := t / Fdbk2  END;
 		IF ODD( x ) THEN  t := t / Fdbk4  END;
-		RETURN S.VAL( SET32, x ) / t
+		RETURN SET32( x ) / t
 	END mx;
 
 	PROCEDURE my( x: SIGNED32 ): SET32;
 	VAR t1, t2: SET32;
 	BEGIN
-		t1 := S.VAL( SET32, x DIV 2 );  t2 := S.VAL( SET32, x DIV 4 );
+		t1 := SET32( x DIV 2 );  t2 := SET32( x DIV 4 );
 		IF ODD( x DIV 2 ) THEN  t2 := t2 / Fdbk2  END;
 		IF ODD( x ) THEN  t1 := t1 / Fdbk2;  t2 := t2 / Fdbk4  END;
-		RETURN S.VAL( SET32, x ) / t1 / t2
+		RETURN SET32( x ) / t1 / t2
 	END my;
 
 	PROCEDURE split( x: SIGNED32;  VAR v: SKey );
 	BEGIN
-		v[3] := S.VAL( SET32, x DIV 1000000H MOD 100H );
-		v[2] := S.VAL( SET32, x DIV 10000H MOD 100H );
-		v[1] := S.VAL( SET32, x DIV 100H MOD 100H );
-		v[0] := S.VAL( SET32, x MOD 100H );
+		v[3] := SET32( x DIV 1000000H MOD 100H );
+		v[2] := SET32( x DIV 10000H MOD 100H );
+		v[1] := SET32( x DIV 100H MOD 100H );
+		v[0] := SET32( x MOD 100H );
 	END split;
 
 	PROCEDURE -Int( x: SET32 ): SIGNED32;
 	BEGIN
-		RETURN S.VAL( SIGNED32, x )
+		RETURN SIGNED32( x )
 	END Int;
 
 
-	PROCEDURE F32( x: SET32;  CONST k32: ARRAY OF SIGNED32;  keybits: SIGNED32 ): SIGNED32;
+	PROCEDURE F32( x: SET32;  CONST k32: ARRAY OF SIGNED32;  keybits: SIZE ): SIGNED32;
 	VAR a, b, c, d, l: SIGNED32;  k, k1: SKey;
 	BEGIN
 		(* Run each byte thru 8x8 S-boxes, xoring with key byte at each stage. *)
@@ -199,7 +200,7 @@ CONST
 		b := Int( x ) DIV 100H MOD 100H;
 		a := Int( x ) MOD 100H;
 
-		l := ((keybits + 63) DIV 64) MOD 4;
+		l := SIGNED32( ((keybits + 63) DIV 64) MOD 4 );
 		IF l = 0 THEN  (* 256 bits of key *)
 			split( k32[3], k );
 			a := Int( tab1[a] / k[0] );
@@ -232,25 +233,25 @@ CONST
 	PROCEDURE Encode( k0, k1: SIGNED32 ): SIGNED32;
 	VAR i, j, b: SIGNED32;  r, g2, g2s16, g3, g3s8, g3s24: SET32;
 	BEGIN
-		r := S.VAL( SET32, k1 );
+		r := SET32( k1 );
 		FOR i := 0 TO 1 DO
-			IF i # 0 THEN  r := r / S.VAL( SET32, k0 )  END;
+			IF i # 0 THEN  r := r / SET32( k0 )  END;
 			FOR j := 0 TO 3 DO
-				b := S.VAL( SIGNED32, LSH( r, -24 ) );
+				b := SIGNED32( LSH( r, -24 ) );
 
-				g2 := S.VAL( SET32, b*2 );
+				g2 := SET32( b*2 );
 				IF b > 7FH THEN  g2 := (g2 / S14d) * Byte0  END;
 				g2s16 := LSH( g2, 16 );
 
-				g3 := S.VAL( SET32, b DIV 2 ) / g2;
+				g3 := SET32( b DIV 2 ) / g2;
 				IF ODD( b ) THEN  g3 := g3 / S0a6  END;
 				g3s8 := LSH( g3, 8 );
 				g3s24 := LSH( g3s8, 16 );
 
-				r := LSH( r, 8 ) / g3s24 / g2s16 / g3s8 / S.VAL( SET32, b )
+				r := LSH( r, 8 ) / g3s24 / g2s16 / g3s8 / SET32( b )
 			END
 		END;
-		RETURN S.VAL( SIGNED32, r )
+		RETURN SIGNED32( r )
 	END Encode;
 
 

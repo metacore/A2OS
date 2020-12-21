@@ -1,7 +1,7 @@
 MODULE CryptoMD5;	(** AUTHOR "G.F."; PURPOSE "MD5"; *)
 
 IMPORT
-	S := SYSTEM,  Hashes := CryptoHashes, U := CryptoUtils;
+	Hashes := CryptoHashes, U := CryptoUtils;
 
 TYPE
 	Buffer = ARRAY 16 OF SIGNED32;
@@ -100,28 +100,28 @@ VAR
 		PROCEDURE -F1( VAR a: SIGNED32;  b, c, d, x, s, t: SIGNED32 );
 		VAR f: SIGNED32;
 		BEGIN
-			f := S.VAL( SIGNED32, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((-S.VAL( SET32, b )) * S.VAL( SET32, d )) );
+			f := SIGNED32( (SET32( b ) * SET32( c )) + ((-SET32( b )) * SET32( d )) );
 			a := ROT( a + f + x + t, s ) + b
 		END F1;
 
 		PROCEDURE -F2( VAR a: SIGNED32;  b, c, d, x, s, t: SIGNED32 );
 		VAR f: SIGNED32;
 		BEGIN
-			f := S.VAL( SIGNED32, (S.VAL( SET32, b ) * S.VAL( SET32, d )) + (S.VAL( SET32, c ) * (-S.VAL( SET32, d ))) );
+			f := SIGNED32( (SET32( b ) * SET32( d )) + (SET32( c ) * (-SET32( d ))) );
 			a := ROT( a + f + x + t, s ) + b
 		END F2;
 
 		PROCEDURE -F3( VAR a: SIGNED32;  b, c, d, x, s, t: SIGNED32 );
 		VAR f: SIGNED32;
 		BEGIN
-			f := S.VAL( SIGNED32, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
+			f := SIGNED32( SET32( b ) / SET32( c ) / SET32( d ) );
 			a := ROT( a + f + x + t, s ) + b
 		END F3;
 
 		PROCEDURE -F4( VAR a: SIGNED32;  b, c, d, x, s, t: SIGNED32 );
 		VAR f: SIGNED32;
 		BEGIN
-			f := S.VAL( SIGNED32, S.VAL( SET32, c ) / (S.VAL( SET32, b ) + (-S.VAL( SET32, d ))) );
+			f := SIGNED32( SET32( c ) / (SET32( b ) + (-SET32( d ))) );
 			a := ROT( a + f + x + t, s ) + b
 		END F4;
 

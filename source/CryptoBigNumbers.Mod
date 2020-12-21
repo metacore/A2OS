@@ -4,7 +4,7 @@ MODULE CryptoBigNumbers;  (* g.f.	2001.10.07 *)
 (* 2002.09.24	g.f.	inceased digit size from 8 bit to 32 bit *)
 (* 2002.10.04	g.f.	faster version of ModExp (uses montgomery multiplications now) *)
 (* 2005.07.07	g.f.	Fabian Nart's enhancements incorporated *)
-(* 2010.01.12	g.f.	interface cleanup, most procedures got funtions *)
+(* 2010.01.12	g.f.	interface cleanup, most procedures got functions *)
 
 
 IMPORT Streams, Random, Kernel, Log := KernelLog;
@@ -801,7 +801,7 @@ VAR
 	PROCEDURE TextWrite*( w: Streams.Writer;  b: BigNumber );
 	VAR i: SIZE;
 	BEGIN
-		IF b.neg THEN  w.String( "-" ) END;
+		IF b.neg THEN  w.Char( "-" ) END;
 		IF b.len = 0 THEN  w.String( " 00000000" )
 		ELSE i := b.len;
 			WHILE i > 0 DO
@@ -820,7 +820,7 @@ VAR
 	PROCEDURE Print*( b: BigNumber );
 	VAR i: SIZE;
 	BEGIN
-		IF b.neg THEN Log.String( "-" ) END;
+		IF b.neg THEN Log.Char( "-" ) END;
 		IF b.len = 0 THEN  Log.String( "00000000" )
 		ELSE  i := b.len;
 			WHILE i > 0 DO

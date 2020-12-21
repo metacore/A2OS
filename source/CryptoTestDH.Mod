@@ -1,6 +1,6 @@
 MODULE CryptoTestDH;
 
-IMPORT D := CryptoDiffieHellman, B := CryptoBigNumbers, Kernel, Out := KernelLog;
+IMPORT D := CryptoDiffieHellman, B := CryptoBigNumbers, Kernel, Log := KernelLog;
 
 
 
@@ -13,23 +13,23 @@ IMPORT D := CryptoDiffieHellman, B := CryptoBigNumbers, Kernel, Out := KernelLog
 	BEGIN
 		NEW( dh1, 0, nprime );
 		pub1 := dh1.GenPubKey( );
-		Out.String( "public key 1:" );  Out.Ln;  B.Print( pub1 );  Out.Ln;
+		Log.String( "public key 1:" );  Log.Ln;  B.Print( pub1 );  Log.Ln;
 
 		NEW( dh2, 0, nprime );
 		pub2 := dh2.GenPubKey( );
-		Out.String( "public key 2:" );  Out.Ln;  B.Print( pub2 );  Out.Ln;  Out.Ln;
+		Log.String( "public key 2:" );  Log.Ln;  B.Print( pub2 );  Log.Ln;  Log.Ln;
 
 
 		k1 := dh1.ComputeKey( pub2 );
-		Out.String( "key a:" );  Out.Ln;  B.Print( k1 );  Out.Ln;
+		Log.String( "key a:" );  Log.Ln;  B.Print( k1 );  Log.Ln;
 
 		t := Kernel.GetTicks( );
 		k2 := dh2.ComputeKey( pub1 );
 		t := Kernel.GetTicks( ) - t;
-		Out.String( "key b:" );  Out.Ln; B.Print( k2 );   Out.Ln;
+		Log.String( "key b:" );  Log.Ln; B.Print( k2 );   Log.Ln;
 
-		IF (B.Cmp( k1, k2 ) = 0) THEN Out.String( "ok" ) ELSE Out.String( "failed" ) END;
-		Out.String( " (" );  Out.Int( t, 1 );  Out.String( " ms)" );  Out.Ln;
+		IF (B.Cmp( k1, k2 ) = 0) THEN Log.String( "ok" ) ELSE Log.String( "failed" ) END;
+		Log.String( " (" );  Log.Int( t, 1 );  Log.String( " ms)" );  Log.Ln;
 	END Do;
 
 	PROCEDURE SSL192*;

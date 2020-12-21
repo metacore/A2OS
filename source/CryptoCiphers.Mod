@@ -20,8 +20,8 @@ TYPE
 				mode-: SIGNED8;   (** ECB, CBC *)
 				len1, len2: SIGNED16;
 
-				PROCEDURE appsize( size: SIGNED32 );
-				VAR i, t, d: SIGNED32;
+				PROCEDURE appsize( size: SIZE );
+				VAR i, t, d: SIZE;
 				BEGIN
 					IF (size = 64) OR (size = 128) THEN  RETURN   END;
 					len2 := len1;  i := 0;  t := 10000;
@@ -40,7 +40,7 @@ TYPE
 				END appmode;
 
 				(** initialize key for de/encryption *)
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32 );
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIZE );
 				BEGIN
 					appsize( keybits );  isKeyInitialized := TRUE
 				END InitKey;

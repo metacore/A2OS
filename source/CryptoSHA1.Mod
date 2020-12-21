@@ -1,7 +1,7 @@
 MODULE CryptoSHA1;	(** AUTHOR "G.F."; PURPOSE "SHA-1"; *)
 
 IMPORT
-	S := SYSTEM,  Hashes := CryptoHashes, U := CryptoUtils;
+	Hashes := CryptoHashes, U := CryptoUtils;
 
 CONST
 	BlockSize = 64;
@@ -122,33 +122,33 @@ TYPE
 
 	PROCEDURE -tr0019( a: SIGNED32; VAR b: SIGNED32; c, d, e: SIGNED32; VAR  f: SIGNED32; x: SET32 );
 	BEGIN
-		f := S.VAL( SIGNED32, x ) + e + 5A827999H + ROT( a, 5 ) +
+		f := SIGNED32( x ) + e + 5A827999H + ROT( a, 5 ) +
 			(*F1( b, c, d );*)
-			S.VAL( SIGNED32, ((S.VAL( SET32, c ) / S.VAL( SET32, d )) * S.VAL( SET32, b )) / S.VAL( SET32, d ) );
+			SIGNED32( ((SET32( c ) / SET32( d )) * SET32( b )) / SET32( d ) );
 		b := ROT( b, 30 );
 	END tr0019;
 
 	PROCEDURE -tr2039( a: SIGNED32;  VAR b: SIGNED32;  c, d, e: SIGNED32;  VAR f: SIGNED32;  x: SET32 );
 	BEGIN
-		f := S.VAL( SIGNED32, x ) + e + 6ED9EBA1H + ROT( a, 5 ) +
+		f := SIGNED32( x ) + e + 6ED9EBA1H + ROT( a, 5 ) +
 			(*F2( b, c, d );*)
-			S.VAL( SIGNED32, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
+			SIGNED32( SET32( b ) / SET32( c ) / SET32( d ) );
 		b := ROT( b, 30 );
 	END tr2039;
 
 	PROCEDURE -tr4059( a: SIGNED32;  VAR b: SIGNED32;  c, d, e: SIGNED32;  VAR f: SIGNED32;  x: SET32);
 	BEGIN
-		f := S.VAL( SIGNED32, x ) + e + SIGNED32(8F1BBCDCH) + ROT( a, 5 ) +
+		f := SIGNED32( x ) + e + SIGNED32(8F1BBCDCH) + ROT( a, 5 ) +
 			(*F3( b, c, d );*)
-			S.VAL( SIGNED32, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((S.VAL( SET32, b ) + S.VAL( SET32, c )) * S.VAL( SET32, d )) );
+			SIGNED32( (SET32( b ) * SET32( c )) + ((SET32( b ) + SET32( c )) * SET32( d )) );
 		b := ROT( b, 30 )
 	END tr4059;
 
 	PROCEDURE -tr6079( a: SIGNED32;  VAR b: SIGNED32;  c, d, e: SIGNED32;  VAR f: SIGNED32;  x: SET32 );
 	BEGIN
-		f := S.VAL( SIGNED32, x ) + e + SIGNED32(0CA62C1D6H) + ROT( a, 5 ) +
+		f := SIGNED32( x ) + e + SIGNED32(0CA62C1D6H) + ROT( a, 5 ) +
 			(*F2( b, c, d );*)
-			S.VAL( SIGNED32, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
+			SIGNED32( SET32( b ) / SET32( c ) / SET32( d ) );
 		b := ROT( b, 30 );
 	END tr6079;
 

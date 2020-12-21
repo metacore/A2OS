@@ -3,7 +3,8 @@ MODULE CryptoRSA;	(** AUTHOR "G.F."; PURPOSE "RSA"; *)
 (* Excerpt of Crypt.Mod  jm 23.8.95.*)
 
 IMPORT
-	B := CryptoBigNumbers, U := CryptoUtils, MD5 := CryptoMD5, Ciphers := CryptoCiphers,
+	B := CryptoBigNumbers, U := CryptoUtils, MD5 := CryptoMD5, 
+	Ciphers := CryptoCiphers,
 	Base64 := CryptoBase64, Streams, Clock;
 
 CONST
@@ -45,7 +46,7 @@ TYPE
 			END Sign;
 
 
-			PROCEDURE Verify*( CONST digest: ARRAY OF CHAR;  dlen: SIGNED32;  signature: Number ): BOOLEAN;
+			PROCEDURE Verify*( CONST digest: ARRAY OF CHAR;  dlen: SIZE;  signature: Number ): BOOLEAN;
 			VAR
 				msg: Number;
 				i, l: SIZE;
@@ -199,7 +200,7 @@ VAR
 		cipher: Ciphers.Cipher;
 		md5: MD5.Hash;
 		digest: ARRAY 16 OF CHAR; pl: SIGNED32;
-		buf: ARRAY 4096 OF CHAR; magic: SIGNED32;
+		buf: ARRAY 4096 OF CHAR; magic: SIZE;
 		bl, n: SIZE; size: SIGNED32;
 
 	BEGIN

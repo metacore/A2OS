@@ -1,7 +1,7 @@
 MODULE CryptoTestHashes;	(** AUTHOR "F.N."; PURPOSE "Hashes Test"; *)
 
 IMPORT
-	Hashes := CryptoHashes,	Utils := CryptoUtils, Kernel, Out := KernelLog;
+	Hashes := CryptoHashes,	Utils := CryptoUtils, Kernel, Log := KernelLog;
 
 	(* data: binary, exphash: hexadecimal *)
 	PROCEDURE CheckHash( CONST modname, data, exphash: ARRAY OF CHAR );
@@ -14,12 +14,12 @@ IMPORT
 		h.Initialize;
 		h.Update( data, 0, LEN( data )-1 );
 		h.GetHash( hash, 0 );
-		Out.Ln; Out.String( "************************************" );
-		Out.Ln; Out.String( "Checking: " ); Out.String( h.name );
-		Out.Ln; Out.String( "Value:" ); Out.Ln; Out.String( "      '" ); Out.String( data ); Out.String( "'" );
-		Out.Ln; Out.String( "Computed Hash:" ); Utils.PrintHex( hash, 0, h.size );
+		Log.Ln; Log.String( "************************************" );
+		Log.Ln; Log.String( "Checking: " ); Log.String( h.name );
+		Log.Ln; Log.String( "Value:" ); Log.Ln; Log.String( "      '" ); Log.String( data ); Log.String( "'" );
+		Log.Ln; Log.String( "Computed Hash:" ); Utils.PrintHex( hash, 0, h.size );
 		Utils.Hex2Bin( exphash, 0, temp, 0, h.size );
-		Out.Ln; Out.String( "Expected Hash:" ); Utils.PrintHex( temp, 0, h.size );
+		Log.Ln; Log.String( "Expected Hash:" ); Utils.PrintHex( temp, 0, h.size );
 	END CheckHash;
 
 
@@ -33,18 +33,18 @@ IMPORT
 		h: Hashes.Hash;
 	BEGIN
 		h := Hashes.NewHash( modname );
-		Out.Ln; Out.String( "************************************" );
-		Out.Ln; Out.String( "Measuring: " ); Out.String( h.name ); Out.Ln;
+		Log.Ln; Log.String( "************************************" );
+		Log.Ln; Log.String( "Measuring: " ); Log.String( h.name ); Log.Ln;
 		FOR i := 0 TO 999 DO buf[i] := 'a' END;
 		Kernel.SetTimer(milliTimer, 0);
 		FOR c := 1 TO 10 DO
 			h.Initialize;
 			FOR i := 1 TO 1000 DO h.Update( buf, 0, 1000 ) END;
-			Out.Char( "." )
+			Log.Char( "." )
 		END;
 		h.GetHash( hash, 0 );
-		Out.String( "hashed 10 MB in " ); Out.Int( Kernel.Elapsed(milliTimer), 0 ); Out.String( " msec" );
-		Out.Ln;
+		Log.String( "hashed 10 MB in " ); Log.Int( Kernel.Elapsed(milliTimer), 0 ); Log.String( " msec" );
+		Log.Ln;
 	END MeasureTime;
 
 	PROCEDURE TestMD5*;
@@ -61,11 +61,15 @@ IMPORT
 
 	PROCEDURE TestSHA1*;
 	BEGIN
-		CheckHash( "CryptoSHA1", "", "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709" );
-		CheckHash( "CryptoSHA1", "abc", "A9993E364706816ABA3E25717850C26C9CD0D89D" );
+		CheckHash( "CryptoSHA1", 
+				"", 
+				"DA39A3EE5E6B4B0D3255BFEF95601890AFD80709" );
+		CheckHash( "CryptoSHA1", 
+				"abc", 
+				"A9993E364706816ABA3E25717850C26C9CD0D89D" );
 		CheckHash( "CryptoSHA1",
-						"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-						"84983E441C3BD26EBAAE4AA1F95129E5E54670F1");
+				"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+				"84983E441C3BD26EBAAE4AA1F95129E5E54670F1");
 		MeasureTime( "CryptoSHA1" );
 	END TestSHA1;
 

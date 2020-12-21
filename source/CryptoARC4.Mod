@@ -16,10 +16,10 @@ TYPE
 		END Init;
 
 		(** initialize arc4 key. keybits = [8..2048], MUST be multiple of 8. *)
-		PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32);
+		PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIZE);
 		VAR
 			keydata: ARRAY 256 OF SIGNED32;
-			keybytes: SIGNED32;
+			keybytes: SIZE;
 			temp: SIGNED32;
 		BEGIN
 			ASSERT( keybits MOD 8 = 0 );  ASSERT( keybits >  7 );  ASSERT( keybits < 2049 );

@@ -1,11 +1,10 @@
 MODULE CryptoCAST;   (* g.f.	22.10.02 *)
 
-IMPORT S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
+IMPORT Ciphers := CryptoCiphers, U := CryptoUtils;
 
 
 
 TYPE
-	LI = SIGNED32;
 	Key =	RECORD
 				val: SIGNED32;
 				rot: SIGNED8
@@ -26,11 +25,11 @@ TYPE
 			VAR keys: Keys;
 				iv: Block;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR;  keybits: SIGNED32 );
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR;  keybits: SIZE );
 				BEGIN
 					ASSERT( keybits MOD 8 = 0 );
 					InitKey^( src, keybits );
-					InitKeys( keys, src, keybits DIV 8 )
+					InitKeys( keys, src, SIGNED32( keybits DIV 8 ) )
 				END InitKey;
 
 				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR;  mode: SIGNED8 );
@@ -104,7 +103,7 @@ TYPE
 		PROCEDURE Zz( i: SIGNED16;  s: SET32 );
 		VAR l: SIGNED32;
 		BEGIN
-			Z[i DIV 4] := s;  l := S.VAL( SIGNED32, s );
+			Z[i DIV 4] := s;  l := SIGNED32( s );
 			z[i + 3] := SHORT( l MOD 256 );  l := l DIV 256;
 			z[i + 2] := SHORT( l MOD 256 );  l := l DIV 256;
 			z[i + 1] := SHORT( l MOD 256 );  l := l DIV 256;
@@ -114,7 +113,7 @@ TYPE
 		PROCEDURE Xx( i: SIGNED16;  s: SET32 );
 		VAR l: SIGNED32;
 		BEGIN
-			X[i DIV 4] := s;  l := S.VAL( SIGNED32, s );
+			X[i DIV 4] := s;  l := SIGNED32( s );
 			x[i + 3] := SHORT( l MOD 256 );  l := l DIV 256;
 			x[i + 2] := SHORT( l MOD 256 );  l := l DIV 256;
 			x[i + 1] := SHORT( l MOD 256 );  l := l DIV 256;
@@ -172,43 +171,43 @@ TYPE
 			k[j + 15] := T4[x[14]] / T5[x[15]] / T6[x[1]] / T7[x[0]] / T7[x[13]];
 		END;
 		FOR i := 0 TO 15 DO
-			keys.data[i].val := S.VAL( SIGNED32, k[i] );
-			keys.data[i].rot := SHORT( SHORT( (S.VAL( SIGNED32, k[i + 16] ) + 16) MOD 32 ) );
+			keys.data[i].val := SIGNED32( k[i] );
+			keys.data[i].rot := SHORT( SHORT( (SIGNED32( k[i + 16] ) + 16) MOD 32 ) );
 		END
 	END InitKeys;
 
 	PROCEDURE CAST1( VAR k: Key;  VAR L, R: SET32 );   (* +, xor, - *)
 	VAR a, b, axb, t, c, d: SIGNED32;
 	BEGIN
-		t := ROT( k.val + S.VAL( LI, R ), k.rot );
+		t := ROT( k.val + SIGNED32( R ), k.rot );
 		b := T1[t MOD 256];  t := t DIV 256;
 		a := T0[t MOD 256];  t := t DIV 256;
 		d := T3[t MOD 256];  t := t DIV 256;
 		c := T2[t MOD 256];
-		axb := S.VAL( LI, S.VAL( SET32, a ) / S.VAL( SET32, b ) );
-		L := L / S.VAL( SET32, axb - c + d );
+		axb := SIGNED32( SET32( a ) / SET32( b ) );
+		L := L / SET32( axb - c + d );
 	END CAST1;
 
 	PROCEDURE CAST2( VAR k: Key;  VAR L, R: SET32 );   (* xor, -, + *)
 	VAR t, a, b, c, d: SIGNED32;
 	BEGIN
-		t := ROT( S.VAL( LI, S.VAL( SET32, k.val )/R ), k.rot );
+		t := ROT( SIGNED32( SET32( k.val )/R ), k.rot );
 		b := T1[t MOD 256];  t := t DIV 256;
 		a := T0[t MOD 256];  t := t DIV 256;
 		d := T3[t MOD 256];  t := t DIV 256;
 		c := T2[t MOD 256];
-		L := L / (S.VAL( SET32, a - b + c ) / S.VAL( SET32, d ) );
+		L := L / (SET32( a - b + c ) / SET32( d ) );
 	END CAST2;
 
 	PROCEDURE CAST3( VAR k: Key;  VAR L, R: SET32 );   (* -, +, xor *)
 	VAR t, a, b, c, d: SIGNED32;
 	BEGIN
-		t := ROT( k.val - S.VAL( LI, R ), k.rot );
+		t := ROT( k.val - SIGNED32( R ), k.rot );
 		b := T1[t MOD 256];  t := t DIV 256;
 		a := T0[t MOD 256];  t := t DIV 256;
 		d := T3[t MOD 256];  t := t DIV 256;
 		c := T2[t MOD 256];
-		L := L / S.VAL( SET32, S.VAL( LI, S.VAL( SET32, a + b ) / S.VAL( SET32, c ) ) - d );
+		L := L / SET32( SIGNED32( SET32( a + b ) / SET32( c ) ) - d );
 	END CAST3;
 
 

@@ -1,18 +1,18 @@
 MODULE CryptoIDEA;   (* g.f.	2002.07.19 *)
 
-IMPORT S := SYSTEM, Ciphers := CryptoCiphers;
+IMPORT Ciphers := CryptoCiphers;
 
 TYPE
-	CARD16 = SIGNED32;  LI = SIGNED32;
-	Block = ARRAY 4 OF CARD16;
-	KeyBlock = ARRAY 9, 6 OF CARD16;
+	Card16 = SIGNED32;  
+	Block = ARRAY 4 OF Card16;
+	KeyBlock = ARRAY 9, 6 OF Card16;
 
 	Cipher* = OBJECT (Ciphers.Cipher)
 			VAR
 				ekeys, dkeys: KeyBlock;
 				iv: Block;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32 );
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIZE );
 				BEGIN
 					ASSERT( keybits = 128 );
 					InitKey^( src, keybits );
@@ -94,7 +94,7 @@ TYPE
 (*-------------------------------------------------------------------------------*)
 
 
-	PROCEDURE Inverse( x: CARD16 ): CARD16;
+	PROCEDURE Inverse( x: Card16 ): Card16;
 	VAR n1, n2, q, r, b1, b2, t: SIGNED32;
 	BEGIN
 		IF x = 0 THEN  b2 := 0
@@ -112,13 +112,13 @@ TYPE
 		RETURN b2 MOD 10000H
 	END Inverse;
 
-	PROCEDURE shor( a, b: CARD16 ): CARD16;
+	PROCEDURE shor( a, b: Card16 ): Card16;
 	BEGIN
-		RETURN S.VAL( LI, S.VAL( SET32, LSH( a, 9 ) ) + S.VAL( SET32, LSH( b, -7 ) ) ) MOD 10000H;
+		RETURN Card16( SET32( LSH( a, 9 ) ) + SET32( LSH( b, -7 ) ) ) MOD 10000H;
 	END shor;
 
 	PROCEDURE CalcEncryptionKeys( CONST src: ARRAY OF CHAR;  VAR e: KeyBlock );
-	VAR s: ARRAY 54 OF CARD16;
+	VAR s: ARRAY 54 OF Card16;
 		i, j, p: SIGNED16;
 	BEGIN
 		p := 0;
@@ -143,7 +143,7 @@ TYPE
 	END CalcEncryptionKeys;
 
 	PROCEDURE CalcDecryptionKeys( CONST  e: KeyBlock; VAR d: KeyBlock );
-	VAR i, j: SIGNED16;  t: CARD16;
+	VAR i, j: SIGNED16;  t: Card16;
 	BEGIN
 		j := 8;
 		FOR i := 0 TO 8 DO
@@ -162,7 +162,7 @@ TYPE
 	END CalcDecryptionKeys;
 
 	PROCEDURE IDEACipher( VAR b: Block;  CONST key: KeyBlock );
-	VAR i, x1, x2, x3, x4, t1, t2, t3: CARD16;
+	VAR i, x1, x2, x3, x4, t1, t2, t3: Card16;
 	BEGIN
 		x1 := b[0];  x2 := b[1];  x3 := b[2];  x4 := b[3];
 		FOR i := 0 TO 7 DO
@@ -182,12 +182,12 @@ TYPE
 		b[3] := Mul( x4, key[8, 3] );
 	END IDEACipher;
 
-	PROCEDURE Xor( a, b: CARD16 ): CARD16;
+	PROCEDURE -Xor( a, b: Card16 ): Card16;
 	BEGIN
-		RETURN S.VAL( SIGNED32, S.VAL( SET32, a )/S.VAL( SET32, b ) )
+		RETURN Card16( SET32( a ) / SET32( b ) )
 	END Xor;
 
-	PROCEDURE Mul( a, b: CARD16 ): CARD16;
+	PROCEDURE -Mul( a, b: Card16 ): Card16;
 	VAR p, q: SIGNED32;
 	BEGIN
 		IF a = 0 THEN  p := 10001H - b

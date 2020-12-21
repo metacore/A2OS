@@ -1,7 +1,7 @@
 MODULE CryptoSHA256;	(** AUTHOR "G.F."; PURPOSE "SHA-256"; *)
 
 IMPORT
-	S := SYSTEM,  Hashes := CryptoHashes, U := CryptoUtils;
+	Hashes := CryptoHashes, U := CryptoUtils;
 
 CONST
 	BlockSize = 64;
@@ -14,9 +14,9 @@ TYPE
 	Hash* = OBJECT (Hashes.Hash)
 		VAR
 			hash: ARRAY 8 OF SIGNED32;		(* state *)
-			Nl, Nh: SIZE;
+			Nl, Nh: SIGNED32;
 			cdata: ARRAY BlockSize OF CHAR;	(* pending data *)
-			cn: SIZE	(* number of chars in cdata *)
+			cn: SIGNED32;	(* number of chars in cdata *)
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -26,10 +26,10 @@ TYPE
 
 		PROCEDURE Initialize*;
 		BEGIN
-			hash[0] := 6A09E667H;	hash[1] := SIGNED32( 0BB67AE85H );
-			hash[2] := 3C6EF372H;	hash[3] := SIGNED32( 0A54FF53AH );
-			hash[4] := 510E527FH;	hash[5] := SIGNED32( 09B05688CH );
-			hash[6] := 1F83D9ABH;	hash[7] := SIGNED32( 05BE0CD19H );
+			hash[0] := SIGNED32( 6A09E667H );		hash[1] := SIGNED32( 0BB67AE85H );
+			hash[2] := SIGNED32( 3C6EF372H );	hash[3] := SIGNED32( 0A54FF53AH );
+			hash[4] := SIGNED32( 510E527FH );		hash[5] := SIGNED32( 09B05688CH );
+			hash[6] := SIGNED32( 1F83D9ABH);		hash[7] := SIGNED32( 05BE0CD19H );
 			Nl := 0;
 			Nh := 0;
 			cn := 0;
@@ -47,13 +47,13 @@ TYPE
 				IF i < 16 THEN
 					X[i] := U.IntFromBufferBE( buf, pos );  INC( pos, 4 )
 				ELSE
-					s0 := sigma0( X[(i + 1) MOD 16] );
-					s1 := sigma1( X[(i + 14) MOD 16] );
-					s := s0 + s1 + X[(i + 9) MOD 16];
+					s0 := sigma0( SET32(X[(i+1) MOD 16]) );
+					s1 := sigma1( SET32(X[(i+14) MOD 16]) );
+					s := s0 + s1 + X[(i+9) MOD 16];
 					INC( X[i MOD 16], s );
 				END;
-				T1 := X[i MOD 16] + h + Sigma1Ch( e, f, g ) + K256[i];
-				T2 := Sigma0Maj( a, b, c );
+				T1 := X[i MOD 16] + h + Sigma1Ch( SET32(e), SET32(f), SET32(g) ) + K256[i];
+				T2 := Sigma0Maj( SET32(a), SET32(b), SET32(c) );
 				h := g;  g := f;  f := e;  e := d + T1;
 				d := c;  c := b;  b := a;  a := T1 + T2;
 			END;
@@ -71,16 +71,16 @@ TYPE
 
 		(** data: value to be hashed *)
 		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
-			VAR n, i, l: SIZE;
+			VAR n, i, l: SIGNED32;
 		BEGIN
 			ASSERT( initialized );
-			l := Nl + len*8;
+			l := Nl + SIGNED32(len)*8;
 			IF l < Nl THEN INC( Nh )  (* overflow *)  END;
-			Nh := Nh + ASH( len, -29 );  Nl := l;
+			Nh := Nh + ASH( SIGNED32(len), -29 );  Nl := l;
 
 			IF cn > 0 THEN
 				IF cn + len < BlockSize THEN
-					i := cn;  INC( cn, len );
+					i := cn;  INC( cn, SIGNED32(len) );
 					WHILE i < cn  DO  cdata[i] := data[pos];  INC( i ); INC( pos )  END;
 					RETURN
 				ELSE
@@ -129,36 +129,30 @@ TYPE
 
 
 
-	PROCEDURE -Sigma0Maj( px, py, pz: SIGNED32 ): SIGNED32;
-	VAR x, y, z, a, b: SET32;
+	PROCEDURE -Sigma0Maj( x, y, z: SET32 ): SIGNED32;
+	VAR a, b: SET32;
 	BEGIN
-		x := S.VAL( SET32, px );  y := S.VAL( SET32, py );  z := S.VAL( SET32, pz );
 		a := ROT( x, 30 ) / ROT( x, 19 ) / ROT( x, 10 );
 		b := (x*y) / (x*z) / (y*z);
-		RETURN S.VAL( SIGNED32, a ) + S.VAL( SIGNED32, b )
+		RETURN SIGNED32( a ) + SIGNED32( b )
 	END Sigma0Maj;
 
-	PROCEDURE -Sigma1Ch( px, py, pz: SIGNED32 ): SIGNED32;
-	VAR x, y, z, a, b: SET32;
+	PROCEDURE -Sigma1Ch( x, y, z: SET32 ): SIGNED32;
+	VAR a, b: SET32;
 	BEGIN
-		x := S.VAL( SET32, px );  y := S.VAL( SET32, py );  z := S.VAL( SET32, pz );
 		a := ROT( x, 26 ) / ROT( x, 21 ) / ROT( x, 7 );
 		b := (x*y) / ((-x)*z);
-		RETURN S.VAL( SIGNED32, a ) + S.VAL( SIGNED32, b )
+		RETURN SIGNED32( a ) + SIGNED32( b )
 	END Sigma1Ch;
 
-	PROCEDURE -sigma0( px: SIGNED32 ): SIGNED32;
-	VAR x: SET32;
+	PROCEDURE -sigma0( x: SET32 ): SIGNED32;
 	BEGIN
-		x :=S.VAL( SET32, px );
-		RETURN S.VAL( SIGNED32, ROT( x , 25 ) / ROT( x, 14 ) / LSH( x, -3 ) )
+		RETURN SIGNED32( ROT( x , 25 ) / ROT( x, 14 ) / LSH( x, -3 ) )
 	END sigma0;
 
-	PROCEDURE -sigma1( px: SIGNED32 ): SIGNED32;
-	VAR x: SET32;
+	PROCEDURE -sigma1( x: SET32 ): SIGNED32;
 	BEGIN
-		x := S.VAL( SET32, px );
-		RETURN S.VAL( SIGNED32, ROT( x , 15 ) / ROT( x, 13 ) / LSH( x, -10 ) )
+		RETURN SIGNED32( ROT( x , 15 ) / ROT( x, 13 ) / LSH( x, -10 ) )
 	END sigma1;
 
 

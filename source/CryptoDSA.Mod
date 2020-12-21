@@ -30,7 +30,7 @@ TYPE
 			y-	: Number;
 			inv, r : Number;
 
-			PROCEDURE Sign*( CONST digest: ARRAY OF CHAR;  len: SIGNED16  ): Signature;
+			PROCEDURE Sign*( CONST digest: ARRAY OF CHAR;  len: SIZE  ): Signature;
 			VAR  m, xr, ss: Number;  sig: Signature;
 			BEGIN
 				ASSERT( private );
@@ -45,7 +45,7 @@ TYPE
 				RETURN sig
 			END Sign;
 
-			PROCEDURE Verify*(  CONST digest: ARRAY OF CHAR;  dlen: SIGNED16;  sig: Signature ): BOOLEAN;
+			PROCEDURE Verify*(  CONST digest: ARRAY OF CHAR;  dlen: SIZE;  sig: Signature ): BOOLEAN;
 			VAR
 				u, v, w, t1, t2: Number;
 			BEGIN

@@ -8,12 +8,14 @@ IMPORT Ciphers := CryptoCiphers, U := CryptoUtils, D := CryptoDES;
 
 
 TYPE
+	Ind4 = RECORD a, b, c, d: SIGNED32 END;
+	
 	Cipher* = OBJECT (Ciphers.Cipher)
 			VAR
 				ske, skd: ARRAY 96 OF SET32; ski: SIGNED32;
 				ivx, ivy: SET32;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32 );
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIZE );
 				VAR X, Y: SET32;  i: SIGNED32;
 				BEGIN
 					ASSERT( keybits = 192 );
@@ -109,20 +111,20 @@ TYPE
 
 
 				PROCEDURE RoundE*( VAR x, y: SET32 );
-				VAR i: D.Ind4;
+				VAR i: Ind4;
 				BEGIN
-					D.Split( ske[ski] / x, i );  INC( ski );
+					Split( ske[ski] / x, i );  INC( ski );
 					y := y / D.sb8[i.a] / D.sb6[i.b] / D.sb4[i.c] / D.sb2[i.d];
-					D.Split( ske[ski] / ROT( x, -4 ), i );  INC( ski );
+					Split( ske[ski] / ROT( x, -4 ), i );  INC( ski );
 					y := y / D.sb7[i.a] / D.sb5[i.b] / D.sb3[i.c] / D.sb1[i.d]
 				END RoundE;
 
 				PROCEDURE RoundD*( VAR x, y: SET32 );
-				VAR i: D.Ind4;
+				VAR i: Ind4;
 				BEGIN
-					D.Split( skd[ski] / x, i );  INC( ski );
+					Split( skd[ski] / x, i );  INC( ski );
 					y := y / D.sb8[i.a] / D.sb6[i.b] / D.sb4[i.c] / D.sb2[i.d];
-					D.Split( skd[ski] / ROT( x, -4 ), i );  INC( ski );
+					Split( skd[ski] / ROT( x, -4 ), i );  INC( ski );
 					y := y / D.sb7[i.a] / D.sb5[i.b] / D.sb3[i.c] / D.sb1[i.d]
 				END RoundD;
 
@@ -133,6 +135,14 @@ TYPE
 
 			END Cipher;
 
+
+	PROCEDURE -Split( x: SET32; VAR i4: Ind4 );
+	BEGIN
+		i4.a := SIGNED32( x ) MOD 40H;
+		i4.b := SIGNED32( x ) DIV 100H MOD 40H;
+		i4.c := SIGNED32( x ) DIV 10000H MOD 40H;
+		i4.d := SIGNED32( x ) DIV 1000000H MOD 40H
+	END Split;
 
 
 	PROCEDURE NewCipher*( ): Ciphers.Cipher;

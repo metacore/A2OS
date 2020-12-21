@@ -30,7 +30,7 @@ TYPE
 				key, dkey: RKeys;
 				iv: Block;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: INTEGER );
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIZE );
 				BEGIN
 					InitKey^( src, keybits );
 					IF keybits = 128 THEN  rounds := Init128( src )

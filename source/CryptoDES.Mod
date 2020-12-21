@@ -4,7 +4,7 @@ MODULE CryptoDES;	(** AUTHOR "G.F."; PUROSE "DES Cipher";	 *)
 (* based on POLARSSL des.c *)
 
 
-IMPORT S := SYSTEM, U := CryptoUtils, Ciphers := CryptoCiphers;
+IMPORT U := CryptoUtils, Ciphers := CryptoCiphers;
 CONST
 	Mask01 = SET32( 0AAAAAAAAH );
 	Mask02 = SET32( 33333333H );
@@ -15,7 +15,7 @@ CONST
 TYPE
 	Sandbox = ARRAY 64 OF SET32;
 	BitSwap = ARRAY 16 OF SET32;
-	Ind4* = RECORD a-, b-, c-, d-: SIGNED32 END;
+	Ind4 = RECORD a, b, c, d: SIGNED32 END;
 
 VAR
 	sb1-, sb2-, sb3-, sb4-, sb5-, sb6-, sb7-, sb8-: Sandbox;
@@ -27,7 +27,7 @@ TYPE
 		ske, skd: ARRAY 32 OF SET32;  ki: SIGNED32;
 		ivx, ivy: SET32;
 
-		PROCEDURE InitKey*( CONST src: ARRAY OF CHAR;  keybits: SIGNED32 );
+		PROCEDURE InitKey*( CONST src: ARRAY OF CHAR;  keybits: SIZE );
 		VAR X, Y: SET32;  i: SIGNED32;
 		BEGIN
 			ASSERT( keybits = 64 );
@@ -124,13 +124,13 @@ TYPE
 
 	END Cipher;
 
-	(* temporarily disabled the inlining -- the compiler inliner still provides problems with the scope symbols *)
-	PROCEDURE Split*( x: SET32; VAR i4: Ind4 );
+
+	PROCEDURE -Split( x: SET32; VAR i4: Ind4 );
 	BEGIN
-		i4.a := S.VAL( SIGNED32, x ) MOD 40H;
-		i4.b := S.VAL( SIGNED32, x ) DIV 100H MOD 40H;
-		i4.c := S.VAL( SIGNED32, x ) DIV 10000H MOD 40H;
-		i4.d := S.VAL( SIGNED32, x ) DIV 1000000H MOD 40H
+		i4.a := SIGNED32( x ) MOD 40H;
+		i4.b := SIGNED32( x ) DIV 100H MOD 40H;
+		i4.c := SIGNED32( x ) DIV 10000H MOD 40H;
+		i4.d := SIGNED32( x ) DIV 1000000H MOD 40H
 	END Split;
 
 
@@ -174,18 +174,18 @@ TYPE
 		PROCEDURE sms( CONST LRHs: BitSwap;  x: SET32; rs, ls: SIGNED32 ): SET32;
 		VAR i: SIGNED32;
 		BEGIN
-			i := S.VAL( SIGNED32, LSH( x, -rs ) ) MOD 16;
+			i := SIGNED32( LSH( x, -rs ) ) MOD 16;
 			RETURN LSH( LRHs[i], ls )
 		END sms;
 
 		PROCEDURE sm( b: SET32; shift, mask: SIGNED32 ): SET32;
 		BEGIN
-			RETURN LSH( b, shift ) * S.VAL( SET32,  mask )
+			RETURN LSH( b, shift ) * SET32( mask )
 		END sm;
 
 	BEGIN
-		t := (LSH( y, -4 ) / x) * S.VAL( SET32, 0F0F0F0FH );  x := x / t;  y := y / LSH( t, 4 );
-		t := (y / x) * S.VAL( SET32, 10101010H ); x := x / t;  y := y / t;
+		t := (LSH( y, -4 ) / x) * SET32( 0F0F0F0FH );  x := x / t;  y := y / LSH( t, 4 );
+		t := (y / x) * SET32( 10101010H ); x := x / t;  y := y / t;
 
 		x :=
 			sms( LHs, x, 0, 3 ) + sms( LHs, x, 8, 2 ) + sms( LHs, x, 16, 1 ) + sms( LHs, x, 24, 0 ) +
@@ -204,12 +204,12 @@ TYPE
 			sk[ofs + 2*i] :=
 					sm( x, 4,		24000000H ) + sm( x, 28,	10000000H ) +
 					sm( x, 14, 	08000000H ) + sm( x, 18,	02080000H ) +
-					sm( x, 6,		01000000H ) + sm( x, 9,		00200000H ) +
+					sm( x, 6,		01000000H ) + sm( x, 9,	00200000H ) +
 				     sm( x, -1, 	00100000H ) + sm( x, 10,	00040000H ) +
 					sm( x, 2,		00020000H ) + sm( x, -10,	00010000H ) +
 					sm( y,-13,	00002000H ) + sm( y, -4,	00001000H ) +
 					sm( y, 6,		00000800H ) + sm( y, -1,	00000400H ) +
-					sm( y, -14,	00000200H ) + sm( y, 0,		00000100H ) +
+					sm( y, -14,	00000200H ) + sm( y, 0,	00000100H ) +
 					sm( y, -5,		00000020H ) + sm( y, -10,	00000010H ) +
 					sm( y, -3,		00000008H ) + sm( y, -18,	00000004H ) +
 					sm( y, -26,	00000002H ) + sm( y, -24,	00000001H );
@@ -217,13 +217,13 @@ TYPE
 	        	sk[ofs + 2*i + 1] :=
 	        			sm( x, 15,		20000000H ) + sm( x, 17,	10000000H ) +
 					sm( x, 10,		08000000H ) + sm( x, 22,	04000000H ) +
-					sm( x, -2,		02000000H ) + sm( x, 1,		01000000H ) +
+					sm( x, -2,		02000000H ) + sm( x, 1,	01000000H ) +
 					sm( x, 16,		00200000H ) + sm( x, 11,	00100000H ) +
 					sm( x, 3,		00080000H ) + sm( x, -6,	00040000H ) +
 					sm( x, 15,		00020000H ) + sm( x, -4,	00010000H ) +
-					sm( y, -2,		00002000H ) + sm( y, 8,		00001000H ) +
+					sm( y, -2,		00002000H ) + sm( y, 8,	00001000H ) +
 					sm( y, -14,	00000808H ) + sm( y, -9,	00000400H ) +
-					sm( y, 0,		00000200H ) + sm( y, 7,		00000100H ) +
+					sm( y, 0,		00000200H ) + sm( y, 7,	00000100H ) +
 					sm( y, -7,		00000020H ) + sm( y, -3,	00000011H ) +
 					sm( y, 2,		00000004H ) + sm( y, -21,	00000002H );
 		END

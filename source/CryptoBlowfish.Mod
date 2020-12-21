@@ -6,7 +6,7 @@ MODULE CryptoBlowfish;   (** AUTHOR "GF"; PURPOSE "Blowfish en/decryption"; *)
 *)
 
 
-IMPORT Ciphers := CryptoCiphers, S := SYSTEM, U := CryptoUtils;
+IMPORT Ciphers := CryptoCiphers, U := CryptoUtils;
 
 CONST
 	N = 16;
@@ -30,8 +30,8 @@ TYPE
 				s: TS;
 				ivl, ivr: SET32;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32 );
-				VAR i, m: SIGNED32;  xl, xr: SET32;
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIZE );
+				VAR i, m: SIZE;  xl, xr: SET32;
 				BEGIN
 					InitKey^( src, keybits );  m := keybits DIV 8;  s := s0;
 					FOR i := 0 TO N + 1 DO
@@ -41,11 +41,11 @@ TYPE
 					FOR i := 0 TO N BY 2 DO  encrypt0( xl, xr, xl, xr );  p[i] := xl;  p[i + 1] := xr  END;
 					FOR i := 0 TO 254 BY 2 DO
 						encrypt0( xl, xr, xl, xr );
-						s.a[i] := S.VAL( SIGNED32, xl );  s.a[i + 1] := S.VAL( SIGNED32, xr );
+						s.a[i] := SIGNED32( xl );  s.a[i + 1] := SIGNED32( xr );
 					END;
 					FOR i := 0 TO 254 BY 2 DO
 						encrypt0( xl, xr, xl, xr );
-						s.b[i] := S.VAL( SIGNED32, xl );  s.b[i + 1] := S.VAL( SIGNED32, xr );
+						s.b[i] := SIGNED32( xl );  s.b[i + 1] := SIGNED32( xr );
 					END;
 					FOR i := 0 TO 254 BY 2 DO
 						encrypt0( xl, xr, xl, xr );
@@ -53,7 +53,7 @@ TYPE
 					END;
 					FOR i := 0 TO 254 BY 2 DO
 						encrypt0( xl, xr, xl, xr );
-						s.d[i] := S.VAL( SIGNED32, xl );  s.d[i + 1] := S.VAL( SIGNED32, xr );
+						s.d[i] := SIGNED32( xl );  s.d[i + 1] := SIGNED32( xr );
 					END
 				END InitKey;
 
@@ -105,17 +105,17 @@ TYPE
 				VAR
 					ab, c: SET32; d: SIGNED32;
 				BEGIN
-					ab := S.VAL( SET32, s.a[x DIV 1000000H MOD 100H] + s.b[x DIV 10000H MOD 100H] );
+					ab := SET32( s.a[x DIV 1000000H MOD 100H] + s.b[x DIV 10000H MOD 100H] );
 					c := s.c[x DIV 100H MOD 100H];
 					d := s.d[x MOD 100H];
-					RETURN S.VAL( SET32, S.VAL( SIGNED32, ab/c ) + d );
+					RETURN SET32( SIGNED32( ab/c ) + d );
 				END F;
 
 				PROCEDURE encrypt0( xl, xr: SET32;  VAR yl, yr: SET32 );
 				VAR t: SET32;  i: SIGNED16;
 				BEGIN
 					FOR i := 0 TO N - 1 DO
-						xl := xl/p[i];  xr := F( S.VAL( SIGNED32, xl ) )/xr;
+						xl := xl/p[i];  xr := F( SIGNED32( xl ) )/xr;
 						t := xl;  xl := xr;  xr := t
 					 END;
 					t := xl;  xl := xr;  xr := t;
@@ -126,7 +126,7 @@ TYPE
 				VAR t: SET32;  i: SIGNED16;
 				BEGIN
 					FOR i := N + 1 TO 2 BY -1 DO
-						xl := xl/p[i];  xr := F( S.VAL( SIGNED32, xl ) )/xr;
+						xl := xl/p[i];  xr := F( SIGNED32( xl ) )/xr;
 						t := xl;  xl := xr;  xr := t
 					END;
 					t := xl;  xl := xr;  xr := t;

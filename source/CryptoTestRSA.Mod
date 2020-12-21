@@ -2,7 +2,7 @@ MODULE CryptoTestRSA;
 
 IMPORT
 	RSA := CryptoRSA, B := CryptoBigNumbers, P := CryptoPrimes,
-	Files, Out := KernelLog, WMDialogs;
+	Files, Log := KernelLog, WMDialogs;
 
 
 CONST
@@ -16,12 +16,12 @@ CONST
 		p, q, e, signature: B.BigNumber;
 		digest: ARRAY 64 OF CHAR;
 	BEGIN
-		Out.String( "generating RSA Keys" ); Out.Ln;
+		Log.String( "generating RSA Keys" ); Log.Ln;
 		p := P.NewPrime( Size DIV 2, FALSE );
-		Out.String("p = "); B.Print( p ); Out.Ln;
+		Log.String("p = "); B.Print( p ); Log.Ln;
 
 		q := P.NewPrime( Size DIV 2, FALSE );
-		Out.String("q = "); B.Print( q ); Out.Ln;
+		Log.String("q = "); B.Print( q ); Log.Ln;
 		B.AssignInt( e, 3 );
 
 		RSA.MakeKeys( p, q, e, "Test Key", pub, priv );
@@ -29,12 +29,12 @@ CONST
 		signature :=  priv.Sign( digest, 32 );
 		IF signature # NIL THEN
 			IF pub.Verify( digest, 32, signature ) THEN
-				Out.String( "sign : verify  ok" ); Out.Ln;
+				Log.String( "sign : verify  ok" ); Log.Ln;
 			ELSE
-				Out.String( "sign : verify failed" ); Out.Ln;
+				Log.String( "sign : verify failed" ); Log.Ln;
 			END
 		ELSE
-			Out.String( "error: wrong passphrase for private key" ); Out.Ln
+			Log.String( "error: wrong passphrase for private key" ); Log.Ln
 		END;
 	END Test1;
 
@@ -57,7 +57,7 @@ CONST
 			INC( i )
 		UNTIL (priv # NIL) OR (i = 3);
 		IF priv = NIL THEN
-			Out.String( "wrong passphrase" ); Out.Ln;  RETURN
+			Log.String( "wrong passphrase" ); Log.Ln;  RETURN
 		END;
 
 		f := Files.Old( PublicKeyFile ); Files.OpenReader( r, f, 0 );
@@ -66,9 +66,9 @@ CONST
 		digest := "Everyone gets Friday off her panties.";
 		signature :=  priv.Sign( digest, 32 );
 		IF pub.Verify( digest, 32, signature ) THEN
-			Out.String( "sign : verify  ok" ); Out.Ln;
+			Log.String( "sign : verify  ok" ); Log.Ln;
 		ELSE
-			Out.String( "sign : verify failed" ); Out.Ln;
+			Log.String( "sign : verify failed" ); Log.Ln;
 		END
 	END TestRSAKeyFiles;
 

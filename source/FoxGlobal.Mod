@@ -661,7 +661,8 @@ TYPE
 				END
 			ELSIF par.type.resolved IS SyntaxTree.RecordType THEN
 				IF (par.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) OR (par.assignmentOperator # NIL)THEN
-					IF IsOberonProcedure(par.ownerType) & ~par.type.resolved(SyntaxTree.RecordType).isFinal & (par.assignmentOperator = NIL) THEN
+					IF IsOberonProcedure(par.ownerType) & ~par.type.resolved(SyntaxTree.RecordType).isFinal & (par.assignmentOperator = NIL) 
+						& ~par.returnByReference THEN
 						RETURN 2*addressSize
 					ELSE
 						RETURN addressSize

@@ -71,6 +71,7 @@ TYPE
 	IdentifierString*= Scanner.IdentifierString;
 	CallingConvention*= SIGNED32;
 	SubType* = Scanner.SubType;
+	Kind*= SIGNED32;
 
 	(** visitor pattern implementation *)
 	(* to use this object in your implementation, copy and paste and replace "x: " by "x: SyntaxTree." *)
@@ -3051,7 +3052,7 @@ TYPE
 		initializer-: Expression;
 
 		usedAsReference-: BOOLEAN;
-		kind-: SIGNED32;   (* ValueParameter, ConstParameter, VarParameter *)
+		kind-: Kind;   (* ValueParameter, ConstParameter, VarParameter *)
 
 		PROCEDURE & InitVariable*( position: Position;  name: Identifier);
 		BEGIN
@@ -3081,6 +3082,7 @@ TYPE
 			new.untraced := untraced;
 			new.preferRegister := preferRegister;
 			new.inRegister := inRegister;
+			new.kind := kind;
 			new.initializer := CloneExpression(initializer);
 			RETURN new;
 		END Clone;
@@ -3134,12 +3136,13 @@ TYPE
 		defaultValue-: Expression;
 		assignmentOperator-: Operator;
 
-		kind-: SIGNED32;   (* ValueParameter, ConstParameter, VarParameter *)
+		kind-: Kind;   (* ValueParameter, ConstParameter, VarParameter *)
 		ownerType-: Type;
 		untraced-: BOOLEAN;
 		movable-: BOOLEAN;
 		selfParameter-: BOOLEAN;
 		autoConvert-: BOOLEAN; (* for the support of builtin-functions in backends only *)
+		returnByReference-: BOOLEAN;
 
 		registerNumber-: SIZE;
 		inRegister-: BOOLEAN;
@@ -3162,7 +3165,13 @@ TYPE
 			registerNumber := -1;
 			autoConvert := FALSE;
 			assignmentOperator := NIL;
+			returnByReference := FALSE;
 		END InitParameter;
+
+		PROCEDURE ReturnByReference*(b: BOOLEAN);
+		BEGIN
+			returnByReference := b;
+		END ReturnByReference;
 
 		PROCEDURE PreferRegister*(b: BOOLEAN);
 		BEGIN
@@ -3211,7 +3220,7 @@ TYPE
 
 		PROCEDURE SetKind*(kind: SIGNED32);
 		BEGIN SELF.kind := kind; END SetKind;
-
+		
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN RETURN ~untraced  & type.NeedsTrace ();
 		END NeedsTrace;

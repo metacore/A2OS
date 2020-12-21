@@ -636,6 +636,7 @@ TYPE
 					parameter.SetUntraced(procedureType.hasUntracedReturn);
 					ResolveParameter(parameter);
 					procedureType.SetReturnParameter(parameter); (* return parameter serves as a cache only *)
+					IF procedureType.varReturn THEN parameter.ReturnByReference(TRUE) END;
 				END;
 
 				(* process parameters *)

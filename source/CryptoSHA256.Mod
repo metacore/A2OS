@@ -20,7 +20,7 @@ TYPE
 
 		PROCEDURE &Init*;
 		BEGIN
-			SetNameAndSize( "sha256", 32 );
+			SetNameAndSize( "sha2-256", 32 );
 			initialized := FALSE
 		END Init;
 

@@ -11244,7 +11244,7 @@ TYPE
 						ASSERT(parameter # NIL);
 						IF parameter = NIL THEN
 							Error(procedure.position, "structured return of parameter of procedure not found");
-						ELSIF procedureType.varReturn THEN
+						ELSIF parameter.type.IsRecordType() & procedureType.varReturn THEN
 							Designate(expression, right);
 							parameterDesignator := checker.NewSymbolDesignator(expression.position,NIL,NIL, parameter);
 							Designate(parameterDesignator, leftO);

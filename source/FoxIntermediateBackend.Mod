@@ -9996,7 +9996,7 @@ TYPE
 				GetBaseRegister(basereg,currentScope,x.scope);
 				result.op := basereg;
 				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
-				IF (x.kind = SyntaxTree.VarParameter) OR (x.kind = SyntaxTree.ConstParameter) & (type IS SyntaxTree.RecordType) THEN
+				IF ((x.kind = SyntaxTree.VarParameter) OR (x.kind = SyntaxTree.ConstParameter)) & (type IS SyntaxTree.RecordType) THEN
 					IntermediateCode.MakeMemory(result.op,addressType);
 				END;
 				(* EXPERIMENTAL *)

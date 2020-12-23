@@ -688,11 +688,7 @@ TYPE
 		PROCEDURE SizeOfVariable*(var: SyntaxTree.Variable):SIZE;
 		BEGIN
 			IF (var.type.resolved IS SyntaxTree.MathArrayType) OR (var.type.resolved IS SyntaxTree.ArrayType) THEN
-				IF (var.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) THEN
-					RETURN addressSize;
-				ELSE
-					RETURN SizeOf(var.type)
-				END;
+				RETURN SizeOf(var.type)
 			ELSIF var.type.resolved IS SyntaxTree.RangeType THEN
 				IF var.kind = SyntaxTree.VarParameter THEN
 					RETURN addressSize

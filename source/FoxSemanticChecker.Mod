@@ -6872,6 +6872,7 @@ TYPE
 			expression: SyntaxTree.Expression;
 			symbol: SyntaxTree.Symbol;
 			typeDeclaration: SyntaxTree.TypeDeclaration;
+			import: SyntaxTree.Import;
 		BEGIN
 			IF x.module # NIL THEN
 				RETURN x.module.name;
@@ -6893,6 +6894,11 @@ TYPE
 							Global.GetSymbolName(typeDeclaration, name);
 							stringWriter.String(name);
 						END
+					ELSIF (expression IS SyntaxTree.SymbolDesignator) & (expression(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Import) THEN
+						symbol := expression(SyntaxTree.SymbolDesignator).symbol;
+						import := symbol(SyntaxTree.Import);
+						Global.GetSymbolName(import.module, name);
+						stringWriter.String(name);
 					ELSIF expression.resolved # NIL THEN
 						printer.Expression (expression.resolved);
 					ELSE
@@ -6959,7 +6965,7 @@ TYPE
 							constDeclaration.SetAccess(SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal);
 							constDeclaration.SetValue(expression.resolved);
 							module.moduleScope.AddConstant(constDeclaration);
-							IF parameter.type # SyntaxTree.TemplateType.Const THEN
+							IF (parameter.type # SyntaxTree.TemplateType.Const) & (parameter.type # SyntaxTree.TemplateType.Automatic) THEN
 								Error(expression.position,"passed expression where no constant is expected");
 							END;
 						ELSIF expression IS SyntaxTree.SymbolDesignator THEN
@@ -6969,8 +6975,15 @@ TYPE
 								typeDeclaration.SetAccess(SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal);
 								typeDeclaration.SetDeclaredType(symbol(SyntaxTree.TypeDeclaration).declaredType);
 								module.moduleScope.AddTypeDeclaration(typeDeclaration);
-								IF parameter.type # SyntaxTree.TemplateType.Type THEN
+								IF (parameter.type # SyntaxTree.TemplateType.Type)  & (parameter.type # SyntaxTree.TemplateType.Automatic) THEN
 									Error(expression.position,"passed type where no type is expected");
+								END;
+							ELSIF symbol IS SyntaxTree.Import THEN
+								import := SyntaxTree.NewImport(expression.position,parameter.identifier,symbol(SyntaxTree.Import).moduleName,TRUE);
+								import.SetModule(symbol(SyntaxTree.Import).module);
+								module.moduleScope.AddImport(import);
+								IF (parameter.type # SyntaxTree.TemplateType.Import) & (parameter.type # SyntaxTree.TemplateType.Automatic) THEN
+									Error(expression.position,"passed import where no import is expected");
 								END;
 							ELSE
 								Error(expression.position,"invalid template argument");

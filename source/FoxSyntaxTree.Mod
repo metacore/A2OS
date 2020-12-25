@@ -5086,7 +5086,7 @@ TYPE
 	END ModuleScope;
 
 	TemplateType*= ENUM
-		Type*, Const*
+		Type*, Const*, Import*, Automatic*
 	END;
 
 	TemplateParameter*= RECORD

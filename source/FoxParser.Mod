@@ -2333,8 +2333,12 @@ TYPE
 		BEGIN
 			IF Optional(Scanner.Const) THEN
 				parameter.type := SyntaxTree.TemplateType.Const
-			ELSIF Mandatory(Scanner.Type) THEN
+			ELSIF Optional(Scanner.Type) THEN
 				parameter.type := SyntaxTree.TemplateType.Type
+			ELSIF Optional(Scanner.Import) THEN
+				parameter.type := SyntaxTree.TemplateType.Import
+			ELSE
+				parameter.type := SyntaxTree.TemplateType.Automatic
 			END;
 			parameter.identifier := Identifier(position);
 			RETURN parameter;

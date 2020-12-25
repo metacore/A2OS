@@ -1926,6 +1926,9 @@ TYPE
 				Keyword("CONST ");
 			ELSIF x.type = SyntaxTree.TemplateType.Type THEN
 				Keyword("TYPE ");
+			ELSIF x.type = SyntaxTree.TemplateType.Import THEN
+				Keyword("IMPORT ");
+			ELSIF x.type = SyntaxTree.TemplateType.Automatic THEN
 			ELSE HALT(200) END;
 			Identifier(x.identifier);
 		END TemplateParameter;

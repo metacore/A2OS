@@ -1332,6 +1332,11 @@ TYPE
 				Indent;
 				Comments(x.comment,x,FALSE);
 				Keyword("OPERATOR ");
+				
+				type := x.type(SyntaxTree.ProcedureType);
+				IF type.isConst THEN
+					Keyword("CONST ");
+				END;
 
 				first := TRUE;
 				IF x.isInline  OR x.isOberonInline THEN
@@ -1341,6 +1346,10 @@ TYPE
 					IF mode = SymbolFile THEN w.String("^ ") END;
 					IF x.isDynamic THEN Flag(Global.NameDynamic, first) END;
 					IF ~first THEN w.String("}") END;
+				END;
+
+				IF (type.selfParameter # NIL) & ~(type.selfParameter.name = "@Self") THEN
+					ParameterList(type.selfParameter);
 				END;
 
 				type := x.type(SyntaxTree.ProcedureType);

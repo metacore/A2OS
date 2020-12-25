@@ -3392,6 +3392,7 @@ TYPE
 		VAR type: SyntaxTree.Type; expression: SyntaxTree.Expression; op: SyntaxTree.Operator; recordType: SyntaxTree.RecordType;
 			actualParameters: SyntaxTree.ExpressionList; i: SIZE; result: SyntaxTree.Designator;
 			pointer: BOOLEAN; designator: SyntaxTree.Designator;
+			identifier: SyntaxTree.Identifier;
 
 			PROCEDURE FindOperator(recordType: SyntaxTree.RecordType; identifier: SyntaxTree.Identifier; actualParameters: SyntaxTree.ExpressionList): SyntaxTree.Operator;
 			VAR bestOperator: SyntaxTree.Operator; bestDistance: SIZE; numberParameters: SIZE; procedureType: SyntaxTree.ProcedureType;
@@ -3449,15 +3450,15 @@ TYPE
 					actualParameters.AddExpression(expression);
 				END;
 			END;
-
-			op := FindOperator(recordType, SyntaxTree.NewIdentifier("[]"), actualParameters);
+			identifier := Global.GetIdentifier(oper,currentScope.ownerModule.case);
+			op := FindOperator(recordType, identifier, actualParameters);
 			IF rhs # NIL THEN 
 				IF (op = NIL) OR ~op.type(SyntaxTree.ProcedureType).varReturn THEN				
 					actualParameters.AddExpression(rhs);
-					op := FindOperator(recordType, SyntaxTree.NewIdentifier("[]"), actualParameters);
-					END;
- 		END;
-				
+					op := FindOperator(recordType, identifier, actualParameters);
+				END;
+ 			END;
+
 			IF op # NIL THEN
 				designator := left(SyntaxTree.Designator);
 				IF pointer THEN designator := NewDereferenceDesignator(Basic.invalidPosition, designator,designator) END;
@@ -3474,7 +3475,7 @@ TYPE
 					END;
 					rhs := SyntaxTree.NewDesignator(); rhs.SetType(op.type(SyntaxTree.ProcedureType).returnType); (* only a stub to test for existence of operator *)
 					actualParameters.AddExpression(rhs);
-					op := FindOperator(recordType, SyntaxTree.NewIdentifier("[]"), actualParameters);
+					op := FindOperator(recordType, identifier, actualParameters);
 					IF op = NIL THEN rhs := NIL END;
 				END;
 
@@ -5788,6 +5789,12 @@ TYPE
 						ELSE
 							result := NewProcedureCallDesignator(designator.position,designator,left,parameters)
 						END
+					ELSIF IsRecordType(left.type) OR IsPointerToRecord(left.type) THEN (* operator() ? *)
+						result := NewObjectOperatorCall(designator.position, left, Global.FunctionCallOperator,parameters, NIL);
+						IF result = NIL THEN
+							Error(designator.position,"undefined operator");
+							result := SyntaxTree.invalidDesignator
+						END;
 					ELSIF IsTypeDesignator(left,typeDeclaration)  & (parameters.Length()=1) THEN
 						expression := parameters.GetExpression(0);
 						type := typeDeclaration.declaredType.resolved;
@@ -6806,6 +6813,7 @@ TYPE
 						| Scanner.GreaterGreaterQ, Scanner.LessLessQ:
 							mustBeBinary := TRUE; mustReturnBoolean := TRUE;
 						| Global.Indexer:
+						| Global.FunctionCallOperator:
 						END;
 
 						(* check parameter count *)
@@ -8286,6 +8294,9 @@ TYPE
 								END;
 								IF declaredType IS SyntaxTree.RecordType THEN
 									declaredType(SyntaxTree.RecordType).recordScope.AddProcedure(procedure);
+									IF procedure IS SyntaxTree.Operator THEN
+										declaredType(SyntaxTree.RecordType).recordScope.AddOperator(procedure(SyntaxTree.Operator));										
+									END;
 									Register(procedure, declaredType(SyntaxTree.RecordType).recordScope, procedure IS SyntaxTree.Operator);
 								ELSE
 									Error(procedureType.selfParameter.position,"type is no record or pointer to record");
@@ -8365,7 +8376,7 @@ TYPE
 			IF variable.initializer # NIL THEN
 				initializer := ResolveExpression(variable.initializer);
 				IF (currentScope IS SyntaxTree.RecordScope) & (initializer.resolved = NIL) THEN
-					Error(variable.position,"frobidden non-static record field initializer");
+					Error(variable.position,"forbidden non-static record field initializer");
 				END; 
 				IF ~(initializer IS SyntaxTree.ProcedureCallDesignator) OR ~CompatibleTo(system, initializer.type, variable.type) THEN
 					expression := NewSymbolDesignator(variable.position, NIL, NIL, variable);
@@ -8427,7 +8438,7 @@ TYPE
 		(** check if all operators from one module are compatible to the ones in the other module
 		- check if there are not multiple operators with the same signature
 			(apart from the conversion operator "@Convert": it is the only operator that may be defined multiple times with the same signature)
-		- check for all operators whose signatures are compatible, whether the return types are compatible
+		- check for all operators whoa signatures are compatible, whether the return types are compatible
 		note that:
 			- the return type is not considered to be part of the signature
 			- two signatures are considered compatible, if all of the operands are compatible
@@ -10091,5 +10102,5 @@ TYPE
 END FoxSemanticChecker.
 
 System.FreeDownTo FoxSemanticChecker ~
-
+a
 System.FreeDownTo FoxIntermediateBackend ~

@@ -2076,13 +2076,19 @@ TYPE
 			i: SIGNED32; position: Position;
 			modifiers: SyntaxTree.Modifier; (* nopov *)
 			isInline, forward: BOOLEAN;
+			kind: SIGNED32;
+			identifier: SyntaxTree.Identifier;
+			parameter: SyntaxTree.Parameter;
+			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 		BEGIN
 			IF Trace THEN S( "Operator" ) END;
 			(* token operator already consumed *)
 			position := token.position;
+			procedureType := SyntaxTree.NewProcedureType(token.position,parentScope);
 
 			forward := Optional(Scanner.Arrow);
-
+			procedureType.SetConst(Optional(Scanner.Const));
+			
 			isInline := FALSE;
 
 			IF Optional( Scanner.LeftBrace) THEN
@@ -2090,6 +2096,24 @@ TYPE
 			END;
 			IF Optional( Scanner.Minus ) THEN  (* inline *)
 				isInline := TRUE;
+			END;
+
+			IF Optional(Scanner.LeftParenthesis) THEN (* type bound *)
+				IF Optional(Scanner.Var) THEN
+					kind := SyntaxTree.VarParameter
+				ELSIF Optional(Scanner.Const) THEN
+					kind := SyntaxTree.ConstParameter;
+				ELSE
+					kind := SyntaxTree.ConstParameter;
+				END;
+				identifier := Identifier(position);
+				parameter := SyntaxTree.NewParameter(position, procedureType, identifier, kind);
+				Check(Scanner.Colon);
+				qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(position, SyntaxTree.invalidIdentifier, Identifier(position));
+				parameter.SetType(SyntaxTree.NewQualifiedType(position, procedureScope, qualifiedIdentifier));
+				Check(Scanner.RightParenthesis);
+				procedureType.SetSelfParameter(parameter);
+				parameter.SetSelfParameter(TRUE);
 			END;
 
 			IF MandatoryString( string ) THEN
@@ -2109,7 +2133,6 @@ TYPE
 			operator := SyntaxTree.NewOperator( token.position, SyntaxTree.NewIdentifier(string^), procedureScope);
 			CommentSymbol(operator);
 			operator.SetAccess(access);
-			procedureType := SyntaxTree.NewProcedureType(token.position,parentScope);
 			IF Mandatory(Scanner.LeftParenthesis) THEN FormalParameters( procedureType, procedureScope ) END;
 			procedureType.SetModifiers(modifiers); (* nopov *)
 			operator.SetType( procedureType );

@@ -155,7 +155,7 @@ TYPE
 
 	PROCEDURE VerifyIdentity*( CONST keyblob, signature, host, hash: ARRAY OF CHAR ): BOOLEAN;
 	VAR
-		name1, name2: ARRAY 128 OF CHAR; i, j: SIZE; len: SIGNED32;
+		name1, name2: ARRAY 128 OF CHAR; i, j, len: SIZE;
 		dsa: DSA.Key; dsasig: DSA.Signature;
 		rsa: RSA.Key; e, n, rsasig: BigNumber;
 		p, q, g, pub, r, s: BigNumber;

@@ -68,7 +68,13 @@ VAR
 	END PrintHex;
 
 
-
+	PROCEDURE PrintBufferString*( CONST buf: ARRAY OF CHAR;  pos: SIGNED32 );
+	VAR i, p: SIZE; len: SIZE;
+	BEGIN
+		p := pos;
+		GetLength( buf, p, len );
+		FOR i := 0 TO len - 1 DO Log.Char( buf[p + i] )  END
+	END PrintBufferString;
 
 
 	(*==========  ssh packet buffer <---> program data  ===========*)
@@ -91,6 +97,15 @@ VAR
 				ORD( buf[pos+3] );
 		INC( pos, 4 );
 	END GetLength;
+
+	PROCEDURE GetInt*( CONST buf: ARRAY OF CHAR;  pos: SIZE ): SIGNED32;
+	BEGIN
+		RETURN	ASH( LONG( ORD( buf[pos] ) ), 24 ) +
+				ASH( LONG( ORD( buf[pos + 1] ) ), 16 ) +
+				ASH( LONG( ORD( buf[pos + 2] ) ), 8 ) +
+				ORD( buf[pos + 3] );
+	END GetInt;
+	
 
 	PROCEDURE PutChar*( VAR buf: ARRAY OF CHAR;  VAR pos: SIZE;  ch: CHAR );
 	BEGIN

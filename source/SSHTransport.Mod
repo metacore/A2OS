@@ -120,7 +120,7 @@ TYPE
 
 				PROCEDURE SendClientVersion;
 				VAR
-					len: SIGNED32; pos: SIZE; res: INTEGER;
+					len, pos: SIZE; res: INTEGER;
 					nl: ARRAY 4 OF CHAR;
 				BEGIN
 					pos := 0;
@@ -170,7 +170,7 @@ TYPE
 
 				(** Receive SSH Packet into buf,  return packet type *)
 				PROCEDURE ReceivePacket*( VAR buf: ARRAY OF CHAR;  VAR size: SIZE ): CHAR;
-				VAR i, l: SIZE; pos: SIZE; l2, pad, trlen, cbs: SIGNED32; res: INTEGER;
+				VAR i, l: SIZE; pos: SIZE; l2: SIZE; pad,  cbs: SIGNED32; trlen: SIZE; res: INTEGER;
 					seqno: ARRAY 4 OF CHAR; rmac, cmac: ARRAY 20 OF CHAR;
 					trbuf: ARRAY 8196 OF CHAR;
 					packType: SIGNED32;
@@ -273,7 +273,7 @@ TYPE
 				PROCEDURE NegotiateAlgorythms;
 				VAR
 					p, len: SIZE;
-					l, n: SIGNED32;  kex: SIGNED8;
+					l:SIZE; n: SIGNED32;  kex: SIGNED8;
 					buf: ARRAY 4096 OF CHAR;
 					x, m: ARRAY 512 OF CHAR;  lbuf: ARRAY 4 OF CHAR;
 					cipher: Ciphers.Cipher; keybits, maclen: SIGNED32;
@@ -400,7 +400,7 @@ TYPE
 				PROCEDURE Group1( sha1: SHA1.Hash );
 				CONST DHInit = 1EX;  DHReply = 1FX;
 				VAR
-					buf: ARRAY 1024 OF CHAR; lshkb, lf: SIGNED32; len, p, pos: SIZE;
+					buf: ARRAY 1024 OF CHAR; lshkb, lf: SIZE; len, p, pos: SIZE;
 					pub, serverpub, sec: B.BigNumber;  dh: DH.DH;  packet: Packet;
 				BEGIN
 					IF 1 IN G.debug THEN
@@ -437,7 +437,7 @@ TYPE
 				PROCEDURE Group14( sha1: SHA1.Hash );
 				CONST DHInit = 1EX;  DHReply = 1FX;
 				VAR
-					buf: ARRAY 2048 OF CHAR; p, pos, len: SIZE; lshkb, lf: SIGNED32;
+					buf: ARRAY 2048 OF CHAR; p, pos, len: SIZE; lshkb, lf: SIZE;
 					pub, serverpub, sec: B.BigNumber;  dh: DH.DH;  packet: Packet;
 				BEGIN
 					IF 1 IN G.debug THEN
@@ -486,7 +486,7 @@ TYPE
 				PROCEDURE GroupExchange( sha1: SHA1.Hash );
 				CONST GEXRequest = 22X;  GEXGroup = 1FX;  GEXInit = 20X;  GEXReply = 21X;
 				VAR
-					buf1,buf2: ARRAY 4096 OF CHAR; pos, b1len, b2len: SIZE; l, lshkb, lf: SIGNED32;
+					buf1,buf2: ARRAY 4096 OF CHAR; pos, b1len, b2len: SIZE; l, lshkb, lf: SIZE;
 					pub, serverpub, sec, prim, gen: B.BigNumber;  dh: DH.DH;
 					pack1, pack2: Packet;
 				BEGIN
@@ -578,7 +578,8 @@ TYPE
 				PROCEDURE DeriveKey( keykind: CHAR;  keylen: SIGNED32;  VAR key: ARRAY OF CHAR );
 				VAR
 					buf: ARRAY 512 OF CHAR;
-					i, top, slen: SIGNED32;
+					i, top: SIGNED32;
+					slen: SIZE;
 					h: SHA1.Hash;
 					p: SIZE;
 				BEGIN

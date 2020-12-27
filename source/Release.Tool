@@ -1441,7 +1441,8 @@ END
 
 PACKAGE Build ARCHIVE "Build.zip" SOURCE "BuildSrc.zip" DESCRIPTION "Build Tools"
 	Build.Tool Build.VMWare.Tool
-	WIN { Windows.Build.Tool Windows.BuildMini32.Tool Windows.BuildMini64.Tool }
+	WIN { Windows.Build.Tool Windows.BuildMini32.Tool Windows.BuildMini32.iss Windows.BuildMini64.Tool Windows.BuildMini64.iss }
+	A2.ico
 	AosInst.Tool Aos.Par			# Install tool
 	IsoImages.Mod
 	ReleaseThreadPool.Mod Release.Mod Release.Tool	# Build release tool

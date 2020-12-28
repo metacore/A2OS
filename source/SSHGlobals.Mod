@@ -1,12 +1,12 @@
-MODULE SSHGlobals;
+MODULE SSHGlobals; (* GF ??.??.2002 / 10.12.2020 *)
 
-IMPORT SYSTEM,
-		Texts, TextUtilities, UTF8Strings, Strings, Commands,
-		Ciphers := CryptoCiphers, Out := KernelLog;
+IMPORT
+		Texts, TextUtilities, UTF8Strings, Strings,
+		Ciphers := CryptoCiphers, Log := KernelLog;
 
 CONST
 	ConfigFile* = "SSH.Configuration.Text";
-	HostkeysFile* = "SSH.KnownHosts.Data";		(* entries in openssh format! *)
+	HostkeysFile* = "SSH.KnownHosts";		(* entries in openssh format! *)
 	PrivateKeyFile* = "SSH.RSAKey.priv";
 	PublicKeyFile* = "SSH.RSAKey.pub";			(* openssh format *)
 
@@ -19,29 +19,22 @@ VAR
 	buf: Buffer;
 	bp: SIGNED32; (* current position in buf *)
 
-	debug-: SET;		(* bits: 	{0}: verbose
-
-								transport level:
-								{1}: trace protocol,
-								{2}: trace protocol more detailed
-								{3}: show I/O packets (type only)
-								{4}: show I/O packets (with contents)
-								....
-						*)
+	debug-: BOOLEAN;		
 
 	hexd: ARRAY 17 OF CHAR;	(* constant *)
 
 	(*-------------- Debugging -----------------------*)
 
-	PROCEDURE SetDebug*( context: Commands.Context );
-	VAR i: SIGNED32;
+	PROCEDURE DebugOn*;
 	BEGIN
-		IF context.arg.GetInteger( i, FALSE ) THEN
-			debug := SET(i )
-		ELSE
-			context.result := Commands.CommandParseError;
-		END;
-	END SetDebug;
+		Log.Ln;
+		debug := TRUE
+	END DebugOn;
+	
+	PROCEDURE DebugOff*;
+	BEGIN
+		debug := FALSE
+	END DebugOff;
 
 	(*--------------- SSH configuration  -----------------*)
 
@@ -139,6 +132,26 @@ VAR
 	END GetCipherParams;
 
 
+	PROCEDURE GetKexMethods*( VAR kex: ARRAY OF CHAR );
+	VAR x: ARRAY 128 OF CHAR; n: INTEGER;
+	BEGIN
+		IF buf = NIL THEN  buf := GetConfigBuffer()  END;
+		bp := 0;
+		IF buf[bp] = '#' THEN  NextLine  END;
+		kex := "";  n := 0;
+		REPEAT
+			GetConfigString( x );
+			IF x = "kex" THEN  
+				GetConfigString( x );
+				IF n # 0 THEN  Strings.Append( kex, "," )  END;
+				Strings.Append( kex, x );
+				INC( n )
+			END;
+			NextLine
+		UNTIL buf[bp] = 0X
+	END GetKexMethods;
+
+
 	PROCEDURE GetHMacParams*(	CONST name: ARRAY OF CHAR;
 									VAR modname: ARRAY OF CHAR;  VAR bytes: SIGNED32 );
 	VAR x: ARRAY 128 OF CHAR;
@@ -157,8 +170,6 @@ VAR
 			NextLine
 		UNTIL (buf[bp] = 0X) OR (modname # "unknown")
 	END GetHMacParams;
-
-
 	PROCEDURE ExpandBuf( VAR buf: Buffer; newSize: SIZE );
 	VAR newBuf: Buffer; i: SIZE;
 	BEGIN
@@ -178,7 +189,7 @@ VAR
 		NEW( text );
 		TextUtilities.LoadAuto( text, ConfigFile, format, res );
 		IF res # 0 THEN
-			Out.String( "could not open file " ); Out.String( ConfigFile ); Out.Ln
+			Log.String( "could not open file " ); Log.String( ConfigFile ); Log.Ln
 		ELSE
 			text.AcquireRead;
 			NEW( r, text ); r.SetPosition( 0 );
@@ -198,7 +209,20 @@ VAR
 			RETURN buffer
 		END
 	END GetConfigBuffer;
-
+	
+	
+	PROCEDURE ShowByte*( c: CHAR );
+	BEGIN
+		CASE c OF
+		| CR:  Log.String(" \r" )
+		| NL:  Log.String( " \n" )
+		| HT:  Log.String( " \t" )
+		| ' ' .. '~':
+			Log.Char( ' ' );  Log.Char( c )
+		ELSE
+			Log.Char( '\' );  Log.Hex( ORD( c ), -2 )
+		END
+	END ShowByte;
 
 
 BEGIN

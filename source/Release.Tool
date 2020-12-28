@@ -1188,10 +1188,10 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	~COOP { WMProfiler.Mod }
 
 	# ssh
-	SSH.Tool
-	SSH.Configuration.Text
-	SSHGlobals.Mod SSHKeys.Mod SSHTransport.Mod SSHAuthorize.Mod
-	SSH.Mod SSHClient.Mod
+	SSH.Tool  SSH.Configuration.Text
+	SSHGlobals.Mod  SSHPackets.Mod  SSHKeys.Mod  
+	SSHTransport.Mod  SSHAuthorize.Mod  SSHChannels.Mod   
+	SSHTerminal.Mod  SSH.Mod 
 END
 
 PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc.zip" DESCRIPTION "Window Manager and Graphical Applications"

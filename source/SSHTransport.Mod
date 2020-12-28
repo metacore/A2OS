@@ -1,18 +1,13 @@
-MODULE SSHTransport;  	(* g.f.	2002.07.08 *)
-(** SSH Transport Layer *)
+MODULE SSHTransport;  	(* GF	8.7.2002 / 10.12.2020 *)
 
-(*	2002.09.24	g.f.	rel. 1.3	*)
-(*	2002.10.15	g.f.	RSA hostkeys added, proc. 'deriveKey' fixed	*)
-(*	2005.07.08	g.f.	algoMatch fixed, HMAC handling fixed *)
-
-IMPORT TCP, IP, DNS, Out := KernelLog,
-	Ciphers := CryptoCiphers, B := CryptoBigNumbers, DH := CryptoDiffieHellman,
-	HMAC := CryptoHMAC, SHA1 := CryptoSHA1,
-	U := CryptoUtils, G := SSHGlobals, SSHKeys;
+IMPORT TCP, IP, DNS, Strings, Log := KernelLog,
+	Ciphers := CryptoCiphers, B := CryptoBigNumbers, DH := CryptoDiffieHellman, CryptoHashes,
+	CryptoHMAC,
+	U := CryptoUtils, G := SSHGlobals, P := SSHPackets, SSHKeys;
 
 CONST
-	ClientVersion = "SSH-2.0-A2 SSH-1.7";  SSHport = 22;
-	KEXAlgorythms		= "diffie-hellman-group14-sha1,diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1";
+	ClientVersion = "SSH-2.0-A2 SSH-1.8";  SSHport = 22;
+	(* KEXAlgorythms	= built from contents of  SSHConfiguration.Text *)
 	SHKAlgorythms		= "ssh-rsa,ssh-dss";
 	(* Ciphers list			=  built from contents of  SSHConfiguration.Text *)
 	(* HMAC list			=  built from contents of  SSHConfiguration.Text *)
@@ -21,636 +16,628 @@ CONST
 
 	CR = 0DX;  NL = 0AX;
 
-	(* SSH  Message Numbers *)
-	Disconn = 1X;  Ignore = 2X;  Unimpl = 3X;  Debug = 4X;
-	ServiceRequest = 5X;  ServiceAccept = 6X;
-	KEXInit = 14X;  NewKeys = 15X;
-
 	Closed* = 0;  Connected* = 1;  Keyexchange* = 2;  (** Connection states *)
 
 
 TYPE
-	Key = ARRAY 20 OF CHAR;
+	Key = ARRAY 64 OF CHAR;
+	ModuleName = ARRAY 32 OF CHAR;
+	
+	Packet* = P.Packet;	
+	
+	SSHMac = OBJECT 
+	VAR 
+		size, keySize: SIZE;
+		name: ARRAY 64 OF CHAR;
+		key: ARRAY 64 OF CHAR;
+		hmac: CryptoHMAC.HMac;
+		
+		PROCEDURE &NewMac( CONST modName: ARRAY OF CHAR; macLen: SIZE );
+		BEGIN
+			NEW( hmac, modName );
+			keySize := hmac.size;
+			IF macLen < hmac.size THEN  hmac.ShrinkLength( macLen ) END;
+			COPY( hmac.name, name );
+			size := hmac.size
+		END NewMac;
+		
+		PROCEDURE SetKey( CONST macKey: ARRAY OF CHAR );
+		VAR i: SIZE;
+		BEGIN
+			FOR i := 0 TO keySize-1 DO  key[i] := macKey[i]  END;
+		END SetKey;
+		
+		PROCEDURE Initialize( nr: SIZE );
+		VAR
+			seqno: ARRAY 4 OF CHAR;
+		BEGIN
+			hmac.Initialize( key, keySize );
+			Int2Chars( nr, seqno );
+			hmac.Update( seqno, 0, 4 ); 
+		END Initialize;
+		
+		PROCEDURE Update( CONST buf: ARRAY OF CHAR; pos, len: SIZE );
+		BEGIN
+			hmac.Update( buf, pos, len )
+		END Update;
+		
+		PROCEDURE GetMac( VAR buf: ARRAY OF CHAR; pos: SIZE );
+		BEGIN
+			hmac.GetMac( buf, pos )
+		END GetMac;
+		
+	END SSHMac;
+	
+	
+	
+	SecurityState = RECORD
+		incipher, outcipher: Ciphers.Cipher;
+		inkeybits, outkeybits: SIGNED32;		(* cipher keybits *)
+		inmode, outmode: SIGNED8;				(* cipher modes *)
+		inmac, outmac: SSHMac;
+	END;
+	
+	
 
 	Connection* = OBJECT
-			VAR
-				state-: SIGNED8;
-				tcp: TCP.Connection;
-				servername: ARRAY 128 OF CHAR;
-				cvers, svers: ARRAY 260 OF CHAR;  (* string *)
-				sessionId-, hash: Key;
-				secret: ARRAY 1024 OF CHAR;	(* shared secret, (mpint format) *)
-				incount, outcount: SIGNED32;	(* packet counters *)
-				(* current security state: *)
-				inhkey, outhkey: Key;
-				incipher, outcipher: Ciphers.Cipher;
-				inmac, outmac: HMAC.HMac;
-				inmaclen, outmaclen: SIGNED32;
-				new: RECORD
-						(* pending security state: *)
-						incipher, outcipher: Ciphers.Cipher;
-						inkeybits, outkeybits: SIGNED32;		(* cipher keybits *)
-						inmode, outmode: SIGNED8;		(* cipher modes *)
-						inmac, outmac: HMAC.HMac;
-						inmaclen, outmaclen: SIGNED32;
-					END;
+	VAR
+		state-: INTEGER;
+		tcp-: TCP.Connection;
+		servername: ARRAY 128 OF CHAR;
+		cvers, svers: ARRAY 260 OF CHAR;  (* string *)
+		session_id-: Key;  session_id_size-: SIZE;
+		session_key: Key;  session_key_size: SIZE;
+		secret: ARRAY 1024 OF CHAR;	(* common secret, (mpint format) *)
+		incount, outcount: SIGNED32;	(* packet counters *)
+		incipher, outcipher: Ciphers.Cipher;
+		inmac, outmac: SSHMac;
+		
+		cipherList, hmacList, kexList: ARRAY 1024 OF CHAR;	(* client methods *)
+		clientChannelNo: SIGNED32;
 
-				cipherList, hmacList: ARRAY 1024 OF CHAR;
-				clientChannelNo: SIGNED32;
+		PROCEDURE & Open*( CONST hostname: ARRAY OF CHAR );
+		VAR
+			res: INTEGER;  adr: IP.Adr;  p: SIZE;
+		BEGIN
+			state := Closed;
+			Log.String( "connecting to " );  Log.String( hostname );  Log.String( " ... " );
+			DNS.HostByName( hostname, adr, res );
+			IF res = DNS.Ok THEN
+				NEW( tcp ); tcp.Open( 0, adr, SSHport, res );
+				IF res = TCP.Ok THEN
+					state := Connected;
+					COPY( hostname, servername );
+					Log.String( "connected" );  Log.Ln;
+					tcp.KeepAlive( TRUE );
+					p := 0;  U.PutString( cvers, p, ClientVersion );
+					incipher := Ciphers.NewCipher( "" );
+					outcipher := Ciphers.NewCipher( "" );		(* empty ciphers, no encryption *)
+					incount := 0; outcount := 0;
+					inmac := NIL;  outmac := NIL;
+					IF GetServerVersion( ) THEN
+						SendClientVersion;
+						G.GetCipherList( cipherList );
+						G.GetHMacList( hmacList );
+						G.GetKexMethods( kexList );
+						session_id_size := 0;
+						NegotiateAlgorythms;
+					END
+				ELSE
+					Log.Ln;  Log.String( "connection failed" );  Log.Ln;
+				END
+			ELSE
+				Log.Ln;  Log.String( "DNS lookup failed" );  Log.Ln;
+			END;
+		END Open;
 
-				PROCEDURE & Open*( CONST hostname: ARRAY OF CHAR );
-				VAR
-					res: INTEGER;  adr: IP.Adr;  p: SIZE;
-				BEGIN
+
+		PROCEDURE GetServerVersion( ): BOOLEAN;
+		VAR receivebuf: ARRAY 2048 OF CHAR;  len, p1, p2: SIZE;
+		BEGIN
+			REPEAT
+				len := ReceiveLine( tcp, receivebuf )
+			UNTIL Head( receivebuf, "SSH-" );
+
+			IF ~Head( receivebuf, "SSH-1.99" ) & ~Head( receivebuf, "SSH-2.0" ) THEN
+				Log.String( "remote host does not support SSH version 2.0" );  Log.Ln;
+				tcp.Close( );
+				RETURN FALSE
+			ELSE
+				p1 := 0;  p2 := 0;
+				U.PutArray( svers, p1, receivebuf, p2, len );
+				IF G.debug THEN
+					Log.String( "server version: " ); PrintBufferString( svers, 0 ); Log.Ln;
+					Log.String( "client version: " ); PrintBufferString( cvers, 0 ); Log.Ln;
+				END;
+				RETURN TRUE
+			END
+		END GetServerVersion;
+				
+		PROCEDURE PrintBufferString*( CONST buf: ARRAY OF CHAR;  pos: SIGNED32 );
+		VAR i, p, len: SIZE; 
+		BEGIN
+			p := pos;
+			U.GetLength( buf, p, len );
+			FOR i := 0 TO len - 1 DO Log.Char( buf[p + i] )  END
+		END PrintBufferString;
+
+		PROCEDURE SendClientVersion;
+		VAR
+			len, pos: SIZE; res: INTEGER;
+			nl: ARRAY 4 OF CHAR;
+		BEGIN
+			pos := 0;
+			U.GetLength( cvers, pos, len );
+			tcp.Send( cvers, 4, len, TRUE, res );
+			nl[0] := CR; nl[1] := NL;
+			tcp.Send( nl, 0, 2, TRUE, res );
+		END SendClientVersion;
+	
+
+		(** Send packet p *)
+		PROCEDURE SendPacket*( p: Packet );
+		VAR
+			i, trlen, payload, padsize, cbs: SIZE; res: INTEGER;
+			trbuf: ARRAY 8196 OF CHAR;
+		BEGIN {EXCLUSIVE}
+			IF state = Closed THEN  RETURN  END;
+			ASSERT( p.len > 0 );
+			cbs := outcipher.blockSize;
+			padsize := cbs - (p.len + 5) MOD cbs;
+			IF padsize < 4 THEN INC( padsize, cbs ) END;
+			payload := 1 + p.len + padsize;
+			Int2Chars( payload, trbuf );  trbuf[4] := CHR( padsize );
+			trlen := 4 + payload;
+			FOR i := 0 TO p.len - 1 DO trbuf[i+5] := p.buf[i]  END;
+			U.RandomBytes( trbuf, p.len + 5, padsize  );
+			IF outmac # NIL THEN
+				outmac.Initialize( outcount );
+				outmac.Update( trbuf, 0, trlen );
+				outmac.GetMac( trbuf, trlen );
+			END;
+			outcipher.Encrypt( trbuf, 0, trlen );
+			IF outmac # NIL THEN INC( trlen, outmac.size ) END;
+			tcp.Send( trbuf, 0, trlen, TRUE, res );
+			INC( outcount );
+			IF G.debug THEN	 p.Show  END;
+		END SendPacket;
+
+				
+		(** Receive SSH Packet *)
+		PROCEDURE GetPacket*( ): Packet;
+		VAR i, l, pos, trlen: SIZE; padsize, cbs: SIGNED32; err, res: INTEGER;
+			rmac, cmac: ARRAY 64 OF CHAR;
+			trbuf: ARRAY 8196 OF CHAR;
+			msg: ARRAY 128 OF CHAR;
+			size: SIZE;
+			p: Packet;	
+		BEGIN
+			ASSERT( state > Closed );
+			cbs := incipher.blockSize;
+			tcp.Receive( trbuf, 0, cbs, cbs, l, res );
+			IF res # TCP.Ok THEN 
+				Log.String( "Broken connection, closed by peer" ); Log.Ln;
+				state := Closed;
+				RETURN  P.emptyPacket
+			END;
+			incipher.Decrypt( trbuf, 0, cbs );
+			pos := 0;
+			U.GetLength( trbuf, pos, trlen );
+			ASSERT( (4 + trlen) MOD cbs = 0 );
+			padsize := ORD( trbuf[4] );  size := trlen - 1 - padsize;
+			INC( trlen, 4 );	(* the len bytes itself *)
+			tcp.Receive( trbuf, cbs, trlen - cbs, trlen - cbs, l, res );
+			incipher.Decrypt( trbuf, cbs, trlen - cbs );	
+			IF inmac # NIL THEN
+				tcp.Receive( rmac, 0, inmac.size, inmac.size, l, res );
+				inmac.Initialize( incount );
+				inmac.Update( trbuf, 0, trlen );
+				inmac.GetMac( cmac, 0 );
+				i := 0;
+				WHILE (i < inmac.size) & (rmac[i] = cmac[i]) DO  INC( i )  END;
+				IF i < inmac.size THEN
+					Log.String( "received a packet with wrong MAC" ); Log.Ln;
+					Disconnect( 1, "wrong mac" );
+					RETURN  P.emptyPacket
+				END
+			END;
+			INC( incount );
+			p := P.MakeReceivedPacket( trbuf, size );
+			IF G.debug THEN  p.Show  END;
+			
+			IF p.type = P.Ignore THEN  
+				RETURN GetPacket( )
+			ELSIF p.type = P.Debug THEN  
+				p.SetPos( 1 );
+				IF p.GetChar( ) = 1X THEN
+					p.GetString( msg );
+					Log.String( msg ); Log.Ln;
+				END;
+				RETURN GetPacket( )
+			ELSIF (p.type = P.KEXInit) & (state # Keyexchange) THEN
+				Log.String( "reexchanging keys:  not yet implemented" ); Log.Ln;
+				HALT( 99 );
+				(* renegotiate( ssh, package )*)
+			ELSE
+				IF p.type = P.Disconn THEN
+					p.SetPos( 1 );
+					err := p.GetInteger( );
+					p.GetString( msg );  
+					Log.String( "### remote host closed connection: " );
+					Log.String( msg ); Log.Ln;
 					state := Closed;
-					Out.String( "connecting to " );  Out.String( hostname );  Out.String( " ... " );
-					DNS.HostByName( hostname, adr, res );
-					IF res = DNS.Ok THEN
-						NEW( tcp ); tcp.Open( 0, adr, SSHport, res );
-						IF res = TCP.Ok THEN
-							state := Connected;
-							COPY( hostname, servername );
-							Out.String( "connected" );  Out.Ln;
-							tcp.KeepAlive( TRUE );
-							p := 0;  U.PutString( cvers, p, ClientVersion );
-							incipher := Ciphers.NewCipher( "" );
-							outcipher := Ciphers.NewCipher( "" );		(* empty ciphers, no encryption *)
-							incount := 0; outcount := 0;
-							inmac := NIL;  outmac := NIL;
-							IF ReceiveServerVersion( ) THEN
-								SendClientVersion;
-								G.GetCipherList( cipherList );
-								G.GetHMacList( hmacList );
-								IF 2 IN G.debug THEN
-									Out.String( "client Ciphers: "); Out.Ln;  Out.String( cipherList ); Out.Ln;
-									Out.String( "client hmacs: "); Out.Ln;  Out.String( hmacList ); Out.Ln;
-								END;
-								NegotiateAlgorythms;
-							END
-						ELSE
-							Out.Ln;  Out.String( "connection failed" );  Out.Ln;
-						END
-					ELSE
-						Out.Ln;  Out.String( "DNS lookup failed" );  Out.Ln;
-					END;
-				END Open;
+					p := P.emptyPacket
+				END;
+			END;
+			RETURN p
+		END GetPacket;	
+
+		PROCEDURE DebugMessage*( msg: ARRAY OF CHAR );
+		VAR 
+			buf: ARRAY 256 OF CHAR;
+			sp: Packet;
+		BEGIN
+			buf := "A2-SSH: ";  Strings.Append( buf, msg );
+			NEW( sp,  P.Debug, 512 );
+				sp.AppChar( 1X );			(* TRUE, always display *)
+				sp.AppString( buf );			(* message *)
+				sp.AppString( "" );			(* language *)
+			SendPacket( sp )
+		END DebugMessage;
 
 
-				PROCEDURE ReceiveServerVersion( ): BOOLEAN;
-				VAR receivebuf: ARRAY 2048 OF CHAR;  len, p1, p2: SIZE;
-				BEGIN
-					REPEAT
-						len := ReceiveLine( tcp, receivebuf )
-					UNTIL Head( receivebuf, "SSH-" );
+		PROCEDURE Disconnect*( reason: INTEGER;  CONST msg: ARRAY  OF CHAR );
+		VAR sp: Packet;
+		BEGIN 
+			IF state > Closed THEN
+				NEW( sp, P.Disconn, 512 );
+					sp.AppInteger( reason );
+					sp.AppString( msg );
+					sp.AppString( "" );	(* language *)
+				SendPacket( sp );
+				tcp.Close( );  state := Closed;
+				Log.String( "connection to " );  Log.String( servername );  
+				Log.String( " closed "); Log.Ln;
+			END;
+		END Disconnect;
 
-					IF ~Head( receivebuf, "SSH-1.99" ) & ~Head( receivebuf, "SSH-2.0" ) THEN
-						Out.String( "remote host does not support SSH version 2.0" );  Out.Ln;
-						tcp.Close( );
-						RETURN FALSE
-					ELSE
-						p1 := 0;  p2 := 0;
-						U.PutArray( svers, p1, receivebuf, p2, len );
-						IF 0 IN G.debug THEN
-							Out.String( "server version: " ); U.PrintBufferString( svers, 0 ); Out.Ln;
-							Out.String( "client version: " ); U.PrintBufferString( cvers, 0 ); Out.Ln;
-						END;
-						RETURN TRUE
-					END
-				END ReceiveServerVersion;
+		PROCEDURE GetChannelNo*( ): SIGNED32;
+		BEGIN
+			INC( clientChannelNo );
+			RETURN clientChannelNo
+		END GetChannelNo;
 
-				PROCEDURE SendClientVersion;
-				VAR
-					len, pos: SIZE; res: INTEGER;
-					nl: ARRAY 4 OF CHAR;
-				BEGIN
-					pos := 0;
-					U.GetLength( cvers, pos, len );
-					tcp.Send( cvers, 4, len, TRUE, res );
-					nl[0] := CR; nl[1] := NL;
-					tcp.Send( nl, 0, 2, TRUE, res );
-				END SendClientVersion;
+		PROCEDURE PacketAvailable*(  ): BOOLEAN;
+		BEGIN
+			IF state = Closed THEN  RETURN FALSE
+			ELSE  RETURN tcp.Available( ) >= 16
+			END
+		END PacketAvailable;
 
-				(** Send packet p *)
-				PROCEDURE SendPacket*( p: Packet );
-				VAR
-					i, trlen, payload, pad, cbs: SIZE; res: INTEGER;
-					seqno: ARRAY 4 OF CHAR;
-					trbuf: ARRAY 8196 OF CHAR;
-					packType: SIGNED32;
-				BEGIN
-					IF state = Closed THEN  RETURN  END;
-					ASSERT( p.len > 0 );
-					cbs := outcipher.blockSize;
-					pad := cbs - (p.len + 5) MOD cbs;
-					IF pad < 4 THEN INC( pad, cbs ) END;
-					payload := 1 + p.len + pad;
-					Int2Chars( payload(SIGNED32), trbuf );  trbuf[4] := CHR( pad );
-					trlen := 4 + payload;
-					FOR i := 0 TO p.len - 1 DO trbuf[i+5] := p.buf[i]  END;
-					U.RandomBytes( trbuf, p.len + 5, pad  );
-					IF outmac # NIL THEN
-						Int2Chars( outcount, seqno );
-						outmac.Initialize( outhkey, outmac.size );
-						outmac.Update( seqno, 0, 4 );  outmac.Update( trbuf, 0, trlen );
-						outmac.GetMac( trbuf, trlen );
-					END;
-					outcipher.Encrypt( trbuf, 0, trlen );
-					IF outmac # NIL THEN INC( trlen, outmaclen ) END;
-					tcp.Send( trbuf, 0, trlen, TRUE, res );
-					INC( outcount );
-					IF 3 IN G.debug THEN
-						packType := ORD( p.buf[0] );
-						Out.String( "sent: "); Out.Int( packType, 0 );  Out.Char( '(' );
-						Out.Char( hexd[packType DIV 16] );
-						Out.Char( hexd[packType MOD 16] );
-						Out.String( "X), len = " ); Out.Int( p.len, 0);
-						Out.Ln
-					END;
-				END SendPacket;
-
-				(** Receive SSH Packet into buf,  return packet type *)
-				PROCEDURE ReceivePacket*( VAR buf: ARRAY OF CHAR;  VAR size: SIZE ): CHAR;
-				VAR i, l: SIZE; pos: SIZE; l2: SIZE; pad,  cbs: SIGNED32; trlen: SIZE; res: INTEGER;
-					seqno: ARRAY 4 OF CHAR; rmac, cmac: ARRAY 20 OF CHAR;
-					trbuf: ARRAY 8196 OF CHAR;
-					packType: SIGNED32;
-				BEGIN
-					IF state = Closed THEN RETURN 0X END;
-					cbs := incipher.blockSize;
-					tcp.Receive( trbuf, 0, cbs, cbs, l, res );
-					IF res # TCP.Ok THEN (* closed by peer *) size := 0;  RETURN 0X  END;
-					incipher.Decrypt( trbuf, 0, cbs );
-					pos := 0;
-					U.GetLength( trbuf, pos, trlen );
-					IF 3 IN G.debug THEN
-						packType := ORD( trbuf[5] );
-						Out.String( "received: "); Out.Int( packType, 0 );  Out.Char( '(' );
-						Out.Char( hexd[packType DIV 16] );
-						Out.Char( hexd[packType MOD 16] );
-						Out.String( "X), len = " ); Out.Int( trlen, 0 );
-						Out.Ln
-					END;
-					ASSERT( (4 + trlen) MOD cbs = 0 );
-					pad := ORD( trbuf[4] );  size := trlen - 1 - pad;
-					INC( trlen, 4 );	(* the len bytes itself *)
-					tcp.Receive( trbuf, cbs, trlen - cbs, trlen - cbs, l, res );
-					incipher.Decrypt( trbuf, cbs, trlen - cbs );
-					IF inmac # NIL THEN
-						tcp.Receive( rmac, 0, inmaclen, inmaclen, l, res );
-						Int2Chars( incount, seqno );
-						inmac.Initialize( inhkey, inmac.size );
-						inmac.Update( seqno, 0, 4 ); inmac.Update( trbuf, 0, trlen );
-						inmac.GetMac( cmac, 0 );
-						i := 0;
-						WHILE (i < inmaclen) & (rmac[i] = cmac[i])  DO INC( i ) END;
-						IF i < inmaclen THEN
-							Out.String( "received packet #" ); Out.Int( incount, 1 );
-							Out.String( " with wrong MAC" ); Out.Ln;
-						END
-					END;
-					INC( incount );
-					IF trbuf[5] = Ignore THEN  RETURN ReceivePacket( buf, size )
-					ELSIF trbuf[5] = Debug THEN  RETURN ReceivePacket( buf, size )
-					ELSIF (trbuf[5] = KEXInit) & (state # Keyexchange) THEN
-						Out.String( "reexchanging keys:  not yet implemented" ); Out.Ln;
-						HALT( 99 );
-						(* renegotiate( ssh, package )*)
-					ELSE
-						IF trbuf[5] = Disconn THEN
-							Out.String( "remote host closed connection: " );
-							pos := 10;
-							U.GetLength( trbuf, pos, l2 );
-							FOR i := 0 TO l2 - 1 DO Out.Char( trbuf[14 + i] ) END;  Out.Ln;
-							state := Closed
-						END;
-						FOR i := 0 TO size - 1 DO buf[i] := trbuf[i+5] END
-					END;
-					RETURN buf[0]
-				END ReceivePacket;
-
-
-				PROCEDURE SendDebug*;
-				VAR packet: Packet;
-				BEGIN
-					NEW( packet,  Debug, 512 );
-					packet.AppChar( 1X );				(* TRUE, always display *)
-					packet.AppString( "ETH Oberon" );	(* message *)
-					packet.AppString( "" );				(* language *)
-					SendPacket( packet )
-				END SendDebug;
-
-
-				PROCEDURE Disconnect*( reason: SIGNED8;  CONST msg: ARRAY  OF CHAR );
-				VAR packet: Packet;
-				BEGIN
-					IF state > Closed THEN
-						NEW( packet, Disconn, 512 );
-						packet.AppInteger( reason );
-						packet.AppString( msg );
-						packet.AppString( "" );	(* language *)
-						SendPacket( packet );
-
-						tcp.Close( );  state := Closed;
-						IF msg # "" THEN  Out.String( msg );  Out.Ln  END;
-						Out.String( "connection to " ); Out.String( servername );  Out.String( " closed "); Out.Ln;
-					END
-				END Disconnect;
-
-				PROCEDURE GetChannelNo*( ): SIGNED32;
-				BEGIN
-					INC( clientChannelNo );
-					RETURN clientChannelNo
-				END GetChannelNo;
-
-				PROCEDURE PacketAvailable*(  ): BOOLEAN;
-				BEGIN
-					IF state = Closed THEN  RETURN FALSE
-					ELSE RETURN  tcp.Available( ) >= 16
-					END
-				END PacketAvailable;
-
-
-				PROCEDURE NegotiateAlgorythms;
-				VAR
-					p, len: SIZE;
-					l:SIZE; n: SIGNED32;  kex: SIGNED8;
-					buf: ARRAY 4096 OF CHAR;
-					x, m: ARRAY 512 OF CHAR;  lbuf: ARRAY 4 OF CHAR;
-					cipher: Ciphers.Cipher; keybits, maclen: SIGNED32;
-					modname: ARRAY 32 OF CHAR;
-					mode: SIGNED8;
-					mac: HMAC.HMac;
-					sha1: SHA1.Hash;
-					packet: Packet;
-				BEGIN
-					state := Keyexchange;
-					NEW( sha1 );
-					sha1.Initialize;
-					p := 0;  U.GetLength( cvers, p, l );  sha1.Update( cvers, 0, l + 4 );		(* VC *)
-					p := 0;  U.GetLength( svers, p, l );  sha1.Update( svers, 0, l + 4 );		(* VS *)
-
-					packet := ClientAlgorythms( );
-
-					Int2Chars( packet.len(SIGNED32), lbuf );
-					sha1.Update( lbuf, 0, 4 );  sha1.Update( packet.buf^, 0, packet.len );	(* IC *)
-					SendPacket( packet );
-
-					IF ReceivePacket( buf, len ) = KEXInit THEN
-						Int2Chars( len(SIGNED32), lbuf );
-						sha1.Update( lbuf, 0, 4 );  sha1.Update( buf, 0, len );				(* IS *)
-
-						p := 17;
-						FOR n := 1 TO 8 DO
-							U.GetString( buf, p, x );
-							IF 2 IN G.debug THEN  Out.String( x ); Out.Ln  END;
-							CASE n OF
-							|1:
-									algoMatch( KEXAlgorythms, x, m );
-									IF m = "diffie-hellman-group1-sha1" THEN kex := 1
-									ELSIF m = "diffie-hellman-group14-sha1" THEN kex := 2
-									ELSIF m = "diffie-hellman-group-exchange-sha1" THEN kex := 3
-									ELSE
-										Out.String( 'no common kex alg found' ); Out.Ln;
-										Out.String( "   client: " ); Out.String( KEXAlgorythms );  Out.Ln;
-										Out.String( "   server: " ); Out.String( x );  Out.Ln;
-										Disconnect( 2, "protocol error" );  RETURN
-									END
-							|2:
-									algoMatch( SHKAlgorythms, x, m );
-									IF m = "" THEN
-										Out.String( 'no common server host key alg found' ); Out.Ln;
-										Out.String( "   client: " ); Out.String( SHKAlgorythms );  Out.Ln;
-										Out.String( "   server: " ); Out.String( x );  Out.Ln;
-										Disconnect( 2, "protocol error" );  RETURN
-									END
-							|3, 4:
-									algoMatch( cipherList, x, m );
-									IF m = "" THEN
-										Out.String( 'no common cipher found' ); Out.Ln;
-										Out.String( "   client: " ); Out.String( cipherList );  Out.Ln;
-										Out.String( "   server: " ); Out.String( x );  Out.Ln;
-										Disconnect( 2, "protocol error" );  RETURN
-									END;
-									G.GetCipherParams( m, modname, keybits, mode );
-									cipher := Ciphers.NewCipher( modname );
-									IF n = 3 THEN
-										new.outcipher := cipher;  new.outkeybits := keybits; new.inmode := mode
-									ELSE
-										new.incipher := cipher;  new.inkeybits := keybits; new.outmode := mode
-									END;
-							|5, 6:
-									algoMatch( hmacList, x, m );
-									IF m = "none" THEN
-									ELSIF m # "" THEN
-										G.GetHMacParams( m, modname, maclen );
-										NEW( mac, modname )
-									ELSE
-										Out.String( 'no common hmac found' ); Out.Ln;
-										Out.String( "   client: " ); Out.String( hmacList );  Out.Ln;
-										Out.String( "   server: " ); Out.String( x );  Out.Ln;
-										Disconnect( 2, "protocol error" );  RETURN
-									END;
-									IF n = 5 THEN
-										new.outmac := mac;  new.outmaclen := maclen
-									ELSE
-										new.inmac := mac;  new.inmaclen := maclen
-									END;
-							|7, 8:
-									algoMatch( ComprAlgorythms, x, m );
-									IF m # "none" THEN
-										Out.String( 'no common compr alg found' ); Out.Ln;
-										Out.String( "   client: " ); Out.String( ComprAlgorythms );  Out.Ln;
-										Out.String( "   server: " ); Out.String( x );  Out.Ln;
-										Disconnect( 2, "protocol error" );  RETURN
-									END
+				
+		PROCEDURE NegotiateAlgorythms;
+		VAR
+			l, n, pos: SIZE;  kex: INTEGER;
+			x, m: ARRAY 512 OF CHAR;  lbuf: ARRAY 4 OF CHAR;
+			cipher: Ciphers.Cipher; keybits, maclen: SIGNED32;
+			modname: ModuleName;
+			mode: SIGNED8;
+			sp, rp: Packet;
+			hash: CryptoHashes.Hash;
+			new: SecurityState;
+		BEGIN
+			state := Keyexchange;
+			
+			sp := ClientAlgorythms( );
+			SendPacket( sp );
+			
+			rp := GetPacket( );	
+			IF rp.type = P.KEXInit THEN	
+				rp.SetPos( 17 ); (* skip serever cookie *)
+				FOR n := 1 TO 8 DO
+					rp.GetString( x );
+					CASE n OF
+					|1:
+							AlgoMatch( "kex", kexList, x, m );
+							IF m = "diffie-hellman-group1-sha1" THEN kex := 1
+							ELSIF m = "diffie-hellman-group14-sha1" THEN kex := 2
+							ELSIF m = "diffie-hellman-group-exchange-sha1" THEN kex := 3
+							ELSIF m = "diffie-hellman-group1-sha256" THEN kex := 4
+							ELSIF m = "diffie-hellman-group14-sha256" THEN kex := 5
+							ELSIF m = "diffie-hellman-group-exchange-sha256" THEN kex := 6
+							ELSE
+								Disconnect( 2, "protocol error" );  RETURN
 							END;
-						END;
-					ELSE Disconnect( 2, "protocol error" );  RETURN
+					|2:
+							AlgoMatch( "hostkey", SHKAlgorythms, x, m );
+							IF m = "" THEN
+								Disconnect( 2, "protocol error" );  RETURN
+							END
+					|3, 4:
+							AlgoMatch( "cipher", cipherList, x, m );
+							IF m = "" THEN
+								Disconnect( 2, "protocol error" );  RETURN
+							END;
+							G.GetCipherParams( m, modname, keybits, mode );
+							cipher := Ciphers.NewCipher( modname );
+							IF n = 3 THEN
+								new.outcipher := cipher;  new.outkeybits := keybits; new.outmode := mode
+							ELSE
+								new.incipher := cipher;  new.inkeybits := keybits; new.inmode := mode
+							END;
+					|5, 6:
+							AlgoMatch( "hmac", hmacList, x, m );
+							IF m = "none" THEN
+							ELSIF m # "" THEN
+								G.GetHMacParams( m, modname, maclen );
+							ELSE
+								Disconnect( 2, "protocol error" );  RETURN
+							END;
+							IF n = 5 THEN  
+								NEW( new.outmac, modname, maclen );
+							ELSE  
+								NEW( new.inmac, modname, maclen );
+							END;
+					|7, 8:
+							AlgoMatch( "compr", ComprAlgorythms, x, m );
+							IF m # "none" THEN
+								Disconnect( 2, "protocol error" );  RETURN
+							END
 					END;
-					Out.String( "exchanging keys" ); Out.Ln;
-					IF kex = 1 THEN Group1( sha1 )
-					ELSIF kex = 2 THEN Group14( sha1 )
-					ELSIF kex = 3 THEN GroupExchange( sha1 )
-					END;
-					IF state # Closed THEN
-						ActivateNewKeys;
-						state := Connected;
-						Out.String( "key exchange done" ); Out.Ln
-					ELSE
-						Out.String( "key exchange failed" ); Out.Ln
-					END;
-				END NegotiateAlgorythms;
+				END;
+			ELSE 
+				Disconnect( 2, "protocol error" );  RETURN
+			END;
+			IF kex < 4 THEN
+				hash := CryptoHashes.NewHash( "CryptoSHA1" )
+			ELSE
+				hash := CryptoHashes.NewHash( "CryptoSHA256" );
+				DEC( kex, 3 )
+			END;
+			hash.Initialize;
+			pos := 0;  U.GetLength( cvers, pos, l );  hash.Update( cvers, 0, l + 4 );		(* VC *)
+			pos := 0;  U.GetLength( svers, pos, l );  hash.Update( svers, 0, l + 4 );		(* VS *)
+			Int2Chars( sp.len, lbuf );
+			hash.Update( lbuf, 0, 4 );  hash.Update( sp.buf^, 0, sp.len );	(* IC *)
+			Int2Chars( rp.len, lbuf );
+			hash.Update( lbuf, 0, 4 );  hash.Update( rp.buf^, 0, rp.len );		(* IS *)
 
-				PROCEDURE ClientAlgorythms(): Packet;
-				VAR packet: Packet;
-				BEGIN
-					NEW( packet, KEXInit, 2048 );
-					U.RandomBytes( packet.buf^, 1, 16 );  packet.len := 17;
-					packet.AppString( KEXAlgorythms );
-					packet.AppString( SHKAlgorythms );
-					packet.AppString( cipherList );  packet.AppString( cipherList );
-					packet.AppString( hmacList );  packet.AppString( hmacList );
-					packet.AppString( ComprAlgorythms );  packet.AppString( ComprAlgorythms );
-					packet.AppString( Languages );  packet.AppString( Languages );
-					packet.AppChar(  0X );	(* FALSE *)
-					packet.AppInteger( 0 );
-					RETURN packet
-				END ClientAlgorythms;
+			IF kex = 1 THEN  rp := Group1( hash )
+			ELSIF kex = 2 THEN  rp := Group14( hash )
+			ELSIF kex = 3 THEN  rp := GroupExchange( hash )
+			END;
+			IF state # Closed THEN
+				hash.GetHash( session_key, 0 );  
+				session_key_size := hash.size;
+				IF session_id_size = 0 THEN
+					session_id := session_key;  
+					session_id_size := session_key_size
+				END;
+				IF CheckSHK( rp ) THEN
+					ActivateNewKeys( hash, new );
+					state := Connected
+				END;
+			ELSE
+				Log.String( "### key exchange failed" ); Log.Ln
+			END;
+		END NegotiateAlgorythms; 
 
-				PROCEDURE Group1( sha1: SHA1.Hash );
-				CONST DHInit = 1EX;  DHReply = 1FX;
-				VAR
-					buf: ARRAY 1024 OF CHAR; lshkb, lf: SIZE; len, p, pos: SIZE;
-					pub, serverpub, sec: B.BigNumber;  dh: DH.DH;  packet: Packet;
-				BEGIN
-					IF 1 IN G.debug THEN
-						Out.String( "diffie-hellman-group1-sha1 key exchange ... " );  Out.Ln;
-					END;
-					NEW( dh, 0, "dh.ssh.group1" );
-					pub := dh.GenPubKey( );
+		PROCEDURE ClientAlgorythms(): Packet;
+		VAR 
+			rand: ARRAY 16 OF CHAR; i: INTEGER;
+			sp: Packet;
+		BEGIN
+			NEW( sp, P.KEXInit, 2048 );
+				U.RandomBytes( rand, 0, 16 );  (* client cookie *)
+				FOR i := 0 TO 15 DO  sp.AppChar( rand[i] )  END;	
+				sp.AppString( kexList );
+				sp.AppString( SHKAlgorythms );
+				sp.AppString( cipherList );  sp.AppString( cipherList );
+				sp.AppString( hmacList );  sp.AppString( hmacList );
+				sp.AppString( ComprAlgorythms );  sp.AppString( ComprAlgorythms );
+				sp.AppString( Languages );  sp.AppString( Languages );
+				sp.AppChar(  0X );	(* FALSE *)
+				sp.AppInteger( 0 );
+			RETURN sp
+		END ClientAlgorythms;
 
-					NEW( packet, DHInit, 1024 );
-					U.PutBigNumber( packet.buf^, packet.len, pub );
-					SendPacket( packet );
+		PROCEDURE Group1( hash: CryptoHashes.Hash ): Packet;
+		VAR
+			pos, size: SIZE;
+			pub, serverpub, sec: B.BigNumber;  
+			dh: DH.DH;  
+			sp, rp: Packet;
+		BEGIN
+			NEW( dh, 0, "dh.ssh.group1" );
+			pub := dh.GenPubKey( );
 
-					IF ReceivePacket( buf, len ) = DHReply THEN
-						pos := 1;
-						U.GetLength( buf, pos, lshkb );
-						sha1.Update( buf, 1, 4 + lshkb );					(* KS *)
-						sha1.Update( packet.buf^, 1, packet.len - 1 );	(* e *)
-						INC( pos, lshkb );
-						U.GetLength( buf, pos, lf );
-						sha1.Update( buf, 1 + 4 + lshkb, 4 + lf );			(*  f *)
-						B.AssignBin( serverpub, buf, 1 + 4 + lshkb + 4, lf );
-						sec := dh.ComputeKey( serverpub );
-						p := 0;  U.PutBigNumber( secret, p, sec );
-						sha1.Update( secret, 0, p );							(* K *)
-						sha1.GetHash( hash, 0 );
-						IF 1 IN G.debug THEN  Out.String( "done" );  Out.Ln  END;
-						CheckSHK( buf, 1, 1 + 4 + lshkb + 4 + lf );
-						IF incount < 5 THEN  sessionId := hash END;
-					ELSE
-						Disconnect( 2, "protocol error: 'DH REPLY' package expected" );
-					END
-				END Group1;
+			NEW( sp, P.DHInit, 1024 );
+				sp.AppBigNumber( pub );
+			SendPacket( sp );
+			
+			rp := GetPacket( );
+			IF rp.type = P.DHReply THEN
+				rp.SetPos( 1 );
+				rp.GetBlobInfo( pos, size );
+				hash.Update( rp.buf^, pos, size );						(* KS *)
+				hash.Update( sp.buf^, 1, sp.len - 1 );					(* e *)
+				rp.GetBlobInfo( pos, size );
+				hash.Update( rp.buf^, pos, size );						(*  f *)
+				rp.SetPos( pos );
+				serverpub := rp.GetBigNumber( );
+				sec := dh.ComputeKey( serverpub );
+				pos := 0;  U.PutBigNumber( secret, pos, sec );
+				hash.Update( secret, 0, pos );							(* K *)
+			ELSE
+				Disconnect( 2, "protocol error: 'DH REPLY' package expected" );
+			END;
+			RETURN rp
+		END Group1;
 
-				PROCEDURE Group14( sha1: SHA1.Hash );
-				CONST DHInit = 1EX;  DHReply = 1FX;
-				VAR
-					buf: ARRAY 2048 OF CHAR; p, pos, len: SIZE; lshkb, lf: SIZE;
-					pub, serverpub, sec: B.BigNumber;  dh: DH.DH;  packet: Packet;
-				BEGIN
-					IF 1 IN G.debug THEN
-						Out.String( "diffie-hellman-group14-sha1 key exchange ... " );  Out.Ln;
-					END;
-					NEW( dh, 0, "dh.ssh.group14" );
-					pub := dh.GenPubKey( );
+		PROCEDURE Group14( hash: CryptoHashes.Hash ): Packet;
+		VAR
+			pos, size: SIZE; 
+			pub, serverpub, sec: B.BigNumber;  
+			dh: DH.DH;  
+			sp, rp: Packet;
+		BEGIN
+			NEW( dh, 0, "dh.ssh.group14" );
+			pub := dh.GenPubKey( );
 
-					NEW( packet, DHInit, 2048 );
-					U.PutBigNumber( packet.buf^, packet.len, pub );
-					SendPacket( packet );
+			NEW( sp, P.DHInit, 2048 );  
+				sp.AppBigNumber( pub );
+			SendPacket( sp );
+			
+			rp := GetPacket( );
+			IF rp.type = P.DHReply THEN
+				rp.SetPos( 1 );
+				rp.GetBlobInfo( pos, size );
+				hash.Update( rp.buf^, pos, size );					(* KS *)
+				hash.Update( sp.buf^, 1, sp.len - 1 );				(* e *)
+				rp.GetBlobInfo( pos, size );
+				hash.Update( rp.buf^, pos, size );					(* f *)
+				rp.SetPos( pos );
+				serverpub := rp.GetBigNumber( );
+				sec := dh.ComputeKey( serverpub );
+				pos := 0;  U.PutBigNumber( secret, pos, sec );
+				hash.Update( secret, 0, pos );						(* K *)
+			ELSE
+				Disconnect( 2, "protocol error: 'DH REPLY' package expected" );
+			END;
+			 RETURN rp
+		END Group14;
+				
 
-					IF ReceivePacket( buf, len ) = DHReply THEN
-						pos := 1;
-						U.GetLength( buf, pos, lshkb );
-						sha1.Update( buf, 1, 4 + lshkb );					(* KS *)
-						sha1.Update( packet.buf^, 1, packet.len - 1 );	(* e *)
-						INC( pos, lshkb );
-						U.GetLength( buf, pos, lf );
-						sha1.Update( buf, 1 + 4 + lshkb, 4 + lf );			(*  f *)
-						B.AssignBin( serverpub, buf, 1 + 4 + lshkb + 4, lf );
-						sec := dh.ComputeKey( serverpub );
-						p := 0;  U.PutBigNumber( secret, p, sec );
-						sha1.Update( secret, 0, p );							(* K *)
-						sha1.GetHash( hash, 0 );
-						IF 1 IN G.debug THEN  Out.String( "done" );  Out.Ln  END;
-						CheckSHK( buf, 1, 1 + 4 + lshkb + 4 + lf );
-						IF incount < 5 THEN  sessionId := hash END;
-					ELSE
-						Disconnect( 2, "protocol error: 'DH REPLY' package expected" );
-					END
-				END Group14;
+		PROCEDURE GroupExchange( hash: CryptoHashes.Hash ): Packet;
+		VAR
+			pos, size: SIZE; 
+			clientpub, serverpub, sec, prim, gen: B.BigNumber;  
+			dh: DH.DH;
+			sp1, sp2, rp1, rp2: Packet;
+		BEGIN
+			NEW( sp1, P.GEXRequest, 64 );
+				sp1.AppInteger( 1024 );  
+				sp1.AppInteger( 1024 );  
+				sp1.AppInteger( 2048 );
+			SendPacket( sp1 );
+			
+			rp1 := GetPacket( );
+			IF rp1.type = P.GEXGroup THEN
+				rp1.SetPos( 1 );
+				prim := rp1.GetBigNumber( );
+				gen := rp1.GetBigNumber( );
+				NEW( dh, 512, "" );  dh.SetPrime( prim, gen );
+				clientpub := dh.GenPubKey( );
 
-				PROCEDURE CheckSHK( CONST buf: ARRAY OF CHAR; shk, sig: SIZE );
-				VAR keyblob, signature: ARRAY 2048 OF CHAR;
-				BEGIN
-					Out.String( "checking server hostkey" ); Out.Ln;
-					U.GetString( buf, shk, keyblob );
-					U.GetString( buf, sig, signature );
-					IF ~SSHKeys.VerifyIdentity( keyblob, signature, servername, hash ) THEN
-						Out.String( "Server host key verification failed" ); Out.Ln;
-						Disconnect( 2, "protocol error" );
-					END;
-				END CheckSHK;
-
-				PROCEDURE GroupExchange( sha1: SHA1.Hash );
-				CONST GEXRequest = 22X;  GEXGroup = 1FX;  GEXInit = 20X;  GEXReply = 21X;
-				VAR
-					buf1,buf2: ARRAY 4096 OF CHAR; pos, b1len, b2len: SIZE; l, lshkb, lf: SIZE;
-					pub, serverpub, sec, prim, gen: B.BigNumber;  dh: DH.DH;
-					pack1, pack2: Packet;
-				BEGIN
-					IF 1 IN G.debug THEN
-						Out.String( "diffie-hellman-group-exchange-sha1 key exchange ... " ); Out.Ln;
-					END;
-					NEW( pack1, GEXRequest, 64 );
-					pack1.AppInteger( 1024 );
-					pack1.AppInteger( 1024 );
-					pack1.AppInteger( 2048 );
-					SendPacket( pack1 );
-
-					IF ReceivePacket( buf1, b1len ) = GEXGroup THEN
-						pos := 1;
-						U.GetLength( buf1, pos, l );  B.AssignBin( prim, buf1, pos, l );
-						INC( pos, l );
-						U.GetLength( buf1, pos, l );  B.AssignBin( gen, buf1, pos, l );
-						NEW( dh, 512, "" );
-						dh.SetPrime( prim, gen );
-						pub := dh.GenPubKey( );
-
-						NEW( pack2, GEXInit, 1024 );
-						U.PutBigNumber( pack2.buf^, pack2.len, pub );
-						SendPacket( pack2 );
-
-						IF ReceivePacket( buf2, b2len ) = GEXReply THEN
-							pos := 1;
-							U.GetLength( buf2, pos, lshkb );
-							sha1.Update( buf2, 1, 4 + lshkb );					(* KS *)
-							sha1.Update( pack1.buf^, 1, 12 );					(* min || n || max *)
-							sha1.Update( buf1, 1, b1len - 1 );					(* p || g *)
-							sha1.Update( pack2.buf^, 1, pack2.len - 1 );		(* e *)
-							INC( pos, lshkb );
-							U.GetLength( buf2, pos, lf );
-							sha1.Update( buf2, 1 + 4 + lshkb, 4 + lf );		(* f *)
-							B.AssignBin( serverpub, buf2, 1 + 4 + lshkb + 4, lf );
-							sec := dh.ComputeKey( serverpub );
-							pos := 0;  U.PutBigNumber( secret, pos, sec );
-							sha1.Update( secret, 0, pos );						(* K *)
-							sha1.GetHash( hash, 0 );
-							IF 1 IN G.debug THEN  Out.String( "done" );  Out.Ln  END;
-							CheckSHK( buf2, 1, 1 + 4 + lshkb + 4 + lf );
-							IF incount < 5 THEN  sessionId := hash END;
-						ELSE
-							Disconnect( 2, "protocol error: 'DH GEX REPLY' package expected" );
-						END
-					ELSE
-						Disconnect( 2, "protocol error: 'DH GEX GROUP' package expected" );
-					END;
-				END GroupExchange;
-
-
-
-				PROCEDURE ActivateNewKeys;
-				VAR len: SIZE;  buf: ARRAY 512 OF CHAR; packet: Packet;
-				BEGIN
-					DeriveKey( 'C', new.outkeybits DIV 8, buf );
-					new.outcipher.InitKey( buf, new.outkeybits );
-					DeriveKey( 'A', 16, buf );
-					new.outcipher.SetIV( buf, new.outmode );
-
-					DeriveKey( 'D', new.inkeybits DIV 8, buf );
-					new.incipher.InitKey( buf, new.inkeybits );
-					DeriveKey( 'B', 16, buf );
-					new.incipher.SetIV( buf, new.inmode );
-
-					NEW( packet, NewKeys, 64 );  SendPacket( packet );
-
-					IF ReceivePacket( buf, len ) = NewKeys THEN
-						DeriveKey( 'E', 20, outhkey );
-						outmac := new.outmac;  outmaclen := new.outmaclen;
-						DeriveKey(  'F', 20, inhkey );
-						inmac := new.inmac;   inmaclen := new.inmaclen;
-						outcipher := new.outcipher;  incipher := new.incipher;
-						IF 0 IN G.debug THEN
-							Out.String( "receive cipher: " );  Out.String( incipher.name );  Out.Ln;
-							Out.String( "send cipher:     " );  Out.String( outcipher.name );  Out.Ln;
-							Out.String( "receive MAC:   " );  Out.String( inmac.name );
-									Out.Int( inmaclen, 7 );  Out.Ln;
-							Out.String( "send MAC:       " );  Out.String( outmac.name );
-									Out.Int( outmaclen, 7 );  Out.Ln;
-						END
-					ELSE
-						Disconnect( 2, "protocol error:  'NEWKEYS' packet expected" )
-					END
-				END ActivateNewKeys;
+				NEW( sp2, P.GEXInit, 1024 );  
+					sp2.AppBigNumber( clientpub );
+				SendPacket( sp2 );
+				
+				rp2 := GetPacket( );
+				IF rp2.type = P.GEXReply THEN
+					rp2.SetPos( 1 );
+					rp2.GetBlobInfo( pos, size );
+					hash.Update( rp2.buf^, pos, size );					(* KS *)
+					hash.Update( sp1.buf^, 1, 12 );					(* min || n || max *)
+					hash.Update( rp1.buf^, 1, rp1.len - 1 );			(* p || g *)
+					hash.Update( sp2.buf^, 1, sp2.len - 1 );			(* e *)
+					rp2.GetBlobInfo( pos, size );						
+					hash.Update( rp2.buf^, pos, size );					(* f *)
+					rp2.SetPos( pos );
+					serverpub := rp2.GetBigNumber( );
+					sec := dh.ComputeKey( serverpub );
+					pos := 0;  U.PutBigNumber( secret, pos, sec );
+					hash.Update( secret, 0, pos );						(* K *)
+				ELSE
+					Disconnect( 2, "protocol error: 'DH GEX REPLY' package expected" );
+				END
+			ELSE
+				Disconnect( 2, "protocol error: 'DH GEX GROUP' package expected" );
+			END;
+			RETURN rp2
+		END GroupExchange;
 
 
-				PROCEDURE DeriveKey( keykind: CHAR;  keylen: SIGNED32;  VAR key: ARRAY OF CHAR );
-				VAR
-					buf: ARRAY 512 OF CHAR;
-					i, top: SIGNED32;
-					slen: SIZE;
-					h: SHA1.Hash;
-					p: SIZE;
-				BEGIN
-					NEW( h );  h.Initialize;
-					p := 0;  U.GetLength( secret, p, slen );
-					h.Update( secret, 0, slen + 4 );
-					h.Update( hash, 0, 20 );
-					buf[0] := keykind;  h.Update( buf, 0, 1 );
-					h.Update( sessionId, 0, 20 );
-					h.GetHash( buf, 0 );  top :=  h.size;
-					WHILE top < keylen DO
-						h.Initialize;
-						p := 0;  U.GetLength( secret, p, slen );
-						h.Update( secret, 0, slen + 4 );
-						h.Update( hash, 0, 20 );
-						h.Update( buf, 0, top );
-						h.GetHash( buf, top );  INC( top,  h.size );
-					END;
-					FOR i := 0 TO keylen - 1 DO key[i] := buf[i] END;
-				END DeriveKey;
+		PROCEDURE CheckSHK( p: Packet ): BOOLEAN;
+		VAR keyblob, signature: ARRAY 2048 OF CHAR; len: SIZE;
+		BEGIN
+			(* current position *)
+			p.GetArray( signature, len );
+			p.SetPos( 1 );
+			p.GetArray( keyblob, len );
+			IF SSHKeys.VerifyHostkey(	 keyblob, signature, servername, 
+												session_id, session_id_size ) THEN
+				RETURN TRUE
+			ELSE
+				Log.String( "### Server host key verification failed" ); Log.Ln;
+				Disconnect( 2, "protocol error" );
+				RETURN FALSE
+			END;
+		END CheckSHK;
+				
+	
+		PROCEDURE ActivateNewKeys( hash: CryptoHashes.Hash; new: SecurityState );
+		VAR key: ARRAY 512 OF CHAR; sp, rp: Packet;
+		BEGIN
+			NEW( sp, P.NewKeys, 64 );  
+			SendPacket( sp );
+			
+			rp := GetPacket( );
+			IF rp.type = P.NewKeys THEN			
+				outcipher := new.outcipher;  	
+				DeriveKey( 'C', new.outkeybits DIV 8, hash, key );
+				outcipher.InitKey( key, new.outkeybits );
+				DeriveKey( 'A', outcipher.blockSize, hash, key );
+				outcipher.SetIV( key, new.outmode );
+				
+				incipher := new.incipher;
+				DeriveKey( 'D', new.inkeybits DIV 8, hash, key );
+				incipher.InitKey( key, new.inkeybits );
+				DeriveKey( 'B', incipher.blockSize, hash, key );
+				incipher.SetIV( key, new.inmode );
+			
+				outmac := new.outmac;
+				DeriveKey( 'E', outmac.keySize, hash, key );
+				outmac.SetKey( key );
+				
+				inmac := new.inmac;
+				DeriveKey( 'F', inmac.keySize, hash, key );
+				inmac.SetKey( key );
+			ELSE
+				Disconnect( 2, "protocol error:  'NEWKEYS' packet expected" )
+			END
+		END ActivateNewKeys;	
 
 
-			END Connection;
+		PROCEDURE DeriveKey( keykind: CHAR;  len: SIZE;  hash: CryptoHashes.Hash; VAR key: ARRAY OF CHAR );
+		VAR
+			buf: ARRAY 512 OF CHAR;
+			i, top, secret_size: SIZE;
+		BEGIN
+			i := 0;  U.GetLength( secret, i, secret_size ); INC( secret_size, 4 );
+			
+			hash.Initialize;
+			hash.Update( secret, 0, secret_size );
+			hash.Update( session_key, 0, session_key_size );
+			buf[0] := keykind;  hash.Update( buf, 0, 1 );
+			hash.Update( session_id, 0, session_id_size );
+			hash.GetHash( buf, 0 );  top :=  hash.size;
+			WHILE top < len DO
+				hash.Initialize;
+				hash.Update( secret, 0, secret_size );
+				hash.Update( session_key, 0, session_key_size );
+				hash.Update( buf, 0, top );
+				hash.GetHash( buf, top );  INC( top,  hash.size );
+			END;
+			FOR i := 0 TO len - 1 DO key[i] := buf[i] END;
+		END DeriveKey;
 
 
-TYPE
-	Packet* = OBJECT (** SSH Packet for sending *)
-			VAR
-				buf-: POINTER TO ARRAY OF CHAR;
-				len-: SIZE;
-
-				PROCEDURE & Init*( type: CHAR; size: SIZE );
-				BEGIN
-					NEW( buf, size );  buf[0] := type;  len := 1;
-				END Init;
-
-				PROCEDURE AppChar*( c: CHAR );
-				BEGIN
-					buf[len] := c;  INC( len )
-				END AppChar;
-
-				PROCEDURE AppInteger* ( v: SIGNED32 );
-				VAR i: SIZE;
-				BEGIN
-					FOR i := 3 TO 0 BY -1 DO buf[len + i] := CHR( v MOD 256 );  v := v DIV 256 END;
-					INC( len, 4 )
-				END AppInteger;
-
-				PROCEDURE AppString*( CONST str: ARRAY OF CHAR );
-				VAR l, p: SIZE;  c: CHAR;
-				BEGIN
-					l := 0;  c := str[0];  p := len + 4;
-					WHILE (l < LEN( str )) & (c # 0X) DO buf[p + l] := c;  INC( l );  c := str[l]  END;
-					AppInteger( l(SIGNED32) );
-					INC( len, l )
-				END AppString;
-
-				PROCEDURE AppArray*( CONST arr: ARRAY OF CHAR;  pos, arrlen: SIZE );
-				VAR i: SIZE;
-				BEGIN
-					AppInteger( arrlen(SIGNED32) );
-					FOR i := 0 TO arrlen -1 DO buf[len] := arr[pos + i];  INC( len )  END
-				END AppArray;
+	END Connection;
 
 
-		END Packet;
 
-VAR hexd: ARRAY 17 OF CHAR;
-
-
-	PROCEDURE Int2Chars( v: SIGNED32;  VAR buf: ARRAY OF CHAR );
+	PROCEDURE Int2Chars( v: SIZE;  VAR buf: ARRAY OF CHAR );
 	VAR i: SIZE;
 	BEGIN
 		FOR i := 3 TO 0 BY -1 DO buf[i] := CHR( v MOD 256 );  v := v DIV 256 END;
@@ -677,7 +664,7 @@ VAR hexd: ARRAY 17 OF CHAR;
 	END ReceiveLine;
 
 
-	PROCEDURE algoMatch( CONST cstr, sstr: ARRAY OF CHAR;  VAR match: ARRAY OF CHAR );
+	PROCEDURE AlgoMatch( CONST algo, cstr, sstr: ARRAY OF CHAR;  VAR match: ARRAY OF CHAR );
 	VAR
 		si, ci: SIGNED16;  matched: BOOLEAN;  tmp: ARRAY 64 OF CHAR;
 
@@ -699,8 +686,13 @@ VAR hexd: ARRAY 17 OF CHAR;
 				matched := (tmp # "") & (tmp = match)
 			UNTIL matched OR (tmp = "");
 		UNTIL matched OR (match = "");
-	END algoMatch;
+		IF G.debug OR (match = "") THEN
+			Log.String( algo ); Log.String( " server: " ); Log.String( sstr ); Log.Ln;
+			Log.String( algo ); Log.String( " client: " ); Log.String( cstr ); Log.Ln;
+			Log.String( algo ); Log.String( " match:  " ); Log.String( match ); Log.Ln;
+		END;
+	END AlgoMatch;
 
 BEGIN
-	hexd := "0123456789ABCDEF"
+	Log.String( "A2-SSH, version 1.8" );  Log.Ln;
 END SSHTransport.

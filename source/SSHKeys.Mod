@@ -1,36 +1,33 @@
-
-MODULE SSHKeys;  (* g.f.	2002.08.29 *)
-
-(*	2002.10.15	g.f.	RSA hostkeys added*)
+MODULE SSHKeys;  (* GF  15.10.2002 *)
 
 IMPORT
-	RSA := CryptoRSA, DSA := CryptoDSA, B:= CryptoBigNumbers, U := CryptoUtils, SHA1 := CryptoSHA1,
+	RSA := CryptoRSA, DSA := CryptoDSA, BN:= CryptoBigNumbers, U := CryptoUtils, SHA1 := CryptoSHA1,
 	MD5 := CryptoMD5, P := CryptoPrimes, G := SSHGlobals,
-	Files, Streams, Out := KernelLog, WMDialogs, Strings;
+	Files, Streams, Log := KernelLog, WMDialogs, Strings;
 
 CONST
 	Ok = WMDialogs.ResOk;
 	Abort = WMDialogs.ResAbort;
 
 TYPE
-	BigNumber = B.BigNumber;
+	BigNumber = BN.BigNumber;
 
 
-
-	PROCEDURE SSHDSSVerify( dsa: DSA.Key;  sig: DSA.Signature;  CONST hash: ARRAY OF CHAR ): BOOLEAN;
+	PROCEDURE SSHDSSVerify( dsa: DSA.Key;  sig: DSA.Signature;  CONST hash: ARRAY OF CHAR; hlen: SIZE ): BOOLEAN;
 	VAR h: SHA1.Hash;  digest: ARRAY 20 OF CHAR;
 	BEGIN
 		NEW( h );
-		h.Initialize;  h.Update( hash, 0, 20 );  h.GetHash( digest, 0 );
+		h.Initialize;  h.Update( hash, 0, hlen );  h.GetHash( digest, 0 );
 		RETURN dsa.Verify( digest, 20, sig )
 	END SSHDSSVerify;
 
-	PROCEDURE SSHRSAVerify( rsa: RSA.Key;  sig: BigNumber;  CONST hash: ARRAY OF CHAR ): BOOLEAN;
+	PROCEDURE SSHRSAVerify( rsa: RSA.Key;  sig: BigNumber;  CONST hash: ARRAY OF CHAR; hlen: SIZE ): BOOLEAN;
 	VAR h1: SHA1.Hash;  h2: MD5.Hash;  digest: ARRAY 20 OF CHAR;
 	BEGIN
 		NEW( h1 );
-		h1.Initialize;  h1.Update( hash, 0, 20 );  h1.GetHash( digest, 0 );
-		IF rsa.Verify( digest, 20, sig ) THEN   RETURN TRUE
+		h1.Initialize;  h1.Update( hash, 0, hlen );  h1.GetHash( digest, 0 );
+		IF rsa.Verify( digest, hlen, sig ) THEN   
+			RETURN TRUE
 		ELSE
 			(* SSH_BUG_RSASIGMD5 in server implementation ? *)
 			NEW( h2 );
@@ -113,8 +110,8 @@ TYPE
 			END
 		END;
 		knownKey := DSA.LoadPublicKey( r );
-		IF B.Cmp( key.y, knownKey.y ) # 0 THEN
-			Out.String( "### error: hostkey of remote host has changed" ); Out.Ln;
+		IF BN.Cmp( key.y, knownKey.y ) # 0 THEN
+			Log.String( "### error: hostkey of remote host has changed" ); Log.Ln;
 			RETURN FALSE
 		END;
 		RETURN TRUE
@@ -145,17 +142,17 @@ TYPE
 			END
 		END;
 		knownKey := RSA.ExtractPublicKey( r );
-		IF B.Cmp( key.modulus, knownKey.modulus ) # 0 THEN
-			Out.String( "### error: hostkey of remote host has changed" ); Out.Ln;
+		IF BN.Cmp( key.modulus, knownKey.modulus ) # 0 THEN
+			Log.String( "### error: hostkey of remote host has changed" ); Log.Ln;
 			RETURN FALSE
 		END;
 		RETURN TRUE
 	END CompareRSAKeys;
 
 
-	PROCEDURE VerifyIdentity*( CONST keyblob, signature, host, hash: ARRAY OF CHAR ): BOOLEAN;
+	PROCEDURE VerifyHostkey*( CONST keyblob, signature, host, hash: ARRAY OF CHAR; hlen: SIZE ): BOOLEAN;
 	VAR
-		name1, name2: ARRAY 128 OF CHAR; i, j, len: SIZE;
+		name1, name2: ARRAY 128 OF CHAR; i, j, len: SIZE; 
 		dsa: DSA.Key; dsasig: DSA.Signature;
 		rsa: RSA.Key; e, n, rsasig: BigNumber;
 		p, q, g, pub, r, s: BigNumber;
@@ -171,26 +168,28 @@ TYPE
 			dsa := DSA.PubKey( p, q, g, pub );
 			U.GetLength( signature, j, len );
 			IF len # 40 THEN  RETURN FALSE  END;
-			B.AssignBin( r, signature, j, 20 ); INC( j, 20 );
-			B.AssignBin( s, signature, j, 20 );
+			BN.AssignBin( r, signature, j, 20 ); INC( j, 20 );
+			BN.AssignBin( s, signature, j, 20 );
 			NEW( dsasig, r, s );
-			IF SSHDSSVerify( dsa, dsasig, hash ) THEN  RETURN CompareDSAKeys( host, dsa )
-			ELSE  RETURN FALSE
+			IF SSHDSSVerify( dsa, dsasig, hash, hlen ) THEN  
+				RETURN CompareDSAKeys( host, dsa )
+			ELSE  
+				RETURN FALSE
 			END
 		ELSIF name1 = "ssh-rsa" THEN
 			U.GetBigNumber( keyblob, i, e );
 			U.GetBigNumber( keyblob, i, n );
 			rsa := RSA.PubKey( e, n );
 			U.GetBigNumber( signature, j, rsasig );
-			IF (rsa.name = "unkown") (* from openssh! *) OR SSHRSAVerify( rsa, rsasig, hash ) THEN
+			IF (rsa.name = "unkown") (* from openssh! *) OR SSHRSAVerify( rsa, rsasig, hash, hlen ) THEN
 				RETURN CompareRSAKeys( host, rsa )
 			ELSE  RETURN FALSE
 			END
 		ELSE
-			Out.String( "### error: unsupported public hostkey type: " );  Out.String( name1 ); Out.Ln;
+			Log.String( "### error: unsupported public hostkey type: " );  Log.String( name1 ); Log.Ln;
 			RETURN FALSE
 		END;
-	END VerifyIdentity;
+	END VerifyHostkey;
 
 
 
@@ -221,8 +220,8 @@ TYPE
 		END;
 		p := P.NewPrime( Size DIV 2, FALSE );
 		q := P.NewPrime( Size DIV 2, FALSE );
-		B.AssignInt( e, 3 );
-		RSA.MakeKeys( p, q, e, "Aos rsa-key", pub, priv );
+		BN.AssignInt( e, 3 );
+		RSA.MakeKeys( p, q, e, "A2 rsa-key", pub, priv );
 		f := Files.New( G.PrivateKeyFile );  Files.OpenWriter( w, f, 0 );
 		RSA.StorePrivateKey( w, priv, pw1 );
 		w.Update;

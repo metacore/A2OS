@@ -233,9 +233,9 @@ TYPE
 					Strings.IntToStr(Texts.defaultAttributes.fontInfo.size, tempString);
 					sizeEdit.SetAsString(tempString);
 					styleEdit.SetAsString("regular");
-					Strings.IntToHexStr(Texts.defaultAttributes.color, 7, tempString);
+					Strings.IntToHexStr(Texts.defaultAttributes.color, 8, tempString);
 					colorEdit.SetAsString(tempString);
-					Strings.IntToHexStr(Texts.defaultAttributes.bgcolor, 7, tempString);
+					Strings.IntToHexStr(Texts.defaultAttributes.bgcolor, 8, tempString);
 					bgColEdit.SetAsString(tempString);
 				ELSE
 					famEdit.SetAsString(utilreader.attributes.fontInfo.name);
@@ -252,9 +252,9 @@ TYPE
 					ELSE
 						styleEdit.SetAsString("Regular");
 					END;
-					Strings.IntToHexStr(utilreader.attributes.color, 7, tempString);
+					Strings.IntToHexStr(utilreader.attributes.color, 8, tempString);
 					colorEdit.SetAsString(tempString);
-					Strings.IntToHexStr(utilreader.attributes.bgcolor, 7, tempString);
+					Strings.IntToHexStr(utilreader.attributes.bgcolor, 8, tempString);
 					bgColEdit.SetAsString(tempString);
 				END;
 				text.ReleaseWrite
@@ -393,7 +393,7 @@ TYPE
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
-			Strings.IntToHexStr(result, 7, colorString);
+			Strings.IntToHexStr(result, 8, colorString);
 			colorEdit.SetAsString(colorString);
 			colB.clDefault.Set(result);
 		END ColorPopupHandler;
@@ -412,7 +412,7 @@ TYPE
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
-			Strings.IntToHexStr(result, 7, colorString);
+			Strings.IntToHexStr(result, 8, colorString);
 			bgColEdit.SetAsString(colorString);
 			bgColB.clDefault.Set(result);
 		END BGColorPopupHandler;

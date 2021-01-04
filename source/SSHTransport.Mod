@@ -1,8 +1,7 @@
 MODULE SSHTransport;  	(* GF	8.7.2002 / 10.12.2020 *)
 
 IMPORT TCP, IP, DNS, Strings, Log := KernelLog,
-	Ciphers := CryptoCiphers, B := CryptoBigNumbers, DH := CryptoDiffieHellman, CryptoHashes,
-	CryptoHMAC,
+	Ciphers := CryptoCiphers, B := CryptoBigNumbers, DH := CryptoDiffieHellman, CryptoHashes, CryptoHMAC,
 	U := CryptoUtils, G := SSHGlobals, P := SSHPackets, SSHKeys;
 
 CONST
@@ -145,21 +144,10 @@ TYPE
 			ELSE
 				p1 := 0;  p2 := 0;
 				U.PutArray( svers, p1, receivebuf, p2, len );
-				IF G.debug THEN
-					Log.String( "server version: " ); PrintBufferString( svers, 0 ); Log.Ln;
-					Log.String( "client version: " ); PrintBufferString( cvers, 0 ); Log.Ln;
-				END;
 				RETURN TRUE
 			END
 		END GetServerVersion;
 				
-		PROCEDURE PrintBufferString*( CONST buf: ARRAY OF CHAR;  pos: SIGNED32 );
-		VAR i, p, len: SIZE; 
-		BEGIN
-			p := pos;
-			U.GetLength( buf, p, len );
-			FOR i := 0 TO len - 1 DO Log.Char( buf[p + i] )  END
-		END PrintBufferString;
 
 		PROCEDURE SendClientVersion;
 		VAR
@@ -216,7 +204,7 @@ TYPE
 			cbs := incipher.blockSize;
 			tcp.Receive( trbuf, 0, cbs, cbs, l, res );
 			IF res # TCP.Ok THEN 
-				Log.String( "Broken connection, closed by peer" ); Log.Ln;
+				Log.String( "### Broken connection, closed by peer" ); Log.Ln;
 				state := Closed;
 				RETURN  P.emptyPacket
 			END;
@@ -236,7 +224,7 @@ TYPE
 				i := 0;
 				WHILE (i < inmac.size) & (rmac[i] = cmac[i]) DO  INC( i )  END;
 				IF i < inmac.size THEN
-					Log.String( "received a packet with wrong MAC" ); Log.Ln;
+					Log.String( "### received a packet with wrong MAC" ); Log.Ln;
 					Disconnect( 1, "wrong mac" );
 					RETURN  P.emptyPacket
 				END
@@ -263,7 +251,7 @@ TYPE
 					p.SetPos( 1 );
 					err := p.GetInteger( );
 					p.GetString( msg );  
-					Log.String( "### remote host closed connection: " );
+					Log.String( "### remote host closed the connection: " );
 					Log.String( msg ); Log.Ln;
 					state := Closed;
 					p := P.emptyPacket
@@ -296,8 +284,7 @@ TYPE
 					sp.AppString( "" );	(* language *)
 				SendPacket( sp );
 				tcp.Close( );  state := Closed;
-				Log.String( "connection to " );  Log.String( servername );  
-				Log.String( " closed "); Log.Ln;
+				Log.String( "connection to " );  Log.String( servername );  Log.String( " closed "); Log.Ln;
 			END;
 		END Disconnect;
 
@@ -333,7 +320,7 @@ TYPE
 			
 			rp := GetPacket( );	
 			IF rp.type = P.KEXInit THEN	
-				rp.SetPos( 17 ); (* skip serever cookie *)
+				rp.SetPos( 17 ); (* skip serever random *)
 				FOR n := 1 TO 8 DO
 					rp.GetString( x );
 					CASE n OF
@@ -406,6 +393,7 @@ TYPE
 			ELSIF kex = 2 THEN  rp := Group14( hash )
 			ELSIF kex = 3 THEN  rp := GroupExchange( hash )
 			END;
+			IF state # Closed THEN  CheckSHK( rp )  END;
 			IF state # Closed THEN
 				hash.GetHash( session_key, 0 );  
 				session_key_size := hash.size;
@@ -413,10 +401,8 @@ TYPE
 					session_id := session_key;  
 					session_id_size := session_key_size
 				END;
-				IF CheckSHK( rp ) THEN
-					ActivateNewKeys( hash, new );
-					state := Connected
-				END;
+				ActivateNewKeys( hash, new );
+				state := Connected;
 			ELSE
 				Log.String( "### key exchange failed" ); Log.Ln
 			END;
@@ -428,7 +414,7 @@ TYPE
 			sp: Packet;
 		BEGIN
 			NEW( sp, P.KEXInit, 2048 );
-				U.RandomBytes( rand, 0, 16 );  (* client cookie *)
+				U.RandomBytes( rand, 0, 16 );
 				FOR i := 0 TO 15 DO  sp.AppChar( rand[i] )  END;	
 				sp.AppString( kexList );
 				sp.AppString( SHKAlgorythms );
@@ -558,20 +544,17 @@ TYPE
 		END GroupExchange;
 
 
-		PROCEDURE CheckSHK( p: Packet ): BOOLEAN;
+		PROCEDURE CheckSHK( p: Packet );
 		VAR keyblob, signature: ARRAY 2048 OF CHAR; len: SIZE;
 		BEGIN
 			(* current position *)
 			p.GetArray( signature, len );
 			p.SetPos( 1 );
 			p.GetArray( keyblob, len );
-			IF SSHKeys.VerifyHostkey(	 keyblob, signature, servername, 
-												session_id, session_id_size ) THEN
-				RETURN TRUE
-			ELSE
+			IF ~SSHKeys.VerifyHostkey(	keyblob, signature, servername, 
+												session_key, session_key_size ) THEN
 				Log.String( "### Server host key verification failed" ); Log.Ln;
 				Disconnect( 2, "protocol error" );
-				RETURN FALSE
 			END;
 		END CheckSHK;
 				
@@ -583,7 +566,7 @@ TYPE
 			SendPacket( sp );
 			
 			rp := GetPacket( );
-			IF rp.type = P.NewKeys THEN			
+			IF rp.type = P.NewKeys THEN		
 				outcipher := new.outcipher;  	
 				DeriveKey( 'C', new.outkeybits DIV 8, hash, key );
 				outcipher.InitKey( key, new.outkeybits );
@@ -611,25 +594,26 @@ TYPE
 
 		PROCEDURE DeriveKey( keykind: CHAR;  len: SIZE;  hash: CryptoHashes.Hash; VAR key: ARRAY OF CHAR );
 		VAR
-			buf: ARRAY 512 OF CHAR;
-			i, top, secret_size: SIZE;
+			digest: ARRAY 512 OF CHAR;  ch: ARRAY 2 OF CHAR;
+			i, have, secret_size: SIZE;
 		BEGIN
 			i := 0;  U.GetLength( secret, i, secret_size ); INC( secret_size, 4 );
+			ch[0] := keykind;  
 			
 			hash.Initialize;
 			hash.Update( secret, 0, secret_size );
 			hash.Update( session_key, 0, session_key_size );
-			buf[0] := keykind;  hash.Update( buf, 0, 1 );
+			hash.Update( ch, 0, 1 );
 			hash.Update( session_id, 0, session_id_size );
-			hash.GetHash( buf, 0 );  top :=  hash.size;
-			WHILE top < len DO
+			hash.GetHash( digest, 0 );  have :=  hash.size;
+			WHILE have < len DO
 				hash.Initialize;
 				hash.Update( secret, 0, secret_size );
 				hash.Update( session_key, 0, session_key_size );
-				hash.Update( buf, 0, top );
-				hash.GetHash( buf, top );  INC( top,  hash.size );
+				hash.Update( digest, 0, have );
+				hash.GetHash( digest, have );  INC( have,  hash.size );
 			END;
-			FOR i := 0 TO len - 1 DO key[i] := buf[i] END;
+			FOR i := 0 TO len - 1 DO key[i] := digest[i] END;
 		END DeriveKey;
 
 

@@ -12,11 +12,11 @@ VAR
 
 TYPE
 	Hash* = OBJECT (Hashes.Hash)
-		VAR
-			hash: ARRAY 8 OF SIGNED32;		(* state *)
-			Nl, Nh: SIGNED32;
-			cdata: ARRAY BlockSize OF CHAR;	(* pending data *)
-			cn: SIGNED32;	(* number of chars in cdata *)
+	VAR
+		hash: ARRAY 8 OF SIGNED32;		(* state *)
+		bitlen: SIGNED64;
+		cdata: ARRAY BlockSize OF CHAR;	(* pending data *)
+		cn: SIGNED32;	(* number of chars in cdata *)
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -30,22 +30,22 @@ TYPE
 			hash[2] := SIGNED32( 3C6EF372H );	hash[3] := SIGNED32( 0A54FF53AH );
 			hash[4] := SIGNED32( 510E527FH );		hash[5] := SIGNED32( 09B05688CH );
 			hash[6] := SIGNED32( 1F83D9ABH);		hash[7] := SIGNED32( 05BE0CD19H );
-			Nl := 0;
-			Nh := 0;
+			bitlen := 0;
 			cn := 0;
 			initialized := TRUE
 		END Initialize;
 
-		PROCEDURE HashBlock( CONST buf: ARRAY OF CHAR;  pos: SIZE );
-		VAR a, b, c, d, e, f, g, h, s0, s1, s, T1, T2, i: SIGNED32;
-			X: ARRAY 16 OF SIGNED32
+		PROCEDURE HashBlock;
+		VAR 
+			a, b, c, d, e, f, g, h, s0, s1, s, T1, T2, i: SIGNED32;
+			X: ARRAY 16 OF SIGNED32;
 		BEGIN
 			a := hash[0];  b := hash[1];  c := hash[2];  d := hash[3];
 			e := hash[4];  f := hash[5];  g := hash[6];  h := hash[7];
 
 			FOR i := 0 TO 63 DO
 				IF i < 16 THEN
-					X[i] := U.IntFromBufferBE( buf, pos );  INC( pos, 4 )
+					X[i] := U.IntFromBufferBE( cdata, 4*i )
 				ELSE
 					s0 := sigma0( SET32(X[(i+1) MOD 16]) );
 					s1 := sigma1( SET32(X[(i+14) MOD 16]) );
@@ -63,38 +63,18 @@ TYPE
 		END HashBlock;
 
 
-		PROCEDURE HashContextBlock;
-		BEGIN
-			HashBlock( cdata, 0 );  cn := 0
-		END HashContextBlock;
-
-
 		(** data: value to be hashed *)
 		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
-			VAR n, i, l: SIGNED32;
 		BEGIN
 			ASSERT( initialized );
-			l := Nl + SIGNED32(len)*8;
-			IF l < Nl THEN INC( Nh )  (* overflow *)  END;
-			Nh := Nh + ASH( SIGNED32(len), -29 );  Nl := l;
-
-			IF cn > 0 THEN
-				IF cn + len < BlockSize THEN
-					i := cn;  INC( cn, SIGNED32(len) );
-					WHILE i < cn  DO  cdata[i] := data[pos];  INC( i ); INC( pos )  END;
-					RETURN
-				ELSE
-					WHILE cn < BlockSize  DO
-						cdata[cn] := data[pos];  INC( cn );  INC( pos );  DEC( len )
-					END;
-					HashContextBlock;
+			INC( bitlen, len*8 );
+			
+			WHILE len > 0 DO
+				cdata[cn] := data[pos];  INC( cn );  INC( pos );  DEC( len );
+				IF cn = 64 THEN  
+					HashBlock;  cn := 0
 				END
 			END;
-
-			n := 0;
-			WHILE n < len DIV BlockSize  DO  HashBlock( data, pos );  INC( n )  END;
-			len := len MOD BlockSize;
-			WHILE cn < len  DO cdata[cn] := data[pos];  INC( cn );  INC( pos )  END;
 		END Update;
 
 		(** get the hashvalue of length SELF.size *)
@@ -104,12 +84,13 @@ TYPE
 			cdata[cn] := 80X;  INC( cn );
 			IF cn > BlockSize - 8 THEN
 				WHILE cn < BlockSize  DO  cdata[cn] := 0X;  INC( cn )  END;
-				HashContextBlock;
+				HashBlock;
 			END;
 			p := BlockSize - 8;
 			WHILE cn < p  DO  cdata[cn] := 0X;  INC( cn )  END;
-			U.IntToBufferBE( Nh(SIGNED32), cdata, p );  U.IntToBufferBE( Nl(SIGNED32), cdata, p + 4 );
-			HashContextBlock;
+			U.IntToBufferBE( SIGNED32( LSH( bitlen, -32 ) ), cdata, p );  
+			U.IntToBufferBE( SIGNED32( bitlen ), cdata, p + 4 );
+			HashBlock;
 
 			FOR i := 0 TO 7 DO  U.IntToBufferBE( hash[i], buf, pos );  INC( pos, 4 )  END;
 		END GetHash;
@@ -154,8 +135,6 @@ TYPE
 	BEGIN
 		RETURN SIGNED32( ROT( x , 15 ) / ROT( x, 13 ) / LSH( x, -10 ) )
 	END sigma1;
-
-
 
 
 	PROCEDURE InitializeK;

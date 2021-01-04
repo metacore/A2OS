@@ -15,6 +15,12 @@ VAR
 	BEGIN
 		Do( c, Hashes.NewHash( "CryptoSHA1" ) )
 	END SHA1;
+	
+	PROCEDURE SHA256*( c: Commands.Context );
+	BEGIN
+		Do( c, Hashes.NewHash( "CryptoSHA256" ) )
+	END SHA256;
+
 
 	PROCEDURE SHA3*( c: Commands.Context );
 	VAR h: Hashes.Hash;
@@ -89,8 +95,10 @@ END Checksum.
 			NoFile.Mod
 			~
 
-	Checksum.SHA1  Files.Mod  ~
+	Checksum.SHA1   TLS.Mod ~
 
+	Checksum.SHA256  Files.Mod  TLS.Mod ~
+	
 	Checksum.SHA3  Files.Mod  ~
 
 	System.Free Checksum ~

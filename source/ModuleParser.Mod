@@ -917,6 +917,10 @@ TYPE
 		BEGIN
 			ProcedureModifierP(head);
 			(*SysFlag;*)
+			
+			IF token.symbol = FoxScanner.Const THEN (* a method with CONST modifier *)
+				NextToken;
+			END;
 
 			CASE token.symbol OF
 			| FoxScanner.Minus: head.inline := TRUE; NextToken;

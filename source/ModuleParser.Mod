@@ -355,7 +355,7 @@ TYPE
 	END IdentDef;
 
 	TemplateType*= ENUM
-		Type*, Const*, Empty*
+		Type*, Const*, Import*, Automatic*
 	END;
 
 	TemplateParameter*= OBJECT(NodeList)
@@ -642,10 +642,11 @@ TYPE
 			ELSIF token.symbol = FoxScanner.Type THEN
 				parameter.type := TemplateType.Type;
 				NextToken;
+			ELSIF token.symbol = FoxScanner.Import THEN
+				parameter.type := TemplateType.Import;
+				NextToken;
 			ELSE
-				hasError := TRUE;
-				parameter.type := TemplateType.Empty;
-				KernelLog.String("err (missing 'CONST' or 'TYPE'): "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
+				parameter.type := TemplateType.Automatic;
 			END;
 
 			NEW(parameter.ident);
@@ -654,9 +655,9 @@ TYPE
 				parameter.ident.pos := token.position.start;
 				NextToken;
 			ELSE
+				hasError := TRUE;
 				parameter.ident.name := Strings.NewString("<???>");
 				parameter.ident.pos := token.position.start;
-				hasError := TRUE;
 				KernelLog.String("err (missing template parameter): "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
 			END;
 		END TemplateParameterP;

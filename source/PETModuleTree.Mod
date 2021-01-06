@@ -439,8 +439,10 @@ TYPE
 					AddPostfixToCaption(newNode, StrCONSTPostfix);
 				ELSIF moduleParameter.type = ModuleParser.TemplateType.Type THEN
 					AddPostfixToCaption(newNode, StrTYPEPostfix);
-				ELSE
-					AddPostfixToCaption(newNode, StrUNDEFPostfix);
+				ELSIF moduleParameter.type = ModuleParser.TemplateType.Import THEN
+					AddPostfixToCaption(newNode, StrIMPORTPostfix);
+				ELSIF moduleParameter.type = ModuleParser.TemplateType.Automatic THEN
+					AddPostfixToCaption(newNode, StrAUTOPostfix);
 				END;
 
 				INC(nofParameters);
@@ -1070,7 +1072,8 @@ VAR
 	PrototypeShowTypeHierarchy, PrototypeShowImportedModules : WMProperties.BooleanProperty;
 	StrUNKNOWN, StrVAR, StrCONST, StrIMPORT, StrIN, StrBODY, StrRETURN, StrARRAY, StrOF,
 	StrBecomes, StrAmpersand, StrMinus, StrStar, StrQuote, StrOverwritten, StrOverwrite, StrUNDEFPostfix,
-	StrPARAMETERS, StrARGUMENTS, StrVARPostfix, StrCONSTPostfix, StrTYPEPostfix, StrParenthesis: Strings.String;
+	StrPARAMETERS, StrARGUMENTS, StrVARPostfix, StrCONSTPostfix, StrTYPEPostfix, StrIMPORTPostfix,
+	StrAUTOPostfix, StrParenthesis: Strings.String;
 
 PROCEDURE GetColor(modifiers : SET; defaultColor : WMGraphics.Color) : WMGraphics.Color;
 VAR color : WMGraphics.Color;
@@ -1113,6 +1116,8 @@ BEGIN
 	StrVARPostfix := Strings.NewString(" (VAR)");
 	StrCONSTPostfix := Strings.NewString(" (CONST)");
 	StrTYPEPostfix := Strings.NewString(" (TYPE)");
+	StrIMPORTPostfix := Strings.NewString(" (IMPORT)");
+	StrAUTOPostfix := Strings.NewString(" (AUTO)");
 	StrUNDEFPostfix := Strings.NewString(" (<???>)");
 
 	StrParenthesis := Strings.NewString("(...)");

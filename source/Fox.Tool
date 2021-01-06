@@ -66,7 +66,7 @@ compiler options:
 		--darwinHost	flag		use Darwin (MacOSX) calling convention for ext. C procedures
 		--hardware	string	hardware generation hint for ActiveCells
 		--documentation	string	install documentation engine
-	-R	--rootDir	string	specification of a root directory; is prepended to the srcPath (for handling of relative vs full path designators)
+	-R	--rootPath	string	specification of a root directory path; is prepended to the srcPath (for handling of relative vs full path designators)
 	-S	--srcPath	string	specification of a source path
 	-D --destPath		string	specification of a destination path
 	-p	--platform		string	compiler options for platforms such as ARMA2, Win32, defined in Compiler.Mod

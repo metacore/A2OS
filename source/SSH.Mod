@@ -41,15 +41,7 @@ TYPE
 	BEGIN
 		SSHTerminal.Open
 	END Terminal;
-	
-	PROCEDURE SendCommand( w: Streams.Writer; CONST cmd, fname: ARRAY OF CHAR );
-	BEGIN
-		w.Update;
-		w.String( "stty -echo raw; " );
-		w.String( cmd );  w.Char( ' ' );  w.String( fname );
-		w.Char( CR ); 
-		w.Update
-	END SendCommand;
+
 	
 	PROCEDURE Sync( w: Streams.Writer );
 	BEGIN
@@ -57,7 +49,7 @@ TYPE
 	END Sync;
 
 
-	(**  SSH.Send  user@host  {  <filename>[:<remote filename> ] }  ~ *)
+	(**  SSH.Send  user@host  filename[>remote filename] ...  ~ *)
 	PROCEDURE Send*( context: Commands.Context );
 	VAR
 		f: Files.File;
@@ -80,7 +72,7 @@ TYPE
 			
 			f := Files.Old( locFileName );
 			IF f # NIL THEN
-				chan := SSHChannels.OpenSession( conn, FALSE );
+				chan := SSHChannels.OpenTransferChannel( conn, "scp -q -t ." );
 				SendFile( f, chan, remFileName );
 				chan.Close
 			ELSE  
@@ -93,20 +85,17 @@ TYPE
 	END Send;
 
 
-	PROCEDURE SendFile( f: Files.File;  chan: Channel;  CONST fileName: ARRAY OF CHAR );
+	PROCEDURE SendFile( f: Files.File;  chan: Channel;  CONST remName: ARRAY OF CHAR );
 	VAR
-		fr: Files.Reader;  flen, sent: Files.Size;
+		fr: Files.Reader;  flen, sent: SIZE;
 		rchan: Streams.Reader;  wchan: Streams.Writer; ch: CHAR;
 	BEGIN
 		Streams.OpenWriter( wchan, chan.Send );
 		Streams.OpenReader( rchan, chan.Receive );
 		
-		SendCommand( wchan, "scp -q -t", fileName ); 
-		rchan.Char( ch ); (* sync *)	
-		
 		flen := f.Length( );
-		wchan.String( "C0644 " );  wchan.Int( flen, 0 );  wchan.Char( ' ' );  wchan.String( fileName );  
-		wchan.Char( CR );  wchan.Char( NL );  wchan.Update;
+		wchan.String( "C0644 " );  wchan.Int( flen, 0 );  wchan.Char( ' ' );
+		wchan.String( remName );  wchan.Char( NL );  wchan.Update;
 		rchan.Char( ch ); (* sync *)
 		IF ORD( ch ) IN {1, 2} THEN
 			Beep.Beep( 1000 );
@@ -130,10 +119,10 @@ TYPE
 	END SendFile;
 
 
-	(**  SSH.Receive  user@host  {  <filename>[:<local filename>] }  ~ *)
+	(**  SSH.Receive  user@host   filename[>ocal filename] ...  ~ *)
 	PROCEDURE Receive*( context: Commands.Context );
 	VAR
-		locFileName, remFileName, str, uid, hostname: ARRAY 128 OF CHAR;
+		locFileName, remFileName, str, uid, hostname, cmd: ARRAY 128 OF CHAR;
 		strings: Strings.StringArray;
 		conn: A.Connection;
 		chan: Channel; 
@@ -153,15 +142,16 @@ TYPE
 			Log.String( hostname );  Log.Char( ':' );  Log.String( remFileName );  
 			Log.String( "  =>  " );  Log.String( locFileName );  Log.String( "    " );
 			
-			chan := SSHChannels.OpenSession( conn, FALSE );
-			ReceiveFile( chan, remFileName, locFileName );
+			cmd := "scp -q -f ";  Strings.Append( cmd, remFileName );
+			chan := SSHChannels.OpenTransferChannel( conn, cmd );
+			ReceiveFile( chan, locFileName );
 			chan.Close
 		END;
 		conn.Disconnect( 11, "Good bye" )
 	END Receive;
 
 
-	PROCEDURE ReceiveFile( chan: Channel; CONST remName, locName: ARRAY OF CHAR );
+	PROCEDURE ReceiveFile( chan: Channel; CONST locName: ARRAY OF CHAR );
 	VAR 
 		f: Files.File;  fw: Files.Writer;  
 		flen, received: SIGNED32;
@@ -172,9 +162,8 @@ TYPE
 	BEGIN
 		Streams.OpenWriter( wchan, chan.Send );
 		Streams.OpenReader( rchan, chan.Receive );
-		SendCommand( wchan, "scp -q -f", remName ); 
 		Sync( wchan );
-		rchan.Char( ch ); (* sync *)
+		rchan.Char( ch ); 
 		IF ORD( ch ) IN {1, 2} THEN
 			Beep.Beep( 1000 );
 			Log.Ln;  Log.String( "### transfer failed: " );

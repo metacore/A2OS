@@ -67,7 +67,7 @@ compiler options:
 		--hardware	string	hardware generation hint for ActiveCells
 		--documentation	string	install documentation engine
 	-R	--rootPath	string	specification of a root directory path; is prepended to the srcPath (for handling of relative vs full path designators)
-	-S	--srcPath	string	specification of a source path
+	-S	--srcPath	string	specification of a source path; replaces existing path
 	-D --destPath		string	specification of a destination path
 	-p	--platform		string	compiler options for platforms such as ARMA2, Win32, defined in Compiler.Mod
 	-d	--define	string	define comma-separated identifiers for conditional compilation

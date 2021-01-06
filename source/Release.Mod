@@ -67,7 +67,7 @@ MODULE Release; (** AUTHOR "staubesv"; PURPOSE "Release build tool"; *)
 
 IMPORT
 	Modules, Streams, Commands, Options, Files, Dates, Strings, Texts, TextUtilities, ReleaseThreadPool, Diagnostics, WMGraphics, Zip,
-	CompilerInterface, Compiler, SyntaxTree := FoxSyntaxTree ;
+	CompilerInterface, Compiler, SyntaxTree := FoxSyntaxTree, UTF8Strings;
 
 CONST
 	VersionMajor = 1;
@@ -2808,12 +2808,27 @@ VAR
 	reader : Streams.StringReader;
 	buffer : POINTER TO ARRAY OF CHAR;
 	length : SIZE;
+
+	PROCEDURE CountBytes(text : Texts.Text): SIZE;
+	VAR pos := 0, size := 0 : SIZE;
+		r : Texts.TextReader;
+		ucs : Texts.Char32;
+		string : ARRAY 8 OF CHAR;
+	BEGIN
+		text.AcquireRead;
+		NEW(r, text);
+		r.ReadCh(ucs);
+		WHILE (ucs > 0) & UTF8Strings.EncodeChar(ucs, string, pos) DO
+			INC(size, pos); pos := 0;
+			r.ReadCh(ucs);
+		END;
+		text.ReleaseRead;
+		RETURN size;
+	END CountBytes;
+
 BEGIN
 	ASSERT((text # NIL) & (diagnostics # NIL));
-	text.AcquireRead;
-	length := text.GetLength();
-	text.ReleaseRead;
-	IF length = 0 THEN length := 1 END;
+	length := CountBytes(text) + 1;
 	NEW(buffer, length);
 	TextUtilities.TextToStr(text, buffer^);
 	NEW(reader, LEN(buffer)); reader.SetRaw(buffer^, 0, LEN(buffer));

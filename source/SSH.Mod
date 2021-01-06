@@ -87,7 +87,8 @@ TYPE
 
 	PROCEDURE SendFile( f: Files.File;  chan: Channel;  CONST remName: ARRAY OF CHAR );
 	VAR
-		fr: Files.Reader;  flen, sent: SIZE;
+		fr: Files.Reader; sent: SIZE;
+		flen: Files.Size;
 		rchan: Streams.Reader;  wchan: Streams.Writer; ch: CHAR;
 	BEGIN
 		Streams.OpenWriter( wchan, chan.Send );

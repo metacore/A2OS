@@ -38,7 +38,7 @@ TYPE
 		objectFile*: Formats.ObjectFileFormat;
 		findPC*: SectionName;
 		documentation*,test*: Backend.Backend;
-		srcPath, destPath: Files.FileName;
+		rootPath, srcPath, destPath: Files.FileName;
 		replacements: SemanticChecker.Replacement;
 		platformCallingConvention: SyntaxTree.CallingConvention;
 		definitions: Options.Parameter;
@@ -306,6 +306,7 @@ TYPE
 		options.Add(0X,"hardware", Options.String);
 		options.Add(0X,"documentation", Options.String);
 		options.Add(0X,"test", Options.String);
+		options.Add("R","rootPath", Options.String);
 		options.Add("S","srcPath", Options.String);
 		options.Add("D","destPath", Options.String);
 		options.Add(0X,"replacements", Options.String);
@@ -433,6 +434,7 @@ TYPE
 			IF options.GetFlag("oberon07") THEN INCL(compilerOptions.flags, Oberon07) END;
 			IF options.GetFlag("cooperative") THEN INCL(compilerOptions.flags, Cooperative) END;
 			IF options.GetFlag("cellsAreObjects") THEN INCL(compilerOptions.flags, CellsAreObjects) END;
+			IF ~options.GetString("rootPath", compilerOptions.rootPath) THEN compilerOptions.rootPath := "" END;
 			IF ~options.GetString("srcPath", compilerOptions.srcPath) THEN compilerOptions.srcPath := "" END;
 			IF ~options.GetString("destPath", compilerOptions.destPath) THEN compilerOptions.destPath := "" END;
 			IF compilerOptions.backend # NIL THEN compilerOptions.backend.GetOptions (options) END;
@@ -480,6 +482,10 @@ TYPE
 					Files.SplitPath(filename, path, file);
 					IF path = "" THEN Files.JoinPath(options.srcPath, file, filename) END;
 				END;
+				IF options.rootPath # "" THEN
+					Files.JoinPath(options.rootPath, filename, filename);
+				END;
+				
 				reader := Basic.GetFileReader(filename);
 
 				IF reader = NIL THEN

@@ -48,6 +48,8 @@ System.Show Time elapsed: ~ System.Ln ~
 System.Timer elapsed ~ System.Ln ~
 ~
 
+System.FreeDownTo FoxBasic ~
+
 compiler options:
 		--print			flag		printout source code (for debugging)
 		--silent			flag		do not printout success messages
@@ -64,7 +66,8 @@ compiler options:
 		--darwinHost	flag		use Darwin (MacOSX) calling convention for ext. C procedures
 		--hardware	string	hardware generation hint for ActiveCells
 		--documentation	string	install documentation engine
-	-S	--sourcePath	string	specification of a source path
+	-R	--rootDir	string	specification of a root directory; is prepended to the srcPath (for handling of relative vs full path designators)
+	-S	--srcPath	string	specification of a source path
 	-D --destPath		string	specification of a destination path
 	-p	--platform		string	compiler options for platforms such as ARMA2, Win32, defined in Compiler.Mod
 	-d	--define	string	define comma-separated identifiers for conditional compilation

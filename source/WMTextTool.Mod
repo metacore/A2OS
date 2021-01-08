@@ -3,10 +3,10 @@ MODULE WMTextTool;	(** AUTHOR "TF"; PURPOSE "Text Tool"; *)
 IMPORT
 	Modules, Streams, Commands, Texts, Strings, WMComponents, WMRestorable, WMEditors, WMPopups, WMRectangles,
 	WMGraphics, WMMessages, WMStandardComponents,
-	WM := WMWindowManager, XML, XMLObjects;
+	WM := WMWindowManager, XML;
 
 CONST
-	WindowWidth = 122; WindowHeight = 220;
+	WindowWidth = 160; WindowHeight = 240;
 
 	(* field parameter for Change procedure *)
 	ChangeFont = {0};
@@ -42,6 +42,7 @@ TYPE
 
 	Window* = OBJECT (WMComponents.FormWindow)
 	VAR
+		leftPanel, rightPanel: WMStandardComponents.Panel;
 		bold, lock, comment, stupid, assert, preferred, debug, normal, incSize, decSize, get, apply: WMStandardComponents.Button;
 		famEdit, sizeEdit, styleEdit, colorEdit, bgColEdit: WMEditors.TextField;
 		famCheck, sizeCheck, styleCheck, colorCheck, bgColCheck: WMStandardComponents.Checkbox;
@@ -51,30 +52,32 @@ TYPE
 		PROCEDURE CreateForm(): WMComponents.VisualComponent;
 		VAR
 			label : WMStandardComponents.Label;
-			panel : WMStandardComponents.Panel;
+			panel, bottomPanel : WMStandardComponents.Panel;
 			toolbar: WMStandardComponents.Panel;
 			manager : WM.WindowManager;
 			windowStyle : WM.WindowStyle;
+			panelHeight := 0 : SIZE;
 
 			PROCEDURE AB(panel : WMStandardComponents.Panel; btn: WMStandardComponents.Button);
 			BEGIN
-				btn.alignment.Set(WMComponents.AlignLeft);
+				btn.alignment.Set(WMComponents.AlignTop);
+				btn.bounds.SetHeight(20);
 				btn.fillColor.Set(0FFFFFFFFH);
 				btn.clDefault.Set(windowStyle.bgColor);
 				btn.clTextDefault.Set(WMGraphics.Black);
-				btn.bounds.SetWidth(WindowWidth DIV 2); panel.AddContent(btn)
+				panel.AddContent(btn)
 			END AB;
 
 			PROCEDURE AL(panel : WMStandardComponents.Panel; lbl : WMStandardComponents.Label);
 			BEGIN
-				lbl.alignment.Set(WMComponents.AlignLeft); lbl.bounds.SetWidth(31); label.textColor.Set(0000000FFH);
+				lbl.alignment.Set(WMComponents.AlignLeft); lbl.bounds.SetWidth(40); label.textColor.Set(0000000FFH);
 				panel.AddContent(lbl)
 			END AL;
 
 			PROCEDURE AC(panel : WMStandardComponents.Panel; chk : WMStandardComponents.Checkbox);
 			BEGIN
-				chk.bounds.SetWidth(16); chk.state.Set(1); chk.bearing.Set(WMRectangles.MakeRect(2, 2, 2, 2));
-				chk.alignment.Set(WMComponents.AlignRight); chk.bounds.SetWidth(20);
+				chk.bounds.SetWidth(20); chk.state.Set(1); chk.bearing.Set(WMRectangles.MakeRect(2, 2, 2, 2));
+				chk.alignment.Set(WMComponents.AlignRight);
 				panel.AddContent(chk)
 			END AC;
 
@@ -95,80 +98,82 @@ TYPE
 			IF (windowStyle.bgColor = 0) THEN windowStyle.bgColor := WMGraphics.White; END;
 
 			NEW(panel); panel.bounds.SetExtents(WindowWidth, WindowHeight); panel.takesFocus.Set(TRUE);
+			panel.fillColor.Set(windowStyle.bgColor); panel.alignment.Set(WMComponents.AlignClient);
 
-			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
-			panel.AddContent(toolbar);
-			NEW(bold); bold.caption.SetAOC("Bold"); AB(toolbar, bold);
-
-			NEW(lock); lock.caption.SetAOC("Lock"); AB(toolbar, lock);
-
-			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
-			panel.AddContent(toolbar);
-			NEW(comment); comment.caption.SetAOC("Comment"); AB(toolbar, comment);
-			NEW(debug); debug.caption.SetAOC("Debug"); AB(toolbar, debug);
-
-			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
-			panel.AddContent(toolbar);
-			NEW(stupid); stupid.caption.SetAOC("Stupid"); AB(toolbar, stupid);
-			NEW(assert); assert.caption.SetAOC("Assert"); AB(toolbar, assert);
-
-			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
-			panel.AddContent(toolbar);
-			NEW(preferred); preferred.caption.SetAOC("Preferred"); AB(toolbar, preferred);
-			NEW(normal); normal.caption.SetAOC("Normal"); AB(toolbar, normal);
-
-			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
-			panel.AddContent(toolbar);
-			NEW(incSize); incSize.caption.SetAOC("Inc Size"); AB(toolbar, incSize);
-			NEW(decSize); decSize.caption.SetAOC("Dec Size"); AB(toolbar, decSize);
-
-			(* Get/Apply *)
-			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
-			panel.AddContent(toolbar);
-			NEW(get); get.caption.SetAOC("Get"); AB(toolbar, get);
+			NEW(leftPanel);
+			leftPanel.bounds.SetWidth(WindowWidth DIV 2);
+			NEW(bold); bold.caption.SetAOC("Bold"); AB(leftPanel, bold);
+			NEW(comment); comment.caption.SetAOC("Comment"); AB(leftPanel, comment);
+			NEW(stupid); stupid.caption.SetAOC("Stupid"); AB(leftPanel, stupid);
+			NEW(preferred); preferred.caption.SetAOC("Preferred"); AB(leftPanel, preferred);
+			NEW(incSize); incSize.caption.SetAOC("Inc Size"); AB(leftPanel, incSize);
+			NEW(get); get.caption.SetAOC("Get"); AB(leftPanel, get);
 			get.clDefault.Set(088000088H); get.clTextDefault.Set(WMGraphics.White);
-			NEW(apply); apply.caption.SetAOC("Apply"); AB(toolbar, apply);
+			leftPanel.alignment.Set(WMComponents.AlignLeft);
+
+			NEW(rightPanel);
+			rightPanel.bounds.SetWidth(WindowWidth - leftPanel.bounds.GetWidth());
+			NEW(lock); lock.caption.SetAOC("Lock"); AB(rightPanel, lock);
+			NEW(debug); debug.caption.SetAOC("Debug"); AB(rightPanel, debug);
+			NEW(assert); assert.caption.SetAOC("Assert"); AB(rightPanel, assert);
+			NEW(normal); normal.caption.SetAOC("Normal"); AB(rightPanel, normal);
+			NEW(decSize); decSize.caption.SetAOC("Dec Size"); AB(rightPanel, decSize);
+			NEW(apply); apply.caption.SetAOC("Apply"); AB(rightPanel, apply);
 			apply.clDefault.Set(088000088H); apply.clTextDefault.Set(WMGraphics.White);
+			rightPanel.alignment.Set(WMComponents.AlignLeft);
+
+
+			NEW(bottomPanel);
 
 			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
-			toolbar.fillColor.Set(windowStyle.bgColor);
-			panel.AddContent(toolbar);
+			bottomPanel.AddContent(toolbar);
 			NEW(label); label.caption.SetAOC("Font:"); AL(toolbar, label);
 			NEW(famCheck); AC(toolbar, famCheck);
 			NEW(famEdit); famEdit.SetAsString(Texts.defaultAttributes.fontInfo.name); AE(toolbar, famEdit);
+			INC(panelHeight, toolbar.bounds.GetHeight());
 
 			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			toolbar.fillColor.Set(windowStyle.bgColor);
-			panel.AddContent(toolbar);
+			bottomPanel.AddContent(toolbar);
 			NEW(label); label.caption.SetAOC("Size:"); AL(toolbar, label);
 			NEW(sizeCheck); AC(toolbar, sizeCheck);
 			NEW(sizeEdit); sizeEdit.SetAsString("14"); AE(toolbar, sizeEdit);
+			INC(panelHeight, toolbar.bounds.GetHeight());
 
 			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			toolbar.fillColor.Set(windowStyle.bgColor);
-			panel.AddContent(toolbar);
+			bottomPanel.AddContent(toolbar);
 			NEW(label); label.caption.SetAOC("Style:"); AL(toolbar, label);
 			NEW(styleCheck); AC(toolbar, styleCheck);
 			NEW(styleB); styleB.caption.SetAOC("+"); AD(toolbar, styleB);
 			NEW(styleEdit); styleEdit.SetAsString("Regular"); AE(toolbar, styleEdit);
+			INC(panelHeight, toolbar.bounds.GetHeight());
 
 			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			toolbar.fillColor.Set(windowStyle.bgColor);
-			panel.AddContent(toolbar);
+			bottomPanel.AddContent(toolbar);
 			NEW(label); label.caption.SetAOC("Color:"); AL(toolbar, label);
 			NEW(colorCheck); AC(toolbar, colorCheck);
 			NEW(colB); colB.caption.SetAOC("+"); AD(toolbar, colB);
 			NEW(colorEdit); colorEdit.SetAsString("000000FF"); colorEdit.onChanged.Add(UpdateColors);
 			AE(toolbar, colorEdit);
+			INC(panelHeight, toolbar.bounds.GetHeight());
 
 			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			toolbar.fillColor.Set(windowStyle.bgColor);
-			panel.AddContent(toolbar);
+			bottomPanel.AddContent(toolbar);
 			NEW(label); label.caption.SetAOC("BCol:"); AL(toolbar, label);
 			NEW(bgColCheck); AC(toolbar, bgColCheck);
 			NEW(bgColB); bgColB.caption.SetAOC("+"); AD(toolbar, bgColB);
 			NEW(bgColEdit); bgColEdit.SetAsString("00000000"); bgColEdit.onChanged.Add(UpdateColors);
 			AE(toolbar, bgColEdit);
+			INC(panelHeight, toolbar.bounds.GetHeight());
+			bottomPanel.bounds.SetHeight(panelHeight);
+			bottomPanel.alignment.Set(WMComponents.AlignBottom);
+
+			panel.AddContent(bottomPanel);
+			panel.AddContent(leftPanel);
+			panel.AddContent(rightPanel);
 
 			UpdateColors(NIL, NIL);
 
@@ -178,7 +183,6 @@ TYPE
 		PROCEDURE &New*(c : WMRestorable.Context);
 		VAR vc : WMComponents.VisualComponent;
 		BEGIN
-			scaling := TRUE;
 			IncCount;
 			vc := CreateForm();
 			bold.onClick.Add(SetStyle);
@@ -214,6 +218,20 @@ TYPE
 				WM.ExtAddWindow(SELF, 50, 120, {WM.FlagStayOnTop, WM.FlagFrame, WM.FlagClose, WM.FlagMinimize})
 			END;
 		END New;
+
+		PROCEDURE Resizing*( VAR width, height : SIZE );
+		BEGIN
+			IF width < WindowWidth THEN width := WindowWidth END;
+			IF height < WindowHeight THEN height := WindowHeight END;
+			Resizing^( width, height )
+		END Resizing;
+
+		PROCEDURE Resized*(width, height: SIZE);
+		BEGIN
+			Resized^(width, height);
+			leftPanel.bounds.SetWidth(width DIV 2);
+			rightPanel.bounds.SetWidth(width - leftPanel.bounds.GetWidth());
+		END Resized;
 
 		PROCEDURE GetStyle(sender, data : ANY);
 		VAR

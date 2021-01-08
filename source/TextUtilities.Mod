@@ -1930,7 +1930,7 @@ BEGIN
 	IF (in # NIL) THEN
 		pos := in.Pos();
 		in.Bytes(fstring, 0, LEN(fstring), i);
-		in.SetPos(pos);
+		IF in.CanSetPos() THEN in.SetPos(pos); END;
 
 		IF (i > 3) & (fstring[0] = 00X) & (fstring[1] = 00X) & (fstring[2] = 0FEX) & (fstring[3] = 0FFX) THEN
 			COPY("UTF-32BE", format);

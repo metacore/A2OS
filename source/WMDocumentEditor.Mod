@@ -77,16 +77,22 @@ TYPE
 		VAR
 			text : Texts.Text;
 			msg : ARRAY 512 OF CHAR; res : INTEGER;
-			fullname : Files.FileName;
+			name, fullname, archiveName, entryName : Files.FileName;
 			decoder : Codecs.TextDecoder;
 			in : Streams.Reader;
 			file : Files.File;
 		BEGIN
 			res := -1;
-			COPY(filename, fullname);
+			Codecs.SplitName(filename, archiveName, entryName);
+			IF (archiveName # "") THEN
+				COPY(archiveName, name);
+			ELSE
+				COPY(filename, name);
+			END;
+			COPY(name, fullname);
 
 			(* Check whether file exists and get its canonical name *)
-			file := Files.Old(filename);
+			file := Files.Old(name);
 			IF (file # NIL) THEN
 				file.GetName(fullname);
 			ELSE
@@ -96,6 +102,8 @@ TYPE
 					file := NIL;
 				END;
 			END;
+
+			IF (archiveName # "") THEN Codecs.JoinName(fullname, entryName, fullname); END;
 
 			IF (filenameEdit # NIL) THEN
 				filenameEdit.SetAsString(fullname);
@@ -158,32 +166,38 @@ TYPE
 			END;
 		END StoreHandler;
 
-		PROCEDURE Store*(CONST filename,format  : ARRAY OF CHAR);
+		PROCEDURE Store*(CONST filename,format : ARRAY OF CHAR);
 		VAR
-			text : Texts.Text;
-			fullname : Files.FileName;
+			name, backName, fullname, archiveName, entryName : Files.FileName;
 			msg : ARRAY 512 OF CHAR; res : INTEGER;
-			backName : ARRAY 128 OF CHAR;
 			encoder : Codecs.TextEncoder;
-			w : Files.Writer;
+			w : Streams.Writer;
 			f : Files.File;
 		BEGIN
 			IF (filenameEdit # NIL) THEN filenameEdit.SetAsString(filename); END;
-			f := Files.Old(filename);
+
+			Codecs.SplitName(filename, archiveName, entryName);
+			IF (archiveName # "") THEN
+				COPY(archiveName, name);
+			ELSE
+				COPY(filename, name);
+			END;
+			COPY(name, fullname);
+
+			f := Files.Old(name);
 			IF (f # NIL) THEN
 				IF (Files.ReadOnly IN f.flags) THEN
 					msg := "File is read-only: "; Strings.Append(msg, filename);
 					WMDialogs.Error("Error", msg);
 					RETURN;
 				END;
-				f := NIL;
+
+				IF (archiveName = "") THEN (*! create backup *)
+					Strings.Concat(filename, ".Bak", backName);
+					Files.Rename(filename, backName, res);
+					IF res = 0 THEN KernelLog.String("Backup created  in "); KernelLog.String(backName); KernelLog.Ln END;
+				END;
 			END;
-			(* create backup *)
-			Strings.Concat(filename, ".Bak", backName);
-			Files.Rename(filename, backName, res);
-			IF res = 0 THEN KernelLog.String("Backup created  in "); KernelLog.String(backName); KernelLog.Ln END;
-			text := editor.text;
-			text.AcquireWrite;
 
 			IF (format = "AUTO") THEN
 				IF (autoCodecFormat = "") THEN
@@ -191,26 +205,31 @@ TYPE
 				ELSE
 					encoder := Codecs.GetTextEncoder(autoCodecFormat);
 				END;
-			ELSE encoder := Codecs.GetTextEncoder(format);
+			ELSE
+				encoder := Codecs.GetTextEncoder(format);
 			END;
 
-			COPY(filename, fullname);
 			IF (encoder # NIL) THEN
-				f := Files.New(filename);
-				IF (f = NIL) THEN
-					msg := "Could not create file "; Strings.Append(msg, filename);
-					WMDialogs.Error("Error", msg);
-					RETURN;
+				IF (archiveName = "") OR ( f = NIL ) THEN
+					f := Files.New(name);
+					IF (f = NIL) THEN
+						msg := "Could not create f "; Strings.Append(msg, name);
+						WMDialogs.Error("Error", msg);
+						RETURN;
+					END;
 				END;
 
 				f.GetName(fullname);
-				Files.OpenWriter(w, f, 0);
+				IF (archiveName # "") THEN Codecs.JoinName(fullname, entryName, fullname); END;
+				IF (filenameEdit # NIL) THEN filenameEdit.SetAsString(fullname); END;
+				w := Codecs.OpenOutputStream(fullname);
 
 				encoder.Open(w);
-				encoder.WriteText(text, res);
-				IF res = 0 THEN
-					Files.Register(f); f.Update;
-				ELSE
+				editor.text.AcquireWrite;
+				encoder.WriteText(editor.text, res);
+				editor.text.ReleaseWrite;
+				w.Update;
+				IF res # 0 THEN
 					msg := "Could not encode file "; Strings.Append(msg, fullname);
 					WMDialogs.Error("Error", msg);
 				END;
@@ -219,12 +238,8 @@ TYPE
 				WMDialogs.Error("Error", msg);
 			END;
 
-			text.ReleaseWrite;
 			modified := FALSE;
-			IF (filenameEdit # NIL) THEN
-				filenameEdit.SetAsString(fullname);
-				lastFilename := fullname;
-			END;
+
 			IF (buttons * StoreButton # {}) THEN storeBtn.caption.SetAOC("::System:ButtonTitles:SStore") END;
 		END Store;
 

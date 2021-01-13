@@ -191,6 +191,9 @@ TYPE
 		PROCEDURE VisitExpression*(x: Expression);
 		BEGIN HALT(100) (* abstract *) END VisitExpression;
 
+		PROCEDURE VisitConditionalExpression*(x: ConditionalExpression);
+		BEGIN HALT(100) (* abstract *) END VisitConditionalExpression;
+
 		PROCEDURE VisitSet*(x: Set);
 		BEGIN HALT(100) (* abstract *) END VisitSet;
 
@@ -323,6 +326,7 @@ TYPE
 			| BinaryExpression DO VisitBinaryExpression(x)
 			| UnaryExpression DO VisitUnaryExpression(x)
 			| MathArrayExpression DO VisitMathArrayExpression(x)
+			| ConditionalExpression DO VisitConditionalExpression(x)
 			| Set DO VisitSet(x)
 			| BooleanValue DO VisitBooleanValue(x)
 			| IntegerValue DO VisitIntegerValue(x)
@@ -2203,6 +2207,35 @@ TYPE
 		END SetContext;
 
 	END RangeExpression;
+	
+	ConditionalExpression*=OBJECT (Expression);
+	VAR condition-, expression-, alternative-: Expression;
+	
+		PROCEDURE &InitConditionalExpression(position: Position; cond, exp, alt: Expression);
+		BEGIN
+			InitExpression(position);
+			SELF.condition := cond;
+			SELF.expression := exp;
+			SELF.alternative := alt;
+		END InitConditionalExpression;
+		
+		PROCEDURE SetCondition*(e: Expression);
+		BEGIN
+			SELF.condition := e;
+		END SetCondition;
+
+		PROCEDURE SetExpression*(e: Expression);
+		BEGIN
+			SELF.expression := e;
+		END SetExpression;		
+		
+		PROCEDURE SetAlternative*(e: Expression);
+		BEGIN
+			SELF.alternative := e;
+		END SetAlternative;
+		
+	
+	END ConditionalExpression;
 
 	(** << ? >> **)
 	TensorRangeExpression*=OBJECT (Expression);
@@ -5764,6 +5797,12 @@ VAR
 	BEGIN
 		NEW(rangeExpression, position, first, last, step); RETURN rangeExpression
 	END NewRangeExpression;
+
+	PROCEDURE NewConditionalExpression*( position: Position;  cond, exp, alt: Expression): ConditionalExpression;
+	VAR condExpression: ConditionalExpression;
+	BEGIN
+		NEW( condExpression, position, cond, exp, alt );  RETURN condExpression;
+	END NewConditionalExpression;
 
 	PROCEDURE NewTensorRangeExpression*(position: Position): TensorRangeExpression;
 	VAR tensorRangeExpression: TensorRangeExpression;

@@ -2765,6 +2765,22 @@ TYPE
 			END;
 			RETURN result
 		END ResolveBinaryExpression;
+		
+		PROCEDURE ResolveConditionalExpression(x: SyntaxTree.ConditionalExpression): SyntaxTree.Expression;
+		VAR b: BOOLEAN; expression, alternative: SyntaxTree.Expression;
+		BEGIN
+			x.SetCondition(ResolveCondition(x.condition));
+			expression := ResolveExpression(x.expression);
+			alternative := ResolveExpression(x.alternative);
+			IF IsBooleanValue(x.condition,b) THEN
+				IF b THEN RETURN expression ELSE RETURN alternative END;
+			END;
+			ConvertOperands(expression, alternative);
+			x.SetExpression(expression);
+			x.SetAlternative(alternative);
+			x.SetType(expression.type);
+			RETURN x;
+		END ResolveConditionalExpression;
 
 		(** resolve a range expression of the from <<first .. last BY step>>
 			- depending on the context different things are checked:
@@ -5974,6 +5990,7 @@ TYPE
 			| SyntaxTree.IdentifierDesignator DO result := ResolveIdentifierDesignator(x)
 			| SyntaxTree.TensorRangeExpression DO x.SetType(NIL);
 			| SyntaxTree.RangeExpression DO result := ResolveRangeExpression(x)
+			| SyntaxTree.ConditionalExpression DO result := ResolveConditionalExpression(x)
 			| SyntaxTree.BinaryExpression DO result := ResolveBinaryExpression(x)
 			| SyntaxTree.UnaryExpression DO result := ResolveUnaryExpression(x)
 			| SyntaxTree.MathArrayExpression DO result := ResolveMathArrayExpression(x)

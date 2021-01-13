@@ -1704,6 +1704,8 @@ TYPE
 		PROCEDURE Evaluate(CONST x: SyntaxTree.Expression; VAR result: Operand);
 		VAR operand: Operand; type: SyntaxTree.Type; symbol: SyntaxTree.Symbol;
 		VAR pos: Streams.Position;
+		VAR variable: SyntaxTree.Variable; variableDesignator: SyntaxTree.Designator;
+			falseL, end: Label;
 		BEGIN
 			pos := x.position.start;
 
@@ -1716,6 +1718,19 @@ TYPE
 				EvaluateBinaryExpression(x, result);
 			|SyntaxTree.Set DO
 				EvaluateSet(x, result);
+			|SyntaxTree.ConditionalExpression DO
+				variable :=  GetTemporaryVariable(SyntaxTree.ValueParameter,x.type, FALSE, FALSE (* untraced *));
+				variableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, NIL, variable);
+				variableDesignator.SetType(x.type);
+				falseL := NewLabel();
+				end := NewLabel();
+				Condition(x.condition,falseL,FALSE);
+				Assign(variableDesignator,x.expression);
+				BrL(end);
+				SetLabel(falseL);
+				Assign(variableDesignator,x.alternative);
+				SetLabel(end);
+				Evaluate(variableDesignator,result);
 			|SyntaxTree.RangeExpression DO
 				InitOperand(result, ModeValue);
 				ASSERT(x.first # NIL);
@@ -1806,6 +1821,7 @@ TYPE
 			| SyntaxTree.IndexDesignator DO DesignateIndexDesignator(x, result)
 			| SyntaxTree.SymbolDesignator DO DesignateSymbolDesignator(x, result)
 			| SyntaxTree.Conversion DO DesignateConversion(x, result)
+			| SyntaxTree.ConditionalExpression DO DesignateConditionalExpression(x, result)
 			| SyntaxTree.MathArrayExpression DO DesignateMathArrayExpression(x, result)
 			| SyntaxTree.StringValue DO DesignateStringValue(x, result)
 			| SyntaxTree.MathArrayValue DO DesignateMathArrayValue(x, result)
@@ -2875,6 +2891,38 @@ TYPE
 
 			RETURN resultingSet
 		END SetFromRange;
+		
+		PROCEDURE DesignateConditionalExpression(x: SyntaxTree.ConditionalExpression; VAR result: Operand);
+		VAR variable: SyntaxTree.Variable; variableDesignator: SyntaxTree.Designator;
+				falseL, end: Label; op, target: Operand;
+		BEGIN
+				variable :=  GetTemporaryVariable(SyntaxTree.VarParameter,x.type, FALSE, FALSE (* untraced *));
+				variableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, NIL, variable);
+				variableDesignator.SetType(x.type);
+				falseL := NewLabel();
+				end := NewLabel();
+				Condition(x.condition,falseL,FALSE);
+				Assign(variableDesignator, x.expression);
+				(*Designate(x.expression, op);
+				Evaluate(variableDesignator, target);
+				Emit(Mov(position,target.op, op.op));
+				ReleaseOperand(op);
+				ReleaseOperand(target);
+				*)
+				BrL(end);
+				SetLabel(falseL);
+				Assign(variableDesignator, x.alternative);
+				(*
+				Designate(x.alternative, op);
+				Evaluate(variableDesignator, target);
+				Emit(Mov(position,target.op, op.op));
+				ReleaseOperand(op);
+				ReleaseOperand(target);
+				*)
+				SetLabel(end);
+				Designate(variableDesignator,result);
+		END DesignateConditionalExpression;
+		
 
 		(* math arrays of the form [a,b,c]
 			x is a static array and thus does not provide any pointers

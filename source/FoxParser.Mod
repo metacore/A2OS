@@ -894,7 +894,7 @@ TYPE
 			             | '.=' | '.#' | '.<' | '.<=' | '.>'  '.>='
 			             | '??' | '!!' | '<<?' | '>>?'.
 		**)
-		PROCEDURE Expression*( ): SyntaxTree.Expression;
+		PROCEDURE RelationalExpression*( ): SyntaxTree.Expression;
 		VAR expression, rightExpression: SyntaxTree.Expression;  operator: Operator;  position: Position;
 		BEGIN
 			IF Trace THEN S( "Expression" ) END;
@@ -910,8 +910,30 @@ TYPE
 			(*IF OptionalB(Scanner.Escape) THEN END; (* skip breaking escape *)*)
 			IF Trace THEN E( "Expression" ) END;
 			RETURN expression
-		END Expression;
+		END RelationalExpression;
 
+		PROCEDURE ConditionalExpression*(): SyntaxTree.Expression;
+		VAR expression, condition, alternative: SyntaxTree.Expression; position: Position;
+		BEGIN
+			expression := RelationalExpression();
+			position := expression.position;
+			IF Optional(Scanner.If) THEN
+				condition := RelationalExpression();
+				IF Mandatory(Scanner.Else) THEN
+					alternative := Expression();
+				END;
+				RETURN SyntaxTree.NewConditionalExpression(position, condition, expression, alternative);
+			ELSE
+				RETURN expression;
+			END;
+		END ConditionalExpression;
+		
+		PROCEDURE Expression*(): SyntaxTree.Expression;
+		BEGIN
+			RETURN ConditionalExpression();
+		END Expression;
+		
+		
 		(** Case = RangeExpression {',' RangeExpression} ':' StatementSequence. **)
 		PROCEDURE Case( caseStatement: SyntaxTree.CaseStatement );
 		VAR

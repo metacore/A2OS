@@ -566,6 +566,16 @@ TYPE
 				EndComment
 			END
 		END VisitRangeExpression;
+		
+		PROCEDURE VisitConditionalExpression*(x: SyntaxTree.ConditionalExpression);
+		BEGIN
+			Expression(x.expression);
+			Keyword(" IF ");
+			Expression(x.condition);
+			Keyword(" ELSE ");
+			Expression(x.alternative);
+		END VisitConditionalExpression;
+		
 
 		PROCEDURE VisitTensorRangeExpression*(x: SyntaxTree.TensorRangeExpression);
 		BEGIN

@@ -42,7 +42,7 @@ TYPE
 		PROCEDURE ^ PointerMove*(fx, fy: SIZE; keys: SET); 
 		PROCEDURE ^ Inside*(X, Y: SIZE): BOOLEAN; 
 		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ AddDisplayPoint(x, y: SIZE); 
 		PROCEDURE ^ MoveDisplayPoints(dx, dy: SIGNED32); 
 		PROCEDURE ^ Normalize; 
@@ -95,7 +95,7 @@ TYPE
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ Inside*(X, Y: SIZE): BOOLEAN; 
 		PROCEDURE ^ IsHit*(mx, my: SIZE): BOOLEAN; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ Normalize*; 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Spline; 

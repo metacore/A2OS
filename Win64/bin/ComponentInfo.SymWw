@@ -15,7 +15,7 @@ TYPE
 		PROCEDURE ^ Show(out: Streams.Writer); 
 	END Statistics; 
 
-	PROCEDURE ^ DumpComponent*(obj: ANY; out: Streams.Writer); 
+	PROCEDURE ^ DumpComponent*(obj: ANY ; out: Streams.Writer); 
 	PROCEDURE ^ GatherStatistics*(component: XML.Element; stats: Statistics); 
 	PROCEDURE ^ ShowStatistics*(context: Commands.Context); 
 	PROCEDURE ^ ShowPrototypes*(context: Commands.Context); 

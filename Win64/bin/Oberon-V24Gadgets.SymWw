@@ -24,7 +24,7 @@ VAR
 	PROCEDURE ^ WriteString(T: Terminals.Terminal; str: ARRAY OF CHAR); 
 	PROCEDURE ^ WriteLn(T: Terminals.Terminal); 
 	PROCEDURE ^ Receiver(me: Oberon.Task); 
-	PROCEDURE ^ Cleanup(f: ANY); 
+	PROCEDURE ^ Cleanup(f: ANY ); 
 	PROCEDURE ^ OpenConn(F: TerminalGadgets.Frame; port, bps, data, stop, parity: SIGNED32); 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ Close*; 

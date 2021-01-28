@@ -4,7 +4,7 @@ CONST
 TYPE 
 	String = Strings.String; 
 
-	EventListener* = PROCEDURE {DELEGATE}(sender, par: ANY); 
+	EventListener* = PROCEDURE {DELEGATE}(sender, par: ANY ); 
 
 	CompCommandFinder* = PROCEDURE {DELEGATE}(str: String):EventListener; 
 
@@ -24,15 +24,15 @@ TYPE
 			next: EventListenerLink; 
 		END; 
 		name, info: String; 
-		owner: ANY; 
+		owner: ANY ; 
 		finder: CompCommandFinder; 
 		next: EventSource; 
 		minimalDelay: SIGNED32; 
 		updateTimer: Kernel.MilliTimer; 
 		lastFrameTimer: Objects.Timer; 
-		lastPar: ANY; 
+		lastPar: ANY ; 
 
-		PROCEDURE ^  & New*(owner: ANY; name, info: String; finder: CompCommandFinder); 
+		PROCEDURE ^  & New*(owner: ANY ; name, info: String; finder: CompCommandFinder); 
 		PROCEDURE ^ SetMinimalDelay*(ms: SIGNED32); 
 		PROCEDURE ^ GetName*(): String; 
 		PROCEDURE ^ GetInfo*(): String; 
@@ -40,8 +40,8 @@ TYPE
 		PROCEDURE ^ AddByString*(link: String); 
 		PROCEDURE ^ Remove*(observer: EventListener); 
 		PROCEDURE ^ RemoveByString*(string: String); 
-		PROCEDURE ^ CallWithSender*(sender, par: ANY); 
-		PROCEDURE ^ Call*(par: ANY); 
+		PROCEDURE ^ CallWithSender*(sender, par: ANY ); 
+		PROCEDURE ^ Call*(par: ANY ); 
 		PROCEDURE ^ Call0; 
 		PROCEDURE ^ HasListeners*(): BOOLEAN; 
 	END EventSource; 

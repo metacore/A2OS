@@ -20,7 +20,7 @@ TYPE
 		showDeadzone-: WMProperties.BooleanProperty; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END AxisComponent; 
 
@@ -35,7 +35,7 @@ TYPE
 		calibrationLabel: WMStandardComponents.Label; 
 
 		PROCEDURE ^ HandleJoystickMessage(VAR msg: Joysticks.JoystickMessage); 
-		PROCEDURE ^ HandleCalibrationButton(sender, data: ANY); 
+		PROCEDURE ^ HandleCalibrationButton(sender, data: ANY ); 
 		PROCEDURE ^ InitNameLabel(CONST name, description: ARRAY OF CHAR); 
 		PROCEDURE ^ InitButtonsPanel(nbrOfButtons: SIGNED32); 
 		PROCEDURE ^ InitCoolieHatPanels(nbrOfCoolieHats: SIGNED32); 

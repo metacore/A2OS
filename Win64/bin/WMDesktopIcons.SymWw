@@ -27,8 +27,8 @@ TYPE
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ ExecuteCommand; 
-		PROCEDURE ^ HandleContextMenu(sender, data: ANY); 
-		PROCEDURE ^ HandleContextMenuClose(sender, data: ANY); 
+		PROCEDURE ^ HandleContextMenu(sender, data: ANY ); 
+		PROCEDURE ^ HandleContextMenuClose(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END IconWindow; 
@@ -48,7 +48,7 @@ TYPE
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
 	END IconComponent; 
 VAR 

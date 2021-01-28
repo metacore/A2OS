@@ -45,10 +45,10 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Refresh*; 
-		PROCEDURE ^ NodeExpanded(sender, data: ANY); 
-		PROCEDURE ^ NodeSelected(sender, data: ANY); 
+		PROCEDURE ^ NodeExpanded(sender, data: ANY ); 
+		PROCEDURE ^ NodeSelected(sender, data: ANY ); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WM.DragInfo); 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ SortDirs(VAR dir: ARRAY OF TreeData); 
 		PROCEDURE ^ EnumerateSubDirectories(tree: WMTrees.Tree; node: WMTrees.TreeNode; dir: Strings.String); 
 		PROCEDURE ^ FillMountedFS(tree: WMTrees.Tree; node: WMTrees.TreeNode); 
@@ -70,7 +70,7 @@ TYPE
 
 	SelectionWrapper* = POINTER TO RECORD 
 		sel*: DirEntries; 
-		user*: ANY; 
+		user*: ANY ; 
 	END; 
 
 	StringWrapper* = POINTER TO RECORD 
@@ -95,22 +95,22 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetSearchReqFlag*; 
 		PROCEDURE ^ GetSelection*(): DirEntries; 
-		PROCEDURE ^ ClickSelected(sender, data: ANY); 
-		PROCEDURE ^ HandleCommands(sender, data: ANY); 
-		PROCEDURE ^ ContextMenu(sender: ANY; x, y: SIZE); 
-		PROCEDURE ^ Rename(sender, data: ANY); 
-		PROCEDURE ^ Delete(sender, data: ANY); 
-		PROCEDURE ^ Duplicate(sender, data: ANY); 
-		PROCEDURE ^ Tar(sender, data: ANY); 
-		PROCEDURE ^ Open(sender, data: ANY); 
-		PROCEDURE ^ EditText(sender, data: ANY); 
+		PROCEDURE ^ ClickSelected(sender, data: ANY ); 
+		PROCEDURE ^ HandleCommands(sender, data: ANY ); 
+		PROCEDURE ^ ContextMenu(sender: ANY ; x, y: SIZE); 
+		PROCEDURE ^ Rename(sender, data: ANY ); 
+		PROCEDURE ^ Delete(sender, data: ANY ); 
+		PROCEDURE ^ Duplicate(sender, data: ANY ); 
+		PROCEDURE ^ Tar(sender, data: ANY ); 
+		PROCEDURE ^ Open(sender, data: ANY ); 
+		PROCEDURE ^ EditText(sender, data: ANY ); 
 		PROCEDURE ^ MyDragDropped(x, y: SIZE; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WM.DragInfo); 
-		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
+		PROCEDURE ^ MyStartDrag(sender, data: ANY ); 
 		PROCEDURE ^ CopyFile(target: WMDropTarget.DropFiles; CONST local, remote: ARRAY OF CHAR; VAR res: INTEGER); 
-		PROCEDURE ^ Refresh(sender, data: ANY); 
+		PROCEDURE ^ Refresh(sender, data: ANY ); 
 		PROCEDURE ^ Resized*; 
-		PROCEDURE ^ DragArrived(sender, data: ANY); 
+		PROCEDURE ^ DragArrived(sender, data: ANY ); 
 		PROCEDURE ^ ResetGrid*; 
 		PROCEDURE ^ DisplayGrid*(CONST data: ARRAY OF DirEntry; noEl: SIGNED32); 
 		PROCEDURE ^ ToggleProps*; 

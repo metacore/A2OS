@@ -71,6 +71,7 @@ TYPE
 		cell*: Cell; 
 		port*: Port; 
 		procedure*: Procedure; 
+		any*: Any; 
 	END Type; 
 
 	Array* = OBJECT (Node)
@@ -79,6 +80,18 @@ TYPE
 		len*: InfoItem; 
 		base*: Type; 
 	END Array; 
+
+	Any* = OBJECT (Node)
+	END Any; 
+
+	AnyRecord* = OBJECT (Any)
+	END AnyRecord; 
+
+	AnyObject* = OBJECT (Any)
+	END AnyObject; 
+
+	AnyPointer* = OBJECT (Any)
+	END AnyPointer; 
 
 	Record* = OBJECT (Node)
 	VAR 
@@ -258,7 +271,7 @@ TYPE
 		external*: Strings.String; 
 	END IdentDef; 
 
-	TemplateType* = ENUM Type* = 0, Const* = 1, Empty* = 2 END; 
+	TemplateType* = ENUM Type* = 0, Const* = 1, Import* = 2, Automatic* = 3 END; 
 
 	TemplateParameter* = OBJECT (NodeList)
 	VAR 
@@ -324,6 +337,7 @@ TYPE
 		PROCEDURE ^ FPSectionP(fpSection: FPSection); 
 		PROCEDURE ^ TypeP(type: Type); 
 		PROCEDURE ^ ArrayP(array: Array); 
+		PROCEDURE ^ AnyP(type: Type); 
 		PROCEDURE ^ RecordP(record: Record); 
 		PROCEDURE ^ FieldListP(fieldList: FieldDecl); 
 		PROCEDURE ^ FieldDeclP(fieldDecl: FieldDecl); 

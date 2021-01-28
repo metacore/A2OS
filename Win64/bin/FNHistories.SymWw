@@ -3,7 +3,7 @@ MODULE FNHistories;
 CONST 
 TYPE 
 	HistoryItem = POINTER TO RECORD 
-		item: ANY; 
+		item: ANY ; 
 		previous, next: HistoryItem; 
 	END; 
 
@@ -13,12 +13,12 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ IsEmpty*(): BOOLEAN; 
-		PROCEDURE ^ Insert*(item: ANY); 
-		PROCEDURE ^ GetCurrent*(): ANY; 
+		PROCEDURE ^ Insert*(item: ANY ); 
+		PROCEDURE ^ GetCurrent*(): ANY ; 
 		PROCEDURE ^ Back*(): BOOLEAN; 
-		PROCEDURE ^ BackTo*(item: ANY): BOOLEAN; 
+		PROCEDURE ^ BackTo*(item: ANY ): BOOLEAN; 
 		PROCEDURE ^ Forward*(): BOOLEAN; 
-		PROCEDURE ^ ForwardTo*(item: ANY): BOOLEAN; 
+		PROCEDURE ^ ForwardTo*(item: ANY ): BOOLEAN; 
 		PROCEDURE ^ Dump*; 
 	END History; 
 BEGIN

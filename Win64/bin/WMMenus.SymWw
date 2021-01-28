@@ -45,12 +45,12 @@ TYPE
 		parentMenuPanel, focusPanel, rootMenuPanel: MenuPanel; 
 		greyBoxWidth: SIZE; 
 		dragNode: WMTrees.TreeNode; 
-		dragObject: ANY; 
+		dragObject: ANY ; 
 		leftClick, dragPossible: BOOLEAN; 
 		downX, downY: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ SetParent(parentMenuPanel: MenuPanel); 
 		PROCEDURE ^ SetParentWindow(parentWindow: MenuWindow); 
@@ -72,8 +72,8 @@ TYPE
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ MyStartDrag(node: WMTrees.TreeNode; object: ANY); 
-		PROCEDURE ^ DragWasAccepted(sender, data: ANY); 
+		PROCEDURE ^ MyStartDrag(node: WMTrees.TreeNode; object: ANY ); 
+		PROCEDURE ^ DragWasAccepted(sender, data: ANY ); 
 		PROCEDURE ^ CursorUp; 
 		PROCEDURE ^ CursorDown; 
 		PROCEDURE ^ CursorLeft; 
@@ -100,7 +100,7 @@ TYPE
 		takesFocus: BOOLEAN; 
 
 		PROCEDURE ^  & Open*(x, y: SIZE; openDirection: SIGNED32; menu: WMTrees.Tree; root: WMTrees.TreeNode; parent: MenuPanel; takesFocus, indicate: BOOLEAN); 
-		PROCEDURE ^ CloseMenu(sender, data: ANY); 
+		PROCEDURE ^ CloseMenu(sender, data: ANY ); 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: SIGNED32); 
 	END MenuWindow; 
@@ -110,7 +110,7 @@ VAR
 	PROCEDURE ^ AddWindow(window: WMWindowManager.Window; x, y: SIZE; flags: SET); 
 	PROCEDURE ^ ShadowDecorator(window: WMWindowManager.Window); 
 	PROCEDURE ^ HasChildren(parent: WMTrees.TreeNode; tree: WMTrees.Tree): BOOLEAN; 
-	PROCEDURE ^ GetCaption*(data: ANY; menu: WMTrees.Tree): Strings.String; 
+	PROCEDURE ^ GetCaption*(data: ANY ; menu: WMTrees.Tree): Strings.String; 
 	PROCEDURE ^ GetDragWrapper*(node: WMTrees.TreeNode; menu: WMTrees.Tree): DragWrapper; 
 	PROCEDURE ^ FindChild(CONST caption: ARRAY OF CHAR; parent: WMTrees.TreeNode; tree: WMTrees.Tree): WMTrees.TreeNode; 
 	PROCEDURE ^ AddChild*(CONST caption: ARRAY OF CHAR; parent: WMTrees.TreeNode; tree: WMTrees.Tree): WMTrees.TreeNode; 

@@ -25,7 +25,7 @@ TYPE
 VAR 
 	trace: BOOLEAN; 
 
-	PROCEDURE ^ SockFinalizer(S: ANY); 
+	PROCEDURE ^ SockFinalizer(S: ANY ); 
 	PROCEDURE ^ ToggleTrace*; 
 BEGIN
 END UDP.

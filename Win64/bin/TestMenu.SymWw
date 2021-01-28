@@ -14,7 +14,7 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ AddMenuItem(node: WMTrees.TreeNode; xml: XML.Element); 
-		PROCEDURE ^ Selected(sender, data: ANY); 
+		PROCEDURE ^ Selected(sender, data: ANY ); 
 		PROCEDURE ^ AddSubMenu(node: WMTrees.TreeNode; xml: XML.Element); 
 		PROCEDURE ^ SetDocument(xml: XML.Element); 
 		PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
@@ -35,7 +35,7 @@ VAR
 	lastMenu: WMTrees.Tree; 
 
 	PROCEDURE ^ Open*; 
-	PROCEDURE ^ HandleItemSelected(sender, data: ANY); 
+	PROCEDURE ^ HandleItemSelected(sender, data: ANY ); 
 	PROCEDURE ^ OpenPopup*(context: Commands.Context); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 

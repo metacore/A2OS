@@ -51,7 +51,7 @@ CONST
 TYPE 
 	Context* = OBJECT (Commands.Context)
 	VAR 
-		object*: ANY; 
+		object*: ANY ; 
 
 		PROCEDURE ^  & Init*(in, arg: Streams.Reader; out, error: Streams.Writer; caller: OBJECT); 
 	END Context; 
@@ -92,7 +92,7 @@ TYPE
 		name, source: Strings.String; 
 		type: INTEGER; 
 		id: SIZE; 
-		instance: ANY; 
+		instance: ANY ; 
 		next: ComponentInfo; 
 
 		PROCEDURE ^  & Init*; 

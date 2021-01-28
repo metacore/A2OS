@@ -27,7 +27,7 @@ TYPE
 		next*: Key; 
 
 		PROCEDURE ^ Sign*(CONST digest: ARRAY OF CHAR; dlen: SIGNED32): Number; 
-		PROCEDURE ^ Verify*(CONST digest: ARRAY OF CHAR; dlen: SIGNED32; signature: Number): BOOLEAN; 
+		PROCEDURE ^ Verify*(CONST digest: ARRAY OF CHAR; dlen: SIZE; signature: Number): BOOLEAN; 
 		PROCEDURE ^ Encrypt*(msg: Number): Number; 
 		PROCEDURE ^ Decrypt*(msg: Number): Number; 
 	END Key; 

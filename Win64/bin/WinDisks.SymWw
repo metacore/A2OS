@@ -48,7 +48,7 @@ TYPE
 		PROCEDURE ^  & New*(handle: Kernel32.HANDLE; CONST diskname: ARRAY OF CHAR; drive: SIGNED32; flags: SET; blockSize, blocks: SIGNED32); 
 	END VirtualDisk; 
 VAR 
-	DeviceIoControl: PROCEDURE {WINAPI}(hDevice: Kernel32.HANDLE; dwIoControlCode: SIGNED32; VAR lpInBuffer: ARRAY OF SYSTEM.BYTE; nInBufferSize: SIGNED32; VAR lpOutBuffer: ARRAY OF SYSTEM.BYTE; nOutBufferSize: SIGNED32; VAR lpBytesReturned: SIGNED32; lpOverlapped: ANY):Kernel32.BOOL; 
+	DeviceIoControl: PROCEDURE {WINAPI}(hDevice: Kernel32.HANDLE; dwIoControlCode: SIGNED32; VAR lpInBuffer: ARRAY OF SYSTEM.BYTE; nInBufferSize: SIGNED32; VAR lpOutBuffer: ARRAY OF SYSTEM.BYTE; nOutBufferSize: SIGNED32; VAR lpBytesReturned: SIGNED32; lpOverlapped: ANY ):Kernel32.BOOL; 
 	SetFilePointer: PROCEDURE {WINAPI}(hFile: Kernel32.HANDLE; lDistanceToMove: SIGNED32; VAR lpDistanceToMoveHigh: SIGNED32; dwMoveMethod: SIGNED32):SIGNED32; 
 	disks: VirtualDisk; 
 

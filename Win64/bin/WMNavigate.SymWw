@@ -86,7 +86,7 @@ TYPE
 		mouseOverIdx, lastMouseOverIdx: SIZE; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY ); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
@@ -102,7 +102,7 @@ TYPE
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^ CreateAuxCanvas(width, height: SIZE; alpha: BOOLEAN): WMGraphics.BufferCanvas; 
-		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY ); 
 		PROCEDURE ^ UpdateLayout; 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ DrawInternal(canvas: WMGraphics.Canvas; x, y, width, height: SIZE; window: WMWindowManager.Window; hasFocus, mouseOver: BOOLEAN; VAR extImage: WMGraphics.Image); 
@@ -124,7 +124,7 @@ TYPE
 		msg: WMMessages.Message; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY ); 
 		PROCEDURE ^ GoToWindow(window: WMWindowManager.Window; moveViewport: BOOLEAN); 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 

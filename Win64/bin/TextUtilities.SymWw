@@ -1,10 +1,11 @@
 MODULE TextUtilities;
-	IMPORT SYSTEM, Configuration, Commands, Codecs, FP1616, KernelLog, Texts, Streams, Files, UTF8Strings, XML, XMLScanner, XMLParser, XMLObjects, Repositories, Strings, WMGraphics, UnicodeProperties;
+	IMPORT Configuration, Commands, Codecs, FP1616, KernelLog, Texts, Streams, Files, UTF8Strings, XML, XMLScanner, XMLParser, XMLObjects, Repositories, Strings, WMGraphics, UnicodeProperties;
 CONST 
 	Ok* = 0; 
 	FileNotFound* = Files.FileNotFound; 
 	FileCreationError* = 2; 
 	CodecNotFound* = 3; 
+	StreamNotAvailable* = 4; 
 	CR = 0DX; 
 	LF = 0AX; 
 	TAB = 9X; 
@@ -19,6 +20,8 @@ TYPE
 	Text = Texts.Text; 
 
 	LoaderProc* = PROCEDURE {DELEGATE}(text: Text; filename: ARRAY OF CHAR; VAR res: INTEGER); 
+
+	Format* = ARRAY 128 OF CHAR; 
 
 	FormatDescriptor = OBJECT 
 	VAR 
@@ -38,7 +41,7 @@ TYPE
 		ucs32buf: POINTER TO ARRAY OF SIGNED32; 
 		fontName: ARRAY 32 OF CHAR; 
 		fontSize: SIZE; 
-		x, fontVOff: SIGNED32; 
+		fontVOff: SIGNED32; 
 		fontColor, fontBgColor: WMGraphics.Color; 
 		fontStyle: SET; 
 		currentAttributes-: Texts.Attributes; 
@@ -57,7 +60,7 @@ TYPE
 		PROCEDURE ^ SetFontColor*(color: WMGraphics.Color); 
 		PROCEDURE ^ SetBgColor*(bgColor: SIGNED32); 
 		PROCEDURE ^ SetVerticalOffset*(voff: SIGNED32); 
-		PROCEDURE ^ AddObject*(obj: ANY); 
+		PROCEDURE ^ AddObject*(obj: ANY ); 
 	END TextWriter; 
 
 	TextReader* = OBJECT (Streams.Reader)
@@ -151,7 +154,7 @@ TYPE
 		text: Texts.Text; 
 		doc: XML.Document; 
 		cont, tc, tc2: XMLObjects.Enumerator; 
-		ptr: ANY; 
+		ptr: ANY ; 
 		root: XML.Element; 
 		str: Strings.String; 
 		o: Texts.ObjectPiece; 
@@ -159,9 +162,9 @@ TYPE
 		fi: Texts.FontInfo; 
 		stylename, pstylename: ARRAY 64 OF CHAR; 
 		link: Texts.Link; 
+		defaultFont: WMGraphics.Font; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ GetUTF8Char(r: Streams.Reader; VAR u: Texts.Char32; VAR pos: SIZE): BOOLEAN; 
 		PROCEDURE ^ InsertPiece(charContent: XML.CDataSect); 
 		PROCEDURE ^ InsertChar(pos: SIZE; ch: Texts.Char32); 
 		PROCEDURE ^ MalformedXML(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
@@ -196,7 +199,7 @@ TYPE
 		PROCEDURE ^ CloseParagraph; 
 		PROCEDURE ^ WriteSpan(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ CloseSpan; 
-		PROCEDURE ^ WriteObject(o: ANY); 
+		PROCEDURE ^ WriteObject(o: ANY ); 
 		PROCEDURE ^ WriteLabel(CONST label: ARRAY OF CHAR); 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
 		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
@@ -220,6 +223,50 @@ TYPE
 		PROCEDURE ^ Open*(out: Streams.Writer); 
 		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
 	END UTF8Encoder; 
+
+	UTF16Decoder = OBJECT (Codecs.TextDecoder)
+	VAR 
+		errors: BOOLEAN; 
+		byteOrder: Streams.ByteOrder; 
+		text: Texts.Text; 
+
+		PROCEDURE ^  & InitUTF16Decoder(order: Streams.ByteOrder); 
+		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetText*(): Texts.Text; 
+	END UTF16Decoder; 
+
+	UTF16Encoder = OBJECT (Codecs.TextEncoder)
+	VAR 
+		out: Streams.Writer; 
+		byteOrder: Streams.ByteOrder; 
+
+		PROCEDURE ^  & InitUTF16Encoder(order: Streams.ByteOrder); 
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
+	END UTF16Encoder; 
+
+	UTF32Decoder = OBJECT (Codecs.TextDecoder)
+	VAR 
+		errors: BOOLEAN; 
+		text: Texts.Text; 
+		byteOrder: Streams.ByteOrder; 
+
+		PROCEDURE ^  & InitUTF32Decoder(order: Streams.ByteOrder); 
+		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetText*(): Texts.Text; 
+	END UTF32Decoder; 
+
+	UTF32Encoder = OBJECT (Codecs.TextEncoder)
+	VAR 
+		out: Streams.Writer; 
+		byteOrder: Streams.ByteOrder; 
+
+		PROCEDURE ^  & InitUTF32Encoder(order: Streams.ByteOrder); 
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
+	END UTF32Encoder; 
 
 	ISO88591Decoder = OBJECT (Codecs.TextDecoder)
 	VAR 
@@ -269,16 +316,26 @@ VAR
 	PROCEDURE ^ FindPosLineStart*(utilreader: Texts.TextReader; pos: SIZE): SIZE; 
 	PROCEDURE ^ CountWhitespace*(utilreader: Texts.TextReader; pos: SIZE): SIZE; 
 	PROCEDURE ^ LoadAuto*(text: Text; CONST fileName: ARRAY OF CHAR; VAR format: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ DetectTextStream*(in: Streams.Reader; VAR format: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ DecodeAuto*(CONST fileName: ARRAY OF CHAR; VAR format: ARRAY OF CHAR): Codecs.TextDecoder; 
+	PROCEDURE ^ LoadTextStream*(in: Streams.Reader; CONST format: ARRAY OF CHAR; VAR res: INTEGER): Text; 
 	PROCEDURE ^ Load*(text: Text; CONST filename, format: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ LoadAscii*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ LoadUTF8*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ LoadUTF16LE*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ LoadUTF16BE*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ LoadUTF32LE*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ LoadUTF32BE*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ LoadUCS16*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ LoadOberonText*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ LoadText*(text: Texts.Text; CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ Store*(text: Text; CONST filename, format: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ ExportAscii*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ ExportUTF8*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ ExportUTF16LE*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ ExportUTF16BE*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ ExportUTF32LE*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ ExportUTF32BE*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ StoreOberonText*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ StoreText*(text: Texts.Text; CONST fileName: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ TextToStr*(text: Text; VAR string: ARRAY OF CHAR); 
@@ -313,6 +370,14 @@ VAR
 	PROCEDURE ^ BluebottleEncoderFactory*(): Codecs.TextEncoder; 
 	PROCEDURE ^ UTF8DecoderFactory*(): Codecs.TextDecoder; 
 	PROCEDURE ^ UTF8EncoderFactory*(): Codecs.TextEncoder; 
+	PROCEDURE ^ UTF16LEDecoderFactory*(): Codecs.TextDecoder; 
+	PROCEDURE ^ UTF16BEDecoderFactory*(): Codecs.TextDecoder; 
+	PROCEDURE ^ UTF16LEEncoderFactory*(): Codecs.TextEncoder; 
+	PROCEDURE ^ UTF16BEEncoderFactory*(): Codecs.TextEncoder; 
+	PROCEDURE ^ UTF32LEDecoderFactory*(): Codecs.TextDecoder; 
+	PROCEDURE ^ UTF32BEDecoderFactory*(): Codecs.TextDecoder; 
+	PROCEDURE ^ UTF32LEEncoderFactory*(): Codecs.TextEncoder; 
+	PROCEDURE ^ UTF32BEEncoderFactory*(): Codecs.TextEncoder; 
 	PROCEDURE ^ ISO88591DecoderFactory*(): Codecs.TextDecoder; 
 	PROCEDURE ^ ISO88591EncoderFactory*(): Codecs.TextEncoder; 
 	PROCEDURE ^ HEXDecoderFactory*(): Codecs.TextDecoder; 

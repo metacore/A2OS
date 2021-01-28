@@ -91,7 +91,7 @@ TYPE
 
 	DisksModel* = OBJECT {EXCLUSIVE} 
 	VAR 
-		lockedBy: ANY; 
+		lockedBy: ANY ; 
 		lockLevel: SIGNED32; 
 		onChanged*: WMEvents.EventSource; 
 		devTable: Plugins.Table; 

@@ -191,7 +191,7 @@ TYPE
 	PROCEDURE ^ DummyEnum(state, msg: ARRAY OF CHAR; code: SIGNED32); 
 	PROCEDURE ^ InsertError(stmt: Statement; state, msg: ARRAY OF CHAR; nativeCode: SIGNED32); 
 	PROCEDURE ^ EnumErrors*(c: Connection; s: Statement; enum: ErrorProc); 
-	PROCEDURE ^ FinalizeConnection(obj: ANY); 
+	PROCEDURE ^ FinalizeConnection(obj: ANY ); 
 	PROCEDURE ^ Terminate; 
 	PROCEDURE ^ Open*(source, user, passwd: ARRAY OF CHAR): Connection; 
 	PROCEDURE ^ Close*(c: Connection); 

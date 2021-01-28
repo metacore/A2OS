@@ -118,7 +118,7 @@ TYPE
 
 	RecursiveLock* = OBJECT {EXCLUSIVE} 
 	VAR 
-		lockedBy: ANY; 
+		lockedBy: ANY ; 
 		level: SIGNED32; 
 
 		PROCEDURE ^ Acquire*; 

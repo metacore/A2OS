@@ -9,7 +9,7 @@ CONST
 TYPE 
 	TextPortion = ARRAY (PortionSize + 1) OF Texts.Char32; 
 
-	UTF16Builder = RECORD 
+	UTF16Builder = RECORD {FINAL} 
 		length: SIZE; 
 		data: POINTER TO ARRAY OF UNSIGNED16; 
 
@@ -20,7 +20,7 @@ TYPE
 
 	PROCEDURE ^ GetFromClipboard(text: Texts.Text); 
 	PROCEDURE ^ PutToClipboard(text: Texts.Text); 
-	PROCEDURE ^ ClipboardChanged(sender, data: ANY); 
+	PROCEDURE ^ ClipboardChanged(sender, data: ANY ); 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ Cleanup; 
 	PROCEDURE  - IsSingle(c: UNSIGNED32): BOOLEAN;

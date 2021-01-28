@@ -71,7 +71,7 @@ TYPE
 VAR 
 	GetUserName-: PROCEDURE {WINAPI}(VAR lpBuffer: ARRAY OF CHAR; VAR nSize: SIGNED32):Kernel32.BOOL; 
 	RegCloseKey-: PROCEDURE {WINAPI}(hKey: HKEY):SIGNED32; 
-	RegCreateKeyEx-: PROCEDURE {WINAPI}(hKey: HKEY; lpSubKey: ARRAY OF CHAR; Reserved: SIGNED32; lpClass: ARRAY OF CHAR; dwOptions, samDesired: SET; lpSecurityAttributes: ANY; VAR phkResult: HKEY; VAR lpdwDisposition: SIGNED32):SIGNED32; 
+	RegCreateKeyEx-: PROCEDURE {WINAPI}(hKey: HKEY; lpSubKey: ARRAY OF CHAR; Reserved: SIGNED32; lpClass: ARRAY OF CHAR; dwOptions, samDesired: SET; lpSecurityAttributes: ANY ; VAR phkResult: HKEY; VAR lpdwDisposition: SIGNED32):SIGNED32; 
 	RegDeleteKey-: PROCEDURE {WINAPI}(hKey: HKEY; lpSubKey: ARRAY OF CHAR):SIGNED32; 
 	RegDeleteValue-: PROCEDURE {WINAPI}(hKey: HKEY; lpValueName: ARRAY OF CHAR):SIGNED32; 
 	RegEnumKeyEx-: PROCEDURE {WINAPI}(hKey: HKEY; dwIndex: SIGNED32; VAR lpName: ARRAY OF CHAR; VAR lpcbName: SIGNED32; VAR lpReserved: SIGNED32; VAR lpClass: ARRAY OF CHAR; VAR lpcbClass: SIGNED32; VAR lpftLastWriteTime: Kernel32.FileTime):SIGNED32; 

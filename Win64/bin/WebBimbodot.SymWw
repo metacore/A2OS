@@ -125,10 +125,10 @@ VAR
 	PROCEDURE ^ MakeListLink(archive: Archive; VAR l: ARRAY OF CHAR); 
 	PROCEDURE ^ RenderArticleHeadline(h: HTMLWriter; archive: Archive; a: Article); 
 	PROCEDURE ^ FindVersion(archive: Archive; r: HTTPSupport.HTTPRequest): Version; 
-	PROCEDURE ^ Frontpage*(archive: Archive; data: ANY): ANY; 
-	PROCEDURE ^ QueryEdit*(archive: Archive; data: ANY): ANY; 
-	PROCEDURE ^ Publish*(archive: Archive; data: ANY): ANY; 
-	PROCEDURE ^ ShowArticle*(archive: Archive; data: ANY): ANY; 
+	PROCEDURE ^ Frontpage*(archive: Archive; data: ANY ): ANY ; 
+	PROCEDURE ^ QueryEdit*(archive: Archive; data: ANY ): ANY ; 
+	PROCEDURE ^ Publish*(archive: Archive; data: ANY ): ANY ; 
+	PROCEDURE ^ ShowArticle*(archive: Archive; data: ANY ): ANY ; 
 	PROCEDURE ^ Access*(context: WebCGI.CGIContext); 
 	PROCEDURE ^ AddArchive(CONST id, path, title: ARRAY OF CHAR); 
 	PROCEDURE ^ GetArchiveInternal(CONST id: ARRAY OF CHAR): Archive; 

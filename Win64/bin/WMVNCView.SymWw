@@ -30,7 +30,7 @@ TYPE
 		PROCEDURE ^ KeyEvent(ucs: SIGNED32; flags: SET; keysym: SIGNED32); 
 		PROCEDURE ^ MouseEvent(x, y, dz: SIGNED32; keys: SET); 
 		PROCEDURE ^ ClipboardEvent(text: String); 
-		PROCEDURE ^ ClipboardChanged(sender, data: ANY); 
+		PROCEDURE ^ ClipboardChanged(sender, data: ANY ); 
 		PROCEDURE ^ Close; 
 	END VNCView; 
 

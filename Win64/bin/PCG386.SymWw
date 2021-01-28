@@ -139,7 +139,7 @@ VAR
 	PROCEDURE ^ AliveRemove(VAR set: AliveSet; reg: SIGNED32); 
 	PROCEDURE ^ SetRegisterHint(code: PCLIR.Code; barrier: SIGNED32; vreg: PCLIR.Register; ireg: Register); 
 	PROCEDURE ^ SetRegisterHint2(code: PCLIR.Code; barrier: SIGNED32; vreg: PCLIR.Register; ireg, ireg2: Register); 
-	PROCEDURE ^ Optimize(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32; context: ANY); 
+	PROCEDURE ^ Optimize(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32; context: ANY ); 
 	PROCEDURE ^ UseRegisterI(VAR instr: PCLIR.Instruction; VAR reg: Register); 
 	PROCEDURE ^ UseRegister(code: PCLIR.Code; vreg: PCLIR.Register; VAR reg: Register); 
 	PROCEDURE ^ UseRegisterI2(VAR instr: PCLIR.Instruction; VAR reg, reg2: Register); 
@@ -206,7 +206,7 @@ VAR
 	PROCEDURE ^ GenCase(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
 	PROCEDURE ^ GenCaseLine(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
 	PROCEDURE ^ GenCaseElse(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
-	PROCEDURE ^ DumpCode(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32; context: ANY); 
+	PROCEDURE ^ DumpCode(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32; context: ANY ); 
 	PROCEDURE ^ DoOptimize(code: PCLIR.Code); 
 	PROCEDURE ^ IncSaveLevel; 
 	PROCEDURE ^ Init(): BOOLEAN; 

@@ -14,8 +14,8 @@ TYPE
 	VAR 
 		editor: WMEditors.Editor; 
 
-		PROCEDURE ^ HandleEnter(sender, data: ANY); 
-		PROCEDURE ^ HandleEscape(sender, data: ANY); 
+		PROCEDURE ^ HandleEnter(sender, data: ANY ); 
+		PROCEDURE ^ HandleEscape(sender, data: ANY ); 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 

@@ -7,7 +7,7 @@ CONST
 	KindUse = 3; 
 TYPE 
 	Range = RECORD 
-		a, b: SIGNED32; 
+		a, b: SIZE; 
 		kind: SIGNED32; 
 		no: TS.NamedObject; 
 	END; 
@@ -43,7 +43,7 @@ VAR
 	currentAuthor: ARRAY 128 OF CHAR; 
 	currentPurpose: ARRAY 4096 OF CHAR; 
 
-	PROCEDURE ^ MakeRange(from, to, kind: SIGNED32; no: TS.NamedObject); 
+	PROCEDURE ^ MakeRange(from, to: SIZE; kind: SIGNED32; no: TS.NamedObject); 
 	PROCEDURE ^ DumpConst(scope: TS.Scope; c: TS.Const); 
 	PROCEDURE ^ DumpObject(o: TS.Class); 
 	PROCEDURE ^ DumpArray(a: TS.Array; scope: TS.Scope); 

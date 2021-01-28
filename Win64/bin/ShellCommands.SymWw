@@ -25,9 +25,9 @@ TYPE
 	Context* = OBJECT (Commands.Context)
 	VAR 
 		alias: AliasList; 
-		C: ANY; 
+		C: ANY ; 
 
-		PROCEDURE ^  & New*(C: ANY; in: Streams.Reader; out, err: Streams.Writer); 
+		PROCEDURE ^  & New*(C: ANY ; in: Streams.Reader; out, err: Streams.Writer); 
 	END Context; 
 
 	Command = OBJECT 
@@ -36,11 +36,11 @@ TYPE
 		cmd: String; 
 		next: Command; 
 
-		PROCEDURE ^ SetContext(C: ANY; in: Streams.Reader; out, err: Streams.Writer); 
+		PROCEDURE ^ SetContext(C: ANY ; in: Streams.Reader; out, err: Streams.Writer); 
 		PROCEDURE ^  & Init*(ctx: Context); 
 	END Command; 
 
-	PROCEDURE ^ GetPar(par: ANY; VAR p: CmdParameters; VAR w: Streams.Writer); 
+	PROCEDURE ^ GetPar(par: ANY ; VAR p: CmdParameters; VAR w: Streams.Writer); 
 	PROCEDURE ^ GetAliasList(p: Commands.Context): AliasList; 
 	PROCEDURE ^ Close(p: Commands.Context); 
 	PROCEDURE ^ Alias*(context: Commands.Context); 

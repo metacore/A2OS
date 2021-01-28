@@ -80,7 +80,7 @@ TYPE
 VAR 
 	registry: Registry; 
 
-	PROCEDURE ^ PlugIn*(obj: ANY; load: LoadProc; store: StoreProc); 
+	PROCEDURE ^ PlugIn*(obj: ANY ; load: LoadProc; store: StoreProc); 
 	PROCEDURE ^ Open*(fileName: Files.FileName): File; 
 	PROCEDURE ^ Rewind*(f: File); 
 	PROCEDURE ^ Close*(f: File); 

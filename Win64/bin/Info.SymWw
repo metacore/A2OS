@@ -46,7 +46,7 @@ VAR
 	END; 
 	numRecentAllocators*: SIGNED32; 
 
-	PROCEDURE ^ LogAlloc(p: ANY); 
+	PROCEDURE ^ LogAlloc(p: ANY ); 
 	PROCEDURE ^ WriteB(b: SIZE; out: Streams.Writer); 
 	PROCEDURE ^ ModuleDetails*(context: Commands.Context); 
 	PROCEDURE ^ ModulePC*(context: Commands.Context); 
@@ -57,7 +57,7 @@ VAR
 	PROCEDURE ^ RecentAllocators*(context: Commands.Context); 
 	PROCEDURE ^ TraceModule*(context: Commands.Context); 
 	PROCEDURE ^ TraceReference*(context: Commands.Context); 
-	PROCEDURE ^ MarkReference(analyzer: Analyzer; ref: ANY); 
+	PROCEDURE ^ MarkReference(analyzer: Analyzer; ref: ANY ); 
 	PROCEDURE ^ TraceProcessID*(context: Commands.Context); 
 	PROCEDURE ^ FindProcessByID(id: SIGNED32): Objects.Process; 
 	PROCEDURE ^ AnalyzeMarkedBlocks(analyzer: Analyzer); 

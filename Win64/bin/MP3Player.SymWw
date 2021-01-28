@@ -16,7 +16,7 @@ TYPE
 		pos, oldPos: SIGNED32; 
 		setup*: PROCEDURE {DELEGATE}(canSeek: BOOLEAN; totTime, totSamp: SIGNED32); 
 		update*: PROCEDURE {DELEGATE}(status: BOOLEAN; pos, displayTime: SIGNED32); 
-		eof*: PROCEDURE {DELEGATE}(sender, data: ANY); 
+		eof*: PROCEDURE {DELEGATE}(sender, data: ANY ); 
 
 		PROCEDURE ^  & Init*(in: Streams.Reader; length: SIGNED32); 
 		PROCEDURE ^ Play*; 

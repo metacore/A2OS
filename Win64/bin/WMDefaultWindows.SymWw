@@ -61,7 +61,7 @@ TYPE
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
 		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: SIGNED32); 
-		PROCEDURE ^ CloseDispatch*(sender, data: ANY); 
+		PROCEDURE ^ CloseDispatch*(sender, data: ANY ); 
 		PROCEDURE ^ StyleChanged*; 
 	END TopWindow; 
 

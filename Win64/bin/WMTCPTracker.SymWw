@@ -39,13 +39,13 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(delay: SIGNED32; c: WMRestorable.Context); 
 		PROCEDURE ^ GetTitleStr(col: SIGNED32; VAR x: ARRAY OF CHAR); 
-		PROCEDURE ^ Click(sender, data: ANY); 
-		PROCEDURE ^ CloseConnection(sender, data: ANY); 
-		PROCEDURE ^ DiscardConnection(sender, data: ANY); 
+		PROCEDURE ^ Click(sender, data: ANY ); 
+		PROCEDURE ^ CloseConnection(sender, data: ANY ); 
+		PROCEDURE ^ DiscardConnection(sender, data: ANY ); 
 		PROCEDURE ^ GetAlign(col: SIGNED32): SIGNED32; 
 		PROCEDURE ^ StateToString(state: SIGNED32; VAR str: ARRAY OF CHAR); 
 		PROCEDURE ^ GetConnectionStr(x, col: SIGNED32; VAR str: ARRAY OF CHAR); 
-		PROCEDURE ^ AddConnection(obj: ANY; VAR cont: BOOLEAN); 
+		PROCEDURE ^ AddConnection(obj: ANY ; VAR cont: BOOLEAN); 
 		PROCEDURE ^ ScanConnections; 
 		PROCEDURE ^ Update; 
 		PROCEDURE ^ Join; 

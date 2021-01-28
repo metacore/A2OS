@@ -14,7 +14,7 @@ TYPE
 		arrowAtStartI, arrowAtEndI: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ Set*(x0, y0, x1, y1: SIGNED32); 
 		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
 		PROCEDURE ^ SetArrowheads*(arrows: SET); 
@@ -27,7 +27,7 @@ TYPE
 		clBorderI: WMGraphics.Color; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Rectangle; 
 
@@ -37,7 +37,7 @@ TYPE
 		colorI: WMGraphics.Color; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Circle; 
 
@@ -47,7 +47,7 @@ TYPE
 		colorI: WMGraphics.Color; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Ellipse; 
 VAR 

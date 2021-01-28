@@ -131,9 +131,9 @@ TYPE
 
 	AnyValue* = OBJECT (Value)
 	VAR 
-		value*: ANY; 
+		value*: ANY ; 
 
-		PROCEDURE ^  & InitAny*(value: ANY); 
+		PROCEDURE ^  & InitAny*(value: ANY ); 
 		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
 		PROCEDURE ^ GetAddress*(VAR a: ADDRESS): BOOLEAN; 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer); 

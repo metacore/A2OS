@@ -41,7 +41,7 @@ VAR
 	PROCEDURE ^ Dont(C: NetSystem.Connection; VAR l: SIGNED16); 
 	PROCEDURE ^ Receiver(me: Oberon.Task); 
 	PROCEDURE ^ SetUp(C: NetSystem.Connection); 
-	PROCEDURE ^ CloseFrame(F: ANY); 
+	PROCEDURE ^ CloseFrame(F: ANY ); 
 	PROCEDURE ^ OpenConn(F: TerminalGadgets.Frame; host, user, passwd: ARRAY OF CHAR; port: SIGNED16); 
 	PROCEDURE ^ SplitTelnetAdr(VAR url, host, user, passwd: ARRAY OF CHAR; VAR port: SIGNED16; prefix: BOOLEAN): SIGNED32; 
 	PROCEDURE ^ Open*; 

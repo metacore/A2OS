@@ -36,18 +36,18 @@ CONST
 	TraceQueue = FALSE; 
 	MsgTypeMax* = 13; 
 TYPE 
-	CompCommand* = PROCEDURE {DELEGATE}(sender, par: ANY); 
+	CompCommand* = PROCEDURE {DELEGATE}(sender, par: ANY ); 
 
 	String* = Strings.String; 
 
 	Message* = RECORD 
-		originator*, sender*: ANY; 
+		originator*, sender*: ANY ; 
 		token*: AsyncToken; 
 		event*: CompCommand; 
 		msgType*, msgSubType*: SIGNED32; 
 		x*, y*, z*, dx*, dy*, dz*: SIZE; 
 		flags*: SET; 
-		ext*: ANY; 
+		ext*: ANY ; 
 	END; 
 
 	MessageExtension* = POINTER TO RECORD 
@@ -56,7 +56,7 @@ TYPE
 	AsyncToken* = OBJECT {EXCLUSIVE} 
 	VAR 
 		ready: BOOLEAN; 
-		result*: ANY; 
+		result*: ANY ; 
 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ AwaitCompletion*; 
@@ -87,8 +87,8 @@ TYPE
 		alive, continue, waiting, stopped: BOOLEAN; 
 		msg: Message; 
 		handler: MessageHandler; 
-		originator: ANY; 
-		me: ANY; 
+		originator: ANY ; 
+		me: ANY ; 
 		lock-: Locks.RWLock; 
 		th, traphandler: TrapHandler; 
 		name*: String; 
@@ -96,10 +96,10 @@ TYPE
 		PROCEDURE ^  & New*(handler: MessageHandler); 
 		PROCEDURE ^ SetTrapHandler*(th: TrapHandler); 
 		PROCEDURE ^ IsCallFromSequencer*(): BOOLEAN; 
-		PROCEDURE ^ GetOriginator*(): ANY; 
+		PROCEDURE ^ GetOriginator*(): ANY ; 
 		PROCEDURE ^ Add*(VAR msg: Message): BOOLEAN; 
 		PROCEDURE ^ Handle(VAR msg: Message): BOOLEAN; 
-		PROCEDURE ^ ScheduleEvent*(event: CompCommand; sender, par: ANY); 
+		PROCEDURE ^ ScheduleEvent*(event: CompCommand; sender, par: ANY ); 
 		PROCEDURE ^ Stop*; 
 		PROCEDURE ^ WaitFree*; 
 		PROCEDURE ^ Get(VAR msg: Message): BOOLEAN; 
@@ -111,10 +111,10 @@ VAR
 	messagesAddedByType-: ARRAY MsgTypeMax OF SIGNED32; 
 	messagesAdded-: SIGNED32; 
 	messagesDiscarded-: SIGNED32; 
-	debug*: ANY; 
+	debug*: ANY ; 
 	MsgName: ARRAY 32 OF ARRAY 32 OF CHAR; 
 
-	PROCEDURE ^ TokenEnumerator(obj: ANY; VAR cont: BOOLEAN); 
+	PROCEDURE ^ TokenEnumerator(obj: ANY ; VAR cont: BOOLEAN); 
 	PROCEDURE ^ GetAsyncToken*(): AsyncToken; 
 	PROCEDURE ^ RecycleAsyncToken*(t: AsyncToken); 
 	PROCEDURE ^ Contained(CONST this, container: Message): BOOLEAN; 

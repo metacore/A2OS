@@ -75,6 +75,7 @@ TYPE
 		PROCEDURE ^ VisitSetType*(x: SyntaxTree.SetType); 
 		PROCEDURE ^ VisitNilType*(x: SyntaxTree.NilType); 
 		PROCEDURE ^ VisitAnyType*(x: SyntaxTree.AnyType); 
+		PROCEDURE ^ VisitAnyRecordType*(x: SyntaxTree.AnyRecordType); 
 		PROCEDURE ^ VisitAddressType*(x: SyntaxTree.AddressType); 
 		PROCEDURE ^ VisitSizeType*(x: SyntaxTree.SizeType); 
 		PROCEDURE ^ VisitObjectType*(x: SyntaxTree.ObjectType); 

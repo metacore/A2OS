@@ -165,8 +165,8 @@ TYPE
 	PROCEDURE ^ WriteSymbolLabel(text: DocumentationTree.Text; symbol: SyntaxTree.Symbol); 
 	PROCEDURE ^ WriteReferenceInScope*(text: DocumentationTree.Text; symbol: SyntaxTree.Symbol; inScope: SyntaxTree.Scope); 
 	PROCEDURE ^ WriteSymbolReference(text: DocumentationTree.Text; symbol: SyntaxTree.Symbol; scope: SyntaxTree.Scope); 
-	PROCEDURE ^ ParseComments(document: DocumentationTree.Document; c, sentinel: SyntaxTree.Comment; x: ANY); 
-	PROCEDURE ^ MergeComments(c, sentinel: SyntaxTree.Comment; x: ANY): DocumentationTree.String; 
+	PROCEDURE ^ ParseComments(document: DocumentationTree.Document; c, sentinel: SyntaxTree.Comment; x: ANY ); 
+	PROCEDURE ^ MergeComments(c, sentinel: SyntaxTree.Comment; x: ANY ): DocumentationTree.String; 
 	PROCEDURE ^ KeepSections(in: DocumentationTree.Document); 
 	PROCEDURE ^ MergeDocument(in: DocumentationTree.Document; descriptionSection: DocumentationTree.Paragraphs; this: DocumentationTree.Document); 
 	PROCEDURE ^ MergeParagraphs(in, this: DocumentationTree.Paragraphs); 

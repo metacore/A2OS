@@ -57,7 +57,7 @@ TYPE
 
 	DragInfo* = OBJECT 
 	VAR 
-		data*, sender*: ANY; 
+		data*, sender*: ANY ; 
 		onAccept*, onReject*: Messages.CompCommand; 
 		offsetX*, offsetY*: SIZE; 
 	END DragInfo; 
@@ -85,7 +85,7 @@ TYPE
 
 	VisualComponentInfo* = RECORD 
 		width*, height*: SIGNED32; 
-		generator*: PROCEDURE {DELEGATE}():ANY; 
+		generator*: PROCEDURE {DELEGATE}():ANY ; 
 	END; 
 
 	WindowInfo* = RECORD 
@@ -141,7 +141,7 @@ TYPE
 		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: DragInfo); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: DragInfo); 
 		PROCEDURE ^ ConfirmDrag*(accept: BOOLEAN; dragInfo: DragInfo); 
-		PROCEDURE ^ StartDrag*(sender, data: ANY; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
+		PROCEDURE ^ StartDrag*(sender, data: ANY ; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ FocusGot*; 
 		PROCEDURE ^ FocusLost*; 
@@ -236,7 +236,7 @@ TYPE
 		PROCEDURE ^ GetWindowInfo*(w: Window; VAR info: WindowInfo): BOOLEAN; 
 		PROCEDURE ^ SetWindowFlag*(w: Window; flag: SIGNED32; value: BOOLEAN); 
 		PROCEDURE ^ SetAcceptDrag*(w: Window; accept: BOOLEAN); 
-		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
+		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY ; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
 		PROCEDURE ^ TransferPointer*(to: Window): BOOLEAN; 
 		PROCEDURE ^ CheckPointerImage*; 
 		PROCEDURE ^ AddView*(v: ViewPort); 

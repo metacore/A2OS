@@ -13,7 +13,7 @@ TYPE
 
 		PROCEDURE ^  & New*(CONST title: ARRAY OF CHAR); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ ClearText(sender, data: ANY); 
+		PROCEDURE ^ ClearText(sender, data: ANY ); 
 	END LogWindow; 
 
 	TraceSubscriber = OBJECT 

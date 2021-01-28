@@ -18,7 +18,7 @@ TYPE
 		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Available*(): SIZE; 
 		PROCEDURE ^ SetPortState(bps, data, parity, stop: SIGNED32; VAR res: INTEGER); 
-		PROCEDURE ^ FinalizePort(ptr: ANY); 
+		PROCEDURE ^ FinalizePort(ptr: ANY ); 
 		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: SIGNED32); 
 		PROCEDURE ^ ClearMC*(s: SET); 
 		PROCEDURE ^ SetMC*(s: SET); 

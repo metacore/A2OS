@@ -1,5 +1,5 @@
 MODULE PrecisionTimer;
-	IMPORT SYSTEM, Kernel32, KernelLog;
+	IMPORT Kernel32, KernelLog;
 CONST 
 TYPE 
 	Counter* = SIGNED64; 

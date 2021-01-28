@@ -23,11 +23,11 @@ TYPE
 
 		PROCEDURE ^  & New*(title: ARRAY OF CHAR; interval: SIGNED32; name: Modules.Name); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ ClearText(sender, data: ANY); 
-		PROCEDURE ^ Load(sender, data: ANY); 
+		PROCEDURE ^ ClearText(sender, data: ANY ); 
+		PROCEDURE ^ Load(sender, data: ANY ); 
 		PROCEDURE ^ OutState(name: Modules.Name); 
-		PROCEDURE ^ RefreshSwitch(sender, data: ANY); 
-		PROCEDURE ^ Refresh(sender, data: ANY); 
+		PROCEDURE ^ RefreshSwitch(sender, data: ANY ); 
+		PROCEDURE ^ Refresh(sender, data: ANY ); 
 		PROCEDURE ^ SetInterval*(interval: SIGNED32); 
 		PROCEDURE ^ Variables(refs: Bytes; i: SIZE; base: ADDRESS; w: Streams.Writer); 
 		PROCEDURE ^ FindProc(refs: Bytes; ofs: ADDRESS): SIZE; 

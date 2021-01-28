@@ -10,16 +10,16 @@ TYPE
 	VAR 
 		fin: Finalizer; 
 		next: OberonFinalizer; 
-		obj: ANY; 
+		obj: ANY ; 
 
-		PROCEDURE ^ Finalize(obj: ANY); 
+		PROCEDURE ^ Finalize(obj: ANY ); 
 	END OberonFinalizer; 
 VAR 
 	version*: ARRAY 64 OF CHAR; 
 	shutdown*: SIGNED32; 
-	lockedBy: ANY; 
+	lockedBy: ANY ; 
 	level: SIGNED32; 
-	oberon: ANY; 
+	oberon: ANY ; 
 	finalizeRoot: OberonFinalizer; 
 	NfinalizeAlive, NfinalizeDead: SIGNED32; 
 	finalizers: Kernel.FinalizedCollection; 
@@ -35,7 +35,7 @@ VAR
 	PROCEDURE ^ WriteMemory*(adr, size: SIGNED32); 
 	PROCEDURE ^ Used*(): SIGNED32; 
 	PROCEDURE ^ GC*; 
-	PROCEDURE ^ RegisterObject*(obj: ANY; fin: Finalizer; basic: BOOLEAN); 
+	PROCEDURE ^ RegisterObject*(obj: ANY ; fin: Finalizer; basic: BOOLEAN); 
 	PROCEDURE ^ GetClock*(VAR time, date: SIGNED32); 
 	PROCEDURE ^ SetClock*(time, date: SIGNED32); 
 	PROCEDURE ^ GetConfig*(name: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 

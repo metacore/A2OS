@@ -12,19 +12,19 @@ TYPE
 
 	DropTarget* = OBJECT (WMDropTarget.DropTarget)
 	VAR 
-		originator: ANY; 
+		originator: ANY ; 
 		addComponent: AddComponentProcedure; 
 
-		PROCEDURE ^  & Init*(originator: ANY; addComponent: AddComponentProcedure); 
+		PROCEDURE ^  & Init*(originator: ANY ; addComponent: AddComponentProcedure); 
 		PROCEDURE ^ GetInterface*(type: SIGNED32): WMDropTarget.DropInterface; 
 	END DropTarget; 
 
 	DropComponent* = OBJECT (WMDropTarget.DropInterface)
 	VAR 
-		originator: ANY; 
+		originator: ANY ; 
 		addComponent: AddComponentProcedure; 
 
-		PROCEDURE ^  & Init*(originator: ANY; addComponent: AddComponentProcedure); 
+		PROCEDURE ^  & Init*(originator: ANY ; addComponent: AddComponentProcedure); 
 		PROCEDURE ^ Set(component: Repositories.Component; VAR res: INTEGER); 
 	END DropComponent; 
 
@@ -65,12 +65,12 @@ TYPE
 		state: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ InitGrid; 
 		PROCEDURE ^ GetSelectedComponent(): Repositories.Component; 
-		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
-		PROCEDURE ^ DragWasAccepted(sender, data: ANY); 
+		PROCEDURE ^ MyStartDrag(sender, data: ANY ); 
+		PROCEDURE ^ DragWasAccepted(sender, data: ANY ); 
 		PROCEDURE ^ SetDetails(details: BOOLEAN); 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ UpdateGridSpacings*; 
@@ -96,9 +96,9 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ SetStatusLabel(CONST m1, m2, m3: ARRAY OF CHAR); 
 		PROCEDURE ^ LoadRepository(CONST filename: ARRAY OF CHAR); 
-		PROCEDURE ^ HandleButtons(sender, data: ANY); 
-		PROCEDURE ^ OnRepositoriesClicked(sender, data: ANY); 
-		PROCEDURE ^ OnComponentClicked(sender, data: ANY); 
+		PROCEDURE ^ HandleButtons(sender, data: ANY ); 
+		PROCEDURE ^ OnRepositoriesClicked(sender, data: ANY ); 
+		PROCEDURE ^ OnComponentClicked(sender, data: ANY ); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ Close*; 
 	END Window; 

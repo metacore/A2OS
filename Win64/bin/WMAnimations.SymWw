@@ -25,7 +25,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ LoadImages; 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ SetState(state: SIGNED32); 

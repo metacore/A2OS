@@ -70,7 +70,7 @@ TYPE
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ Append(message: String; cs: Texts.CharacterStyle; ps: Texts.ParagraphStyle); 
-		PROCEDURE ^ SendClick(sender, data: ANY); 
+		PROCEDURE ^ SendClick(sender, data: ANY ); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(inst: Instance); 
 	END ChatWindow; 

@@ -1,5 +1,5 @@
 MODULE KernelLogger;
-	IMPORT SYSTEM, KernelLog, Texts, TextUtilities, Kernel, Modules;
+	IMPORT KernelLog, Texts, TextUtilities, Kernel, Modules, Configuration;
 CONST 
 	BufSize = (SIGNED32(8192) * 8); 
 	DeleteSize = (BufSize DIV 8); 
@@ -26,6 +26,8 @@ VAR
 	logger: Logger; 
 	buf: POINTER TO ARRAY OF CHAR; 
 	kernelLog-: Texts.Text; 
+	monospace, default: ARRAY 256 OF CHAR; 
+	res: INTEGER; 
 
 	PROCEDURE ^ Start*; 
 	PROCEDURE ^ Stop*; 

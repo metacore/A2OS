@@ -709,7 +709,7 @@ TYPE
 
 			rxe := e.GetAttribute("rx");
 			rye := e.GetAttribute("ry");
-			IF (rxe=NIL) & (rxe=NIL) THEN
+			IF (rxe=NIL) & (rye=NIL) THEN
 				LoadFilterAttributeBegin(e);
 				renderer.RenderRect(x, y, width, height, state);
 				LoadFilterAttributeEnd();

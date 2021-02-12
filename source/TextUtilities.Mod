@@ -1924,13 +1924,11 @@ END LoadAuto;
 
 (** Procedure to get decoder for the given file - appropriate Format will be chosen automaticaly *)
 PROCEDURE DetectTextStream*(in: Streams.Reader; VAR format: ARRAY OF CHAR; VAR res: INTEGER);
-VAR pos: Streams.Position; fstring : ARRAY 64 OF CHAR; i : SIZE;
+VAR fstring : ARRAY 64 OF CHAR; i : SIZE;
 BEGIN
 	COPY("", format);
 	IF (in # NIL) THEN
-		pos := in.Pos();
 		in.Bytes(fstring, 0, LEN(fstring), i);
-		IF in.CanSetPos() THEN in.SetPos(pos); END;
 
 		IF (i > 3) & (fstring[0] = 00X) & (fstring[1] = 00X) & (fstring[2] = 0FEX) & (fstring[3] = 0FFX) THEN
 			COPY("UTF-32BE", format);
@@ -1978,12 +1976,13 @@ END DecodeAuto;
 PROCEDURE LoadTextStream*(in: Streams.Reader; CONST format: ARRAY OF CHAR; VAR res: INTEGER): Text;
 VAR decoder : Codecs.TextDecoder;
 BEGIN
+	RESULT := NIL;
 	IF (in # NIL) THEN
 		decoder := Codecs.GetTextDecoder(format);
 		IF (decoder # NIL) THEN
 			decoder.Open(in, res);
 			IF (res = Ok) THEN
-				RETURN decoder.GetText();
+				RESULT := decoder.GetText();
 			END;
 		ELSE
 			res := CodecNotFound;
@@ -1991,7 +1990,35 @@ BEGIN
 	ELSE
 		res := StreamNotAvailable;
 	END;
+	RETURN RESULT;
 END LoadTextStream;
+
+PROCEDURE LoadTextAuto*(text : Text; CONST fileName: ARRAY OF CHAR; VAR format: Format; VAR res: INTEGER): Text;
+VAR in: Streams.Reader;  t : Text;
+BEGIN
+	ASSERT(text # NIL);
+	in := Codecs.OpenInputStream(fileName);
+	IF (in # NIL) THEN
+		DetectTextStream(in, format, res);
+		IF res = Ok THEN
+			IF in.CanSetPos() THEN
+				in.SetPos(0);
+			ELSE (* reopen text stream *)
+				in := Codecs.OpenInputStream(fileName);
+			END;
+			t :=  LoadTextStream(in, format, res);
+			IF (res = Ok) THEN
+				t.AcquireRead;
+				text.AcquireWrite;
+				text.CopyFromText(t, 0, t.GetLength(), 0);
+				text.ReleaseWrite;
+				t.ReleaseRead;
+			END;
+		END;
+	ELSE
+		res := FileNotFound;
+	END;
+END LoadTextAuto;
 
 (** Load text using codecs *)
 PROCEDURE Load*(text : Text; CONST filename, format : ARRAY OF CHAR; VAR res : INTEGER);

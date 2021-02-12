@@ -1156,13 +1156,28 @@ VAR
 		NEW( b, send, DefaultWriterSize )
 	END OpenWriter;
 
-(** Open a reader from the specified stream receiver. *)
+	(** Open a reader from the specified stream receiver. *)
 	PROCEDURE OpenReader*( VAR b: Reader;  receive: Receiver );
 	BEGIN
 		NEW( b, receive, DefaultReaderSize )
 	END OpenReader;
 
-(** Copy the contents of a reader to a writer *)
+	(** Open a string writer *)
+	PROCEDURE OpenStringWriter*( VAR b: StringWriter; size: SIZE );
+	BEGIN
+		NEW( b, size );
+	END OpenStringWriter;
+
+	(** Open a string reader *)
+	PROCEDURE OpenStringReader*( VAR b: StringReader; CONST string: ARRAY OF CHAR );
+	VAR len := 0: SIZE;
+	BEGIN
+		WHILE ( string[ len ] # 0X ) DO INC( len ) END;
+		NEW( b, len );
+		b.SetRaw( string, 0, len );
+	END OpenStringReader;
+
+	(** Copy the contents of a reader to a writer *)
 	PROCEDURE Copy* (r: Reader; w: Writer);
 	VAR char: CHAR;
 	BEGIN
@@ -1171,7 +1186,6 @@ VAR
 			IF r.res = Ok THEN w.Char (char) END
 		END;
 	END Copy;
-
 
 BEGIN
 	months := " Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec";

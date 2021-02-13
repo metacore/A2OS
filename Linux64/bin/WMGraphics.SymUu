@@ -1,5 +1,5 @@
 MODULE WMGraphics;
-	IMPORT Kernel, Rectangles := WMRectangles, Raster, KernelLog, UTF8Strings, Strings, RasterScale := WMRasterScale, Codecs, Files, Streams, Reals;
+	IMPORT Kernel, Rectangles := WMRectangles, Raster, KernelLog, UTF8Strings, Strings, RasterScale := WMRasterScale, Codecs, Files, Streams, Reals, Configuration;
 CONST 
 	ModeCopy* = RasterScale.ModeCopy; 
 	ModeSrcOverDst* = RasterScale.ModeSrcOverDst; 
@@ -26,6 +26,7 @@ CONST
 	AlignRight* = 2; 
 	AlignTop* = 0; 
 	AlignBottom* = 2; 
+	pathToFonts = \"WindowManager.FontManager.SystemFonts"\; 
 TYPE 
 	Real* = FLOAT32; 
 
@@ -72,6 +73,7 @@ TYPE
 	FontManager* = OBJECT 
 
 		PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): Font; 
+		PROCEDURE ^ GetSystemFont*(CONST name: ARRAY OF CHAR): Font; 
 	END FontManager; 
 
 	CanvasState* = RECORD 
@@ -167,7 +169,7 @@ VAR
 	PROCEDURE ^ RGBAToColor*(r, g, b, a: SIGNED32): Color; 
 	PROCEDURE ^ Dark*(color: Color): Color; 
 	PROCEDURE ^ Light*(color: Color): Color; 
-	PROCEDURE ^ CheckImage(obj: ANY; VAR cont: BOOLEAN); 
+	PROCEDURE ^ CheckImage(obj: ANY ; VAR cont: BOOLEAN); 
 	PROCEDURE ^ GetExtension(CONST name: ARRAY OF CHAR; VAR ext: ARRAY OF CHAR); 
 	PROCEDURE ^ LoadImage*(CONST name: ARRAY OF CHAR; shared: BOOLEAN): Image; 
 	PROCEDURE ^ StoreImage*(img: Raster.Image; CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
@@ -176,6 +178,9 @@ VAR
 	PROCEDURE ^ InstallDefaultFont*(f: Font); 
 	PROCEDURE ^ GetDefaultFont*(): Font; 
 	PROCEDURE ^ InstallFontManager*(fm: FontManager); 
+	PROCEDURE ^ GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR family: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetSystemFontSize*(CONST systemName: ARRAY OF CHAR; VAR size: SIZE): BOOLEAN; 
+	PROCEDURE ^ GetSystemFont*(CONST name: ARRAY OF CHAR; VAR font: Font): BOOLEAN; 
 	PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): Font; 
 	PROCEDURE ^ FBRenderChar*(canvas: Canvas; x, y: Real; char: Char32); 
 	PROCEDURE ^ FBGetGlyphSpacings*(code: SIGNED32; VAR glyphSpacings: GlyphSpacings); 

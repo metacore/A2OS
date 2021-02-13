@@ -1,5 +1,5 @@
 MODULE CryptoPrimes;
-	IMPORT B := CryptoBigNumbers, Out := KernelLog;
+	IMPORT B := CryptoBigNumbers, Log := KernelLog;
 CONST 
 	N = 2048; 
 TYPE 

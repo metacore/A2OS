@@ -1,7 +1,7 @@
 MODULE TFClasses;
 	IMPORT Strings, SYSTEM;
 TYPE 
-	ObjectArray* = POINTER TO ARRAY OF ANY; 
+	ObjectArray* = POINTER TO ARRAY OF ANY ; 
 
 	List* = OBJECT {EXCLUSIVE} 
 	VAR 
@@ -12,17 +12,17 @@ TYPE
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ GetCount*(): SIZE; 
 		PROCEDURE ^ Grow; 
-		PROCEDURE ^ Add*(x: ANY); 
-		PROCEDURE ^ Replace*(x, y: ANY); 
-		PROCEDURE ^ IndexOf*(x: ANY): SIZE; 
-		PROCEDURE ^ Remove*(x: ANY); 
+		PROCEDURE ^ Add*(x: ANY ); 
+		PROCEDURE ^ Replace*(x, y: ANY ); 
+		PROCEDURE ^ IndexOf*(x: ANY ): SIZE; 
+		PROCEDURE ^ Remove*(x: ANY ); 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ GetItem*(i: SIZE): ANY; 
+		PROCEDURE ^ GetItem*(i: SIZE): ANY ; 
 		PROCEDURE ^ Lock*; 
 		PROCEDURE ^ Unlock*; 
 	END List; 
 
-	CompareMethod* = PROCEDURE {DELEGATE}(first, second: ANY):INTEGER; 
+	CompareMethod* = PROCEDURE {DELEGATE}(first, second: ANY ):INTEGER; 
 
 	SortedList* = OBJECT {EXCLUSIVE} (List)
 	VAR 
@@ -30,18 +30,18 @@ TYPE
 
 		PROCEDURE ^  & Init*(m: CompareMethod); 
 		PROCEDURE ^ SetCompareMethod*(m: CompareMethod); 
-		PROCEDURE ^ Add*(x: ANY); 
-		PROCEDURE ^ AddUnlocked(x: ANY); 
-		PROCEDURE ^ FindPosition(x: ANY): SIZE; 
-		PROCEDURE ^ Remove*(x: ANY); 
-		PROCEDURE ^ RemoveUnlocked(x: ANY); 
-		PROCEDURE ^ Replace*(x, y: ANY); 
-		PROCEDURE ^ SearchByKey*(x: ANY): ANY; 
+		PROCEDURE ^ Add*(x: ANY ); 
+		PROCEDURE ^ AddUnlocked(x: ANY ); 
+		PROCEDURE ^ FindPosition(x: ANY ): SIZE; 
+		PROCEDURE ^ Remove*(x: ANY ); 
+		PROCEDURE ^ RemoveUnlocked(x: ANY ); 
+		PROCEDURE ^ Replace*(x, y: ANY ); 
+		PROCEDURE ^ SearchByKey*(x: ANY ): ANY ; 
 	END SortedList; 
 
 	StringMapEntry = POINTER TO RECORD 
 		key: Strings.String; 
-		value: ANY; 
+		value: ANY ; 
 		next: StringMapEntry; 
 		hash: SIZE; 
 	END; 
@@ -54,8 +54,8 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ CalcHash(CONST buffer: ARRAY OF CHAR): SIZE; 
-		PROCEDURE ^ Find*(CONST key: ARRAY OF CHAR): ANY; 
-		PROCEDURE ^ Add*(CONST key: ARRAY OF CHAR; value: ANY); 
+		PROCEDURE ^ Find*(CONST key: ARRAY OF CHAR): ANY ; 
+		PROCEDURE ^ Add*(CONST key: ARRAY OF CHAR; value: ANY ); 
 		PROCEDURE ^ GetKeys; 
 	END StringHashMap; 
 BEGIN

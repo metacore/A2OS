@@ -52,7 +52,7 @@ TYPE
 
 	DropObject* = OBJECT (DropInterface)
 
-		PROCEDURE ^ Set*(object: ANY; VAR res: INTEGER); 
+		PROCEDURE ^ Set*(object: ANY ; VAR res: INTEGER); 
 	END DropObject; 
 BEGIN
 END WMDropTarget.

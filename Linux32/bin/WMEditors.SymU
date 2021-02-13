@@ -19,21 +19,21 @@ TYPE
 
 	DropTarget = OBJECT (WMDropTarget.DropTarget)
 	VAR 
-		originator: ANY; 
+		originator: ANY ; 
 		setString: SetStringProcedure; 
 		position: SIGNED32; 
 
-		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; position: SIGNED32); 
+		PROCEDURE ^  & Init(originator: ANY ; setString: SetStringProcedure; position: SIGNED32); 
 		PROCEDURE ^ GetInterface*(type: SIGNED32): WMDropTarget.DropInterface; 
 	END DropTarget; 
 
 	DropString = OBJECT (WMDropTarget.DropString)
 	VAR 
-		originator: ANY; 
+		originator: ANY ; 
 		setString: SetStringProcedure; 
 		position: SIGNED32; 
 
-		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; position: SIGNED32); 
+		PROCEDURE ^  & Init(originator: ANY ; setString: SetStringProcedure; position: SIGNED32); 
 		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: INTEGER); 
 	END DropString; 
 
@@ -73,12 +73,12 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ SetCurrentCursorVisibility(isVisible: BOOLEAN); 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ CheckSize(min: SIZE); 
 		PROCEDURE ^ GetAsString*(VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ SetAsString*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ LinkChanged*(sender, object: ANY); 
+		PROCEDURE ^ LinkChanged*(sender, object: ANY ); 
 		PROCEDURE ^ UpdateModel; 
 		PROCEDURE ^ Changed; 
 		PROCEDURE ^ GetCursorPosition(x: SIZE): SIGNED32; 
@@ -109,7 +109,7 @@ TYPE
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
 		PROCEDURE ^ AutoStartDrag*; 
-		PROCEDURE ^ DragWasAccepted(sender, data: ANY); 
+		PROCEDURE ^ DragWasAccepted(sender, data: ANY ); 
 		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; position: SIGNED32; VAR res: INTEGER); 
@@ -121,7 +121,7 @@ TYPE
 		PROCEDURE ^ FocusLost*; 
 	END TextField; 
 
-	NumberField = OBJECT {EXCLUSIVE} (TextField)
+	NumberField* = OBJECT {EXCLUSIVE} (TextField)
 	VAR 
 		fractionalDigits-: WMProperties.Int32Property; 
 		unitModel-: WMProperties.ReferenceProperty; 
@@ -129,9 +129,9 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetUnit(VAR u: FLOAT64): BOOLEAN; 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ LinkChanged*(sender, data: ANY); 
+		PROCEDURE ^ LinkChanged*(sender, data: ANY ); 
 		PROCEDURE ^ UpdateModel; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 	END NumberField; 
 
 	MacroData* = OBJECT 
@@ -151,7 +151,7 @@ TYPE
 		ime: WMInputMethods.IME; 
 		multiLine-, readOnly-: WMProperties.BooleanProperty; 
 		highlighting-: WMProperties.StringProperty; 
-		extInterface-: ANY; 
+		extInterface-: ANY ; 
 		text-: Texts.Text; 
 		utilreader: Texts.TextReader; 
 		onEnter-, onEscape-: WMEvents.EventSource; 
@@ -170,14 +170,14 @@ TYPE
 		PROCEDURE ^ SetFocus*; 
 		PROCEDURE ^ CheckScrollbars; 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
-		PROCEDURE ^ LinkChanged*(sender, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ LinkChanged*(sender, data: ANY ); 
 		PROCEDURE ^ SetText*(t: Texts.Text); 
 		PROCEDURE ^ SetCursorInfo(charsAdded: SIZE); 
 		PROCEDURE ^ GetCursorPosition(): SIZE; 
 		PROCEDURE ^ GetCursorScreenPosition(VAR x, y: SIZE); 
 		PROCEDURE ^ SetIMEInterface(ime: WMInputMethods.IME; text: Texts.Text); 
-		PROCEDURE ^ SetExtInterface*(extInterface: ANY); 
+		PROCEDURE ^ SetExtInterface*(extInterface: ANY ); 
 		PROCEDURE ^ FocusReceived*; 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ InsertChar*(ch: Texts.Char32); 

@@ -16,7 +16,7 @@ TYPE
 
 	HashEntryIntAny = RECORD 
 		key: SIZE; 
-		value: ANY; 
+		value: ANY ; 
 	END; 
 
 	HashIntAnyArray = POINTER TO ARRAY OF HashEntryIntAny; 
@@ -46,8 +46,8 @@ TYPE
 		maxLoadFactor: FLOAT32; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
-		PROCEDURE ^ Put*(key: SIZE; value: ANY); 
-		PROCEDURE ^ Get*(key: SIZE): ANY; 
+		PROCEDURE ^ Put*(key: SIZE; value: ANY ); 
+		PROCEDURE ^ Get*(key: SIZE): ANY ; 
 		PROCEDURE ^ Has*(key: SIZE): BOOLEAN; 
 		PROCEDURE ^ Length*(): SIZE; 
 		PROCEDURE ^ Clear*; 

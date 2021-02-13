@@ -121,7 +121,7 @@ TYPE
 		nofEntries-: SIGNED32; 
 		size-: SIGNED32; 
 		sizeOnDisk-: SIGNED32; 
-		user*: ANY; 
+		user*: ANY ; 
 		next: Package; 
 
 		PROCEDURE ^ SetInstall*(install: BOOLEAN; VAR msg: ARRAY OF CHAR): BOOLEAN; 

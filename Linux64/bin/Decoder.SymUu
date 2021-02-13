@@ -209,7 +209,7 @@ TYPE
 		PROCEDURE ^ DecodeField(reader: Streams.Reader): FieldInfo; 
 		PROCEDURE ^ FindProcedureFromPC(pc: SIGNED32): ProcedureInfo; 
 		PROCEDURE ^ Init; 
-		PROCEDURE ^ ClickNode(sender, data: ANY); 
+		PROCEDURE ^ ClickNode(sender, data: ANY ); 
 		PROCEDURE ^ OutlineNamedProcedure(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ OutlinePC(pc: SIGNED32); 
 		PROCEDURE ^ InitializeOutline(panel: WMStandardComponents.Panel): Streams.Writer; 
@@ -275,9 +275,9 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New(CONST fileName: ARRAY OF CHAR; c: WMRestorable.Context); 
 		PROCEDURE ^ AdjustTitle(CONST str: ARRAY OF CHAR); 
-		PROCEDURE ^ DecodeFileHandler(sender, data: ANY); 
-		PROCEDURE ^ DecodeModuleHandler(sender, data: ANY); 
-		PROCEDURE ^ DecodeBytesHandler(sender, data: ANY); 
+		PROCEDURE ^ DecodeFileHandler(sender, data: ANY ); 
+		PROCEDURE ^ DecodeModuleHandler(sender, data: ANY ); 
+		PROCEDURE ^ DecodeBytesHandler(sender, data: ANY ); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ OutlineProcedure(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ OutlinePC(pc: SIGNED32); 

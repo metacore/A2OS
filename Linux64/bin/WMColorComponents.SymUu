@@ -4,7 +4,7 @@ CONST
 TYPE 
 	ChangeHandler = PROCEDURE {DELEGATE}; 
 
-	ColorChangeHandler = PROCEDURE {DELEGATE}(sender, color: ANY); 
+	ColorChangeHandler = PROCEDURE {DELEGATE}(sender, color: ANY ); 
 
 	Color* = OBJECT 
 	VAR 
@@ -37,10 +37,10 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ PropertyChanged*(sender, prop: ANY); 
-		PROCEDURE ^ Increment(sender, data: ANY); 
-		PROCEDURE ^ Decrement(sender, data: ANY); 
-		PROCEDURE ^ ValueChanged(sender, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, prop: ANY ); 
+		PROCEDURE ^ Increment(sender, data: ANY ); 
+		PROCEDURE ^ Decrement(sender, data: ANY ); 
+		PROCEDURE ^ ValueChanged(sender, data: ANY ); 
 	END NumberInput; 
 
 	NumericColorChooser* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
@@ -49,10 +49,10 @@ TYPE
 		colorChangeHandler: ColorChangeHandler; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ SetColor*(sender, color: ANY); 
+		PROCEDURE ^ SetColor*(sender, color: ANY ); 
 		PROCEDURE ^ SetExternalColorChangeHandler*(cch: ColorChangeHandler); 
 		PROCEDURE ^ NumberInputChanged; 
-		PROCEDURE ^ DefaultColorChangeHandler(sender, color: ANY); 
+		PROCEDURE ^ DefaultColorChangeHandler(sender, color: ANY ); 
 	END NumericColorChooser; 
 
 	ColorPot* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
@@ -63,14 +63,14 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ DrawBackground*(c: WMGraphics.Canvas); 
 		PROCEDURE ^ GetHexValue(VAR hex: ARRAY OF CHAR); 
-		PROCEDURE ^ SetColor*(sender, color: ANY); 
-		PROCEDURE ^ DefaultColorChangeHandler(sender, color: ANY); 
+		PROCEDURE ^ SetColor*(sender, color: ANY ); 
+		PROCEDURE ^ DefaultColorChangeHandler(sender, color: ANY ); 
 		PROCEDURE ^ SetExternalColorChangeHandler*(cch: ColorChangeHandler); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
-		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
-		PROCEDURE ^ DragArrived(sender, data: ANY); 
+		PROCEDURE ^ MyStartDrag(sender, data: ANY ); 
+		PROCEDURE ^ DragArrived(sender, data: ANY ); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 	END ColorPot; 
 
@@ -86,8 +86,8 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetColor(color: WMGraphics.Color); 
-		PROCEDURE ^ SetColor2(sender, color: ANY); 
-		PROCEDURE ^ ShowColorChangeHandler(sender, color: ANY); 
+		PROCEDURE ^ SetColor2(sender, color: ANY ); 
+		PROCEDURE ^ ShowColorChangeHandler(sender, color: ANY ); 
 	END ColorChooser; 
 VAR 
 	StrNumberInput, StrNumericColorChooser, StrColorPot, StrColorChooser: Strings.String; 

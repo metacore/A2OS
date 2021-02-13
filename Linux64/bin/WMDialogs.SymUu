@@ -50,13 +50,13 @@ TYPE
 		PROCEDURE ^ Show*; 
 		PROCEDURE ^ SetType*(type: INTEGER); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ Ok*(sender, data: ANY); 
-		PROCEDURE ^ Abort*(sender, data: ANY); 
-		PROCEDURE ^ No*(sender, data: ANY); 
-		PROCEDURE ^ Yes*(sender, data: ANY); 
-		PROCEDURE ^ All*(sender, data: ANY); 
-		PROCEDURE ^ Never*(sender, data: ANY); 
-		PROCEDURE ^ Ignore*(sender, data: ANY); 
+		PROCEDURE ^ Ok*(sender, data: ANY ); 
+		PROCEDURE ^ Abort*(sender, data: ANY ); 
+		PROCEDURE ^ No*(sender, data: ANY ); 
+		PROCEDURE ^ Yes*(sender, data: ANY ); 
+		PROCEDURE ^ All*(sender, data: ANY ); 
+		PROCEDURE ^ Never*(sender, data: ANY ); 
+		PROCEDURE ^ Ignore*(sender, data: ANY ); 
 		PROCEDURE ^ WireError*(CONST detectedBy, msg: ARRAY OF CHAR); 
 		PROCEDURE ^ Handle*(VAR msg: WMMessages.Message); 
 	END Dialog; 
@@ -113,8 +113,8 @@ TYPE
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Ok*(sender, data: ANY); 
-		PROCEDURE ^ Abort*(sender, data: ANY); 
+		PROCEDURE ^ Ok*(sender, data: ANY ); 
+		PROCEDURE ^ Abort*(sender, data: ANY ); 
 		PROCEDURE ^ Show*(x, y: SIZE; VAR text: ARRAY OF CHAR): INTEGER; 
 		PROCEDURE ^ FocusLost*; 
 	END MiniStringInput; 
@@ -127,8 +127,8 @@ TYPE
 
 		PROCEDURE ^  & New*(CONST dialog: ARRAY OF CHAR; VAR width, height: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ Show*(x, y: SIZE; flags: SET; VAR res: ARRAY OF CHAR); 
-		PROCEDURE ^ WireComponents(c: XML.Content; data: ANY); 
-		PROCEDURE ^ HandleEvents(sender, data: ANY); 
+		PROCEDURE ^ WireComponents(c: XML.Content; data: ANY ); 
+		PROCEDURE ^ HandleEvents(sender, data: ANY ); 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ Close*; 
 	END CustomDialog; 

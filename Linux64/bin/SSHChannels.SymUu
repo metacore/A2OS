@@ -1,0 +1,48 @@
+MODULE SSHChannels;
+	IMPORT Kernel, Streams, Log := KernelLog, P := SSHPackets, T := SSHTransport;
+CONST 
+	WinSize = (8 * 1024); 
+	MaxPacketSize = (4 * 1024); 
+	Opening* = 0; 
+	Open* = 1; 
+	Closed* = 2; 
+TYPE 
+	Packet = P.Packet; 
+
+	Connection = T.Connection; 
+
+	Channel* = OBJECT (Streams.Connection)
+	CONST 
+		BufSize = (2 * 2048); 
+	VAR 
+		state-: INTEGER; 
+		conn: Connection; 
+		rchan: SIGNED32; 
+		clchan: SIGNED32; 
+		rwsize: SIZE; 
+		clwsize: SIZE; 
+		rpmax: SIZE; 
+		interactive: BOOLEAN; 
+		sendBuffer: ARRAY BufSize OF CHAR; 
+		bufPos, sentBytes: SIZE; 
+		rpac: Packet; 
+
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ FlushBuffer; 
+		PROCEDURE ^ GetWindowSpace; 
+		PROCEDURE ^ GetPacket(): Packet; 
+		PROCEDURE ^ WindowChange*(width, height: SIZE); 
+		PROCEDURE ^ Eof*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^  & Init*(c: Connection); 
+	END Channel; 
+VAR 
+	timer: Kernel.Timer; 
+
+	PROCEDURE ^ OpenSession*(conn: Connection; interactive: BOOLEAN): Channel; 
+	PROCEDURE ^ OpenTransferChannel*(conn: Connection; CONST remCommand: ARRAY OF CHAR): Channel; 
+	PROCEDURE ^ ErrorResponse(CONST caller: ARRAY OF CHAR; p: Packet); 
+	PROCEDURE ^ SkipInput(conn: Connection); 
+BEGIN
+END SSHChannels.

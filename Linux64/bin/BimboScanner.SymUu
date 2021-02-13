@@ -1,8 +1,7 @@
 MODULE BimboScanner;
-	IMPORT Trace, Texts, Streams, UTF8Strings, Strings;
+	IMPORT Texts, Streams, UTF8Strings, Strings;
 CONST 
 	Eot* = 0X; 
-	ObjectMarker = 20X; 
 	LF = 0AX; 
 	char* = 1; 
 	integer* = 2; 
@@ -108,7 +107,7 @@ TYPE
 	Scanner* = OBJECT 
 	VAR 
 		buffer: Strings.String; 
-		pos-: SIGNED32; 
+		pos-: SIZE; 
 		ch-: CHAR; 
 		str-: ARRAY 1024 OF CHAR; 
 		sym-: SIGNED32; 
@@ -117,8 +116,8 @@ TYPE
 		longintval-: SIGNED64; 
 		realval-: FLOAT32; 
 		lrlval-: FLOAT64; 
-		numStartPos, numEndPos: SIGNED32; 
-		lastpos-, curpos-, errpos-: SIGNED32; 
+		numStartPos, numEndPos: SIZE; 
+		lastpos-, curpos-, errpos-: SIZE; 
 		isNummer: BOOLEAN; 
 		commentStr-: StringMaker; 
 		cw: Streams.Writer; 
@@ -136,7 +135,7 @@ TYPE
 VAR 
 	reservedChar-, ignoredChar, newChar-: ARRAY 256 OF BOOLEAN; 
 
-	PROCEDURE ^ InitWithText*(t: Texts.Text; pos: SIGNED32): Scanner; 
+	PROCEDURE ^ InitWithText*(t: Texts.Text; pos: SIZE): Scanner; 
 	PROCEDURE ^ ExpandBuf(VAR oldBuf: Strings.String; newSize: SIZE); 
 	PROCEDURE ^ InitReservedChars; 
 	PROCEDURE ^ InitNewChar; 

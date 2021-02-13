@@ -39,7 +39,7 @@ VAR
 
 	PROCEDURE ^ UpdateFile(f: File); 
 	PROCEDURE ^ FileChanged(f: File): BOOLEAN; 
-	PROCEDURE ^ Search(f: ANY; VAR cont: BOOLEAN); 
+	PROCEDURE ^ Search(f: ANY ; VAR cont: BOOLEAN); 
 	PROCEDURE ^ New*(CONST name: ARRAY OF CHAR): File; 
 	PROCEDURE ^ Old*(CONST name: ARRAY OF CHAR): File; 
 	PROCEDURE ^ Register*(f: File); 

@@ -42,7 +42,7 @@ TYPE
 
 		PROCEDURE ^ Resized*(width, height: SIZE); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
-		PROCEDURE ^ TabSelected(sender, data: ANY); 
+		PROCEDURE ^ TabSelected(sender, data: ANY ); 
 		PROCEDURE ^ SelectTabByName(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ Close*; 

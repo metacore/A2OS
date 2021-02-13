@@ -35,20 +35,20 @@ TYPE
 		wordWrap, modified: BOOLEAN; 
 		buttons: SET; 
 
-		PROCEDURE ^ FilenameEscapeHandler(sender, data: ANY); 
-		PROCEDURE ^ LoadHandler(sender, data: ANY); 
+		PROCEDURE ^ FilenameEscapeHandler(sender, data: ANY ); 
+		PROCEDURE ^ LoadHandler(sender, data: ANY ); 
 		PROCEDURE ^ Load*(CONST filename, format: ARRAY OF CHAR); 
-		PROCEDURE ^ StoreHandler(sender, data: ANY); 
+		PROCEDURE ^ StoreHandler(sender, data: ANY ); 
 		PROCEDURE ^ Store*(CONST filename, format: ARRAY OF CHAR); 
 		PROCEDURE ^ FormatHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ SetFormatCaption(CONST format: ARRAY OF CHAR); 
-		PROCEDURE ^ FormatPopupHandler(sender, data: ANY); 
-		PROCEDURE ^ SearchHandler(sender, data: ANY); 
-		PROCEDURE ^ WrapHandler(sender, data: ANY); 
+		PROCEDURE ^ FormatPopupHandler(sender, data: ANY ); 
+		PROCEDURE ^ SearchHandler(sender, data: ANY ); 
+		PROCEDURE ^ WrapHandler(sender, data: ANY ); 
 		PROCEDURE ^ SetWordWrap*(wordWrap: BOOLEAN); 
-		PROCEDURE ^ ClearHandler(sender, data: ANY); 
+		PROCEDURE ^ ClearHandler(sender, data: ANY ); 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ TextChanged(sender, data: ANY); 
+		PROCEDURE ^ TextChanged(sender, data: ANY ); 
 		PROCEDURE ^ SetText*(text: Texts.Text); 
 		PROCEDURE ^ SetToolbar*(buttons: SET); 
 		PROCEDURE ^ HandleShortcut*(ucs: SIZE; flags: SET; keysym: SIZE): BOOLEAN; 

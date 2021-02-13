@@ -51,7 +51,7 @@ TYPE
 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ CreatePluginWindows(viewType: SIGNED32); 
-		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY ); 
 		PROCEDURE ^ GetSampleParameters(VAR ui, bs, si: SIGNED32); 
 		PROCEDURE ^ SetSampleParameters(ui, bs, si: SIGNED32); 
 		PROCEDURE ^ UpdateGrid; 
@@ -108,7 +108,7 @@ TYPE
 		nofRows: SIGNED32; 
 
 		PROCEDURE ^ NbrToStr(nbr: FLOAT64; VAR string: ARRAY OF CHAR); 
-		PROCEDURE ^ UpdateGrid(sender, data: ANY); 
+		PROCEDURE ^ UpdateGrid(sender, data: ANY ); 
 		PROCEDURE ^ InitGrid; 
 		PROCEDURE ^ InitView*; 
 		PROCEDURE ^ Resized*; 
@@ -122,7 +122,7 @@ TYPE
 		heights: POINTER TO ARRAY OF FLOAT64; 
 
 		PROCEDURE ^ InitView*; 
-		PROCEDURE ^ UpdateChart(sender, data: ANY); 
+		PROCEDURE ^ UpdateChart(sender, data: ANY ); 
 		PROCEDURE ^ Finalize*; 
 	END PluginChartView; 
 
@@ -138,7 +138,7 @@ TYPE
 		PROCEDURE ^ InitDiagram(pluginInstance: Plugins.Plugin; index: SIGNED32); 
 		PROCEDURE ^ InstallPlugin; 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ Finalize*; 
 	END PerfMonSimpleGraph; 
 
@@ -165,7 +165,7 @@ TYPE
 		graphView: PluginGraphView; 
 		stop, clear, automin, automax, perSecond, legend: WMStandardComponents.Button; 
 
-		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY ); 
 		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 
 		PROCEDURE ^ LoadFromXml*(configuration: XML.Element); 
 		PROCEDURE ^ StoreToXml(): XML.Element; 
@@ -177,7 +177,7 @@ TYPE
 		allBtn, noneBtn, toggleBtn, graphBtn: WMStandardComponents.Button; 
 
 		PROCEDURE ^ SetHide(hide: BOOLEAN); 
-		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY ); 
 		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 
 	END PluginGridWindow; 
 
@@ -187,7 +187,7 @@ TYPE
 		verticalBtn: WMStandardComponents.Button; 
 		vertical: BOOLEAN; 
 
-		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY ); 
 		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 
 	END PluginChartWindow; 
 VAR 

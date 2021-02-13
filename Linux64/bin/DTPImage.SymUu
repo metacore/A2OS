@@ -40,7 +40,7 @@ TYPE
 		PROCEDURE ^ Show*(x, y: SIZE); 
 		PROCEDURE ^ Hide*; 
 		PROCEDURE ^ RefreshValues; 
-		PROCEDURE ^ SetValueHandler(sender, data: ANY); 
+		PROCEDURE ^ SetValueHandler(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 	END ImagePropWindow; 
 

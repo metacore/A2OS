@@ -107,7 +107,7 @@ TYPE
 		procID-: SIGNED32; 
 		state-: Machine.State; 
 		state0: ARRAY 2048 OF CHAR; 
-		context: ANY; 
+		context: ANY ; 
 		lastThreadTimes: SIGNED64; 
 		gcContext: GCContext; 
 
@@ -169,18 +169,18 @@ VAR
 	PROCEDURE ^ Sleep*(ms: SIGNED32); 
 	PROCEDURE ^ Yield-; 
 	PROCEDURE ^ CurrentProcess*(): {UNTRACED} Process; 
-	PROCEDURE ^ CurrentContext*(): ANY; 
-	PROCEDURE ^ SetContext*(context: ANY); 
-	PROCEDURE ^ ActiveObject*(): ANY; 
+	PROCEDURE ^ CurrentContext*(): ANY ; 
+	PROCEDURE ^ SetContext*(context: ANY ); 
+	PROCEDURE ^ ActiveObject*(): ANY ; 
 	PROCEDURE ^ GetStackBottom*(p: Process): ADDRESS; 
 	PROCEDURE ^ GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE); 
 	PROCEDURE ^ NextValidStackSegment*(p: Process; VAR bp, pc, sp: ADDRESS; VAR contextPos: SIZE): BOOLEAN; 
 	PROCEDURE ^ GetProcessID*(): INTEGER; 
 	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
-	PROCEDURE ^ RegisterFinalizer(obj: ANY; fin: Heaps.Finalizer); 
-	PROCEDURE ^ FinalizeActiveObj(obj: ANY); 
-	PROCEDURE ^ FinalizeProtObject(obj: ANY); 
-	PROCEDURE ^ FinalizeProcess(obj: ANY); 
+	PROCEDURE ^ RegisterFinalizer(obj: ANY ; fin: Heaps.Finalizer); 
+	PROCEDURE ^ FinalizeActiveObj(obj: ANY ); 
+	PROCEDURE ^ FinalizeProtObject(obj: ANY ); 
+	PROCEDURE ^ FinalizeProcess(obj: ANY ); 
 	PROCEDURE ^ Exit; 
 	PROCEDURE ^ ExitTrap-; 
 	PROCEDURE ^ Remove(t: Timer); 

@@ -45,8 +45,8 @@ TYPE
 		PROCEDURE ^ PrearrangeReachableDataSections*; 
 		PROCEDURE ^ PatchValueInSection*(CONST sectionName: Basic.SegmentedName; syntaxTreeValue: SyntaxTree.Value); 
 		PROCEDURE ^ ExtractModuleWithName(CONST desiredName: ARRAY OF CHAR): Sections.Module; 
-		PROCEDURE ^ SectionPositionComparison(leftObject, rightObject: ANY): BOOLEAN; 
-		PROCEDURE ^ SectionPositionAndSizeComparison(leftObject, rightObject: ANY): BOOLEAN; 
+		PROCEDURE ^ SectionPositionComparison(leftObject, rightObject: ANY ): BOOLEAN; 
+		PROCEDURE ^ SectionPositionAndSizeComparison(leftObject, rightObject: ANY ): BOOLEAN; 
 		PROCEDURE ^ FixSections(binaryModule: Sections.Module; VAR sizes: ARRAY OF BinaryCode.Unit); 
 		PROCEDURE ^ Conflict(binaryModule: Sections.Module; VAR sizes: ARRAY OF BinaryCode.Unit): BOOLEAN; 
 		PROCEDURE ^ GenerateObjectFile*(objectFileFormat: Formats.ObjectFileFormat; log: Streams.Writer; CONST desiredName: ARRAY OF CHAR): BOOLEAN; 

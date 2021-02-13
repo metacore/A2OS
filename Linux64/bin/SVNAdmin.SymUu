@@ -22,7 +22,7 @@ TYPE
 		VersionUrl*: ARRAY 256 OF CHAR; 
 	END; 
 
-	TraverseHandler* = PROCEDURE {DELEGATE}(CONST path: ARRAY OF CHAR; fileEntry: EntryEntity; data: ANY):BOOLEAN; 
+	TraverseHandler* = PROCEDURE {DELEGATE}(CONST path: ARRAY OF CHAR; fileEntry: EntryEntity; data: ANY ):BOOLEAN; 
 
 	Entry* = OBJECT 
 	VAR 
@@ -72,7 +72,7 @@ TYPE
 	PROCEDURE ^ CreateDirectory*(CONST path: ARRAY OF CHAR); 
 	PROCEDURE ^ ReadChecksum*(CONST file: ARRAY OF CHAR): Strings.String; 
 	PROCEDURE ^ CheckChecksum*(CONST file: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ Traverse*(CONST path: ARRAY OF CHAR; handler: TraverseHandler; data: ANY; verurl: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ Traverse*(CONST path: ARRAY OF CHAR; handler: TraverseHandler; data: ANY ; verurl: BOOLEAN; VAR res: INTEGER); 
 	PROCEDURE ^ CopyToBaseFile*(CONST file: ARRAY OF CHAR); 
 	PROCEDURE ^ SetFileAttribute*(file: ARRAY OF CHAR); 
 	PROCEDURE ^ RemoveFileAttribute*(file: ARRAY OF CHAR); 

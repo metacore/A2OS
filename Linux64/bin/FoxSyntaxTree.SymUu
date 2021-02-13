@@ -55,6 +55,8 @@ TYPE
 
 	SubType* = Scanner.SubType; 
 
+	Kind* = SIGNED32; 
+
 	Visitor* = OBJECT 
 
 		PROCEDURE ^ VisitType*(x: Type); 
@@ -85,6 +87,7 @@ TYPE
 		PROCEDURE ^ VisitProcedureType*(x: ProcedureType); 
 		PROCEDURE ^ VType*(x: Type); 
 		PROCEDURE ^ VisitExpression*(x: Expression); 
+		PROCEDURE ^ VisitConditionalExpression*(x: ConditionalExpression); 
 		PROCEDURE ^ VisitSet*(x: Set); 
 		PROCEDURE ^ VisitMathArrayExpression*(x: MathArrayExpression); 
 		PROCEDURE ^ VisitUnaryExpression*(x: UnaryExpression); 
@@ -530,6 +533,7 @@ TYPE
 		stackAlignment-: SIZE; 
 		parametersOffset-: SIZE; 
 		varReturn-: BOOLEAN; 
+		isConst-: BOOLEAN; 
 
 		PROCEDURE ^  & InitProcedureType(position: Position; scope: Scope); 
 		PROCEDURE ^ SetNoReturn*(noReturn: BOOLEAN); 
@@ -547,6 +551,7 @@ TYPE
 		PROCEDURE ^ SetSelfParameterInObject*(parameter: Parameter); 
 		PROCEDURE ^ SetCallingConvention*(cc: CallingConvention); 
 		PROCEDURE ^ SetVarReturn*(b: BOOLEAN); 
+		PROCEDURE ^ SetConst*(b: BOOLEAN); 
 		PROCEDURE ^ AddParameter*(p: Parameter); 
 		PROCEDURE ^ RevertParameters*; 
 		PROCEDURE ^ SetReturnType*(type: Type); 
@@ -640,6 +645,16 @@ TYPE
 		PROCEDURE ^ SetStep*(step: Expression); 
 		PROCEDURE ^ SetContext*(context: SIGNED8); 
 	END RangeExpression; 
+
+	ConditionalExpression* = OBJECT (Expression)
+	VAR 
+		condition-, expression-, alternative-: Expression; 
+
+		PROCEDURE ^  & InitConditionalExpression(position: Position; cond, exp, alt: Expression); 
+		PROCEDURE ^ SetCondition*(e: Expression); 
+		PROCEDURE ^ SetExpression*(e: Expression); 
+		PROCEDURE ^ SetAlternative*(e: Expression); 
+	END ConditionalExpression; 
 
 	TensorRangeExpression* = OBJECT (Expression)
 
@@ -984,7 +999,7 @@ TYPE
 		modifiers-: Modifier; 
 		initializer-: Expression; 
 		usedAsReference-: BOOLEAN; 
-		kind-: SIGNED32; 
+		kind-: Kind; 
 
 		PROCEDURE ^  & InitVariable*(position: Position; name: Identifier); 
 		PROCEDURE ^ SetKind*(kind: SIGNED32); 
@@ -1005,17 +1020,19 @@ TYPE
 		modifiers-: Modifier; 
 		defaultValue-: Expression; 
 		assignmentOperator-: Operator; 
-		kind-: SIGNED32; 
+		kind-: Kind; 
 		ownerType-: Type; 
 		untraced-: BOOLEAN; 
 		movable-: BOOLEAN; 
 		selfParameter-: BOOLEAN; 
 		autoConvert-: BOOLEAN; 
+		returnByReference-: BOOLEAN; 
 		registerNumber-: SIZE; 
 		inRegister-: BOOLEAN; 
 		preferRegister-: BOOLEAN; 
 
 		PROCEDURE ^  & InitParameter(position: Position; ownerType: Type; name: Identifier; kind: SIGNED32); 
+		PROCEDURE ^ ReturnByReference*(b: BOOLEAN); 
 		PROCEDURE ^ PreferRegister*(b: BOOLEAN); 
 		PROCEDURE ^ InRegister*(b: BOOLEAN); 
 		PROCEDURE ^ RegisterNumber*(reg: SIZE); 
@@ -1441,12 +1458,12 @@ TYPE
 		position-: Position; 
 		source-: String; 
 		scope-: Scope; 
-		item-: ANY; 
+		item-: ANY ; 
 		sameLine-: BOOLEAN; 
 		nextComment-: Comment; 
 
 		PROCEDURE ^  & InitComment(pos: Position; scope: Scope; CONST s: ARRAY OF CHAR; length: SIZE); 
-		PROCEDURE ^ SetItem*(p: ANY; sameLine: BOOLEAN); 
+		PROCEDURE ^ SetItem*(p: ANY ; sameLine: BOOLEAN); 
 	END Comment; 
 
 	Scope* = OBJECT 
@@ -1591,7 +1608,7 @@ TYPE
 		PROCEDURE ^ RemoveImporters*(moduleName, context: Identifier); 
 	END ModuleScope; 
 
-	TemplateType* = ENUM Type* = 0, Const* = 1 END; 
+	TemplateType* = ENUM Type* = 0, Const* = 1, Import* = 2, Automatic* = 3 END; 
 
 	TemplateParameter* = RECORD 
 		type*: TemplateType; 
@@ -1726,6 +1743,7 @@ VAR
 	PROCEDURE ^ NewMathArrayExpression*(position: Position; elements: ExpressionList): MathArrayExpression; 
 	PROCEDURE ^ NewBinaryExpression*(position: Position; left, right: Expression; operator: SIGNED32): BinaryExpression; 
 	PROCEDURE ^ NewRangeExpression*(position: Position; first, last, step: Expression): RangeExpression; 
+	PROCEDURE ^ NewConditionalExpression*(position: Position; cond, exp, alt: Expression): ConditionalExpression; 
 	PROCEDURE ^ NewTensorRangeExpression*(position: Position): TensorRangeExpression; 
 	PROCEDURE ^ NewUnaryExpression*(position: Position; operand: Expression; operator: SIGNED32): UnaryExpression; 
 	PROCEDURE ^ NewConversion*(position: Position; expression: Expression; type: Type; typeExpression: Expression): Conversion; 

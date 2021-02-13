@@ -65,14 +65,14 @@ TYPE
 	Dict* = OBJECT 
 	VAR 
 		key*: ARRAY 64 OF CHAR; 
-		value*: ANY; 
+		value*: ANY ; 
 		next*: Dict; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ EqualsI(VAR buf: ARRAY OF CHAR; with: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ has*(fieldName: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ get*(fieldName: ARRAY OF CHAR; VAR value: ANY): BOOLEAN; 
-		PROCEDURE ^ set*(fieldName: ARRAY OF CHAR; value: ANY); 
+		PROCEDURE ^ get*(fieldName: ARRAY OF CHAR; VAR value: ANY ): BOOLEAN; 
+		PROCEDURE ^ set*(fieldName: ARRAY OF CHAR; value: ANY ); 
 	END Dict; 
 VAR 
 	MsgLog*: Log; 

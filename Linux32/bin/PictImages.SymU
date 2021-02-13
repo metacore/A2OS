@@ -12,7 +12,7 @@ CONST
 	PROCEDURE ^ UnpackP4(VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel); 
 	PROCEDURE ^ LoadPict(img: Raster.Image; VAR fname: ARRAY OF CHAR; VAR done: BOOLEAN); 
 	PROCEDURE ^ StorePict(img: Raster.Image; VAR fname: ARRAY OF CHAR; VAR done: BOOLEAN); 
-	PROCEDURE ^ AosLoad*(x: ANY): ANY; 
-	PROCEDURE ^ AosStore*(x: ANY): ANY; 
+	PROCEDURE ^ AosLoad*(x: ANY ): ANY ; 
+	PROCEDURE ^ AosStore*(x: ANY ): ANY ; 
 BEGIN
 END PictImages.

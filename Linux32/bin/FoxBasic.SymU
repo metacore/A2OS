@@ -38,11 +38,11 @@ TYPE
 
 	Real* = FLOAT64; 
 
-	ObjectArray = POINTER TO ARRAY OF ANY; 
+	ObjectArray = POINTER TO ARRAY OF ANY ; 
 
 	ErrorMsgs = POINTER TO ARRAY OF StringPool.Index; 
 
-	ComparisonFunction = PROCEDURE {DELEGATE}(object1, object2: ANY):BOOLEAN; 
+	ComparisonFunction = PROCEDURE {DELEGATE}(object1, object2: ANY ):BOOLEAN; 
 
 	Position* = RECORD 
 		start*, end*, line*, linepos*: Streams.Position; 
@@ -63,32 +63,32 @@ TYPE
 		PROCEDURE ^  & InitList*(initialSize: SIZE); 
 		PROCEDURE ^ Length*(): SIZE; 
 		PROCEDURE ^ Grow; 
-		PROCEDURE ^ Get*(i: SIZE): ANY; 
-		PROCEDURE ^ Set*(i: SIZE; x: ANY); 
-		PROCEDURE ^ Add*(x: ANY); 
-		PROCEDURE ^ Prepend*(x: ANY); 
+		PROCEDURE ^ Get*(i: SIZE): ANY ; 
+		PROCEDURE ^ Set*(i: SIZE; x: ANY ); 
+		PROCEDURE ^ Add*(x: ANY ); 
+		PROCEDURE ^ Prepend*(x: ANY ); 
 		PROCEDURE ^ Append*(x: List); 
-		PROCEDURE ^ Remove*(x: ANY); 
+		PROCEDURE ^ Remove*(x: ANY ); 
 		PROCEDURE ^ RemoveByIndex*(i: SIZE); 
-		PROCEDURE ^ Insert*(i: SIZE; x: ANY); 
-		PROCEDURE ^ Replace*(x, y: ANY); 
-		PROCEDURE ^ ReplaceByIndex*(i: SIZE; x: ANY); 
-		PROCEDURE ^ IndexOf*(x: ANY): SIZE; 
-		PROCEDURE ^ Contains*(x: ANY): BOOLEAN; 
+		PROCEDURE ^ Insert*(i: SIZE; x: ANY ); 
+		PROCEDURE ^ Replace*(x, y: ANY ); 
+		PROCEDURE ^ ReplaceByIndex*(i: SIZE; x: ANY ); 
+		PROCEDURE ^ IndexOf*(x: ANY ): SIZE; 
+		PROCEDURE ^ Contains*(x: ANY ): BOOLEAN; 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ GrowAndSet*(i: SIZE; x: ANY); 
+		PROCEDURE ^ GrowAndSet*(i: SIZE; x: ANY ); 
 		PROCEDURE ^ Sort*(comparisonFunction: ComparisonFunction); 
 		PROCEDURE ^ QuickSort(comparisonFunction: ComparisonFunction; lo, hi: SIZE); 
 	END List; 
 
 	HashEntryAny = RECORD 
-		key, value: ANY; 
+		key, value: ANY ; 
 		valueInt: SIZE; 
 	END; 
 
 	HashEntryInt = RECORD 
 		key, valueInt: SIZE; 
-		value: ANY; 
+		value: ANY ; 
 	END; 
 
 	HashAnyArray = POINTER TO ARRAY OF HashEntryAny; 
@@ -103,14 +103,14 @@ TYPE
 		maxLoadFactor: FLOAT32; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
-		PROCEDURE ^ Put*(key, value: ANY); 
-		PROCEDURE ^ Get*(key: ANY): ANY; 
-		PROCEDURE ^ Has*(key: ANY): BOOLEAN; 
+		PROCEDURE ^ Put*(key, value: ANY ); 
+		PROCEDURE ^ Get*(key: ANY ): ANY ; 
+		PROCEDURE ^ Has*(key: ANY ): BOOLEAN; 
 		PROCEDURE ^ Length*(): SIZE; 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ PutInt*(key: ANY; value: SIZE); 
-		PROCEDURE ^ GetInt*(key: ANY): SIZE; 
-		PROCEDURE ^ HashValue(key: ANY): SIZE; 
+		PROCEDURE ^ PutInt*(key: ANY ; value: SIZE); 
+		PROCEDURE ^ GetInt*(key: ANY ): SIZE; 
+		PROCEDURE ^ HashValue(key: ANY ): SIZE; 
 		PROCEDURE ^ Grow; 
 	END HashTable; 
 
@@ -120,7 +120,7 @@ TYPE
 		count: SIZE; 
 
 		PROCEDURE ^  & Init(t: HashIntArray); 
-		PROCEDURE ^ GetNext*(VAR key: SIZE; VAR value: ANY): BOOLEAN; 
+		PROCEDURE ^ GetNext*(VAR key: SIZE; VAR value: ANY ): BOOLEAN; 
 	END IntIterator; 
 
 	HashTableInt* = OBJECT 
@@ -131,8 +131,8 @@ TYPE
 		maxLoadFactor: FLOAT32; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
-		PROCEDURE ^ Put*(key: SIZE; value: ANY); 
-		PROCEDURE ^ Get*(key: SIZE): ANY; 
+		PROCEDURE ^ Put*(key: SIZE; value: ANY ); 
+		PROCEDURE ^ Get*(key: SIZE): ANY ; 
 		PROCEDURE ^ Has*(key: SIZE): BOOLEAN; 
 		PROCEDURE ^ Length*(): SIZE; 
 		PROCEDURE ^ Clear*; 
@@ -145,7 +145,7 @@ TYPE
 
 	HashEntrySegmentedName = RECORD 
 		key: ObjectFile.SegmentedName; 
-		value: ANY; 
+		value: ANY ; 
 	END; 
 
 	HashSegmentedNameArray = POINTER TO ARRAY OF HashEntrySegmentedName; 
@@ -158,8 +158,8 @@ TYPE
 		maxLoadFactor: FLOAT32; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
-		PROCEDURE ^ Put*(CONST key: SegmentedName; value: ANY); 
-		PROCEDURE ^ Get*(CONST key: SegmentedName): ANY; 
+		PROCEDURE ^ Put*(CONST key: SegmentedName; value: ANY ); 
+		PROCEDURE ^ Get*(CONST key: SegmentedName): ANY ; 
 		PROCEDURE ^ Has*(CONST key: SegmentedName): BOOLEAN; 
 		PROCEDURE ^ Length*(): SIZE; 
 		PROCEDURE ^ Clear*; 
@@ -279,7 +279,7 @@ VAR
 	PROCEDURE ^ Concat*(VAR result: ARRAY OF CHAR; CONST prefix, name, suffix: ARRAY OF CHAR); 
 	PROCEDURE ^ Lowercase*(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ Uppercase*(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
-	PROCEDURE ^ GetIntegerObj*(value: SIGNED32): ANY; 
+	PROCEDURE ^ GetIntegerObj*(value: SIGNED32): ANY ; 
 	PROCEDURE ^ Align*(VAR offset: SIZE; alignment: SIZE); 
 	PROCEDURE ^ InitErrorMessages; 
 	PROCEDURE ^ ActivateDebug*; 

@@ -35,8 +35,8 @@ TYPE
 		state: SIGNED32; 
 		timer: Kernel.Timer; 
 
-		PROCEDURE ^ HandleButtons(sender, data: ANY); 
-		PROCEDURE ^ HandleEditors(sender, data: ANY); 
+		PROCEDURE ^ HandleButtons(sender, data: ANY ); 
+		PROCEDURE ^ HandleEditors(sender, data: ANY ); 
 		PROCEDURE ^ FilterTime(event: Events.Event; VAR discard: BOOLEAN); 
 		PROCEDURE ^ FilterType(event: Events.Event; VAR discard: BOOLEAN); 
 		PROCEDURE ^ FilterOriginator(event: Events.Event; VAR discard: BOOLEAN); 
@@ -67,8 +67,8 @@ TYPE
 		loadBtn, storeBtn: WMStandardComponents.Button; 
 		filenameEdit: WMEditors.Editor; 
 
-		PROCEDURE ^ HandleLoadButton(sender, data: ANY); 
-		PROCEDURE ^ HandleStoreButton(sender, data: ANY); 
+		PROCEDURE ^ HandleLoadButton(sender, data: ANY ); 
+		PROCEDURE ^ HandleStoreButton(sender, data: ANY ); 
 		PROCEDURE ^ SetEvents(events: EventsUtils.EventContainer); 
 		PROCEDURE ^ CreateFilePanel(): WMComponents.VisualComponent; 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 

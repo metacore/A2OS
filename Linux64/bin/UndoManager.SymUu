@@ -27,8 +27,8 @@ TYPE
 		PROCEDURE ^ InsertText*(pos: SIZE; text: Texts.Text); 
 		PROCEDURE ^ DeleteText*(pos: SIZE; text: Texts.Text); 
 		PROCEDURE ^ BeginObjectChange*(pos: SIZE); 
-		PROCEDURE ^ ObjectChanged*(pos, len: SIZE; type: INTEGER; obj: ANY); 
-		PROCEDURE ^ EndObjectChange*(len: SIZE; type: INTEGER; to: ANY); 
+		PROCEDURE ^ ObjectChanged*(pos, len: SIZE; type: INTEGER; obj: ANY ); 
+		PROCEDURE ^ EndObjectChange*(len: SIZE; type: INTEGER; to: ANY ); 
 		PROCEDURE ^ SetText*(text: Texts.Text); 
 		PROCEDURE ^ Undo*; 
 		PROCEDURE ^ Redo*; 
@@ -82,7 +82,7 @@ TYPE
 	StyleInfo = POINTER TO RECORD 
 		next: StyleInfo; 
 		pos, len: SIZE; 
-		style: ANY; 
+		style: ANY ; 
 		type: INTEGER; 
 	END; 
 
@@ -90,14 +90,14 @@ TYPE
 	VAR 
 		len: SIZE; 
 		type: INTEGER; 
-		new: ANY; 
+		new: ANY ; 
 		old: StyleInfo; 
 
 		PROCEDURE ^  & New*(pos: SIZE); 
-		PROCEDURE ^ Append(pos, len: SIZE; style: ANY; type: INTEGER); 
-		PROCEDURE ^ SetObject(new: ANY); 
+		PROCEDURE ^ Append(pos, len: SIZE; style: ANY ; type: INTEGER); 
+		PROCEDURE ^ SetObject(new: ANY ); 
 		PROCEDURE ^ SetLen(len: SIZE); 
-		PROCEDURE ^ SetStyle*(textpos, len: SIZE; style: ANY); 
+		PROCEDURE ^ SetStyle*(textpos, len: SIZE; style: ANY ); 
 		PROCEDURE ^ Undo(text: Texts.Text); 
 		PROCEDURE ^ Redo(text: Texts.Text); 
 	END StyleUpdateInfo; 

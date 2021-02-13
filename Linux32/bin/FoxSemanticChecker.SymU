@@ -13,7 +13,7 @@ TYPE
 	FileName = ARRAY 256 OF CHAR; 
 
 	LateFix = POINTER TO RECORD 
-		p: ANY; 
+		p: ANY ; 
 		scope: SyntaxTree.Scope; 
 		next: LateFix; 
 	END; 
@@ -23,8 +23,8 @@ TYPE
 		first, last: LateFix; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Get(VAR scope: SyntaxTree.Scope): ANY; 
-		PROCEDURE ^ Add(p: ANY; scope: SyntaxTree.Scope); 
+		PROCEDURE ^ Get(VAR scope: SyntaxTree.Scope): ANY ; 
+		PROCEDURE ^ Add(p: ANY ; scope: SyntaxTree.Scope); 
 	END LateFixList; 
 
 	WithEntry = POINTER TO RECORD 
@@ -120,6 +120,7 @@ TYPE
 		PROCEDURE ^ NewOperatorCall*(position: SyntaxTree.Position; original: SyntaxTree.Expression; op: SIGNED32; parameter: SyntaxTree.ExpressionList; resultType: SyntaxTree.Type): SyntaxTree.Expression; 
 		PROCEDURE ^ NewBinaryOperatorCall*(position: Position; original: SyntaxTree.Expression; op: SIGNED32; leftExpression, rightExpression: SyntaxTree.Expression; resultType: SyntaxTree.Type): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveBinaryExpression(binaryExpression: SyntaxTree.BinaryExpression): SyntaxTree.Expression; 
+		PROCEDURE ^ ResolveConditionalExpression(x: SyntaxTree.ConditionalExpression): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveRangeExpression(x: SyntaxTree.RangeExpression): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveDesignator(d: SyntaxTree.Expression): SyntaxTree.Designator; 
 		PROCEDURE ^ ResolveSelfDesignator(x: SyntaxTree.SelfDesignator): SyntaxTree.Expression; 

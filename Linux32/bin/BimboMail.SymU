@@ -18,7 +18,7 @@ TYPE
 		PROCEDURE ^ GetTitleStr(col: SIGNED32; VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^ MessageClick(sender, data: ANY); 
+		PROCEDURE ^ MessageClick(sender, data: ANY ); 
 	END Window; 
 VAR 
 	nofWindows: SIGNED32; 

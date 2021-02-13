@@ -31,13 +31,13 @@ TYPE
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
-		PROCEDURE ^ OnEnterHandler(sender, data: ANY); 
-		PROCEDURE ^ OnEscapeHandler(sender, data: ANY); 
+		PROCEDURE ^ OnEnterHandler(sender, data: ANY ); 
+		PROCEDURE ^ OnEscapeHandler(sender, data: ANY ); 
 		PROCEDURE ^ FillFirstMountedFS(VAR s: ARRAY OF CHAR); 
 		PROCEDURE ^ SearchDoneHandler; 
 		PROCEDURE ^ SearchStartHandler; 
-		PROCEDURE ^ SearchHandler(sender, data: ANY); 
-		PROCEDURE ^ StopHandler(sender, data: ANY); 
+		PROCEDURE ^ SearchHandler(sender, data: ANY ); 
+		PROCEDURE ^ StopHandler(sender, data: ANY ); 
 		PROCEDURE ^ StopSearcherAndDisplayer; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 

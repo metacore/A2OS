@@ -1,5 +1,5 @@
 MODULE CryptoTwofish;
-	IMPORT S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
+	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils;
 CONST 
 	N = 16; 
 	FDBK = 361; 
@@ -15,12 +15,12 @@ TYPE
 
 	Cipher* = OBJECT (Ciphers.Cipher)
 	VAR 
-		keybits: SIGNED32; 
+		keybits: SIZE; 
 		sbox: ARRAY 4 OF SIGNED32; 
 		subkeys: ARRAY (8 + (2 * N)) OF SIGNED32; 
 		iv: Block; 
 
-		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIGNED32); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIZE); 
 		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
@@ -39,9 +39,9 @@ VAR
 	PROCEDURE ^ split(x: SIGNED32; VAR v: SKey); 
 	PROCEDURE  - Int(x: SET32): SIGNED32;
 	BEGIN
-		RETURN S.VAL(SIGNED32, x)
+		RETURN SIGNED32(x)
 	END Int; 
-	PROCEDURE ^ F32(x: SET32; CONST k32: ARRAY OF SIGNED32; keybits: SIGNED32): SIGNED32; 
+	PROCEDURE ^ F32(x: SET32; CONST k32: ARRAY OF SIGNED32; keybits: SIZE): SIGNED32; 
 	PROCEDURE ^ Encode(k0, k1: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Init0; 
 BEGIN

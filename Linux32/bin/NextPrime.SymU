@@ -1,0 +1,7 @@
+MODULE NextPrime;
+VAR 
+	add, next: ARRAY 11 OF INTEGER; 
+
+	PROCEDURE ^ Calc*(n: INTEGER): INTEGER; 
+BEGIN
+END NextPrime.

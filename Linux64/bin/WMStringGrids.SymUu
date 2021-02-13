@@ -12,7 +12,7 @@ TYPE
 		color, textColor: WMGraphics.Color; 
 		align: INTEGER; 
 		img: WMGraphics.Image; 
-		data: ANY; 
+		data: ANY ; 
 		flags: SET; 
 
 		PROCEDURE ^  & Init; 
@@ -28,7 +28,7 @@ TYPE
 
 	StringGridModel* = OBJECT {EXCLUSIVE} 
 	VAR 
-		lockedBy: ANY; 
+		lockedBy: ANY ; 
 		lockLevel: SIZE; 
 		viewChanged: BOOLEAN; 
 		onChanged*: WMEvents.EventSource; 
@@ -50,8 +50,8 @@ TYPE
 		PROCEDURE ^ GetCellTextAOC*(col, row: SIZE; VAR caption: ARRAY OF CHAR); 
 		PROCEDURE ^ SetCellColors*(col, row: SIZE; color, textColor: WMGraphics.Color); 
 		PROCEDURE ^ GetCellColors*(col, row: SIZE; VAR color, textColor: WMGraphics.Color; VAR valid: BOOLEAN); 
-		PROCEDURE ^ SetCellData*(col, row: SIZE; data: ANY); 
-		PROCEDURE ^ GetCellData*(col, row: SIZE): ANY; 
+		PROCEDURE ^ SetCellData*(col, row: SIZE; data: ANY ); 
+		PROCEDURE ^ GetCellData*(col, row: SIZE): ANY ; 
 		PROCEDURE ^ SetCellImage*(col, row: SIZE; img: WMGraphics.Image); 
 		PROCEDURE ^ GetCellImage*(col, row: SIZE): WMGraphics.Image; 
 		PROCEDURE ^ SetTextAlign*(col, row: SIZE; align: INTEGER); 
@@ -68,9 +68,9 @@ TYPE
 		showImgOnlyCells-: WMProperties.BooleanProperty; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ ModelChanged(sender, data: ANY); 
+		PROCEDURE ^ ModelChanged(sender, data: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
-		PROCEDURE ^ GetCellData*(col, row: SIZE): ANY; 
+		PROCEDURE ^ GetCellData*(col, row: SIZE): ANY ; 
 		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
 	END StringGrid; 
 VAR 

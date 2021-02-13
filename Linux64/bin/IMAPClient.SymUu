@@ -229,7 +229,7 @@ TYPE
 VAR 
 	globalR: SIGNED32; 
 
-	PROCEDURE ^ OldestFirst*(x, y: ANY): SIGNED32; 
-	PROCEDURE ^ BiggestUIDFirst*(x, y: ANY): SIGNED32; 
+	PROCEDURE ^ OldestFirst*(x, y: ANY ): SIGNED32; 
+	PROCEDURE ^ BiggestUIDFirst*(x, y: ANY ): SIGNED32; 
 BEGIN
 END IMAPClient.

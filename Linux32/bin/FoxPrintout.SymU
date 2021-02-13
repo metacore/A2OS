@@ -47,6 +47,7 @@ TYPE
 		PROCEDURE ^ VisitAddressType*(x: SyntaxTree.AddressType); 
 		PROCEDURE ^ VisitObjectType*(x: SyntaxTree.ObjectType); 
 		PROCEDURE ^ VisitAnyType*(x: SyntaxTree.AnyType); 
+		PROCEDURE ^ VisitAnyRecordType*(x: SyntaxTree.AnyRecordType); 
 		PROCEDURE ^ VisitMathArrayType*(x: SyntaxTree.MathArrayType); 
 		PROCEDURE ^ PointerFlags(x: SyntaxTree.PointerType); 
 		PROCEDURE ^ ObjectFlags(rec: SyntaxTree.RecordType; x: SyntaxTree.PointerType); 
@@ -66,6 +67,7 @@ TYPE
 		PROCEDURE ^ VisitUnaryExpression*(x: SyntaxTree.UnaryExpression); 
 		PROCEDURE ^ VisitBinaryExpression*(x: SyntaxTree.BinaryExpression); 
 		PROCEDURE ^ VisitRangeExpression*(x: SyntaxTree.RangeExpression); 
+		PROCEDURE ^ VisitConditionalExpression*(x: SyntaxTree.ConditionalExpression); 
 		PROCEDURE ^ VisitTensorRangeExpression*(x: SyntaxTree.TensorRangeExpression); 
 		PROCEDURE ^ VisitConversion*(x: SyntaxTree.Conversion); 
 		PROCEDURE ^ VisitDesignator*(x: SyntaxTree.Designator); 
@@ -122,7 +124,7 @@ TYPE
 		PROCEDURE ^ BeginComment; 
 		PROCEDURE ^ EndComment; 
 		PROCEDURE ^ Comment(x: SyntaxTree.Comment); 
-		PROCEDURE ^ Comments(c: SyntaxTree.Comment; x: ANY; sameLine: BOOLEAN); 
+		PROCEDURE ^ Comments(c: SyntaxTree.Comment; x: ANY ; sameLine: BOOLEAN); 
 		PROCEDURE ^ CommentList(x: SyntaxTree.Comment); 
 		PROCEDURE ^ Scope*(x: SyntaxTree.Scope); 
 		PROCEDURE ^ ProcedureScope(x: SyntaxTree.ProcedureScope); 
@@ -163,7 +165,7 @@ VAR
 
 	PROCEDURE ^ IsProperType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ NewPrinter*(w: Streams.Writer; mode: SIGNED32; info: BOOLEAN): Printer; 
-	PROCEDURE ^ Info*(CONST info: ARRAY OF CHAR; a: ANY); 
+	PROCEDURE ^ Info*(CONST info: ARRAY OF CHAR; a: ANY ); 
 	PROCEDURE ^ Init; 
 BEGIN
 END FoxPrintout.

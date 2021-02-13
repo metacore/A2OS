@@ -1,0 +1,12 @@
+MODULE OZip3;
+	IMPORT Commands, Files, Strings, BWHCompressor;
+CONST 
+	ComprTag = SIGNED32(4278009657); 
+	Suffix = \".oz3"\; 
+
+	PROCEDURE ^ NewFile(CONST name: ARRAY OF CHAR): Files.File; 
+	PROCEDURE ^ Error(c: Commands.Context; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Compress*(c: Commands.Context); 
+	PROCEDURE ^ Expand*(c: Commands.Context); 
+BEGIN
+END OZip3.

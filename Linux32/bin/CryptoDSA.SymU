@@ -22,8 +22,8 @@ TYPE
 		y-: Number; 
 		inv, r: Number; 
 
-		PROCEDURE ^ Sign*(CONST digest: ARRAY OF CHAR; len: SIGNED16): Signature; 
-		PROCEDURE ^ Verify*(CONST digest: ARRAY OF CHAR; dlen: SIGNED16; sig: Signature): BOOLEAN; 
+		PROCEDURE ^ Sign*(CONST digest: ARRAY OF CHAR; len: SIZE): Signature; 
+		PROCEDURE ^ Verify*(CONST digest: ARRAY OF CHAR; dlen: SIZE; sig: Signature): BOOLEAN; 
 	END Key; 
 VAR 
 	one: Number; 

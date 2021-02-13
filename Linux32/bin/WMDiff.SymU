@@ -95,13 +95,13 @@ TYPE
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Load*(leftFilename, rightFilename: ARRAY OF CHAR); 
 		PROCEDURE ^ Resized*(width, height: SIZE); 
-		PROCEDURE ^ OnViewResized(sender, par: ANY); 
+		PROCEDURE ^ OnViewResized(sender, par: ANY ); 
 		PROCEDURE ^ Setup(nofLines: SIZE); 
 		PROCEDURE ^ SetScrollbarProperties; 
 		PROCEDURE ^ Update; 
-		PROCEDURE ^ DiffHandler(sender, par: ANY); 
-		PROCEDURE ^ OnViewPropertyChange(sender, par: ANY); 
-		PROCEDURE ^ Scrolled(sender, data: ANY); 
+		PROCEDURE ^ DiffHandler(sender, par: ANY ); 
+		PROCEDURE ^ OnViewPropertyChange(sender, par: ANY ); 
+		PROCEDURE ^ Scrolled(sender, data: ANY ); 
 		PROCEDURE ^ HandleKey(ucs: SIZE; flags: SET; keysym: SIZE): BOOLEAN; 
 		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
 		PROCEDURE ^ WheelMove*(dz: SIZE); 

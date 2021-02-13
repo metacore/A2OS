@@ -37,7 +37,7 @@ TYPE
 
 	InterfaceHandler* = PROCEDURE {DELEGATE}(int: Interface); 
 VAR 
-	NilAdr*: Adr; 
+	NilAdr*, Nil4Adr*, Nil6Adr*: Adr; 
 	preferredProtocol*: SIGNED32; 
 
 	PROCEDURE ^ IsNilAdr*(adr: Adr): BOOLEAN; 
@@ -46,7 +46,7 @@ VAR
 	PROCEDURE ^ AdrToStr*(adr: Adr; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ ArrayToAdr*(CONST arr: ARRAY OF CHAR; ofs, protocol: SIGNED32; LSBfirst: BOOLEAN): Adr; 
 	PROCEDURE ^ AdrToArray*(adr: Adr; VAR arr: ARRAY OF CHAR; ofs: SIGNED32; LSBfirst: BOOLEAN); 
-	PROCEDURE ^ IPConfig*(par: ANY): ANY; 
+	PROCEDURE ^ IPConfig*(par: ANY ): ANY ; 
 	PROCEDURE ^ MatchPrefix*(adr: Adr; prefix: Adr): BOOLEAN; 
 	PROCEDURE ^ IsValidIPv4Str(CONST ipString: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ IsValidIPv6Str(ipString: ARRAY OF CHAR): BOOLEAN; 

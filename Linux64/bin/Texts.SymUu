@@ -24,7 +24,7 @@ TYPE
 
 	FontInfo* = OBJECT 
 	VAR 
-		fontcache*: ANY; 
+		fontcache*: ANY ; 
 		name*: ARRAY 32 OF CHAR; 
 		size*: SIZE; 
 		style*: SET; 
@@ -44,7 +44,7 @@ TYPE
 		PROCEDURE ^ Clone*(): Attributes; 
 	END Attributes; 
 
-	AttributeChangerProc* = PROCEDURE {DELEGATE}(VAR attributes: Attributes; userData: ANY); 
+	AttributeChangerProc* = PROCEDURE {DELEGATE}(VAR attributes: Attributes; userData: ANY ); 
 
 	StyleChangedMsg* = OBJECT 
 	END StyleChangedMsg; 
@@ -69,7 +69,7 @@ TYPE
 
 	CharacterStyle* = OBJECT 
 	VAR 
-		fontcache*: ANY; 
+		fontcache*: ANY ; 
 		name*: ARRAY 128 OF CHAR; 
 		family*: ARRAY 32 OF CHAR; 
 		style*: SET; 
@@ -133,7 +133,7 @@ TYPE
 
 	ObjectPiece* = OBJECT (Piece)
 	VAR 
-		object*: ANY; 
+		object*: ANY ; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Clone*(): Piece; 
@@ -156,7 +156,7 @@ TYPE
 	TextPosition* = OBJECT 
 	VAR 
 		position: SIZE; 
-		data*: ANY; 
+		data*: ANY ; 
 		text-: UnicodeText; 
 		GetInternalPos, GetDisplayPos: PositionTranslator; 
 		nextInternalPos*: SIZE; 
@@ -180,7 +180,7 @@ TYPE
 		cstyle-: CharacterStyle; 
 		pstyle-: ParagraphStyle; 
 		link-: Link; 
-		object-: ANY; 
+		object-: ANY ; 
 
 		PROCEDURE ^  & New*(t: UnicodeText); 
 		PROCEDURE ^ CloneProperties*(CONST otherReader: TextReader); 
@@ -202,8 +202,8 @@ TYPE
 		PROCEDURE ^ InsertText*(pos: SIZE; text: Text); 
 		PROCEDURE ^ DeleteText*(pos: SIZE; text: Text); 
 		PROCEDURE ^ BeginObjectChange*(pos: SIZE); 
-		PROCEDURE ^ ObjectChanged*(pos, len: SIZE; type: INTEGER; obj: ANY); 
-		PROCEDURE ^ EndObjectChange*(len: SIZE; type: INTEGER; to: ANY); 
+		PROCEDURE ^ ObjectChanged*(pos, len: SIZE; type: INTEGER; obj: ANY ); 
+		PROCEDURE ^ EndObjectChange*(len: SIZE; type: INTEGER; to: ANY ); 
 		PROCEDURE ^ SetText*(text: Text); 
 		PROCEDURE ^ Undo*; 
 		PROCEDURE ^ Redo*; 
@@ -240,7 +240,7 @@ TYPE
 		PROCEDURE ^ InformListeners(timestamp: SIGNED32; op: INTEGER; pos, len: SIZE); 
 		PROCEDURE ^ UpdatePieceTable; 
 		PROCEDURE ^ FindPiece(pos: SIZE; VAR piece: Piece); 
-		PROCEDURE ^ SendPositionUpdate(obj: ANY; VAR cont: BOOLEAN); 
+		PROCEDURE ^ SendPositionUpdate(obj: ANY ; VAR cont: BOOLEAN); 
 		PROCEDURE ^ UpdatePositionObjects(op: INTEGER; pos, len: SIZE); 
 		PROCEDURE ^ AccumulateChanges(op: INTEGER; pos, len: SIZE); 
 		PROCEDURE ^ RegisterPositionObject*(po: TextPosition); 
@@ -251,9 +251,9 @@ TYPE
 		PROCEDURE ^ InsertUTF8*(pos: SIZE; CONST buf: ARRAY OF CHAR); 
 		PROCEDURE ^ Delete*(pos, len: SIZE); 
 		PROCEDURE ^ CopyFromText*(fromText: UnicodeText; fromPos, len, destPos: SIZE); 
-		PROCEDURE ^ AttributeChanger(VAR attr: Attributes; userData: ANY); 
+		PROCEDURE ^ AttributeChanger(VAR attr: Attributes; userData: ANY ); 
 		PROCEDURE ^ SetAttributes*(pos, len: SIZE; attr: Attributes); 
-		PROCEDURE ^ UpdateAttributes*(pos, len: SIZE; attributeChanger: AttributeChangerProc; userData: ANY); 
+		PROCEDURE ^ UpdateAttributes*(pos, len: SIZE; attributeChanger: AttributeChangerProc; userData: ANY ); 
 		PROCEDURE ^ SetCharacterStyle*(pos, len: SIZE; cstyle: CharacterStyle); 
 		PROCEDURE ^ SetParagraphStyle*(pos, len: SIZE; pstyle: ParagraphStyle); 
 		PROCEDURE ^ SetLink*(pos, len: SIZE; link: Link); 

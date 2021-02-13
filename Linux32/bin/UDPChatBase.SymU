@@ -100,7 +100,7 @@ TYPE
 		PROCEDURE ^ AddInt*(n, len: SIZE); 
 	END Buffer; 
 
-	PArray = POINTER TO ARRAY OF ANY; 
+	PArray = POINTER TO ARRAY OF ANY ; 
 
 	List* = OBJECT {EXCLUSIVE} 
 	VAR 
@@ -111,11 +111,11 @@ TYPE
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ GetCount*(): SIGNED32; 
 		PROCEDURE ^ Grow; 
-		PROCEDURE ^ Add*(x: ANY); 
-		PROCEDURE ^ IndexOf*(x: ANY): SIGNED32; 
-		PROCEDURE ^ Remove*(x: ANY); 
+		PROCEDURE ^ Add*(x: ANY ); 
+		PROCEDURE ^ IndexOf*(x: ANY ): SIGNED32; 
+		PROCEDURE ^ Remove*(x: ANY ); 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ GetItem*(i: SIGNED32): ANY; 
+		PROCEDURE ^ GetItem*(i: SIGNED32): ANY ; 
 		PROCEDURE ^ Lock*; 
 		PROCEDURE ^ Unlock*; 
 	END List; 

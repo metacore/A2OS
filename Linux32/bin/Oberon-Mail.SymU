@@ -1,5 +1,5 @@
 MODULE Mail IN Oberon;
-	IMPORT SYSTEM, Kernel, Files, Strings, Dates, Objects, Display, Fonts, Texts, Oberon, NetSystem, NetTools, MIME, Streams, TextStreams, Display3, Attributes, Links, Gadgets, ListRiders, ListGadgets, AsciiCoder, TextGadgets, TextDocs, Documents, Desktops, HyperDocs, MD5 IN A2, Modules, FileDir;
+	IMPORT SYSTEM, Kernel, Files, Strings, Dates, Objects, Display, Fonts, Texts, Oberon, NetSystem, NetTools, MIME, Streams, TextStreams, Display3, Attributes, Links, Gadgets, ListRiders, ListGadgets, AsciiCoder, TextGadgets, TextDocs, Documents, Desktops, HyperDocs, MD5 IN A2, Modules, FileDir, Out := OutStub;
 CONST 
 	MsgFile = \"MailMessages"\; 
 	IndexFile = \"MailMessages.idx"\; 
@@ -148,6 +148,16 @@ TYPE
 		index: Index; 
 		idxLen: SIGNED32; 
 	END; 
+
+	WrapData = RECORD 
+		nCR: SIGNED32; 
+		indent: SIGNED32; 
+		lineLen: SIGNED32; 
+		width: SIGNED32; 
+		space0, space1, gap: Texts.Writer; 
+		word: Texts.Writer; 
+		accum: Texts.Writer; 
+	END; 
 VAR 
 	msgs: MsgHeadList; 
 	noMsgs, delMsgs: SIGNED32; 
@@ -279,6 +289,11 @@ VAR
 	PROCEDURE ^ Cite*; 
 	PROCEDURE ^ Mono*; 
 	PROCEDURE ^ CutLines*; 
+	PROCEDURE ^ Visible(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ WCopy(VAR w, x: Texts.Writer); 
+	PROCEDURE ^ WCopySeparator(VAR wdata: WrapData); 
+	PROCEDURE ^ WCopySepWord(VAR wdata: WrapData); 
+	PROCEDURE ^ Wrap*; 
 	PROCEDURE ^ SplitMailTo*(VAR url, mailadr: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ MailToSchemeHandler(L: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewMailToLinkScheme*; 

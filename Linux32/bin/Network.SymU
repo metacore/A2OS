@@ -38,7 +38,7 @@ TYPE
 
 	ReceiverList = POINTER TO RECORD 
 		next: ReceiverList; 
-		owner: ANY; 
+		owner: ANY ; 
 		receiver: Receiver; 
 		isPacketValid: IsPacketValid; 
 		isPacketForSingleRec: IsPacketForSingleRec; 
@@ -87,8 +87,8 @@ TYPE
 		PROCEDURE ^ Send*(dst: LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32; loopback: BOOLEAN); 
 		PROCEDURE ^ DoSend*(dst: LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32); 
 		PROCEDURE ^ Loopback(dst: LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32); 
-		PROCEDURE ^ InstallReceiver*(owner: ANY; type: SIGNED32; receiver: Receiver; isPacketValid: IsPacketValid; isPacketForSingleRec: IsPacketForSingleRec; isPacketAccepted: IsPacketAccepted; isForwardingOn: BOOLEAN); 
-		PROCEDURE ^ RemoveReceiver*(owner: ANY; type: SIGNED32); 
+		PROCEDURE ^ InstallReceiver*(owner: ANY ; type: SIGNED32; receiver: Receiver; isPacketValid: IsPacketValid; isPacketForSingleRec: IsPacketForSingleRec; isPacketAccepted: IsPacketAccepted; isForwardingOn: BOOLEAN); 
+		PROCEDURE ^ RemoveReceiver*(owner: ANY ; type: SIGNED32); 
 		PROCEDURE ^ InstallSendSniffer*(s: SendSniffer); 
 		PROCEDURE ^ RemoveSendSniffer*(s: SendSniffer); 
 		PROCEDURE ^ InstallReceiveSniffer*(s: ReceiveSniffer); 

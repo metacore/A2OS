@@ -19,7 +19,7 @@ TYPE
 
 		PROCEDURE ^  & New*(languages: Localization.Languages); 
 		PROCEDURE ^ FindSender(sender: WMStandardComponents.Button; VAR index: SIGNED32); 
-		PROCEDURE ^ SetLanguage(sender, data: ANY); 
+		PROCEDURE ^ SetLanguage(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 	END Window; 
 VAR 

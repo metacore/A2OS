@@ -25,8 +25,8 @@ TYPE
 	VAR 
 		label: WMStandardComponents.Label; 
 
-		PROCEDURE ^ SayHello(sender, data: ANY); 
-		PROCEDURE ^ SayBye(sender, data: ANY); 
+		PROCEDURE ^ SayHello(sender, data: ANY ); 
+		PROCEDURE ^ SayBye(sender, data: ANY ); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 	END StandardComponents; 
 
@@ -35,7 +35,7 @@ TYPE
 		label: WMStandardComponents.Label; 
 		tabs: WMStringGrids.StringGrid; 
 
-		PROCEDURE ^ Test(sender, data: ANY); 
+		PROCEDURE ^ Test(sender, data: ANY ); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 	END StringGrids; 
 VAR 

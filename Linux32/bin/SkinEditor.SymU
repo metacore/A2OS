@@ -38,7 +38,7 @@ TYPE
 		titleLbl, infoLbl: WMStandardComponents.Label; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ ChangeImageHandler(sender, data: ANY); 
+		PROCEDURE ^ ChangeImageHandler(sender, data: ANY ); 
 	END PreviewPanel; 
 
 	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -61,25 +61,25 @@ TYPE
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
-		PROCEDURE ^ SetHandler(sender, data: ANY); 
-		PROCEDURE ^ ShowConfigHandler(sender, data: ANY); 
-		PROCEDURE ^ ShowTutorialHandler(sender, data: ANY); 
+		PROCEDURE ^ SetHandler(sender, data: ANY ); 
+		PROCEDURE ^ ShowConfigHandler(sender, data: ANY ); 
+		PROCEDURE ^ ShowTutorialHandler(sender, data: ANY ); 
 		PROCEDURE ^ ShowDocument(CONST docname: ARRAY OF CHAR); 
 		PROCEDURE ^ EditorFocusHandler(hasFocus: BOOLEAN); 
 		PROCEDURE ^ SplitEditorFocusHandler(hasFocus: BOOLEAN); 
-		PROCEDURE ^ ErrorClick(sender, data: ANY); 
-		PROCEDURE ^ LoadHandler(sender, data: ANY); 
+		PROCEDURE ^ ErrorClick(sender, data: ANY ); 
+		PROCEDURE ^ LoadHandler(sender, data: ANY ); 
 		PROCEDURE ^ Load(filename: ARRAY OF CHAR); 
-		PROCEDURE ^ StoreHandler(sender, data: ANY); 
+		PROCEDURE ^ StoreHandler(sender, data: ANY ); 
 		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR); 
-		PROCEDURE ^ SearchHandler(sender, data: ANY); 
+		PROCEDURE ^ SearchHandler(sender, data: ANY ); 
 		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
-		PROCEDURE ^ TextChanged(sender, data: ANY); 
-		PROCEDURE ^ Split(sender, data: ANY); 
-		PROCEDURE ^ BackHandler(sender, data: ANY); 
-		PROCEDURE ^ ForwardHandler(sender, data: ANY); 
-		PROCEDURE ^ ApplyHandler(sender, data: ANY); 
-		PROCEDURE ^ CheckHandler(sender, data: ANY); 
+		PROCEDURE ^ TextChanged(sender, data: ANY ); 
+		PROCEDURE ^ Split(sender, data: ANY ); 
+		PROCEDURE ^ BackHandler(sender, data: ANY ); 
+		PROCEDURE ^ ForwardHandler(sender, data: ANY ); 
+		PROCEDURE ^ ApplyHandler(sender, data: ANY ); 
+		PROCEDURE ^ CheckHandler(sender, data: ANY ); 
 		PROCEDURE ^ CheckSkin(warnings: BOOLEAN): SkinEngine.Skin; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 

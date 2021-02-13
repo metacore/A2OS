@@ -7,5 +7,6 @@ TYPE
 	PROCEDURE ^ Convert(diagnostics: Diagnostics.Diagnostics; list: Streams.Reader; converter: Converter); 
 	PROCEDURE ^ Oberon*(context: Commands.Context); 
 	PROCEDURE ^ UTF8*(context: Commands.Context); 
+	PROCEDURE ^ BBT*(context: Commands.Context); 
 BEGIN
 END TextConverter.

@@ -22,6 +22,6 @@ TYPE
 VAR 
 	s: StringPool; 
 
-	PROCEDURE ^ Test*(par: ANY): ANY; 
+	PROCEDURE ^ Test*(par: ANY ): ANY ; 
 BEGIN
 END TFStringPool.

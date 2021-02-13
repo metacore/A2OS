@@ -68,6 +68,7 @@ CONST
 	Subtype_Decimal* = 0; 
 	Subtype_Hex* = 1; 
 	Subtype_Float* = 2; 
+	Subtype_Binary* = 3; 
 	Subtype_Char* = 3; 
 	TypeWords = 1; 
 	TypeTokens = 2; 

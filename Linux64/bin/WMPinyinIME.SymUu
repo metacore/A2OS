@@ -64,8 +64,8 @@ TYPE
 		PROCEDURE ^ ScheduleHide; 
 		PROCEDURE ^ WriteSelected; 
 		PROCEDURE ^ ClearSelection; 
-		PROCEDURE ^ Ok*(sender, data: ANY); 
-		PROCEDURE ^ TextChanged*(sender, data: ANY); 
+		PROCEDURE ^ Ok*(sender, data: ANY ); 
+		PROCEDURE ^ TextChanged*(sender, data: ANY ); 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ Hide; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 

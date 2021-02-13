@@ -74,7 +74,7 @@ TYPE
 		body, closeRequested: BOOLEAN; 
 		out: Streams.Writer; 
 		in, inR: Streams.Reader; 
-		o: ANY; 
+		o: ANY ; 
 		h, th: Host; 
 		i: SIZE; 
 		request: WebHTTP.RequestHeader; 

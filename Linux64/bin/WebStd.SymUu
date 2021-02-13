@@ -125,7 +125,7 @@ TYPE
 		comp: PersistentDataCompare; 
 
 		PROCEDURE ^  & Init*(persComp: PersistentDataCompare); 
-		PROCEDURE ^ GenericCompare(obj1, obj2: ANY): BOOLEAN; 
+		PROCEDURE ^ GenericCompare(obj1, obj2: ANY ): BOOLEAN; 
 	END PersistentDataSorter; 
 
 	DataContainer* = OBJECT (DynamicWebpage.StateLessActiveElement)
@@ -169,7 +169,7 @@ TYPE
 		comp: SessionDataCompare; 
 
 		PROCEDURE ^  & Init*(sessComp: SessionDataCompare); 
-		PROCEDURE ^ GenericCompare(obj1, obj2: ANY): BOOLEAN; 
+		PROCEDURE ^ GenericCompare(obj1, obj2: ANY ): BOOLEAN; 
 	END SessionDataSorter; 
 
 	SessionContainer* = OBJECT (DynamicWebpage.StateLessActiveElement)

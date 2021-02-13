@@ -1,8 +1,8 @@
 MODULE GenericSort;
 TYPE 
-	GenericArray* = POINTER TO ARRAY OF ANY; 
+	GenericArray* = POINTER TO ARRAY OF ANY ; 
 
-	GenericCompareFunct* = PROCEDURE {DELEGATE}(obj1, obj2: ANY):BOOLEAN; 
+	GenericCompareFunct* = PROCEDURE {DELEGATE}(obj1, obj2: ANY ):BOOLEAN; 
 
 	PROCEDURE ^ QuickSort*(VAR genArray: GenericArray; compFunc: GenericCompareFunct); 
 	PROCEDURE ^ QuickSortRec(VAR genArray: GenericArray; comp: GenericCompareFunct; lo, hi: SIZE); 

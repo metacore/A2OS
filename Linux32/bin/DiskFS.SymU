@@ -194,7 +194,7 @@ TYPE
 		PROCEDURE ^ Update*; 
 	END File; 
 
-	PROCEDURE ^ Collect(f: ANY); 
+	PROCEDURE ^ Collect(f: ANY ); 
 	PROCEDURE ^ GetSector(vol: Files.Volume; src: DiskAdr; VAR dest: DiskSector); 
 	PROCEDURE ^ PutSector(vol: Files.Volume; dest: DiskAdr; VAR src: DiskSector); 
 	PROCEDURE ^ AllocSector(vol: Files.Volume; hint: DiskAdr; VAR sec: DiskAdr); 

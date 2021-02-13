@@ -90,7 +90,7 @@ TYPE
 		oldFrom, oldTo: SIZE; 
 		color: WMGraphics.Color; 
 		text: Texts.UnicodeText; 
-		onChanged*: PROCEDURE {DELEGATE}(sender, data: ANY); 
+		onChanged*: PROCEDURE {DELEGATE}(sender, data: ANY ); 
 		owner: TextObject; 
 
 		PROCEDURE ^  & New*; 
@@ -117,7 +117,7 @@ TYPE
 		ascent: SIZE; 
 		text: Texts.UnicodeText; 
 		visible: BOOLEAN; 
-		onChanged: PROCEDURE {DELEGATE}(sender, data: ANY); 
+		onChanged: PROCEDURE {DELEGATE}(sender, data: ANY ); 
 		owner: TextObject; 
 
 		PROCEDURE ^ SetOwner(owner: TextObject); 
@@ -192,7 +192,7 @@ TYPE
 		preview: BOOLEAN; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ ClickHandler*(sender, data: ANY); 
+		PROCEDURE ^ ClickHandler*(sender, data: ANY ); 
 		PROCEDURE ^ Clone*(): DTPData.ContentObject; 
 		PROCEDURE ^ Invalidate; 
 		PROCEDURE ^ InvalidateRect(rect: WMRectangles.Rectangle); 
@@ -210,14 +210,14 @@ TYPE
 		PROCEDURE ^ CreateHighlight*(): Highlight; 
 		PROCEDURE ^ RemoveHighlight*(x: Highlight); 
 		PROCEDURE ^ InvalidateRange(a, b: SIZE); 
-		PROCEDURE ^ HighlightChanged(sender, data: ANY); 
+		PROCEDURE ^ HighlightChanged(sender, data: ANY ); 
 		PROCEDURE ^ AddPositionMarker(pm: PositionMarker); 
 		PROCEDURE ^ CreatePositionMarker*(): PositionMarker; 
 		PROCEDURE ^ RemovePositionMarker*(x: PositionMarker); 
-		PROCEDURE ^ PositionMarkerChanged(sender, data: ANY); 
+		PROCEDURE ^ PositionMarkerChanged(sender, data: ANY ); 
 		PROCEDURE ^ CheckNumberOfLines; 
 		PROCEDURE ^ CheckCursor; 
-		PROCEDURE ^ TextChanged(sender, data: ANY); 
+		PROCEDURE ^ TextChanged(sender, data: ANY ); 
 		PROCEDURE ^ GetLineLeftIndent(linenr: SIZE): SIZE; 
 		PROCEDURE ^ FindLineByY*(firstLine, y: SIZE): SIZE; 
 		PROCEDURE ^ ViewToTextPos*(x, y: SIZE; VAR pos: SIZE); 
@@ -234,7 +234,7 @@ TYPE
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keysym: SIZE); 
 		PROCEDURE ^ AutoStartDrag*; 
-		PROCEDURE ^ DragWasAccepted(sender, data: ANY); 
+		PROCEDURE ^ DragWasAccepted(sender, data: ANY ); 
 		PROCEDURE ^ DragOver(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ InsertChar*(ch: Texts.Char32); 
@@ -281,13 +281,13 @@ TYPE
 		PROCEDURE ^ Show*(x, y: SIZE); 
 		PROCEDURE ^ Hide*; 
 		PROCEDURE ^ RefreshValues; 
-		PROCEDURE ^ SetValueHandler(sender, data: ANY); 
-		PROCEDURE ^ InsertHandler(sender, data: ANY); 
+		PROCEDURE ^ SetValueHandler(sender, data: ANY ); 
+		PROCEDURE ^ InsertHandler(sender, data: ANY ); 
 		PROCEDURE ^ InsertImg(CONST file: ARRAY OF CHAR); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ LoadStyleList*; 
-		PROCEDURE ^ PClickSelected(sender, data: ANY); 
-		PROCEDURE ^ CClickSelected(sender, data: ANY); 
+		PROCEDURE ^ PClickSelected(sender, data: ANY ); 
+		PROCEDURE ^ CClickSelected(sender, data: ANY ); 
 	END TextPropWindow; 
 VAR 
 	PTVfirstLine: WMProperties.SizeProperty; 

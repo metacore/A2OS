@@ -1,5 +1,5 @@
 MODULE CryptoTestRSA;
-	IMPORT RSA := CryptoRSA, B := CryptoBigNumbers, P := CryptoPrimes, Files, Out := KernelLog, WMDialogs;
+	IMPORT RSA := CryptoRSA, B := CryptoBigNumbers, P := CryptoPrimes, Files, Log := KernelLog, WMDialogs;
 CONST 
 	Size = 1024; 
 	PrivateKeyFile = \"SSH.RSAKey.priv"\; 

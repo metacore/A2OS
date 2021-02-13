@@ -50,7 +50,7 @@ TYPE
 		PROCEDURE ^ Get*(): PartitionTable.PartitionTable; 
 		PROCEDURE ^ Discard*; 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ HandleOnEnter(sender, data: ANY); 
+		PROCEDURE ^ HandleOnEnter(sender, data: ANY ); 
 		PROCEDURE ^ RegisterOnEnterHandlers; 
 		PROCEDURE ^  & Init*; 
 	END PartitionTableEditor; 

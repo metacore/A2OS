@@ -3,7 +3,7 @@ MODULE Example7;
 TYPE 
 	RecursiveLock* = OBJECT {EXCLUSIVE} 
 	VAR 
-		lockedBy: ANY; 
+		lockedBy: ANY ; 
 		level: SIZE; 
 
 		PROCEDURE ^ Acquire*; 

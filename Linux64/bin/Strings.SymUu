@@ -15,10 +15,12 @@ TYPE
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
 		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Shorten*(n: SIZE); 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ GetWriter*(): Streams.Writer; 
 		PROCEDURE ^ GetLength*(): SIZE; 
 		PROCEDURE ^ GetString*(): String; 
+		PROCEDURE ^ GetStringCopy*(): String; 
 		PROCEDURE ^ Write*(out: Streams.Writer); 
 	END Buffer; 
 VAR 

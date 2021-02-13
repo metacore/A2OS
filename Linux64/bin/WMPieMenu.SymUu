@@ -30,7 +30,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ PropertyChanged*(sender, prop: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, prop: ANY ); 
 		PROCEDURE ^ GetSector(nr: SIZE; VAR s: ARRAY OF WMGraphics.Point2d); 
 		PROCEDURE ^ SetImage(nr: SIGNED32; image: WMGraphics.Image); 
 		PROCEDURE ^ SetText(nr: SIGNED32; text: Strings.String); 
@@ -49,12 +49,12 @@ TYPE
 		lastX*, lastY*: SIZE; 
 		caller: WMWindowManager.Window; 
 		pointerReturned, bt*: BOOLEAN; 
-		userData*: ANY; 
+		userData*: ANY ; 
 		shown: BOOLEAN; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ FocusLost*; 
-		PROCEDURE ^ CloseIt(sender, data: ANY); 
+		PROCEDURE ^ CloseIt(sender, data: ANY ); 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ SetImage*(nr: SIGNED32; image: WMGraphics.Image); 
 		PROCEDURE ^ SetText*(nr: SIGNED32; text: Strings.String); 

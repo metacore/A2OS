@@ -28,8 +28,8 @@ TYPE
 		PROCEDURE ^ ShowLevel; 
 		PROCEDURE ^ EnableInput; 
 		PROCEDURE ^ DisableInput; 
-		PROCEDURE ^ Evaluate(sender, data: ANY); 
-		PROCEDURE ^ Start(sender, data: ANY); 
+		PROCEDURE ^ Evaluate(sender, data: ANY ); 
+		PROCEDURE ^ Start(sender, data: ANY ); 
 		PROCEDURE ^ Started; 
 		PROCEDURE ^ Play; 
 	BEGIN{ACTIVE} 

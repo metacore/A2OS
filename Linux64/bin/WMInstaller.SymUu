@@ -39,7 +39,7 @@ TYPE
 		PROCEDURE ^ SetContent(content: WMComponents.VisualComponent); 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ CheckScrollbars; 
-		PROCEDURE ^ ScrollbarChanged(sender, data: ANY); 
+		PROCEDURE ^ ScrollbarChanged(sender, data: ANY ); 
 		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^  & Init*; 
 	END ScrollPanel; 
@@ -51,13 +51,13 @@ TYPE
 		label: WMStandardComponents.Label; 
 		allBtn, noneBtn: WMStandardComponents.Button; 
 
-		PROCEDURE ^ ClickHandler(sender, data: ANY); 
+		PROCEDURE ^ ClickHandler(sender, data: ANY ); 
 		PROCEDURE ^ GetTotalSize(VAR size, sizeOnDisk: SIGNED32); 
 		PROCEDURE ^ UpdateLabel; 
 		PROCEDURE ^ GetSizeString(package: Installer.Package; VAR caption: ARRAY OF CHAR); 
 		PROCEDURE ^ CreatePackagePanel(package: Installer.Package): WMStandardComponents.Panel; 
 		PROCEDURE ^ SetPackages(packages: Installer.Packages); 
-		PROCEDURE ^ HandleButtons(sender, data: ANY); 
+		PROCEDURE ^ HandleButtons(sender, data: ANY ); 
 		PROCEDURE ^  & New*; 
 	END PackageSelector; 
 
@@ -74,7 +74,7 @@ TYPE
 		PROCEDURE ^ GetConfiguration(): Installer.Configuration; 
 		PROCEDURE ^ IsValidConfiguration(w: Streams.Writer): BOOLEAN; 
 		PROCEDURE ^ CreateLine(lineNbr: SIZE): WMStandardComponents.Panel; 
-		PROCEDURE ^ ClickHandler(sender, data: ANY); 
+		PROCEDURE ^ ClickHandler(sender, data: ANY ); 
 		PROCEDURE ^ ApplyConfiguration; 
 		PROCEDURE ^ NewLabel(CONST caption: ARRAY OF CHAR; width: SIGNED32): WMStandardComponents.Label; 
 		PROCEDURE ^ NewEditor(VAR editor: WMEditors.Editor; CONST caption: ARRAY OF CHAR; width: SIGNED32); 
@@ -123,8 +123,8 @@ TYPE
 		PROCEDURE ^ ShowHelpText; 
 		PROCEDURE ^ GetDiskPartString(selection: WMPartitionsComponents.Selection): Strings.String; 
 		PROCEDURE ^ ReallyDoInstallation(selection: WMPartitionsComponents.Selection): BOOLEAN; 
-		PROCEDURE ^ HandleButtons(sender, data: ANY); 
-		PROCEDURE ^ HandleSelection(sender, data: ANY); 
+		PROCEDURE ^ HandleButtons(sender, data: ANY ); 
+		PROCEDURE ^ HandleSelection(sender, data: ANY ); 
 		PROCEDURE ^ HandleProgressNotification(aborted: BOOLEAN); 
 		PROCEDURE ^ LockPartition(selection: WMPartitionsComponents.Selection): BOOLEAN; 
 		PROCEDURE ^ UnlockPartition(selection: WMPartitionsComponents.Selection); 

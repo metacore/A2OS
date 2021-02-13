@@ -56,12 +56,12 @@ TYPE
 		ownerWindowExitFullScreen*: PROCEDURE {DELEGATE}; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ Render*(state: BOOLEAN); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ SetScrollbars*(hScrollbar, vScrollbar: WMStandardComponents.Scrollbar); 
-		PROCEDURE ^ ScrollbarsChanged*(sender, data: ANY); 
+		PROCEDURE ^ ScrollbarsChanged*(sender, data: ANY ); 
 		PROCEDURE ^ UpdateScrollbars; 
 		PROCEDURE ^ SetDocument*(doc: DTPData.Document); 
 		PROCEDURE ^ GetDocument*(): DTPData.Document; 
@@ -144,7 +144,7 @@ TYPE
 		PROCEDURE ^ SetProperties*(x, y, w, h: FLOAT32; name: Strings.String; style: DTPData.StyleObject; tw: BOOLEAN; twt, twb, twl, twr: FLOAT32); 
 		PROCEDURE ^ SetCoordinates*(x, y, w, h: FLOAT32); 
 		PROCEDURE ^ InitValues*; 
-		PROCEDURE ^ SetValueHandler(sender, data: ANY); 
+		PROCEDURE ^ SetValueHandler(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 	END PropertyWindow; 
 BEGIN

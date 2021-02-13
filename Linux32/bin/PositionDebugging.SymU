@@ -11,7 +11,7 @@ TYPE
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
-		PROCEDURE ^ HandleClose(sender, par: ANY); 
+		PROCEDURE ^ HandleClose(sender, par: ANY ); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; Keys: SET); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
@@ -24,7 +24,7 @@ TYPE
 		viewMode*, color*: WMProperties.Int32Property; 
 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
 	END DebugComponent; 

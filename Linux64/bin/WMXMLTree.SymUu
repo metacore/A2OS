@@ -28,13 +28,13 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetEditor*(e: WMEditors.Editor); 
-		PROCEDURE ^ Click(sender, data: ANY); 
+		PROCEDURE ^ Click(sender, data: ANY ); 
 		PROCEDURE ^ AddSubNode(node: WMTrees.TreeNode; xml: XML.Element); 
 		PROCEDURE ^ SetDocument(xml: XML.Element); 
 		PROCEDURE ^ GetErrorList*(): ErrorList; 
 		PROCEDURE ^ AddErrorToList(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
-		PROCEDURE ^ Refresh*(sender, data: ANY); 
+		PROCEDURE ^ Refresh*(sender, data: ANY ); 
 	END XMLView; 
 VAR 
 	StrXMLView: Strings.String; 

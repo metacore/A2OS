@@ -1,0 +1,37 @@
+MODULE CryptoStreams;
+	IMPORT Streams, CryptoCiphers, CryptoAES, CryptoMD5, Strings;
+CONST 
+	WriteError = 2907; 
+	BufferSize = 1024; 
+TYPE 
+	Cipher* = CryptoCiphers.Cipher; 
+
+	Position = Streams.Position; 
+
+	EncryptingWriter* = OBJECT (Streams.Writer)
+	VAR 
+		out: Streams.Writer; 
+		cipher: Cipher; 
+		eos: BOOLEAN; 
+
+		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: SIZE; prop: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: Position); 
+		PROCEDURE ^ Pos*(): Position; 
+		PROCEDURE ^  & InitCrWriter*(output: Streams.Writer; c: Cipher); 
+	END EncryptingWriter; 
+
+	DecryptingReader* = OBJECT (Streams.Reader)
+	VAR 
+		in: Streams.Reader; 
+		cipher: Cipher; 
+
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: Position); 
+		PROCEDURE ^  & InitCrReader*(input: Streams.Reader; c: Cipher); 
+	END DecryptingReader; 
+
+	PROCEDURE ^ NewCipher*(CONST key: ARRAY OF CHAR): Cipher; 
+BEGIN
+END CryptoStreams.

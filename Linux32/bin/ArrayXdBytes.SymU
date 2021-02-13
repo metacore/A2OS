@@ -36,7 +36,7 @@ TYPE
 
 	Array* = OBJECT (ArrayMemoryStructure)
 	VAR 
-		protector: ANY; 
+		protector: ANY ; 
 		permutation-: IndexArray; 
 		bc-: SIGNED8; 
 		f0, f1, f2, f3: Index; 
@@ -45,7 +45,7 @@ TYPE
 		PROCEDURE ^ dbgWriteInfo*; 
 		PROCEDURE ^ GetInfo*(VAR elementsize: SIGNED32); 
 		PROCEDURE ^ SetBoundaryCondition*(c: SIGNED8); 
-		PROCEDURE ^ Allocate*(size: SIGNED32; VAR baseadr: SIGNED32; VAR protector: ANY); 
+		PROCEDURE ^ Allocate*(size: SIGNED32; VAR baseadr: SIGNED32; VAR protector: ANY ); 
 		PROCEDURE ^ ValidateCache*; 
 		PROCEDURE ^ Init(newdim: SIGNED32); 
 		PROCEDURE ^  & NewXdB*(neworigin, newlen: IndexArray); 

@@ -1,5 +1,5 @@
 MODULE CryptoTestHashes;
-	IMPORT Hashes := CryptoHashes, Utils := CryptoUtils, Kernel, Out := KernelLog;
+	IMPORT Hashes := CryptoHashes, Utils := CryptoUtils, Kernel, Log := KernelLog;
 CONST 
 
 	PROCEDURE ^ CheckHash(CONST modname, data, exphash: ARRAY OF CHAR); 

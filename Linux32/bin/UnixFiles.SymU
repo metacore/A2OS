@@ -46,7 +46,7 @@ TYPE
 		stat: Unix.Status; 
 
 		PROCEDURE ^ Init(s: Unix.Status); 
-		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+		PROCEDURE ^ EnumFile(f: ANY ; VAR cont: BOOLEAN); 
 	END SearchByFstat; 
 
 	Collection = OBJECT {EXCLUSIVE} 
@@ -60,7 +60,7 @@ TYPE
 		PROCEDURE ^ ByStat(CONST stat: Unix.Status): File; 
 		PROCEDURE ^ Finalize; 
 		PROCEDURE ^ Collect; 
-		PROCEDURE ^ FinalizeFile(obj: ANY); 
+		PROCEDURE ^ FinalizeFile(obj: ANY ); 
 	END Collection; 
 
 	UnixFileSystem* = OBJECT {EXCLUSIVE} (Files.FileSystem)
@@ -129,7 +129,7 @@ VAR
 
 	PROCEDURE ^ HasInternal(name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	PROCEDURE ^ IsDirectory(VAR stat: Unix.Status): BOOLEAN; 
-	PROCEDURE ^ EnumFinalize(f: ANY; VAR cont: BOOLEAN); 
+	PROCEDURE ^ EnumFinalize(f: ANY ; VAR cont: BOOLEAN); 
 	PROCEDURE ^ GetWorkingDirectory*(VAR path: ARRAY OF CHAR); 
 	PROCEDURE ^ ChangeDirectory*(CONST path: ARRAY OF CHAR; VAR done: BOOLEAN); 
 	PROCEDURE ^ StripPath*(CONST path: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 

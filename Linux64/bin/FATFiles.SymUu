@@ -62,7 +62,7 @@ TYPE
 		found: File; 
 
 		PROCEDURE ^  & Init*(Directory: Address; Name: Filename); 
-		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+		PROCEDURE ^ EnumFile(f: ANY ; VAR cont: BOOLEAN); 
 	END SearchByName; 
 
 	SearchByCluster = OBJECT 
@@ -71,19 +71,19 @@ TYPE
 		found: File; 
 
 		PROCEDURE ^  & Init*(Cluster: Address); 
-		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+		PROCEDURE ^ EnumFile(f: ANY ; VAR cont: BOOLEAN); 
 	END SearchByCluster; 
 
 	FilePurger = OBJECT 
 	VAR 
 		count: SIGNED32; 
 
-		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+		PROCEDURE ^ EnumFile(f: ANY ; VAR cont: BOOLEAN); 
 	END FilePurger; 
 
 	FileUpdater = OBJECT 
 
-		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+		PROCEDURE ^ EnumFile(f: ANY ; VAR cont: BOOLEAN); 
 	END FileUpdater; 
 
 	FileEnumerator = OBJECT 
@@ -92,7 +92,7 @@ TYPE
 		directory: Address; 
 
 		PROCEDURE ^  & Init*(dir: Address); 
-		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+		PROCEDURE ^ EnumFile(f: ANY ; VAR cont: BOOLEAN); 
 	END FileEnumerator; 
 
 	FileSystem* = OBJECT {EXCLUSIVE} (Files.FileSystem)
@@ -252,7 +252,7 @@ TYPE
 	END RootDirectory32; 
 
 	PROCEDURE ^ NewFS*(context: Files.Parameters); 
-	PROCEDURE ^ PurgeFile(f: ANY); 
+	PROCEDURE ^ PurgeFile(f: ANY ); 
 	PROCEDURE ^ ValidateName(VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ ValidLongChar*(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ ValidShortChar*(ch: CHAR): BOOLEAN; 

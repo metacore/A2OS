@@ -85,7 +85,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ GetColWidth*(i: SIZE): SIZE; 
 		PROCEDURE ^ SetColSpacings*(colWidths: Spacings); 
 		PROCEDURE ^ GetColSpacings*(): Spacings; 
@@ -101,7 +101,7 @@ TYPE
 		PROCEDURE ^ GetCellSpans(x, y: SIZE; VAR spanx, spany: SIZE); 
 		PROCEDURE ^ IsSkipCell*(x, y: SIZE): BOOLEAN; 
 		PROCEDURE ^ GetCellDimensions*(x, y: SIZE; VAR width, height: SIZE); 
-		PROCEDURE ^ GetCellData*(col, row: SIZE): ANY; 
+		PROCEDURE ^ GetCellData*(col, row: SIZE): ANY ; 
 		PROCEDURE ^ GetCellState(x, y: SIZE): SET; 
 		PROCEDURE ^ FindMasterCell*(x, y: SIZE; VAR col, row, xpos, ypos: SIZE); 
 		PROCEDURE ^ FindCellXY*(x, y: SIZE; VAR col, row: SIZE); 
@@ -114,7 +114,7 @@ TYPE
 		PROCEDURE ^ ScrollCellVisible(col, row: SIZE); 
 		PROCEDURE ^ SetFocusPos(col, row: SIZE); 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keysym: SIZE); 
-		PROCEDURE ^ Scrolled(sender, data: ANY); 
+		PROCEDURE ^ Scrolled(sender, data: ANY ); 
 		PROCEDURE ^ SetHighlight(col, row: SIZE); 
 		PROCEDURE ^ GetVisibleColRect(col: SIZE): WMRectangles.Rectangle; 
 		PROCEDURE ^ GetVisibleRowRect(row: SIZE): WMRectangles.Rectangle; 

@@ -6,6 +6,7 @@ VAR
 
 	PROCEDURE ^ MD5*(c: Commands.Context); 
 	PROCEDURE ^ SHA1*(c: Commands.Context); 
+	PROCEDURE ^ SHA256*(c: Commands.Context); 
 	PROCEDURE ^ SHA3*(c: Commands.Context); 
 	PROCEDURE ^ Do(c: Commands.Context; h: Hashes.Hash); 
 	PROCEDURE ^ OpenNextFile(c: Commands.Context; VAR f: Files.File): BOOLEAN; 

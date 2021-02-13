@@ -5,7 +5,7 @@ CONST
 TYPE 
 	Lock* = OBJECT {EXCLUSIVE} 
 	VAR 
-		lockedBy: ANY; 
+		lockedBy: ANY ; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Acquire*; 
@@ -16,7 +16,7 @@ TYPE
 	RecursiveLock* = OBJECT {EXCLUSIVE} 
 	VAR 
 		lockLevel: SIZE; 
-		lockedBy: ANY; 
+		lockedBy: ANY ; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Acquire*; 
@@ -27,7 +27,7 @@ TYPE
 	LockReleasedHandler* = PROCEDURE {DELEGATE}; 
 
 	ReaderLockInfo = RECORD 
-		owner: ANY; 
+		owner: ANY ; 
 		lockLevel: SIZE; 
 	END; 
 
@@ -36,8 +36,8 @@ TYPE
 	RWLock* = OBJECT {EXCLUSIVE} 
 	VAR 
 		lockLevel: SIZE; 
-		lockedBy: ANY; 
-		lastReader: ANY; 
+		lockedBy: ANY ; 
+		lastReader: ANY ; 
 		nofReaders: SIZE; 
 		readers: ReaderLockList; 
 		wlReleaseHandler: LockReleasedHandler; 
@@ -62,8 +62,8 @@ TYPE
 VAR 
 	locks: Kernel.FinalizedCollection; 
 
-	PROCEDURE ^ RegisterLock(x: ANY); 
-	PROCEDURE ^ DL(obj: ANY; VAR cont: BOOLEAN); 
+	PROCEDURE ^ RegisterLock(x: ANY ); 
+	PROCEDURE ^ DL(obj: ANY ; VAR cont: BOOLEAN); 
 	PROCEDURE ^ DeadLock*; 
 BEGIN
 END Locks.

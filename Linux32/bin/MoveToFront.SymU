@@ -1,0 +1,13 @@
+MODULE MoveToFront;
+TYPE 
+	MTF* = OBJECT 
+	VAR 
+		alpha: INTEGER; 
+		list: ARRAY 256 OF INTEGER; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Encode*(c: CHAR): CHAR; 
+		PROCEDURE ^ Decode*(ch: CHAR): CHAR; 
+	END MTF; 
+BEGIN
+END MoveToFront.

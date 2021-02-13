@@ -16,12 +16,12 @@ CONST
 TYPE 
 	Dependencies* = ARRAY (MaxNofDependencies + 1) OF SIZE; 
 
-	JobProcedure* = PROCEDURE {DELEGATE}(parameters: ANY; VAR error: BOOLEAN); 
+	JobProcedure* = PROCEDURE {DELEGATE}(parameters: ANY ; VAR error: BOOLEAN); 
 
 	Job = OBJECT {EXCLUSIVE} 
 	VAR 
 		proc: JobProcedure; 
-		parameters: ANY; 
+		parameters: ANY ; 
 		uid: SIZE; 
 		priority: SIZE; 
 		completed: BOOLEAN; 
@@ -118,7 +118,7 @@ TYPE
 		alive, dead: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(nofWorkers: SIZE); 
-		PROCEDURE ^ CreateJob*(proc: JobProcedure; parameters: ANY; priority: SIZE; CONST dependencies: Dependencies): SIZE; 
+		PROCEDURE ^ CreateJob*(proc: JobProcedure; parameters: ANY ; priority: SIZE; CONST dependencies: Dependencies): SIZE; 
 		PROCEDURE ^ AwaitAllDone*; 
 		PROCEDURE ^ JobDone(worker: Worker; job: Job); 
 		PROCEDURE ^ DoScheduling; 

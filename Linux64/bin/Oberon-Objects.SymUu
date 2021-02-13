@@ -172,7 +172,7 @@ VAR
 	FirstAlias: Alias; 
 
 	PROCEDURE ^ Stamp*(VAR M: ObjMsg); 
-	PROCEDURE ^ Cleanup(L: ANY); 
+	PROCEDURE ^ Cleanup(L: ANY ); 
 	PROCEDURE ^ Match(CONST s, ext: ARRAY OF CHAR; VAR len: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ ThisLibrary*(CONST name: ARRAY OF CHAR): Library; 
 	PROCEDURE ^ FreeLibrary*(CONST name: ARRAY OF CHAR); 

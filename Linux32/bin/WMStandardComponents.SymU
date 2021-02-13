@@ -34,14 +34,14 @@ TYPE
 		internalEnabled: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
-		PROCEDURE ^ Start*(sender, par: ANY); 
-		PROCEDURE ^ Stop*(sender, par: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ Start*(sender, par: ANY ); 
+		PROCEDURE ^ Stop*(sender, par: ANY ); 
 		PROCEDURE ^ Finalize*; 
 	BEGIN{ACTIVE} 
 	END Timer; 
 
-	CursorBlinkerCallback = PROCEDURE {DELEGATE}(sender, data: ANY); 
+	CursorBlinkerCallback = PROCEDURE {DELEGATE}(sender, data: ANY ); 
 
 	Blinker* = OBJECT {EXCLUSIVE} 
 	VAR 
@@ -78,7 +78,7 @@ TYPE
 		eRun-: EventListenerInfo; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Run*(sender, par: ANY); 
+		PROCEDURE ^ Run*(sender, par: ANY ); 
 	END SystemCommand; 
 
 	Event* = OBJECT {EXCLUSIVE} (WMComponents.Component)
@@ -87,7 +87,7 @@ TYPE
 		eRun-: EventListenerInfo; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Run*(sender, par: ANY); 
+		PROCEDURE ^ Run*(sender, par: ANY ); 
 	END Event; 
 
 	Panel* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -98,8 +98,8 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ SetBlinker(sender, data: ANY); 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ SetBlinker(sender, data: ANY ); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ Finalize*; 
 	END Panel; 
 
@@ -116,9 +116,9 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ SetCaption*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ LinkChanged*(sender, data: ANY); 
+		PROCEDURE ^ LinkChanged*(sender, data: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: Canvas); 
 	END Label; 
 
@@ -148,7 +148,7 @@ TYPE
 		handler: WMEvents.EventListener; 
 		invert3d: BOOLEAN; 
 		repeater: Timer; 
-		userData*: ANY; 
+		userData*: ANY ; 
 		textAlignH-: WMProperties.Int32Property; 
 		textAlignV-: WMProperties.Int32Property; 
 		horizontalFit: WMProperties.BooleanProperty; 
@@ -159,9 +159,9 @@ TYPE
 		PROCEDURE ^ ExecuteClickHandler; 
 		PROCEDURE ^ ScaleFont*(height: SIZE; percent: INTEGER); 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ LinkChanged*(sender, data: ANY); 
+		PROCEDURE ^ LinkChanged*(sender, data: ANY ); 
 		PROCEDURE ^ ChangeModel(value: BOOLEAN); 
-		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY ); 
 		PROCEDURE ^ CheckRepeating(start: BOOLEAN); 
 		PROCEDURE ^ SetInvert3d*(invert: BOOLEAN); 
 		PROCEDURE ^ SetPressed*(down: BOOLEAN); 
@@ -188,7 +188,7 @@ TYPE
 		PROCEDURE ^ DrawHorizontalBackground(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ DrawVerticalBackground(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keyCode: SIZE); 
-		PROCEDURE ^ Click*(sender, par: ANY); 
+		PROCEDURE ^ Click*(sender, par: ANY ); 
 	END Button; 
 
 	Area = RECORD 
@@ -222,9 +222,9 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Resized*; 
-		PROCEDURE ^ LinkChanged*(sender, data: ANY); 
+		PROCEDURE ^ LinkChanged*(sender, data: ANY ); 
 		PROCEDURE ^ ChangeModel(value: SIZE); 
-		PROCEDURE ^ TimerCallback(sender, data: ANY); 
+		PROCEDURE ^ TimerCallback(sender, data: ANY ); 
 		PROCEDURE ^ CheckRepeating(start: BOOLEAN); 
 		PROCEDURE ^ Down(area: SIGNED8); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
@@ -235,11 +235,11 @@ TYPE
 		PROCEDURE ^ TrackerMove(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ RecacheImages; 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
-		PROCEDURE ^ DecPos*(sender, par: ANY); 
-		PROCEDURE ^ IncPos*(sender, par: ANY); 
-		PROCEDURE ^ PageUp*(sender, par: ANY); 
-		PROCEDURE ^ PageDown*(sender, par: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ DecPos*(sender, par: ANY ); 
+		PROCEDURE ^ IncPos*(sender, par: ANY ); 
+		PROCEDURE ^ PageUp*(sender, par: ANY ); 
+		PROCEDURE ^ PageDown*(sender, par: ANY ); 
 		PROCEDURE ^ UpdateLayout; 
 		PROCEDURE ^ GetButtonColor(area: SIGNED8): WMGraphics.Color; 
 		PROCEDURE ^ GetPageColor(area: SIGNED8): WMGraphics.Color; 
@@ -268,18 +268,18 @@ TYPE
 		ts, tp, lx, ly: SIZE; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ LinkChanged*(sender, link: ANY); 
+		PROCEDURE ^ LinkChanged*(sender, link: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ TrackerPointerDown(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ TrackerPointerUp(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ChangeModel; 
 		PROCEDURE ^ TrackerPointerMove(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
-		PROCEDURE ^ DecPos*(sender, par: ANY); 
-		PROCEDURE ^ IncPos*(sender, par: ANY); 
-		PROCEDURE ^ PageUp*(sender, par: ANY); 
-		PROCEDURE ^ PageDown*(sender, par: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ DecPos*(sender, par: ANY ); 
+		PROCEDURE ^ IncPos*(sender, par: ANY ); 
+		PROCEDURE ^ PageUp*(sender, par: ANY ); 
+		PROCEDURE ^ PageDown*(sender, par: ANY ); 
 		PROCEDURE ^ AlignSubComponents*; 
 		PROCEDURE ^ SetDirection; 
 		PROCEDURE ^ SetTrackerDirection; 
@@ -294,7 +294,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY ); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
@@ -308,7 +308,7 @@ TYPE
 		captionFont: WMGraphics.Font; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ AlignSubComponents*; 
 	END GroupPanel; 
@@ -327,14 +327,14 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ CheckClickHandler; 
-		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ FocusReceived*; 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ Click*(sender, par: ANY); 
+		PROCEDURE ^ Click*(sender, par: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Checkbox; 
 
@@ -346,9 +346,9 @@ TYPE
 		scaleImageI: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ SetImage*(sender, data: ANY); 
+		PROCEDURE ^ SetImage*(sender, data: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Image; 
 
@@ -362,10 +362,10 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ GetOffsets*(VAR x, y: SIZE); 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY); 
-		PROCEDURE ^ SetImage*(sender, data: ANY); 
+		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY ); 
+		PROCEDURE ^ SetImage*(sender, data: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END ImagePanel; 
 VAR 

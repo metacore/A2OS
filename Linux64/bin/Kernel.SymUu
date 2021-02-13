@@ -9,7 +9,7 @@ CONST
 TYPE 
 	Finalizer* = Heaps.Finalizer; 
 
-	Enumerator* = PROCEDURE {DELEGATE}(obj: ANY; VAR cont: BOOLEAN); 
+	Enumerator* = PROCEDURE {DELEGATE}(obj: ANY ; VAR cont: BOOLEAN); 
 
 	FinalizerNode = POINTER TO RECORD (Heaps.FinalizerNode)
 		nextObj{UNTRACED} : FinalizerNode; 
@@ -34,9 +34,9 @@ TYPE
 	VAR 
 		root: FinalizerNode; 
 
-		PROCEDURE ^ Add*(obj: ANY; fin: Finalizer); 
-		PROCEDURE ^ Remove*(obj: ANY); 
-		PROCEDURE ^ RemoveAll*(obj: ANY); 
+		PROCEDURE ^ Add*(obj: ANY ; fin: Finalizer); 
+		PROCEDURE ^ Remove*(obj: ANY ); 
+		PROCEDURE ^ RemoveAll*(obj: ANY ); 
 		PROCEDURE ^ Enumerate*(enum: Enumerator); 
 		PROCEDURE ^ EnumerateN*(enum: Enumerator); 
 		PROCEDURE ^  & Clear*; 

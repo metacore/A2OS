@@ -1,5 +1,5 @@
 MODULE CryptoMD5;
-	IMPORT S := SYSTEM, Hashes := CryptoHashes, U := CryptoUtils;
+	IMPORT Hashes := CryptoHashes, U := CryptoUtils;
 CONST 
 TYPE 
 	Buffer = ARRAY 16 OF SIGNED32; 

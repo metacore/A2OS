@@ -48,7 +48,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Finalize*; 
-		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ PointerLeave*; 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 

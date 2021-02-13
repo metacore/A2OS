@@ -23,9 +23,9 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^ LoadHandler(sender, data: ANY); 
+		PROCEDURE ^ LoadHandler(sender, data: ANY ); 
 		PROCEDURE ^ GetAnswer(VAR file: String; VAR b: BOOLEAN); 
-		PROCEDURE ^ CancelHandler(sender, data: ANY); 
+		PROCEDURE ^ CancelHandler(sender, data: ANY ); 
 	END LoadWindow; 
 
 	SaveWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -38,9 +38,9 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^ SaveHandler(sender, data: ANY); 
+		PROCEDURE ^ SaveHandler(sender, data: ANY ); 
 		PROCEDURE ^ GetAnswer(VAR file: String); 
-		PROCEDURE ^ CancelHandler(sender, data: ANY); 
+		PROCEDURE ^ CancelHandler(sender, data: ANY ); 
 	END SaveWindow; 
 
 	MessageWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -58,7 +58,7 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^ ButtonHandler*(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler*(sender, data: ANY ); 
 		PROCEDURE ^ Reply; 
 		PROCEDURE ^ Send; 
 		PROCEDURE ^ SaveDraft; 
@@ -82,8 +82,8 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^ SearchHandler(sender, data: ANY); 
-		PROCEDURE ^ CancelHandler(sender, data: ANY); 
+		PROCEDURE ^ SearchHandler(sender, data: ANY ); 
+		PROCEDURE ^ CancelHandler(sender, data: ANY ); 
 	END SearchWindow; 
 
 	PreferencesWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -98,8 +98,8 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^ OKHandler(sender, data: ANY); 
-		PROCEDURE ^ CancelHandler(sender, data: ANY); 
+		PROCEDURE ^ OKHandler(sender, data: ANY ); 
+		PROCEDURE ^ CancelHandler(sender, data: ANY ); 
 	END PreferencesWindow; 
 
 	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -125,25 +125,25 @@ TYPE
 		PROCEDURE ^ Resized*(width, height: SIZE); 
 		PROCEDURE ^ ResizeGrid; 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
-		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
-		PROCEDURE ^ DisplayMessage(sender, data: ANY); 
-		PROCEDURE ^ ChangeFolder(sender, data: ANY); 
-		PROCEDURE ^ FolderContextMenu(sender: ANY; x, y: SIZE); 
-		PROCEDURE ^ CreateDir(sender, data: ANY); 
-		PROCEDURE ^ RenameDir(sender, data: ANY); 
-		PROCEDURE ^ DeleteDir(sender, data: ANY); 
-		PROCEDURE ^ TargetDir(sender, data: ANY); 
-		PROCEDURE ^ SentFolder(sender, data: ANY); 
-		PROCEDURE ^ DraftFolder(sender, data: ANY); 
-		PROCEDURE ^ TrashBin(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY ); 
+		PROCEDURE ^ DisplayMessage(sender, data: ANY ); 
+		PROCEDURE ^ ChangeFolder(sender, data: ANY ); 
+		PROCEDURE ^ FolderContextMenu(sender: ANY ; x, y: SIZE); 
+		PROCEDURE ^ CreateDir(sender, data: ANY ); 
+		PROCEDURE ^ RenameDir(sender, data: ANY ); 
+		PROCEDURE ^ DeleteDir(sender, data: ANY ); 
+		PROCEDURE ^ TargetDir(sender, data: ANY ); 
+		PROCEDURE ^ SentFolder(sender, data: ANY ); 
+		PROCEDURE ^ DraftFolder(sender, data: ANY ); 
+		PROCEDURE ^ TrashBin(sender, data: ANY ); 
 		PROCEDURE ^ MessagesDragDropped(x, y: SIZE; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
-		PROCEDURE ^ MessagesStartDrag(sender, data: ANY); 
-		PROCEDURE ^ DragArrivedList(sender, data: ANY); 
-		PROCEDURE ^ MessageContextMenu(sender: ANY; x, y: SIZE); 
+		PROCEDURE ^ MessagesStartDrag(sender, data: ANY ); 
+		PROCEDURE ^ DragArrivedList(sender, data: ANY ); 
+		PROCEDURE ^ MessageContextMenu(sender: ANY ; x, y: SIZE); 
 		PROCEDURE ^ GetMessageSelection(): Classes.List; 
-		PROCEDURE ^ CopyMessages(sender, data: ANY); 
-		PROCEDURE ^ DeleteMessages(sender, data: ANY); 
-		PROCEDURE ^ RestoreMessages(sender, data: ANY); 
+		PROCEDURE ^ CopyMessages(sender, data: ANY ); 
+		PROCEDURE ^ DeleteMessages(sender, data: ANY ); 
+		PROCEDURE ^ RestoreMessages(sender, data: ANY ); 
 		PROCEDURE ^ Connect; 
 		PROCEDURE ^ Disconnect; 
 		PROCEDURE ^ Reload; 

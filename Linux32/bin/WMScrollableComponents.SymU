@@ -18,7 +18,7 @@ TYPE
 		PROCEDURE ^ SetLeftTop(dxf, dyf: FLOAT32); 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ InvalidateRect*(r: WMRectangles.Rectangle); 
-		PROCEDURE ^ InvalidateCommand*(sender, par: ANY); 
+		PROCEDURE ^ InvalidateCommand*(sender, par: ANY ); 
 		PROCEDURE ^ HandleInternal*(VAR msg: WMMessages.Message); 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
 	END ScrollPanel; 
@@ -34,8 +34,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ AlignSubComponents*; 
 		PROCEDURE ^ HandleInternal*(VAR msg: WMMessages.Message); 
-		PROCEDURE ^ FitScrollTarget(sender, par: ANY); 
-		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY); 
+		PROCEDURE ^ FitScrollTarget(sender, par: ANY ); 
+		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY ); 
 		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^ AddInternalComponent*(component: WMComponents.Component); 
 		PROCEDURE ^ AddContent*(content: XML.Content); 

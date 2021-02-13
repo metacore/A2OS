@@ -59,8 +59,8 @@ TYPE
 VAR 
 	trace: BOOLEAN; 
 
-	PROCEDURE ^ DisplayErrors*(par: ANY): ANY; 
-	PROCEDURE ^ DiscardAll*(par: ANY): ANY; 
+	PROCEDURE ^ DisplayErrors*(par: ANY ): ANY ; 
+	PROCEDURE ^ DiscardAll*(par: ANY ): ANY ; 
 	PROCEDURE ^ ToggleTrace*; 
 BEGIN
 END TCP.

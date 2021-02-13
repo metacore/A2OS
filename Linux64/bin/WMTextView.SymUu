@@ -153,7 +153,7 @@ TYPE
 
 	CursorBlinker* = OBJECT {EXCLUSIVE} 
 	VAR 
-		cursor: ANY; 
+		cursor: ANY ; 
 		callback: CursorBlinkerCallback; 
 		interval: SIGNED32; 
 		isVisible: BOOLEAN; 
@@ -161,10 +161,10 @@ TYPE
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Set*(cursor: ANY; callback: CursorBlinkerCallback); 
+		PROCEDURE ^ Set*(cursor: ANY ; callback: CursorBlinkerCallback); 
 		PROCEDURE ^ SetInterval*(ms: SIGNED32); 
-		PROCEDURE ^ Remove*(cursor: ANY); 
-		PROCEDURE ^ Show*(cursor: ANY); 
+		PROCEDURE ^ Remove*(cursor: ANY ); 
+		PROCEDURE ^ Show*(cursor: ANY ); 
 		PROCEDURE ^ Finalize; 
 	BEGIN{ACTIVE} 
 	END CursorBlinker; 
@@ -260,7 +260,7 @@ TYPE
 		oldFlags: SET; 
 		interclick: SIGNED32; 
 		lastTimeStamp: SIGNED32; 
-		oldObject, focusObject: ANY; 
+		oldObject, focusObject: ANY ; 
 		oldPos, focusPos: SIZE; 
 		objHasFocus: BOOLEAN; 
 
@@ -272,11 +272,11 @@ TYPE
 		PROCEDURE ^ InsertChar(char: Char32): SIGNED16; 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ SetScrollbars*(hScrollbar, vScrollbar: WMStandardComponents.Scrollbar); 
-		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY); 
+		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY ); 
 		PROCEDURE ^ UpdateScrollbars; 
 		PROCEDURE ^ BordersChanged; 
 		PROCEDURE ^ WrapModeChanged; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ SetText*(text: Texts.Text); 
 		PROCEDURE ^ SetSyntaxHighlighter*(highlighter: SyntaxHighlighter.Highlighter); 
@@ -286,17 +286,17 @@ TYPE
 		PROCEDURE ^ CreateHighlight*(): Highlight; 
 		PROCEDURE ^ RemoveHighlight*(x: Highlight); 
 		PROCEDURE ^ InvalidateRange(a, b: SIZE); 
-		PROCEDURE ^ HighlightChanged(sender, data: ANY); 
+		PROCEDURE ^ HighlightChanged(sender, data: ANY ); 
 		PROCEDURE ^ AddPositionMarker(pm: PositionMarker); 
 		PROCEDURE ^ CreatePositionMarker*(): PositionMarker; 
 		PROCEDURE ^ CreateCursor*(): Cursor; 
 		PROCEDURE ^ RemovePositionMarker*(x: PositionMarker); 
-		PROCEDURE ^ PositionMarkerChanged(sender, data: ANY); 
+		PROCEDURE ^ PositionMarkerChanged(sender, data: ANY ); 
 		PROCEDURE ^ CheckNumberOfLines; 
 		PROCEDURE ^ CheckCursor; 
 		PROCEDURE ^ CheckParagraphBegin(lineNr: SIZE; VAR height: SIZE); 
 		PROCEDURE ^ CheckParagraphEnd(lineNr: SIZE; VAR height: SIZE); 
-		PROCEDURE ^ TextChanged(sender, data: ANY); 
+		PROCEDURE ^ TextChanged(sender, data: ANY ); 
 		PROCEDURE ^ GetLineLeftIndent(linenr: SIZE): SIZE; 
 		PROCEDURE ^ FindLineByY*(firstLine, y: SIZE): SIZE; 
 		PROCEDURE ^ ViewToTextPos*(x, y: SIZE; VAR pos: SIZE); 
@@ -322,13 +322,13 @@ TYPE
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ TransformCoordinates(VAR x, y: SIZE; obj: WMComponents.VisualComponent); 
 		PROCEDURE ^ ChangePointer(pointerInfo: WMWindowManager.PointerInfo); 
-		PROCEDURE ^ HitObject(x, y: SIZE; VAR pos: SIZE; VAR obj: ANY): BOOLEAN; 
+		PROCEDURE ^ HitObject(x, y: SIZE; VAR pos: SIZE; VAR obj: ANY ): BOOLEAN; 
 		PROCEDURE ^ HitLink(x, y: SIZE; VAR pos: SIZE; VAR link: Texts.Link): BOOLEAN; 
 		PROCEDURE ^ LinkClick(link: Texts.Link); 
-		PROCEDURE ^ LinkClicked*(sender, data: ANY); 
+		PROCEDURE ^ LinkClicked*(sender, data: ANY ); 
 		PROCEDURE ^ FindLabel*(CONST label: ARRAY OF CHAR; VAR pos: SIZE): BOOLEAN; 
 		PROCEDURE ^ AutoStartDrag*; 
-		PROCEDURE ^ DragWasAccepted(sender, data: ANY); 
+		PROCEDURE ^ DragWasAccepted(sender, data: ANY ); 
 		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ ConfirmDrag*(accept: BOOLEAN; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
@@ -352,12 +352,12 @@ TYPE
 		PROCEDURE ^ FindCommandRange*(pos: SIZE; VAR start, end, nofLastSelections: SIZE); 
 		PROCEDURE ^ FindCommand*(pos: SIZE; VAR start, end: SIZE); 
 		PROCEDURE ^ StartCommand*(pos: SIZE; openFile: BOOLEAN); 
-		PROCEDURE ^ Start(sender, data: ANY); 
-		PROCEDURE ^ Open(sender, data: ANY); 
-		PROCEDURE ^ PieMenuStart(sender, data: ANY); 
-		PROCEDURE ^ PieMenuOpen(sender, data: ANY); 
-		PROCEDURE ^ PieMenuCopy(sender, data: ANY); 
-		PROCEDURE ^ PieMenuPaste(sender, data: ANY); 
+		PROCEDURE ^ Start(sender, data: ANY ); 
+		PROCEDURE ^ Open(sender, data: ANY ); 
+		PROCEDURE ^ PieMenuStart(sender, data: ANY ); 
+		PROCEDURE ^ PieMenuOpen(sender, data: ANY ); 
+		PROCEDURE ^ PieMenuCopy(sender, data: ANY ); 
+		PROCEDURE ^ PieMenuPaste(sender, data: ANY ); 
 		PROCEDURE ^ ShowContextMenu*(x, y: SIZE); 
 		PROCEDURE ^ HandleInternal*(VAR x: WMMessages.Message); 
 	END TextView; 
@@ -423,7 +423,7 @@ VAR
 
 	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; value, currentSize: SIZE; VAR newSize: SIZE); 
 	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
-	PROCEDURE ^ ChangeAttribute(VAR attr: Texts.Attributes; userData: ANY); 
+	PROCEDURE ^ ChangeAttribute(VAR attr: Texts.Attributes; userData: ANY ); 
 	PROCEDURE ^ GetFontFromAttr(info: Texts.FontInfo): WMGraphics.Font; 
 	PROCEDURE ^ IsSameFont(f1, f2: WMGraphics.Font): BOOLEAN; 
 	PROCEDURE ^ CheckFont(style: SyntaxHighlighter.Style; font: WMGraphics.Font; VAR fontCache: FontCache); 

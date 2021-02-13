@@ -23,11 +23,11 @@ TYPE
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: SIGNED32); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ SetChangeable(c: BOOLEAN); 
-		PROCEDURE ^ HandleChangeable(sender, data: ANY); 
-		PROCEDURE ^ HandleFullScreen(sender, par: ANY); 
-		PROCEDURE ^ HandleRemove(sender, par: ANY); 
+		PROCEDURE ^ HandleChangeable(sender, data: ANY ); 
+		PROCEDURE ^ HandleFullScreen(sender, par: ANY ); 
+		PROCEDURE ^ HandleRemove(sender, par: ANY ); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^ Change(sender, data: ANY); 
+		PROCEDURE ^ Change(sender, data: ANY ); 
 		PROCEDURE ^ Stop; 
 	BEGIN{ACTIVE} 
 	END Window; 

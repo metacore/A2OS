@@ -125,15 +125,15 @@ TYPE
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
-		PROCEDURE ^ HandleCommandMenuButton(sender, data: ANY); 
-		PROCEDURE ^ HandleCommandPopup(sender, data: ANY); 
-		PROCEDURE ^ HandleSendCommandButton(sender, data: ANY); 
-		PROCEDURE ^ HandleClearStatusButton(sender, data: ANY); 
-		PROCEDURE ^ HandleSearchButton(sender, data: ANY); 
-		PROCEDURE ^ HandleClearButton(sender, data: ANY); 
-		PROCEDURE ^ HandleCopyButton(sender, data: ANY); 
-		PROCEDURE ^ HandlePasteButton(sender, data: ANY); 
-		PROCEDURE ^ HandleXYButtons(sender, data: ANY); 
+		PROCEDURE ^ HandleCommandMenuButton(sender, data: ANY ); 
+		PROCEDURE ^ HandleCommandPopup(sender, data: ANY ); 
+		PROCEDURE ^ HandleSendCommandButton(sender, data: ANY ); 
+		PROCEDURE ^ HandleClearStatusButton(sender, data: ANY ); 
+		PROCEDURE ^ HandleSearchButton(sender, data: ANY ); 
+		PROCEDURE ^ HandleClearButton(sender, data: ANY ); 
+		PROCEDURE ^ HandleCopyButton(sender, data: ANY ); 
+		PROCEDURE ^ HandlePasteButton(sender, data: ANY ); 
+		PROCEDURE ^ HandleXYButtons(sender, data: ANY ); 
 		PROCEDURE ^ HandleShortcut(ucs: SIZE; flags: SET; keySym: SIZE): BOOLEAN; 
 		PROCEDURE ^ ExtKeyPressed(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ExtFocus(hasFocus: BOOLEAN); 
@@ -151,7 +151,7 @@ TYPE
 		PROCEDURE ^ SendXYModem(CONST filename: ARRAY OF CHAR; mode: SIGNED32); 
 		PROCEDURE ^ ReceiveXYModem(filename: ARRAY OF CHAR; mode: SIGNED32); 
 		PROCEDURE ^ ResetStatus; 
-		PROCEDURE ^ ToggleOpen(sender, data: ANY); 
+		PROCEDURE ^ ToggleOpen(sender, data: ANY ); 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: SIZE); 
 		PROCEDURE ^ ReportError(CONST title: ARRAY OF CHAR; res: INTEGER); 

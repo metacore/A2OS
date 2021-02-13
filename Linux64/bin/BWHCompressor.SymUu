@@ -1,0 +1,77 @@
+MODULE BWHCompressor;
+	IMPORT Streams, NextPrime, MoveToFront, BitStreams, Commands;
+CONST 
+	VersionTag = 61665; 
+	Sentinel = (MIN(SIGNED8) - 1); 
+	ByteSize = 8; 
+	ByteMax = (ASH(1, ByteSize) - 1); 
+	Nil = MAX(INTEGER); 
+	CodeBits = (ByteSize + 1); 
+	NbHuff = (ByteMax + 2); 
+	PosBits = 20; 
+	BufSize = (ASH(1, PosBits) - 2); 
+	maxFreq = 1346269; 
+	maxCompte = 1024; 
+	Rac1 = 23; 
+	Rac2 = 32; 
+	DMaxF1 = 2560; 
+	DMaxF = (DMaxF1 * 1000); 
+TYPE 
+	MTF = MoveToFront.MTF; 
+
+	Buffer = POINTER TO ARRAY OF CHAR; 
+
+	TSI = POINTER TO ARRAY OF INTEGER; 
+
+	Huffman = OBJECT 
+	VAR 
+		nbN, compte1: INTEGER; 
+		fils: TSI; 
+		freq, p, f, compte2, freqN, filsN: TSI; 
+
+		PROCEDURE ^ InitTree; 
+		PROCEDURE ^ Ajoute(c: INTEGER); 
+		PROCEDURE ^ MAJTree(c: INTEGER); 
+	END Huffman; 
+
+	HuffmanOut = OBJECT (Huffman)
+	VAR 
+		arch: BitStreams.BitWriter; 
+
+		PROCEDURE ^  & Initialize(archive: Streams.Writer); 
+		PROCEDURE ^ OutHuf(val: INTEGER); 
+	END HuffmanOut; 
+
+	HuffmanIn = OBJECT (Huffman)
+	VAR 
+		arch: BitStreams.BitReader; 
+
+		PROCEDURE ^  & Initialize(archive: Streams.Reader); 
+		PROCEDURE ^ InHuf(): INTEGER; 
+	END HuffmanIn; 
+
+	Compressor = OBJECT (HuffmanOut)
+	VAR 
+		buf: Buffer; 
+		hash, key, depth, posit, suf: TSI; 
+		available, nbHash, nbNodes: INTEGER; 
+		hash2: SET32; 
+
+		PROCEDURE ^  & Initialize(archive: Streams.Writer); 
+		PROCEDURE ^ Key(pere, c: INTEGER): INTEGER; 
+		PROCEDURE ^ Pere(key: INTEGER): INTEGER; 
+		PROCEDURE ^ Car(key: INTEGER): INTEGER; 
+		PROCEDURE ^ Search(skey: INTEGER; VAR pere, pos: INTEGER): BOOLEAN; 
+		PROCEDURE ^ SearchIns(root: INTEGER; c, pos: INTEGER): BOOLEAN; 
+		PROCEDURE ^ Replace(pere, p, q: INTEGER); 
+		PROCEDURE ^ First(root: INTEGER): INTEGER; 
+		PROCEDURE ^ Next(pos: INTEGER): INTEGER; 
+		PROCEDURE ^ AInit(size: INTEGER); 
+		PROCEDURE ^ Sort(size: INTEGER; VAR root: INTEGER); 
+	END Compressor; 
+
+	PROCEDURE ^ Compress*(input: Streams.Reader; output: Streams.Writer); 
+	PROCEDURE ^ Error(CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Expand*(input: Streams.Reader; output: Streams.Writer); 
+BEGIN
+END BWHCompressor.

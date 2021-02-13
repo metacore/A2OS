@@ -218,7 +218,7 @@ TYPE
 		module: Sections.Module; 
 		moduleScope: SyntaxTree.ModuleScope; 
 		awaitProcCounter, labelId, constId, caseId: SIGNED32; 
-		hiddenPointerType: SyntaxTree.RecordType; 
+		hiddenPointerType, anyRecordType: SyntaxTree.RecordType; 
 		delegatePointerType: SyntaxTree.RecordType; 
 		checker: SemanticChecker.Checker; 
 		backend: IntermediateBackend; 
@@ -328,6 +328,7 @@ TYPE
 		PROCEDURE ^ TrapC(br: ConditionalBranch; left, right: IntermediateCode.Operand; trapNo: SIGNED64); 
 		PROCEDURE ^ CheckSetElement(o: IntermediateCode.Operand); 
 		PROCEDURE ^ SetFromRange(x: SyntaxTree.RangeExpression): IntermediateCode.Operand; 
+		PROCEDURE ^ DesignateConditionalExpression(x: SyntaxTree.ConditionalExpression; VAR result: Operand); 
 		PROCEDURE ^ DesignateMathArrayExpression(x: SyntaxTree.MathArrayExpression; VAR result: Operand); 
 		PROCEDURE ^ TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; label: Label; reason: BOOLEAN; withPart: BOOLEAN); 
 		PROCEDURE ^ Error(position: Position; CONST s: ARRAY OF CHAR); 
@@ -395,7 +396,7 @@ TYPE
 		PROCEDURE ^ GetMathArrayIncrementAt(type: SyntaxTree.MathArrayType; CONST operand: Operand; dim: SIZE; check: BOOLEAN; VAR result: Operand); 
 		PROCEDURE ^ MathArrayLenOrIncr(type: SyntaxTree.MathArrayType; CONST operand: Operand; VAR dim: IntermediateCode.Operand; increment: BOOLEAN; check: BOOLEAN; VAR result: Operand); 
 		PROCEDURE ^ ArrayLen(type: SyntaxTree.ArrayType; VAR operand: Operand; VAR dim: IntermediateCode.Operand; VAR result: Operand); 
-		PROCEDURE ^ GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN; untraced: BOOLEAN): SyntaxTree.Variable; 
+		PROCEDURE ^ GetTemporaryVariable(kind: SyntaxTree.Kind; type: SyntaxTree.Type; register: BOOLEAN; untraced: BOOLEAN): SyntaxTree.Variable; 
 		PROCEDURE ^ GetMathArrayDescriptorType(dimensions: SIZE): SyntaxTree.Type; 
 		PROCEDURE ^ PushConstString(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ PushConstBoolean(b: BOOLEAN); 
@@ -642,6 +643,7 @@ VAR
 	PROCEDURE ^ ParametersSize(system: Global.System; procedureType: SyntaxTree.ProcedureType; isNested: BOOLEAN): SIGNED32; 
 	PROCEDURE ^ IsNested(procedure: SyntaxTree.Procedure): BOOLEAN; 
 	PROCEDURE ^ InCellScope(scope: SyntaxTree.Scope): BOOLEAN; 
+	PROCEDURE ^ InScope(scope: SyntaxTree.Scope; in: SyntaxTree.Scope): BOOLEAN; 
 	PROCEDURE ^ ProcedureParametersSize*(system: Global.System; procedure: SyntaxTree.Procedure): SIGNED32; 
 	PROCEDURE ^ ToMemoryUnits*(system: Global.System; size: SIZE): SIGNED32; 
 	PROCEDURE ^ Get*(): Backend.Backend; 

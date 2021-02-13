@@ -33,7 +33,7 @@ TYPE
 	VAR 
 		data-: Array1; 
 
-		PROCEDURE ^ Allocate*(size: SIGNED32; VAR adr: Index; VAR ptr: ANY); 
+		PROCEDURE ^ Allocate*(size: SIGNED32; VAR adr: Index; VAR ptr: ANY ); 
 		PROCEDURE ^ GetInfo*(VAR elementsize: Index); 
 		PROCEDURE ^ AlikeX*(): ArrayXdBytes.Array; 
 		PROCEDURE ^ Read*(R: DataIO.Reader); 

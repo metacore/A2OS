@@ -16,7 +16,7 @@ TYPE
 		PROCEDURE ^ SortNames; 
 	END NameList; 
 
-	PROCEDURE ^ NameComparator(left, right: ANY): BOOLEAN; 
+	PROCEDURE ^ NameComparator(left, right: ANY ): BOOLEAN; 
 	PROCEDURE ^ ParseARMInstructionSet*(context: Commands.Context); 
 	PROCEDURE ^ InstructionBits*(context: Commands.Context); 
 	PROCEDURE ^ Enum*(context: Commands.Context); 

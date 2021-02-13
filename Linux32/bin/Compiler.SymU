@@ -28,7 +28,7 @@ TYPE
 		objectFile*: Formats.ObjectFileFormat; 
 		findPC*: SectionName; 
 		documentation*, test*: Backend.Backend; 
-		srcPath, destPath: Files.FileName; 
+		rootPath, srcPath, destPath: Files.FileName; 
 		replacements: SemanticChecker.Replacement; 
 		platformCallingConvention: SyntaxTree.CallingConvention; 
 		definitions: Options.Parameter; 

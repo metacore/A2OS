@@ -20,7 +20,7 @@ TYPE
 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ ShowContextMenu*(x, y: SIZE); 
-		PROCEDURE ^ TestHandler(sender, data: ANY); 
+		PROCEDURE ^ TestHandler(sender, data: ANY ); 
 	END SomePanel; 
 VAR 
 	nofWindows: SIGNED32; 

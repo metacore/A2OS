@@ -1,7 +1,6 @@
 MODULE WMOSD;
 	IMPORT KernelLog, Modules, Kernel, Commands, Streams, Displays, Plugins, Random, Strings, WM := WMWindowManager, WMComponents, WMStandardComponents, WMGraphics;
 CONST 
-	DefaultFontName = \"Oberon"\; 
 	DefaultFontSize = 24; 
 	DefaultFontStyle = {}; 
 	DefaultHeight = 100; 

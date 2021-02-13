@@ -14,11 +14,11 @@ TYPE
 		device: SoundDevices.Driver; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ MuteChanged(sender, data: ANY); 
+		PROCEDURE ^ MuteChanged(sender, data: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ MixerChangeListener(channel: SoundDevices.MixerChannel); 
-		PROCEDURE ^ MixerChangeEvent(sender, data: ANY); 
-		PROCEDURE ^ VolChanged(sender, data: ANY); 
+		PROCEDURE ^ MixerChangeEvent(sender, data: ANY ); 
+		PROCEDURE ^ VolChanged(sender, data: ANY ); 
 		PROCEDURE ^ FindChannel(deviceName, channelName: ARRAY OF CHAR; VAR dev: SoundDevices.Driver; VAR channel: SoundDevices.MixerChannel); 
 		PROCEDURE ^ Finalize*; 
 	END Mixer; 

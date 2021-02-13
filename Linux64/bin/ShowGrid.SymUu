@@ -1,0 +1,10 @@
+MODULE ShowGrid;
+	IMPORT WMGrids, WMStringGrids, WMComponents, WMStandardComponents, WMGraphics, WMWindowManager;
+CONST 
+VAR 
+	g: WMStringGrids.StringGrid; 
+
+	PROCEDURE ^ Cast(CONST a: ARRAY [*] OF SIZE): POINTER TO ARRAY OF SIZE; 
+	PROCEDURE ^ Do*; 
+BEGIN
+END ShowGrid.

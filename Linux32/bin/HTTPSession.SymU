@@ -11,7 +11,7 @@ TYPE
 
 	SessionVariable* = POINTER TO RECORD 
 		name*: Strings.String; 
-		value*: ANY; 
+		value*: ANY ; 
 	END; 
 
 	Session* = OBJECT {EXCLUSIVE} 
@@ -21,9 +21,9 @@ TYPE
 		leaseTime*: FLOAT32; 
 
 		PROCEDURE ^  & Init*(sessionId: SessionId); 
-		PROCEDURE ^ GetVariableValue*(name: ARRAY OF CHAR): ANY; 
+		PROCEDURE ^ GetVariableValue*(name: ARRAY OF CHAR): ANY ; 
 		PROCEDURE ^ GetVariableByName*(name: ARRAY OF CHAR): SessionVariable; 
-		PROCEDURE ^ AddVariableValue*(name: ARRAY OF CHAR; value: ANY); 
+		PROCEDURE ^ AddVariableValue*(name: ARRAY OF CHAR; value: ANY ); 
 		PROCEDURE ^ RemoveVariable*(name: ARRAY OF CHAR); 
 		PROCEDURE ^ IncreaseLifeTime*; 
 	END Session; 
@@ -34,7 +34,7 @@ TYPE
 	VAR 
 		timer: Kernel.Timer; 
 		i, j: SIZE; 
-		pSession, pHandler: ANY; 
+		pSession, pHandler: ANY ; 
 		s: Session; 
 		expiredSessions: TFClasses.List; 
 		alive, dead: BOOLEAN; 

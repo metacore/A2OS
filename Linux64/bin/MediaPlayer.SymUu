@@ -59,7 +59,7 @@ TYPE
 
 	PointerDownHandler* = PROCEDURE {DELEGATE}(x, y: SIZE; keys: SET); 
 
-	ContextMenuHandler* = PROCEDURE {DELEGATE}(sender: ANY; x, y: SIZE); 
+	ContextMenuHandler* = PROCEDURE {DELEGATE}(sender: ANY ; x, y: SIZE); 
 
 	PlayerWindow* = OBJECT {EXCLUSIVE} (WMWindowManager.DoubleBufferWindow)
 	VAR 
@@ -152,7 +152,7 @@ TYPE
 		black: VideoBuffer; 
 	END; 
 
-	EofProc = PROCEDURE {DELEGATE}(sender, data: ANY); 
+	EofProc = PROCEDURE {DELEGATE}(sender, data: ANY ); 
 
 	EofHandler* = OBJECT {EXCLUSIVE} 
 	VAR 
@@ -211,15 +211,15 @@ TYPE
 		PROCEDURE ^ GetState*(): SIGNED32; 
 		PROCEDURE ^ CanSeek*(): BOOLEAN; 
 		PROCEDURE ^ GetCurrentFrame*(): VideoBuffer; 
-		PROCEDURE ^ ToggleFullScreen*(sender, data: ANY); 
+		PROCEDURE ^ ToggleFullScreen*(sender, data: ANY ); 
 		PROCEDURE ^ CheckWindow(context: Context); 
 		PROCEDURE ^ InitTime; 
 		PROCEDURE ^ GetContext(CONST uri: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: INTEGER): Context; 
 		PROCEDURE ^ FreeContext(context: Context); 
-		PROCEDURE ^ NoAction*(sender, data: ANY); 
-		PROCEDURE ^ Reset*(sender, data: ANY); 
-		PROCEDURE ^ Loop*(sender, data: ANY); 
-		PROCEDURE ^ Quit*(sender, data: ANY); 
+		PROCEDURE ^ NoAction*(sender, data: ANY ); 
+		PROCEDURE ^ Reset*(sender, data: ANY ); 
+		PROCEDURE ^ Loop*(sender, data: ANY ); 
+		PROCEDURE ^ Quit*(sender, data: ANY ); 
 		PROCEDURE ^ RenderAudio(c: Context); 
 		PROCEDURE ^ RenderVideo(c: Context); 
 		PROCEDURE ^ RenderVideoTransition(from, to: Context); 

@@ -11,7 +11,7 @@ TYPE
 
 	TransitionFade = WMTransitions.TransitionFade; 
 
-	ObjectArray = POINTER TO ARRAY OF ANY; 
+	ObjectArray = POINTER TO ARRAY OF ANY ; 
 
 	Slide* = OBJECT 
 	VAR 
@@ -31,13 +31,13 @@ TYPE
 		PROCEDURE ^  & New*(size: SIGNED32); 
 		PROCEDURE ^ GetCount*(): SIGNED32; 
 		PROCEDURE ^ Grow; 
-		PROCEDURE ^ Add*(x: ANY); 
-		PROCEDURE ^ Replace*(x, y: ANY); 
-		PROCEDURE ^ IndexOf*(x: ANY): SIGNED32; 
-		PROCEDURE ^ Remove*(x: ANY); 
+		PROCEDURE ^ Add*(x: ANY ); 
+		PROCEDURE ^ Replace*(x, y: ANY ); 
+		PROCEDURE ^ IndexOf*(x: ANY ): SIGNED32; 
+		PROCEDURE ^ Remove*(x: ANY ); 
 		PROCEDURE ^ RemoveByIndex*(index: SIGNED32); 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ GetItem*(i: SIGNED32): ANY; 
+		PROCEDURE ^ GetItem*(i: SIGNED32): ANY ; 
 		PROCEDURE ^ Lock*; 
 		PROCEDURE ^ Unlock*; 
 	END List; 
@@ -70,10 +70,10 @@ TYPE
 
 		PROCEDURE ^  & New*(data: SlideshowData); 
 		PROCEDURE ^ UpdatePreview; 
-		PROCEDURE ^ ButtonHandlerNext(sender, data: ANY); 
-		PROCEDURE ^ ButtonHandlerPrevious(sender, data: ANY); 
-		PROCEDURE ^ ButtonHandlerFirst(sender, data: ANY); 
-		PROCEDURE ^ ButtonHandlerLast(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandlerNext(sender, data: ANY ); 
+		PROCEDURE ^ ButtonHandlerPrevious(sender, data: ANY ); 
+		PROCEDURE ^ ButtonHandlerFirst(sender, data: ANY ); 
+		PROCEDURE ^ ButtonHandlerLast(sender, data: ANY ); 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 	END SlideshowNavigation; 

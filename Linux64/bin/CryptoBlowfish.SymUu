@@ -1,5 +1,5 @@
 MODULE CryptoBlowfish;
-	IMPORT Ciphers := CryptoCiphers, S := SYSTEM, U := CryptoUtils;
+	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils;
 CONST 
 	N = 16; 
 TYPE 
@@ -18,7 +18,7 @@ TYPE
 		s: TS; 
 		ivl, ivr: SET32; 
 
-		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIGNED32); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIZE); 
 		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 

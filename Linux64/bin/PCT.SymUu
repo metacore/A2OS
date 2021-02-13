@@ -97,7 +97,7 @@ TYPE
 		sorted-: Symbol; 
 		inScope-: Scope; 
 		dlink*: Symbol; 
-		info*: ANY; 
+		info*: ANY ; 
 		pos-: SIGNED32; 
 
 		PROCEDURE ^ Use; 
@@ -133,18 +133,18 @@ TYPE
 		PROCEDURE ^ CreateValue*(name: StringIndex; vis: SET; c: Const; pos: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ CreateType*(name: StringIndex; vis: SET; type: Struct; pos: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ CreateAlias*(ov: Variable; type: Struct; VAR res: INTEGER); 
-		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY; VAR res: INTEGER); 
+		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY ; VAR res: INTEGER); 
 		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ CreateHiddenVarName*(VAR name: StringIndex); 
 		PROCEDURE ^ CreateAwaitProcName*(VAR name: StringIndex; count: SIGNED32); 
-		PROCEDURE ^ FindHiddenVar*(pos: SIGNED32; info: ANY): Variable; 
+		PROCEDURE ^ FindHiddenVar*(pos: SIGNED32; info: ANY ): Variable; 
 	END Scope; 
 
 	WithScope* = OBJECT {EXCLUSIVE} (Scope)
 	VAR 
 		withGuard*, withSym*: Symbol; 
 
-		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY; VAR res: INTEGER); 
+		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY ; VAR res: INTEGER); 
 	END WithScope; 
 
 	ProcScope* = OBJECT {EXCLUSIVE} (Scope)
@@ -158,7 +158,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetCC*(cc: SIGNED32); 
-		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY; VAR res: INTEGER); 
+		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY ; VAR res: INTEGER); 
 		PROCEDURE ^ ReversePars*; 
 		PROCEDURE ^ CreatePar*(vis: SET; ref: BOOLEAN; name: StringIndex; flags: SET; type: Struct; pos: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ CreateReturnPar*(type: Struct; VAR res: INTEGER); 
@@ -172,7 +172,7 @@ TYPE
 		firstMeth-, lastMeth-: Method; 
 		totalVarCount-, totalProcCount-: SIGNED32; 
 
-		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY; VAR res: INTEGER); 
+		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY ; VAR res: INTEGER); 
 		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ IsProtected*(): BOOLEAN; 
 	END RecScope; 
@@ -186,7 +186,7 @@ TYPE
 		records-: Record; 
 		nofRecs-: SIGNED16; 
 
-		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY; VAR res: INTEGER); 
+		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY ; VAR res: INTEGER); 
 		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ AddModule*(alias: StringIndex; m: Module; pos: SIGNED32; VAR res: INTEGER); 
 	END ModScope; 
@@ -255,7 +255,7 @@ TYPE
 		long-: SIGNED64; 
 		set-: SET; 
 		bool-: BOOLEAN; 
-		ptr-: ANY; 
+		ptr-: ANY ; 
 		str-: POINTER TO PCS.String; 
 		owner-: Value; 
 	END; 
@@ -389,7 +389,7 @@ VAR
 	PROCEDURE ^ InitScope*(scope, parent: Scope; flags: SET; imported: BOOLEAN); 
 	PROCEDURE ^ Insert(scope: Scope; obj: Symbol; VAR res: INTEGER); 
 	PROCEDURE ^ Lookup(scope: Scope; name: StringIndex): Symbol; 
-	PROCEDURE ^ HiddenVarExists*(scope: Scope; info: ANY): BOOLEAN; 
+	PROCEDURE ^ HiddenVarExists*(scope: Scope; info: ANY ): BOOLEAN; 
 	PROCEDURE ^ IsVisible(vis: SET; current, search: Scope; localsearch: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ Find*(current, search: Scope; name: StringIndex; mode: SIGNED8; mark: BOOLEAN): Symbol; 
 	PROCEDURE ^ FindIndexer*(scope: RecScope; name: StringIndex): Method; 
@@ -413,7 +413,7 @@ VAR
 	PROCEDURE ^ NewSetConst*(s: SET): Const; 
 	PROCEDURE ^ NewFloatConst*(r: FLOAT64; type: Struct): Const; 
 	PROCEDURE ^ NewStringConst*(CONST str: ARRAY OF CHAR): Const; 
-	PROCEDURE ^ NewPtrConst*(p: ANY; type: Struct): Const; 
+	PROCEDURE ^ NewPtrConst*(p: ANY ; type: Struct): Const; 
 	PROCEDURE ^ MakeArrayType*(len: ARRAY OF SIGNED32; dim: SIGNED32; base: Struct; basesize: SIGNED32): Struct; 
 	PROCEDURE ^ NewArrayConst*(VAR data: ARRAY OF SYSTEM.BYTE; len: ARRAY OF SIGNED32; dim: SIGNED32; base: Struct; basesize: SIGNED32): Const; 
 	PROCEDURE ^ CheckArrayBase(a: Array; allowedMode: SET; VAR res: INTEGER); 

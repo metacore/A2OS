@@ -55,7 +55,7 @@ TYPE
 		PROCEDURE ^ FindElement*(CONST path: ARRAY OF CHAR): XML.Element; 
 		PROCEDURE ^ GetEntryPath(e: XML.Element; VAR path: ARRAY OF CHAR); 
 		PROCEDURE ^ AddEntryToList(e: XML.Element); 
-		PROCEDURE ^ Traverse(c: XML.Content; data: ANY); 
+		PROCEDURE ^ Traverse(c: XML.Content; data: ANY ); 
 		PROCEDURE ^ GetSubjectList*(VAR e: EntryList; VAR nof: SIGNED32); 
 		PROCEDURE ^ AddEntry*(CONST path: ARRAY OF CHAR; entry: XML.Element); 
 		PROCEDURE ^ DeleteEntry*(CONST path: ARRAY OF CHAR); 

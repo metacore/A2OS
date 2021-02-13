@@ -32,7 +32,7 @@ TYPE
 		nofDirectImports*: SIGNED32; 
 		icMod: ModuleInfo; 
 		icDecision: BOOLEAN; 
-		reference*: ANY; 
+		reference*: ANY ; 
 		group*, subgroup*: SIGNED32; 
 		subsystems*: SET; 
 
@@ -201,8 +201,8 @@ TYPE
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New(ml: ModuleList); 
-		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY); 
-		PROCEDURE ^ WritePDF(sender, data: ANY); 
+		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY ); 
+		PROCEDURE ^ WritePDF(sender, data: ANY ); 
 		PROCEDURE ^ Populate; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 

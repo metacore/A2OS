@@ -20,7 +20,7 @@ TYPE
 
 		PROCEDURE ^  & New(x, y, width, height: SIZE; grid: WMStringGrids.StringGrid; dropDownList: DropDownList); 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: SIGNED32); 
-		PROCEDURE ^ Clicked(sender, data: ANY); 
+		PROCEDURE ^ Clicked(sender, data: ANY ); 
 		PROCEDURE ^ PropagateSelection; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ SelectEntry(next: BOOLEAN); 
@@ -43,7 +43,7 @@ TYPE
 		entries: EntryArray; 
 		nofEntries: SIGNED32; 
 		lockLevel: SIGNED32; 
-		lockedBy: ANY; 
+		lockedBy: ANY ; 
 		viewChanged: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
@@ -84,14 +84,14 @@ TYPE
 		PROCEDURE ^ SelectKey*(key: SIGNED32); 
 		PROCEDURE ^ GetSelection*(): Entry; 
 		PROCEDURE ^ SetModel*(model: DropDownListModel); 
-		PROCEDURE ^ TextChanged(sender, data: ANY); 
-		PROCEDURE ^ ModelChanged(sender, data: ANY); 
+		PROCEDURE ^ TextChanged(sender, data: ANY ); 
+		PROCEDURE ^ ModelChanged(sender, data: ANY ); 
 		PROCEDURE ^ KeyPressed(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
-		PROCEDURE ^ ShowDropDownList(sender, data: ANY); 
+		PROCEDURE ^ ShowDropDownList(sender, data: ANY ); 
 		PROCEDURE ^ InitGrid; 
 		PROCEDURE ^ AddRow(entry: Entry; index: SIGNED32); 
 		PROCEDURE ^ UpdateGrid; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ SetMode(mode: SIGNED32); 
 	END DropDownList; 
 VAR 

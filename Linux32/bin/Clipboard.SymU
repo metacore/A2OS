@@ -35,7 +35,7 @@ VAR
 	PROCEDURE ^ ScanHexDigits(CONST buf: ARRAY OF CHAR; VAR pos: SIZE): UNSIGNED32; 
 	PROCEDURE ^ Utf8ToUnicode(CONST buf: ARRAY OF CHAR; VAR pos: SIZE): UNSIGNED32; 
 	PROCEDURE ^ ClearSelection; 
-	PROCEDURE ^ ClipboardChanged(sender, data: ANY); 
+	PROCEDURE ^ ClipboardChanged(sender, data: ANY ); 
 	PROCEDURE ^ PutToClipboard(text: Texts.Text); 
 	PROCEDURE ^ SendSelection(VAR event: X11.SelectionRequestEvent); 
 	PROCEDURE ^ GetFromClipboard(text: Texts.Text); 

@@ -88,17 +88,17 @@ TYPE
 		PROCEDURE ^ AlignSubComponents*; 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ CreateContent(): WMComponents.VisualComponent; 
-		PROCEDURE ^ ScrollY(sender, data: ANY); 
-		PROCEDURE ^ ScrollX(sender, data: ANY); 
+		PROCEDURE ^ ScrollY(sender, data: ANY ); 
+		PROCEDURE ^ ScrollX(sender, data: ANY ); 
 		PROCEDURE ^ Finalize*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
-		PROCEDURE ^ GridClicked(sender, x: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ GridClicked(sender, x: ANY ); 
 		PROCEDURE ^ UpdateDiskOverview(disk: Disk; top: SIZE; updateContent: BOOLEAN): WMStandardComponents.Panel; 
 		PROCEDURE ^ BuildVTable(VAR disk: Disk); 
 		PROCEDURE ^ BuildDiskPanel(VAR disk: Disk): WMStandardComponents.Panel; 
 		PROCEDURE ^ UpdateDiskPanel(disk: Disk); 
-		PROCEDURE ^ DiskEventHandler(sender, data: ANY); 
-		PROCEDURE ^ DiskPanelHandler(owner, par: ANY); 
+		PROCEDURE ^ DiskEventHandler(sender, data: ANY ); 
+		PROCEDURE ^ DiskPanelHandler(owner, par: ANY ); 
 		PROCEDURE ^ RebuildDiskOverview; 
 		PROCEDURE ^ BuildSkeleton; 
 		PROCEDURE ^ GetSizeString(nbrOfBlocks, blockSize: SIGNED32): Strings.String; 
@@ -134,12 +134,12 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ ScrollY(sender, data: ANY); 
+		PROCEDURE ^ ScrollY(sender, data: ANY ); 
 		PROCEDURE ^ GetSelection*(): Operation; 
-		PROCEDURE ^ GridClicked(sender, x: ANY); 
+		PROCEDURE ^ GridClicked(sender, x: ANY ); 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ UpdateGrid(updateContent: BOOLEAN); 
-		PROCEDURE ^ OperationEventHandler(sender, data: ANY); 
+		PROCEDURE ^ OperationEventHandler(sender, data: ANY ); 
 		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ PollStatus; 
@@ -153,8 +153,8 @@ TYPE
 		selectionLabel: WMStandardComponents.Label; 
 		selector: PartitionSelector; 
 
-		PROCEDURE ^ HandleButtons(sender, data: ANY); 
-		PROCEDURE ^ HandleSelection(sender, data: ANY); 
+		PROCEDURE ^ HandleButtons(sender, data: ANY ); 
+		PROCEDURE ^ HandleSelection(sender, data: ANY ); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*; 
 	END TestWindow; 

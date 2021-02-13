@@ -26,7 +26,7 @@ TYPE
 		PROCEDURE ^ Changed*; 
 		PROCEDURE ^ AddContent*(content: XML.Content); 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
-		PROCEDURE ^ Write*(w: Streams.Writer; context: ANY; level: SIGNED32); 
+		PROCEDURE ^ Write*(w: Streams.Writer; context: ANY ; level: SIGNED32); 
 	END Model; 
 
 	Boolean* = OBJECT {EXCLUSIVE} (Model)
@@ -159,7 +159,7 @@ TYPE
 		PROCEDURE ^ Set*(value: Texts.Text); 
 		PROCEDURE ^ SetReference*(value: Texts.Text); 
 		PROCEDURE ^ Get*(): Texts.Text; 
-		PROCEDURE ^ OnTextChanged(sender, data: ANY); 
+		PROCEDURE ^ OnTextChanged(sender, data: ANY ); 
 		PROCEDURE ^ SetAsString*(CONST string: ARRAY OF CHAR); 
 		PROCEDURE ^ GetAsString*(VAR string: ARRAY OF CHAR); 
 		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 

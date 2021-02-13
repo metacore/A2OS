@@ -488,9 +488,9 @@ TYPE
 					ELSE
 						styleEdit.SetAsString("Regular");
 					END;
-					Strings.IntToHexStr(cStyle.color, 7, tempString);
+					Strings.IntToHexStr(cStyle.color, 8, tempString);
 					colorEdit.SetAsString(tempString);
-					Strings.IntToHexStr(cStyle.bgColor, 7, tempString);
+					Strings.IntToHexStr(cStyle.bgColor, 8, tempString);
 					bgColEdit.SetAsString(tempString);
 				ELSIF (utilreader.attributes # NIL) THEN
 					famEdit.SetAsString(utilreader.attributes.fontInfo.name);
@@ -507,9 +507,9 @@ TYPE
 					ELSE
 						styleEdit.SetAsString("Regular");
 					END;
-					Strings.IntToHexStr(utilreader.attributes.color, 7, tempString);
+					Strings.IntToHexStr(utilreader.attributes.color, 8, tempString);
 					colorEdit.SetAsString(tempString);
-					Strings.IntToHexStr(utilreader.attributes.bgcolor, 7, tempString);
+					Strings.IntToHexStr(utilreader.attributes.bgcolor, 8, tempString);
 					bgColEdit.SetAsString(tempString);
 				END;
 				text.ReleaseWrite
@@ -611,7 +611,7 @@ TYPE
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
-			Strings.IntToHexStr(result, 7, colorString);
+			Strings.IntToHexStr(result, 8, colorString);
 			colorEdit.SetAsString(colorString);
 		END ColorPopupHandler;
 
@@ -629,7 +629,7 @@ TYPE
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
-			Strings.IntToHexStr(result, 7, colorString);
+			Strings.IntToHexStr(result, 8, colorString);
 			bgColEdit.SetAsString(colorString);
 		END BGColorPopupHandler;
 
@@ -1060,9 +1060,9 @@ TYPE
 				cLeading.SetAsString(tempString);
 				Strings.FloatToStr(currentCStyle.baselineShift, 0,4,0, tempString);
 				cBaselineShift.SetAsString(tempString);
-				Strings.IntToHexStr(currentCStyle.color, 7, tempString);
+				Strings.IntToHexStr(currentCStyle.color, 8, tempString);
 				cColor.SetAsString(tempString);
-				Strings.IntToHexStr(currentCStyle.bgColor, 7, tempString);
+				Strings.IntToHexStr(currentCStyle.bgColor, 8, tempString);
 				cBackColor.SetAsString(tempString);
 				Strings.FloatToStr(FP1616.FixpToFloat(currentCStyle.tracking), 0,4,0, tempString);
 				cTracking.SetAsString(tempString);
@@ -1193,13 +1193,13 @@ TYPE
 			ELSIF (tempEditor = cColor) THEN
 				Strings.HexStrToInt(tempString, tempInt, res);
 				tempCStyle.color := tempInt;
-				Strings.IntToHexStr(tempInt, 7, tempString);
+				Strings.IntToHexStr(tempInt, 8, tempString);
 				cColor.SetAsString(tempString);
 				previewLabel.textColor.Set(tempInt); previewLabel.Invalidate;
 			ELSIF (tempEditor = cBackColor) THEN
 				Strings.HexStrToInt(tempString, tempInt, res);
 				tempCStyle.bgColor := tempInt;
-				Strings.IntToHexStr(tempInt, 7, tempString);
+				Strings.IntToHexStr(tempInt, 8, tempString);
 				cBackColor.SetAsString(tempString);
 				previewLabel.fillColor.Set(tempInt); previewLabel.Invalidate;
 			ELSIF (tempEditor = cTracking) THEN
@@ -1643,13 +1643,13 @@ TYPE
 			cColor.GetAsString(tempString);
 			Strings.HexStrToInt(tempString, tempInt, res);
 			tempCStyle.color := tempInt;
-			Strings.IntToHexStr(tempInt, 7, tempString);
+			Strings.IntToHexStr(tempInt, 8, tempString);
 			cColor.SetAsString(tempString);
 			previewLabel.textColor.Set(tempInt); previewLabel.Invalidate;
 			cBackColor.GetAsString(tempString);
 			Strings.HexStrToInt(tempString, tempInt, res);
 			tempCStyle.bgColor := tempInt;
-			Strings.IntToHexStr(tempInt, 7, tempString);
+			Strings.IntToHexStr(tempInt, 8, tempString);
 			cBackColor.SetAsString(tempString);
 			previewLabel.fillColor.Set(tempInt); previewLabel.Invalidate;
 			cTracking.GetAsString(tempString);
@@ -1760,7 +1760,7 @@ TYPE
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
-			Strings.IntToHexStr(result, 7, colorString);
+			Strings.IntToHexStr(result, 8, colorString);
 			cColor.SetAsString(colorString);
 			tempCStyle.color := result;
 			previewLabel.textColor.Set(result); previewLabel.Invalidate;
@@ -1780,7 +1780,7 @@ TYPE
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
-			Strings.IntToHexStr(result, 7, colorString);
+			Strings.IntToHexStr(result, 8, colorString);
 			cBackColor.SetAsString(colorString);
 			tempCStyle.bgColor := result;
 			previewLabel.fillColor.Set(result); previewLabel.Invalidate;
@@ -1808,8 +1808,8 @@ BEGIN
 	END;
 	Strings.IntToStr(styleInt, string); Strings.Append(name, string); Strings.Append(name, " ");
 	Strings.IntToStr(0, string); Strings.Append(name, string); Strings.Append(name, " ");
-	Strings.IntToHexStr(fgColor, 7, string); Strings.Append(name, string); Strings.Append(name, " ");
-	Strings.IntToHexStr(bgColor, 7, string); Strings.Append(name, string);
+	Strings.IntToHexStr(fgColor, 8, string); Strings.Append(name, string); Strings.Append(name, " ");
+	Strings.IntToHexStr(bgColor, 8, string); Strings.Append(name, string);
 END CreateStyleName;
 
 PROCEDURE EnsureAttribute(VAR attr : Texts.Attributes);

@@ -68,17 +68,17 @@ TYPE
 
 	TrapHandler* = PROCEDURE {DELEGATE}():BOOLEAN; 
 
-	MsgQ = OBJECT 
-	VAR 
+	MsgQ = RECORD 
 		head, num: SIZE; 
 		msgQ: POINTER TO ARRAY OF Message; 
 		owner: MsgSequencer; 
 
-		PROCEDURE ^  & InitQ(o: MsgSequencer; size: SIZE); 
+		PROCEDURE ^ Init(o: MsgSequencer; size: SIZE); 
 		PROCEDURE ^ Grow(trace: BOOLEAN); 
-		PROCEDURE ^ Add*(VAR msg: Message; debug: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ Add(VAR msg: Message; debug: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ Get(VAR msg: Message; debug: BOOLEAN): BOOLEAN; 
-	END MsgQ; 
+	END
+	; 
 
 	MsgSequencer* = OBJECT {EXCLUSIVE} 
 	VAR 

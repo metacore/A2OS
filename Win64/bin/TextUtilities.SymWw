@@ -319,6 +319,7 @@ VAR
 	PROCEDURE ^ DetectTextStream*(in: Streams.Reader; VAR format: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ DecodeAuto*(CONST fileName: ARRAY OF CHAR; VAR format: ARRAY OF CHAR): Codecs.TextDecoder; 
 	PROCEDURE ^ LoadTextStream*(in: Streams.Reader; CONST format: ARRAY OF CHAR; VAR res: INTEGER): Text; 
+	PROCEDURE ^ LoadTextAuto*(text: Text; CONST fileName: ARRAY OF CHAR; VAR format: Format; VAR res: INTEGER): Text; 
 	PROCEDURE ^ Load*(text: Text; CONST filename, format: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ LoadAscii*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ LoadUTF8*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 

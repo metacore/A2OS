@@ -177,6 +177,8 @@ VAR
 
 	PROCEDURE ^ OpenWriter*(VAR b: Writer; send: Sender); 
 	PROCEDURE ^ OpenReader*(VAR b: Reader; receive: Receiver); 
+	PROCEDURE ^ OpenStringWriter*(VAR b: StringWriter; size: SIZE); 
+	PROCEDURE ^ OpenStringReader*(VAR b: StringReader; CONST string: ARRAY OF CHAR); 
 	PROCEDURE ^ Copy*(r: Reader; w: Writer); 
 BEGIN
 END Streams.

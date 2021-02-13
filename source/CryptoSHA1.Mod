@@ -14,7 +14,7 @@ TYPE
 			hash: State;
 			Nl, Nh: SIZE;
 			cdata: ARRAY BlockSize OF CHAR;	(* pending data *)
-			cn: SIZE	(* number of chars in data *)
+			cn: SIZE;	(* number of bytes in cdata *)
 
 
 		PROCEDURE &Init*;

@@ -37,11 +37,11 @@ TYPE
 		PROCEDURE ^ Update; 
 		PROCEDURE ^ IsComponentUsed(glyph: WMCCGFonts.Glyph; code: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ Filter(nofSubs: SIGNED32; CONST subs: ARRAY OF SIGNED32); 
-		PROCEDURE ^ ToggleFilter(sender, data: ANY); 
-		PROCEDURE ^ NewCharacter(sender, data: ANY); 
-		PROCEDURE ^ NewCode(sender, data: ANY); 
-		PROCEDURE ^ SelectChar(sender, data: ANY); 
-		PROCEDURE ^ FilterSelection(sender, data: ANY); 
+		PROCEDURE ^ ToggleFilter(sender, data: ANY ); 
+		PROCEDURE ^ NewCharacter(sender, data: ANY ); 
+		PROCEDURE ^ NewCode(sender, data: ANY ); 
+		PROCEDURE ^ SelectChar(sender, data: ANY ); 
+		PROCEDURE ^ FilterSelection(sender, data: ANY ); 
 		PROCEDURE ^ IsInFilterArray(ucs: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ AddToFilter(ucs: SIGNED32); 
 		PROCEDURE ^ RemoveFromFilter(ucs: SIGNED32); 

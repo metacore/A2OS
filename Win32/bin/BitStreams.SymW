@@ -1,0 +1,26 @@
+MODULE BitStreams;
+	IMPORT Streams;
+TYPE 
+	BitReader* = OBJECT 
+	VAR 
+		r: Streams.Reader; 
+		byte, bit: INTEGER; 
+
+		PROCEDURE ^  & New*(arch: Streams.Reader); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ InBit*(): INTEGER; 
+		PROCEDURE ^ InBits*(n: INTEGER): INTEGER; 
+	END BitReader; 
+
+	BitWriter* = OBJECT 
+	VAR 
+		w: Streams.Writer; 
+		byte, bit: INTEGER; 
+
+		PROCEDURE ^  & Init*(arch: Streams.Writer); 
+		PROCEDURE ^ OutBit*(b: INTEGER); 
+		PROCEDURE ^ OutBits*(c, n: INTEGER); 
+		PROCEDURE ^ Finish*; 
+	END BitWriter; 
+BEGIN
+END BitStreams.

@@ -9,7 +9,15 @@ TYPE
 		name*: String; 
 		size*: SIZE; 
 		style*: SET; 
+
+		PROCEDURE ^  & Init*; 
 	END FontInfo; 
+
+	FontAlias = ARRAY 32 OF CHAR; 
+
+	FontInfoArray = POINTER TO ARRAY OF FontInfo; 
+
+	FontAliasArray = POINTER TO ARRAY OF FontAlias; 
 
 	FontFactory = PROCEDURE (info: FontInfo):WMGraphics.Font; 
 
@@ -33,19 +41,24 @@ TYPE
 		defaultFontName: ARRAY 256 OF CHAR; 
 		defaultFontSize: SIGNED32; 
 		defaultFontStyle: SET; 
+		systemFontInfo: FontInfoArray; 
+		systemFontAlias: FontAliasArray; 
+		nofSystemFonts: SIZE; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ MatchExact(obj: ANY; VAR cont: BOOLEAN); 
-		PROCEDURE ^ MatchSimiliar(obj: ANY; VAR cont: BOOLEAN); 
+		PROCEDURE ^ MatchExact(obj: ANY ; VAR cont: BOOLEAN); 
+		PROCEDURE ^ MatchSimiliar(obj: ANY ; VAR cont: BOOLEAN); 
 		PROCEDURE ^ AddExact(str: String); 
 		PROCEDURE ^ AddApproximate(str: String); 
 		PROCEDURE ^ GetConfig; 
 		PROCEDURE ^ Load(ln: String; fi: FontInfo): WMGraphics.Font; 
 		PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): WMGraphics.Font; 
+		PROCEDURE ^ GetSystemFont*(CONST alias: ARRAY OF CHAR): WMGraphics.Font; 
 	END FontManager; 
 VAR 
 	fm: FontManager; 
 
+	PROCEDURE ^ AddSystemFont(manager: FontManager; section: XML.Element); 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ Load; 
 	PROCEDURE ^ Cleanup; 

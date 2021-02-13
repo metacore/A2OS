@@ -133,8 +133,8 @@ VAR
 	PROCEDURE ^ GenInline(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
 	PROCEDURE ^ GenCase(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
 	PROCEDURE ^ GenCaseLine(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
-	PROCEDURE ^ DumpCode(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32; context: ANY); 
-	PROCEDURE ^ Optimize(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32; context: ANY); 
+	PROCEDURE ^ DumpCode(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32; context: ANY ); 
+	PROCEDURE ^ Optimize(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32; context: ANY ); 
 	PROCEDURE ^ DoOptimize(code: PCLIR.Code); 
 	PROCEDURE ^ Init(): BOOLEAN; 
 	PROCEDURE ^ Done(VAR result: INTEGER); 

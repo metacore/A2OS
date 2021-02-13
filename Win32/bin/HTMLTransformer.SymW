@@ -2,12 +2,6 @@ MODULE HTMLTransformer;
 	IMPORT WebBrowserComponents, XMLTransformer, Strings, XML, XMLObjects, DynamicStrings, UTF8Strings, WMGraphics, KernelLog, WMEvents, WMCharCodes, WMComponents, WMRectangles, WMTextView, TextUtilities, Texts, WMStandardComponents, WMMessages, Streams, WMEditors, WMPopups, Messages := WMMessages;
 CONST 
 	verbose = TRUE; 
-	defSerif = \"TimesNewRoman"\; 
-	defSansSerif = \"Arial"\; 
-	defCursive = \"ComicSansMS"\; 
-	defFantasy = \"Arial"\; 
-	defMonospace = \"CourierNew"\; 
-	defaultFont = \"Oberon"\; 
 	cText = 0; 
 	cNewLine = 1; 
 	cParagraph = 2; 
@@ -182,8 +176,8 @@ TYPE
 		firstRadioButtonGroup, lastRadioButtonGroup: RadioButtonGroup; 
 
 		PROCEDURE ^  & Init*(action: String; loadLink: WMEvents.EventListener); 
-		PROCEDURE ^ Send(sender, par: ANY); 
-		PROCEDURE ^ Reset(sender, par: ANY); 
+		PROCEDURE ^ Send(sender, par: ANY ); 
+		PROCEDURE ^ Reset(sender, par: ANY ); 
 		PROCEDURE ^ AddFormComponent(comp: FormComponent); 
 		PROCEDURE ^ AddRadioButton(radioButton: FormRadioButton); 
 	END Form; 
@@ -208,7 +202,7 @@ TYPE
 		PROCEDURE ^  & Init*(name: String; value: String; proc: WMEvents.EventListener); 
 		PROCEDURE ^ IsSuccessful(): BOOLEAN; 
 		PROCEDURE ^ GetValue(): String; 
-		PROCEDURE ^ Click(sender, par: ANY); 
+		PROCEDURE ^ Click(sender, par: ANY ); 
 	END FormButton; 
 
 	FormCheckbox = OBJECT (FormComponent)
@@ -244,7 +238,7 @@ TYPE
 		init: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(name: String; value: String; checked: BOOLEAN); 
-		PROCEDURE ^ Clicked(sender, par: ANY); 
+		PROCEDURE ^ Clicked(sender, par: ANY ); 
 	END FormRadioButton; 
 
 	RadioButtonGroup = OBJECT (FormComponent)
@@ -277,7 +271,7 @@ TYPE
 
 		PROCEDURE ^  & Init*(name: String); 
 		PROCEDURE ^ MenuHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ MenuPopupHandler(sender, data: ANY); 
+		PROCEDURE ^ MenuPopupHandler(sender, data: ANY ); 
 		PROCEDURE ^ NewItem(value: String; label: String; selected: BOOLEAN); 
 		PROCEDURE ^ IsSuccessful(): BOOLEAN; 
 		PROCEDURE ^ GetValue(): String; 
@@ -298,6 +292,9 @@ VAR
 	cursive: ARRAY 64 OF CHAR; 
 	fantasy: ARRAY 64 OF CHAR; 
 	monospace: ARRAY 64 OF CHAR; 
+	defaultFont: ARRAY 64 OF CHAR; 
+	res: INTEGER; 
+	systemFont: WMGraphics.Font; 
 
 	PROCEDURE ^ EncodeLinkData(link, target, url: String): String; 
 	PROCEDURE ^ Utf82UrlEncodedUtf8*(CONST in: ARRAY OF CHAR): String; 

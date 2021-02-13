@@ -16,7 +16,7 @@ VAR
 	PROCEDURE ^ WriteString*(str: ARRAY OF CHAR; VAR name: ARRAY OF CHAR; VAR pos: SIGNED32); 
 	PROCEDURE ^ WriteHex*(val: ADDRESS; VAR name: ARRAY OF CHAR; VAR pos: SIGNED32); 
 	PROCEDURE ^ GetProcedure*(pc: ADDRESS; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ GetTypeName*(p: ANY; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ GetTypeName*(p: ANY ; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ ToDo*(class: SIGNED32); 
 	PROCEDURE ^ ResetToDo*; 
 BEGIN

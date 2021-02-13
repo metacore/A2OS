@@ -18,6 +18,6 @@ TYPE
 	PROCEDURE ^ LockOberon*; 
 	PROCEDURE ^ UnlockOberon*; 
 	PROCEDURE ^ StretchedPict*(M: Display3.Mask; pict: Pictures.Picture; x, y, w, h, dx, dy, dw, dh, mode: SIGNED16); 
-	PROCEDURE ^ TypeOf*(p: ANY): Type; 
+	PROCEDURE ^ TypeOf*(p: ANY ): Type; 
 BEGIN
 END vyPortability.

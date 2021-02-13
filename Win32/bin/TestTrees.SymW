@@ -13,10 +13,10 @@ TYPE
 		editor: WMEditors.Editor; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ NodeSelected(sender, data: ANY); 
-		PROCEDURE ^ DeleteNode(sender, data: ANY); 
-		PROCEDURE ^ RenameNode(sender, data: ANY); 
-		PROCEDURE ^ AddNode(sender, data: ANY); 
+		PROCEDURE ^ NodeSelected(sender, data: ANY ); 
+		PROCEDURE ^ DeleteNode(sender, data: ANY ); 
+		PROCEDURE ^ RenameNode(sender, data: ANY ); 
+		PROCEDURE ^ AddNode(sender, data: ANY ); 
 		PROCEDURE ^ FillTree; 
 		PROCEDURE ^ Close*; 
 	END Window; 

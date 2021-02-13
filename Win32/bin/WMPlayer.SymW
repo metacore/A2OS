@@ -29,7 +29,7 @@ TYPE
 		playBtn, stepBtn, stopBtn, pauseBtn, rewBtn, ffBtn, resetBtn: WMStandardComponents.Button; 
 		owner: Window; 
 
-		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY ); 
 		PROCEDURE ^  & New(owner: Window); 
 	END Control; 
 
@@ -49,12 +49,12 @@ TYPE
 
 		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ GenerateControl*(): ANY; 
+		PROCEDURE ^ GenerateControl*(): ANY ; 
 		PROCEDURE ^ Open*(CONST fileName: ARRAY OF CHAR); 
-		PROCEDURE ^ ButtonHandler*(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler*(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^ SliderSearch(sender, data: ANY); 
+		PROCEDURE ^ SliderSearch(sender, data: ANY ); 
 		PROCEDURE ^ Update*(status, pos, maxpos, time, displayTime: SIGNED32); 
 		PROCEDURE ^ SetUpController*(setup: MediaPlayer.Setup); 
 	END Window; 

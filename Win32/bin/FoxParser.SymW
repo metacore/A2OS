@@ -20,7 +20,7 @@ TYPE
 		token-: Scanner.Token; 
 		diagnostics: Diagnostics.Diagnostics; 
 		currentScope: SyntaxTree.Scope; 
-		recentCommentItem: ANY; 
+		recentCommentItem: ANY ; 
 		recentLine: Streams.Position; 
 		recentComment: SyntaxTree.Comment; 
 		moduleScope: SyntaxTree.ModuleScope; 
@@ -72,6 +72,8 @@ TYPE
 		PROCEDURE ^ ArrayLiteral(): SyntaxTree.Expression; 
 		PROCEDURE ^ Term(): SyntaxTree.Expression; 
 		PROCEDURE ^ SimpleExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ RelationalExpression*(): SyntaxTree.Expression; 
+		PROCEDURE ^ ConditionalExpression*(): SyntaxTree.Expression; 
 		PROCEDURE ^ Expression*(): SyntaxTree.Expression; 
 		PROCEDURE ^ Case(caseStatement: SyntaxTree.CaseStatement); 
 		PROCEDURE ^ Statement*(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN; 
@@ -81,6 +83,7 @@ TYPE
 		PROCEDURE ^ Body(scope: SyntaxTree.ProcedureScope): SyntaxTree.Body; 
 		PROCEDURE ^ BodyProcedure(parentScope: SyntaxTree.Scope): SyntaxTree.Procedure; 
 		PROCEDURE ^ ProcedureType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.ProcedureType; 
+		PROCEDURE ^ AnyType(position: Position): SyntaxTree.Type; 
 		PROCEDURE ^ ObjectType(position: Position; name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
 		PROCEDURE ^ CellType(position: Position; name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope; isCellNet: BOOLEAN): SyntaxTree.Type; 
 		PROCEDURE ^ PointerType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.PointerType; 
@@ -94,7 +97,7 @@ TYPE
 		PROCEDURE ^ ParameterDeclaration(procedureType: SyntaxTree.ProcedureType; parentScope: SyntaxTree.Scope); 
 		PROCEDURE ^ FormalParameters(procedureType: SyntaxTree.ProcedureType; parentScope: SyntaxTree.Scope); 
 		PROCEDURE ^ Flags(): SyntaxTree.Modifier; 
-		PROCEDURE ^ SetNextInComment(c: SyntaxTree.Comment; this: ANY); 
+		PROCEDURE ^ SetNextInComment(c: SyntaxTree.Comment; this: ANY ); 
 		PROCEDURE ^ CommentSymbol(symbol: SyntaxTree.Symbol); 
 		PROCEDURE ^ CommentStatement(symbol: SyntaxTree.Statement); 
 		PROCEDURE ^ CommentCasePart(symbol: SyntaxTree.CasePart); 

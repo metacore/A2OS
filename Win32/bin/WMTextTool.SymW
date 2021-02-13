@@ -1,8 +1,8 @@
 MODULE WMTextTool;
-	IMPORT Modules, Streams, Commands, Texts, Strings, WMComponents, WMRestorable, WMEditors, WMPopups, WMRectangles, WMGraphics, WMMessages, WMStandardComponents, WM := WMWindowManager, XML, XMLObjects;
+	IMPORT Modules, Streams, Commands, Texts, Strings, WMComponents, WMRestorable, WMEditors, WMPopups, WMRectangles, WMGraphics, WMMessages, WMStandardComponents, WM := WMWindowManager, XML;
 CONST 
-	WindowWidth = 122; 
-	WindowHeight = 220; 
+	WindowWidth = 160; 
+	WindowHeight = 240; 
 	ChangeFont = {0}; 
 	ChangeSize = {1}; 
 	ChangeStyle = {2}; 
@@ -28,6 +28,7 @@ TYPE
 
 	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
+		leftPanel, rightPanel: WMStandardComponents.Panel; 
 		bold, lock, comment, stupid, assert, preferred, debug, normal, incSize, decSize, get, apply: WMStandardComponents.Button; 
 		famEdit, sizeEdit, styleEdit, colorEdit, bgColEdit: WMEditors.TextField; 
 		famCheck, sizeCheck, styleCheck, colorCheck, bgColCheck: WMStandardComponents.Checkbox; 
@@ -36,16 +37,18 @@ TYPE
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
-		PROCEDURE ^ GetStyle(sender, data: ANY); 
-		PROCEDURE ^ SetStyle(sender, data: ANY); 
-		PROCEDURE ^ SetCustomStyle(sender, data: ANY); 
+		PROCEDURE ^ Resizing*(VAR width, height: SIZE); 
+		PROCEDURE ^ Resized*(width, height: SIZE); 
+		PROCEDURE ^ GetStyle(sender, data: ANY ); 
+		PROCEDURE ^ SetStyle(sender, data: ANY ); 
+		PROCEDURE ^ SetCustomStyle(sender, data: ANY ); 
 		PROCEDURE ^ StyleDrop(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ StylePopupHandler(sender, data: ANY); 
+		PROCEDURE ^ StylePopupHandler(sender, data: ANY ); 
 		PROCEDURE ^ ColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ColorPopupHandler(result: WMGraphics.Color); 
 		PROCEDURE ^ BGColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ BGColorPopupHandler(result: WMGraphics.Color); 
-		PROCEDURE ^ UpdateColors(sender, data: ANY); 
+		PROCEDURE ^ UpdateColors(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ LoadData(elem: XML.Element); 
 		PROCEDURE ^ StoreData(): XML.Element; 
@@ -56,7 +59,7 @@ VAR
 
 	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; mode, value: SIGNED32; currentSize: SIZE; VAR newSize: SIZE); 
 	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
-	PROCEDURE ^ ChangeAttribute(VAR attr: Texts.Attributes; userData: ANY); 
+	PROCEDURE ^ ChangeAttribute(VAR attr: Texts.Attributes; userData: ANY ); 
 	PROCEDURE ^ ApplyChange(changeInfo: ChangeInfo); 
 	PROCEDURE ^ SetFontSize*(context: Commands.Context); 
 	PROCEDURE ^ SetFontStyle*(context: Commands.Context); 

@@ -226,8 +226,8 @@ TYPE
 		PROCEDURE ^ Enter(c: XML.Container); 
 		PROCEDURE ^ Register(c: XML.Container); 
 		PROCEDURE ^ Exit(VAR c: XML.Container); 
-		PROCEDURE ^ Use(o: ANY); 
-		PROCEDURE ^ Used(o: ANY): BOOLEAN; 
+		PROCEDURE ^ Use(o: ANY ); 
+		PROCEDURE ^ Used(o: ANY ): BOOLEAN; 
 		PROCEDURE ^ AddSymbol(CONST name: ARRAY OF CHAR): Symbol; 
 		PROCEDURE ^ FindElement(CONST name: ARRAY OF CHAR; index: SIGNED32): XML.Element; 
 		PROCEDURE ^ PutElement(symbol: Symbol; element: Element); 
@@ -248,7 +248,7 @@ TYPE
 		PROCEDURE ^ StringAttribute*(CONST name: ARRAY OF CHAR; VAR str: Strings.String): BOOLEAN; 
 		PROCEDURE ^ Enter(CONST name: ARRAY OF CHAR; index: SIGNED32; VAR o: Object): BOOLEAN; 
 		PROCEDURE ^ Exit(CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ CheckUse(o: ANY); 
+		PROCEDURE ^ CheckUse(o: ANY ); 
 		PROCEDURE ^ ReadObject*(CONST name, optionalType: ARRAY OF CHAR; index: SIGNED32; VAR o: Object): BOOLEAN; 
 	END XMLReader; 
 

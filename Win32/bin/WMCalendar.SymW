@@ -60,7 +60,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ NextMonth*; 
 		PROCEDURE ^ PreviousMonth*; 
@@ -86,7 +86,7 @@ TYPE
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY ); 
 		PROCEDURE ^ UpdateDateLabel; 
 		PROCEDURE ^ SetCalendar*(calendar: Calendar); 
 	END CalendarController; 
@@ -107,9 +107,9 @@ TYPE
 		PROCEDURE ^ SetColorScheme(scheme: SIGNED32); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
-		PROCEDURE ^ HandleClose(sender, par: ANY); 
-		PROCEDURE ^ HandleCurrentDay(sender, data: ANY); 
-		PROCEDURE ^ HandleToggleColor(sender, data: ANY); 
+		PROCEDURE ^ HandleClose(sender, par: ANY ); 
+		PROCEDURE ^ HandleCurrentDay(sender, data: ANY ); 
+		PROCEDURE ^ HandleToggleColor(sender, data: ANY ); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 

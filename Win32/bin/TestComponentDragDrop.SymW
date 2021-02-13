@@ -7,8 +7,8 @@ TYPE
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: WM.DragInfo); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WM.DragInfo); 
-		PROCEDURE ^ DragAccepted(sender, data: ANY); 
-		PROCEDURE ^ DragRejected(sender, data: ANY); 
+		PROCEDURE ^ DragAccepted(sender, data: ANY ); 
+		PROCEDURE ^ DragRejected(sender, data: ANY ); 
 	END TestComponent; 
 
 	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)

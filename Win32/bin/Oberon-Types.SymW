@@ -6,7 +6,7 @@ TYPE
 	PROCEDURE ^ This*(mod: Modules.Module; name: ARRAY OF CHAR): Type; 
 	PROCEDURE ^ BaseOf*(t: Type; level: SIGNED16): Type; 
 	PROCEDURE ^ LevelOf*(t: Type): SIGNED16; 
-	PROCEDURE ^ TypeOf*(o: ANY): Type; 
-	PROCEDURE ^ NewObj*(VAR o: ANY; t: Type); 
+	PROCEDURE ^ TypeOf*(o: ANY ): Type; 
+	PROCEDURE ^ NewObj*(VAR o: ANY ; t: Type); 
 BEGIN
 END Types.

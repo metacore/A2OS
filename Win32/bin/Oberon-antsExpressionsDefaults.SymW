@@ -12,10 +12,10 @@ VAR
 	PROCEDURE ^ Vec*(len: SIGNED32): vyBase.Object; 
 	PROCEDURE ^ VecR*(len: SIGNED32): vyBase.Object; 
 	PROCEDURE ^ VecL*(len: SIGNED32): vyBase.Object; 
-	PROCEDURE ^ Len*(ob: ANY): SIGNED32; 
+	PROCEDURE ^ Len*(ob: ANY ): SIGNED32; 
 	PROCEDURE ^ ChunkSummary*(v: vyBase.tVector); 
-	PROCEDURE ^ Ptr*(i: SIGNED32): ANY; 
-	PROCEDURE ^ Selection*(): ANY; 
+	PROCEDURE ^ Ptr*(i: SIGNED32): ANY ; 
+	PROCEDURE ^ Selection*(): ANY ; 
 	PROCEDURE ^ EnableCR*; 
 	PROCEDURE ^ DisableCR*; 
 	PROCEDURE ^ Init; 

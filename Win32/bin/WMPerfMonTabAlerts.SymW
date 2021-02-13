@@ -25,7 +25,7 @@ TYPE
 		timer: Kernel.Timer; 
 		dead, alive: BOOLEAN; 
 
-		PROCEDURE ^ HandleButtons(sender, data: ANY); 
+		PROCEDURE ^ HandleButtons(sender, data: ANY ); 
 		PROCEDURE ^ ResetSelectedAlerts; 
 		PROCEDURE ^ RemoveSelectedAlerts(): SIGNED32; 
 		PROCEDURE ^ Update; 

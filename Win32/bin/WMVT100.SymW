@@ -97,7 +97,7 @@ TYPE
 		PROCEDURE ^ LocateBox(x, y: SIZE; VAR pos: Position); 
 		PROCEDURE ^ Copy; 
 		PROCEDURE ^ Paste; 
-		PROCEDURE ^ ClickHandler(sender, par: ANY); 
+		PROCEDURE ^ ClickHandler(sender, par: ANY ); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ WheelMove*(dz: SIZE); 

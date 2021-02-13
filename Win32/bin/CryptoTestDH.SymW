@@ -1,5 +1,5 @@
 MODULE CryptoTestDH;
-	IMPORT D := CryptoDiffieHellman, B := CryptoBigNumbers, Kernel, Out := KernelLog;
+	IMPORT D := CryptoDiffieHellman, B := CryptoBigNumbers, Kernel, Log := KernelLog;
 CONST 
 
 	PROCEDURE ^ Do(CONST nprime: ARRAY OF CHAR); 

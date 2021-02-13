@@ -1,5 +1,5 @@
 MODULE CryptoUtils;
-	IMPORT S := SYSTEM, Out := KernelLog, Random, Kernel, B := CryptoBigNumbers;
+	IMPORT S := SYSTEM, Log := KernelLog, Random, Kernel, B := CryptoBigNumbers;
 CONST 
 TYPE 
 	InitBuffer* = OBJECT 
@@ -17,9 +17,8 @@ VAR
 
 	PROCEDURE ^ PrintHex*(CONST buf: ARRAY OF CHAR; p, n: SIZE); 
 	PROCEDURE ^ PrintBufferString*(CONST buf: ARRAY OF CHAR; pos: SIGNED32); 
-	PROCEDURE ^ PrintPackage*(CONST buf: ARRAY OF CHAR; len: SIZE); 
-	PROCEDURE ^ PutLength*(VAR buf: ARRAY OF CHAR; VAR pos: SIZE; len: SIGNED32); 
-	PROCEDURE ^ GetLength*(CONST buf: ARRAY OF CHAR; VAR pos: SIZE; VAR len: SIGNED32); 
+	PROCEDURE ^ PutLength*(VAR buf: ARRAY OF CHAR; VAR pos: SIZE; len: SIZE); 
+	PROCEDURE ^ GetLength*(CONST buf: ARRAY OF CHAR; VAR pos: SIZE; VAR len: SIZE); 
 	PROCEDURE ^ GetInt*(CONST buf: ARRAY OF CHAR; pos: SIZE): SIGNED32; 
 	PROCEDURE ^ PutChar*(VAR buf: ARRAY OF CHAR; VAR pos: SIZE; ch: CHAR); 
 	PROCEDURE ^ GetChar*(CONST buf: ARRAY OF CHAR; VAR pos: SIZE; VAR ch: CHAR); 
@@ -29,9 +28,9 @@ VAR
 	PROCEDURE ^ PutBigNumber*(VAR buf: ARRAY OF CHAR; VAR pos: SIZE; b: B.BigNumber); 
 	PROCEDURE ^ GetBigNumber*(CONST buf: ARRAY OF CHAR; VAR pos: SIZE; VAR b: B.BigNumber); 
 	PROCEDURE ^ Hex2Bin*(CONST hex: ARRAY OF CHAR; hp: SIZE; VAR bin: ARRAY OF CHAR; bp: SIZE; len: SIZE); 
-	PROCEDURE ^ Bin2Hex*(CONST bin: ARRAY OF CHAR; bp: SIZE; VAR hex: ARRAY OF CHAR; hp: SIZE; len: SIZE); 
+	PROCEDURE ^ Bin2Hex*(CONST bin: ARRAY OF CHAR; bpos: SIZE; VAR hex: ARRAY OF CHAR; hpos: SIZE; len: SIZE); 
 	PROCEDURE ^ RandomBytes*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
-	PROCEDURE ^ XORBlock*(VAR block, iv: ARRAY OF S.BYTE); 
+	PROCEDURE ^ XORBlock*(VAR block1, block2: ARRAY OF S.BYTE); 
 	PROCEDURE ^ BufferToBlockBE*(CONST buf: ARRAY OF CHAR; pos: SIZE; VAR block: ARRAY OF S.BYTE); 
 	PROCEDURE ^ BufferToBlockLE*(CONST buf: ARRAY OF CHAR; pos: SIZE; VAR block: ARRAY OF S.BYTE); 
 	PROCEDURE ^ BlockToBufferBE*(CONST block: ARRAY OF S.BYTE; VAR buf: ARRAY OF CHAR; pos: SIZE); 

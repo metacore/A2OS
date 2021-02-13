@@ -17,9 +17,9 @@ CONST
 	DimensionMismatch = 401; 
 	AllocationForbidden = 402; 
 	ArrayAlignment = 16; 
-	TensorFlag = 0; 
-	RangeFlag = 1; 
-	TemporaryFlag = 2; 
+	TensorFlag* = 0; 
+	RangeFlag* = 1; 
+	TemporaryFlag* = 2; 
 	down = 0; 
 	up = 1; 
 	SmallMatrixFlag = 3; 
@@ -70,6 +70,24 @@ TYPE
 
 	GenericUnaryAALoopLZ = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: COMPLEX64):COMPLEX64); 
 
+	GenericUnaryALoopS = PROCEDURE (ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED8)); 
+
+	GenericUnaryALoopI = PROCEDURE (ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED16)); 
+
+	GenericUnaryALoopL = PROCEDURE (ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED32)); 
+
+	GenericUnaryALoopH = PROCEDURE (ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED64)); 
+
+	GenericUnaryALoopR = PROCEDURE (ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: FLOAT32)); 
+
+	GenericUnaryALoopX = PROCEDURE (ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: FLOAT64)); 
+
+	GenericUnaryALoopZ = PROCEDURE (ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: COMPLEX32)); 
+
+	GenericUnaryALoopLZ = PROCEDURE (ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: COMPLEX64)); 
+
+	UnaryALoop = PROCEDURE (ladr: ADDRESS; linc, len: SIZE); 
+
 	UnaryAALoop = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 
 	UnaryASLoop = PROCEDURE (ladr, dadr: ADDRESS; linc, len: SIZE); 
@@ -98,14 +116,14 @@ TYPE
 	END; 
 
 	ArrayDescriptor* = RECORD 
-		ptr*: ANY; 
+		ptr*: ANY ; 
 		adr*: ADDRESS; 
 		flags*: SET; 
 		dim*: SIZE; 
 		elementSize*: SIZE; 
 	END; 
 
-	Tensor = POINTER TO ArrayDescriptor; 
+	Tensor* = POINTER TO ArrayDescriptor; 
 
 	UnsafeArray* = POINTER {UNSAFE, UNTRACED} TO RECORD (ArrayDescriptor)
 		lens*: ARRAY 8 OF LenInc; 
@@ -186,6 +204,8 @@ VAR
 	loopAddAXAX*, loopAddARAR*, loopAddAZAZ*, loopAddALZALZ*: BinaryAAALoop; 
 	loopSubAXAX*, loopSubARAR*, loopSubAZAZ*, loopSubALZALZ*: BinaryAAALoop; 
 	loopEMulAXAX*, loopEMulARAR*, loopEMulAZAZ*, loopEMulALZALZ*: BinaryAAALoop; 
+	loopEMulAXAB*: BinaryAAALoop; 
+	loopSumAXAB*: BinaryAASLoop; 
 	loopMatMulAXAX*, loopMatMulARAR*: BinaryAASLoop; 
 	loopMatMulIncAXAX*, loopMatMulIncARAR*: BinaryAASLoop; 
 	loopMulAXSX*, loopMulARSR*, loopMulAZSZ*, loopMulALZSLZ*: BinaryASALoop; 
@@ -216,9 +236,9 @@ VAR
 	PROCEDURE ^ GetAdr(base: UnsafeArray): ADDRESS; 
 	PROCEDURE ^ PutAdr(base: UnsafeArray; value: ADDRESS); 
 	PROCEDURE ^ Align(value: ADDRESS): ADDRESS; 
-	PROCEDURE ^ GetPtr(base: UnsafeArray): ANY; 
-	PROCEDURE ^ SafePut(VAR dest: ANY; src: ANY); 
-	PROCEDURE ^ PutPtr(CONST base: UnsafeArrayT; value: ANY); 
+	PROCEDURE ^ GetPtr(base: UnsafeArray): ANY ; 
+	PROCEDURE ^ SafePut(VAR dest: ANY ; src: ANY ); 
+	PROCEDURE ^ PutPtr(CONST base: UnsafeArrayT; value: ANY ); 
 	PROCEDURE ^ GetSize(base: UnsafeArray): SIZE; 
 	PROCEDURE ^ PutSize(base: UnsafeArray; val: SIZE); 
 	PROCEDURE ^ GetDim(base: UnsafeArray): SIZE; 
@@ -226,7 +246,7 @@ VAR
 	PROCEDURE ^ PutDim(base: UnsafeArray; dim: SIZE); 
 	PROCEDURE ^ PutFlags(base: UnsafeArray; flags: SET); 
 	PROCEDURE ^ Report(CONST name: ARRAY OF CHAR; s: ADDRESS); 
-	PROCEDURE ^ GetArrayDesc(dim: SIZE): Tensor; 
+	PROCEDURE ^ GetArrayDesc*(dim: SIZE): Tensor; 
 	PROCEDURE ^ EnsureArrayDesc*(dim: SIZE; VAR d: Tensor); 
 	PROCEDURE ^ Halt(code: SIZE; left, right, dest: ADDRESS); 
 	PROCEDURE ^ FindPattern1(left, dim: ADDRESS; VAR d, len, linc: SIZE); 
@@ -234,7 +254,15 @@ VAR
 	PROCEDURE ^ FindPattern3(left, right, dest: ADDRESS; dim: SIZE; VAR d, len, linc, ri, di: SIZE); 
 	PROCEDURE ^ Reverse(src: ADDRESS; dim: SIZE); 
 	PROCEDURE ^ CopyUpCompatible(dest, src: ADDRESS; VAR modes: SET); 
-	PROCEDURE ^ AllocateTemp(dest: ADDRESS; src: ADDRESS; Size: SIZE): ANY; 
+	PROCEDURE ^ AllocateTemp(dest: ADDRESS; src: ADDRESS; Size: SIZE): ANY ; 
+	PROCEDURE ^ ApplyGenericUnaryAOpS(CONST left: UnsafeArrayT; Loop: GenericUnaryALoopS; op: PROCEDURE {DELEGATE}(x: SIGNED8)); 
+	PROCEDURE ^ ApplyGenericUnaryAOpI(CONST left: UnsafeArrayT; Loop: GenericUnaryALoopI; op: PROCEDURE {DELEGATE}(x: SIGNED16)); 
+	PROCEDURE ^ ApplyGenericUnaryAOpL(CONST left: UnsafeArrayT; Loop: GenericUnaryALoopL; op: PROCEDURE {DELEGATE}(x: SIGNED32)); 
+	PROCEDURE ^ ApplyGenericUnaryAOpH(CONST left: UnsafeArrayT; Loop: GenericUnaryALoopH; op: PROCEDURE {DELEGATE}(x: SIGNED64)); 
+	PROCEDURE ^ ApplyGenericUnaryAOpR(CONST left: UnsafeArrayT; Loop: GenericUnaryALoopR; op: PROCEDURE {DELEGATE}(x: FLOAT32)); 
+	PROCEDURE ^ ApplyGenericUnaryAOpX(CONST left: UnsafeArrayT; Loop: GenericUnaryALoopX; op: PROCEDURE {DELEGATE}(x: FLOAT64)); 
+	PROCEDURE ^ ApplyGenericUnaryAOpZ(CONST left: UnsafeArrayT; Loop: GenericUnaryALoopZ; op: PROCEDURE {DELEGATE}(x: COMPLEX32)); 
+	PROCEDURE ^ ApplyGenericUnaryAOpLZ(CONST left: UnsafeArrayT; Loop: GenericUnaryALoopLZ; op: PROCEDURE {DELEGATE}(x: COMPLEX64)); 
 	PROCEDURE ^ ApplyGenericUnaryAAOpS(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE {DELEGATE}(x: SIGNED8):SIGNED8); 
 	PROCEDURE ^ ApplyGenericUnaryAAOpI(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopI; op: PROCEDURE {DELEGATE}(x: SIGNED16):SIGNED16); 
 	PROCEDURE ^ ApplyGenericUnaryAAOpL(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopL; op: PROCEDURE {DELEGATE}(x: SIGNED32):SIGNED32); 
@@ -243,6 +271,7 @@ VAR
 	PROCEDURE ^ ApplyGenericUnaryAAOpX(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopX; op: PROCEDURE {DELEGATE}(x: FLOAT64):FLOAT64); 
 	PROCEDURE ^ ApplyGenericUnaryAAOpZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopZ; op: PROCEDURE {DELEGATE}(x: COMPLEX32):COMPLEX32); 
 	PROCEDURE ^ ApplyGenericUnaryAAOpLZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE {DELEGATE}(x: COMPLEX64):COMPLEX64); 
+	PROCEDURE ^ ApplyUnaryAOp*(CONST left: UnsafeArrayT; Loop: UnaryALoop); 
 	PROCEDURE ^ ApplyUnaryAAOp*(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: UnaryAALoop); 
 	PROCEDURE ^ ApplyUnaryASOp*(dest: ADDRESS; CONST left: UnsafeArrayT; Loop: UnaryASLoop); 
 	PROCEDURE ^ ApplyUnarySAOp*(VAR dest: UnsafeArrayT; right: ADDRESS; Loop: UnarySALoop); 
@@ -314,6 +343,14 @@ VAR
 	OPERATOR ^ "@Convert"-(CONST src: ARRAY [?] OF SIZE): ARRAY [?] OF FLOAT32; 
 	PROCEDURE ^ NotLoopAB(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "~"-(CONST src: ARRAY [?] OF BOOLEAN): ARRAY [?] OF BOOLEAN; 
+	PROCEDURE ^ GenericLoopS0(ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED8)); 
+	PROCEDURE ^ GenericLoopI0(ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED16)); 
+	PROCEDURE ^ GenericLoopL0(ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED32)); 
+	PROCEDURE ^ GenericLoopH0(ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED64)); 
+	PROCEDURE ^ GenericLoopR0(ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: FLOAT32)); 
+	PROCEDURE ^ GenericLoopX0(ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: FLOAT64)); 
+	PROCEDURE ^ GenericLoopZ0(ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: COMPLEX32)); 
+	PROCEDURE ^ GenericLoopLZ0(ladr: ADDRESS; linc, len: SIZE; op: PROCEDURE {DELEGATE}(x: COMPLEX64)); 
 	PROCEDURE ^ GenericLoopS(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED8):SIGNED8); 
 	PROCEDURE ^ GenericLoopI(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED16):SIGNED16); 
 	PROCEDURE ^ GenericLoopL(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SIGNED32):SIGNED32); 
@@ -433,6 +470,12 @@ VAR
 	OPERATOR ^ ".*"-(CONST left, right: ARRAY [?] OF COMPLEX32): ARRAY [?] OF COMPLEX32; 
 	PROCEDURE ^ EMulALZALZLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ ".*"-(CONST left, right: ARRAY [?] OF COMPLEX64): ARRAY [?] OF COMPLEX64; 
+	PROCEDURE ^ EMulAXABLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	OPERATOR ^ ".*"-(CONST left: ARRAY [?] OF FLOAT64; CONST right: ARRAY [?] OF BOOLEAN): ARRAY [?] OF FLOAT64; 
+	PROCEDURE ^ SumAXABLoop(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	OPERATOR ^ "+*"-(CONST left: ARRAY [?] OF FLOAT64; CONST right: ARRAY [?] OF BOOLEAN): FLOAT64; 
+	PROCEDURE ^ SumABLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
+	OPERATOR ^ "SUM"-(CONST left: ARRAY [?] OF BOOLEAN): SIZE; 
 	PROCEDURE ^ EMulIncASASLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ ".*+"-(CONST left, right: ARRAY [?] OF SIGNED8): ARRAY [?] OF SIGNED8; 
 	PROCEDURE ^ EMulIncAIAILoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
@@ -1047,14 +1090,19 @@ VAR
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF BOOLEAN; right: BOOLEAN); 
 	PROCEDURE ^ AssignSSASLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF SIGNED8; right: SIGNED8); 
+	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF UNSIGNED8; right: UNSIGNED8); 
+	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF CHAR; right: CHAR); 
 	PROCEDURE ^ AssignSIAILoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF SIGNED16; right: SIGNED16); 
+	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF UNSIGNED16; right: UNSIGNED16); 
 	PROCEDURE ^ AssignSLALLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF SIGNED32; right: SIGNED32); 
+	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF UNSIGNED32; right: UNSIGNED32); 
 	PROCEDURE ^ AssignSYAYLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF SIZE; right: SIZE); 
 	PROCEDURE ^ AssignSHAHLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF SIGNED64; right: SIGNED64); 
+	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF UNSIGNED64; right: UNSIGNED64); 
 	PROCEDURE ^ AssignSRARLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF FLOAT32; right: FLOAT32); 
 	PROCEDURE ^ AssignSXAXLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
@@ -1063,7 +1111,7 @@ VAR
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF COMPLEX32; right: COMPLEX32); 
 	PROCEDURE ^ AssignSLZALZLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF COMPLEX64; right: COMPLEX64); 
-	PROCEDURE ^ AllocateMatrix(dest: ADDRESS; rows, cols, elementsize: SIZE): ANY; 
+	PROCEDURE ^ AllocateMatrix(dest: ADDRESS; rows, cols, elementsize: SIZE): ANY ; 
 	PROCEDURE ^ AllocateVector(CONST dest: UnsafeArrayT; l0, elementsize: SIZE); 
 	PROCEDURE ^ ZeroData(dest: ADDRESS); 
 	PROCEDURE ^ ApplyMatMulLoop*(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; increment: BOOLEAN; fast: FastMatMul); 
@@ -1176,6 +1224,14 @@ VAR
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF FLOAT64; op: PROCEDURE {DELEGATE}(x: FLOAT64):FLOAT64): ARRAY [?] OF FLOAT64; 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF COMPLEX32; op: PROCEDURE {DELEGATE}(x: COMPLEX32):COMPLEX32): ARRAY [?] OF COMPLEX32; 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF COMPLEX64; op: PROCEDURE {DELEGATE}(x: COMPLEX64):COMPLEX64): ARRAY [?] OF COMPLEX64; 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SIGNED8; op: PROCEDURE {DELEGATE}(x: SIGNED8)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SIGNED16; op: PROCEDURE {DELEGATE}(x: SIGNED16)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SIGNED32; op: PROCEDURE {DELEGATE}(x: SIGNED32)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SIGNED64; op: PROCEDURE {DELEGATE}(x: SIGNED64)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF FLOAT32; op: PROCEDURE {DELEGATE}(x: FLOAT32)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF FLOAT64; op: PROCEDURE {DELEGATE}(x: FLOAT64)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF COMPLEX32; op: PROCEDURE {DELEGATE}(x: COMPLEX32)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF COMPLEX64; op: PROCEDURE {DELEGATE}(x: COMPLEX64)); 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SIGNED8; map: PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY [?] OF SIGNED8; 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SIGNED16; map: PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY [?] OF SIGNED16; 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SIGNED32; map: PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY [?] OF SIGNED32; 
@@ -1184,5 +1240,13 @@ VAR
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF FLOAT64; map: PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY [?] OF FLOAT64; 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF COMPLEX32; map: PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY [?] OF COMPLEX32; 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF COMPLEX64; map: PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY [?] OF COMPLEX64; 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SIGNED8; map: PROCEDURE (ladr: ADDRESS; linc, len: SIZE)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SIGNED16; map: PROCEDURE (ladr: ADDRESS; linc, len: SIZE)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SIGNED32; map: PROCEDURE (ladr: ADDRESS; linc, len: SIZE)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SIGNED64; map: PROCEDURE (ladr: ADDRESS; linc, len: SIZE)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF FLOAT32; map: PROCEDURE (ladr: ADDRESS; linc, len: SIZE)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF FLOAT64; map: PROCEDURE (ladr: ADDRESS; linc, len: SIZE)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF COMPLEX32; map: PROCEDURE (ladr: ADDRESS; linc, len: SIZE)); 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF COMPLEX64; map: PROCEDURE (ladr: ADDRESS; linc, len: SIZE)); 
 BEGIN
 END FoxArrayBase.

@@ -12,7 +12,7 @@ CONST
 TYPE 
 	DataPointModel* = OBJECT {EXCLUSIVE} 
 	VAR 
-		lockedBy: ANY; 
+		lockedBy: ANY ; 
 		lockLevel: SIGNED32; 
 		viewChanged: BOOLEAN; 
 		onChanged-: WMEvents.EventSource; 
@@ -86,12 +86,12 @@ TYPE
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ CacheProperties; 
-		PROCEDURE ^ PropertyChanged*(property, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(property, data: ANY ); 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ SetExtModel*(model: MultiPointModel); 
 		PROCEDURE ^ SetExtUpdate*(extUpdate: ExtUpdateHandler); 
-		PROCEDURE ^ Update(sender, data: ANY); 
+		PROCEDURE ^ Update(sender, data: ANY ); 
 		PROCEDURE ^ Scale(factor, min: FLOAT32; srcPoints: Dataset; tarPoints: LongintDataset; height, border: SIZE); 
 		PROCEDURE ^ DrawLines(canvas: WMGraphics.Canvas; w, h, border: SIZE; VAR tmin, tmax: FLOAT32); 
 		PROCEDURE ^ DrawAreas(canvas: WMGraphics.Canvas; w, h, border: SIZE; VAR tmin, tmax: FLOAT32); 
@@ -107,8 +107,8 @@ TYPE
 		checkAllBtn, checkNoneBtn: WMStandardComponents.Button; 
 		optWidth-, optHeight-: SIGNED32; 
 
-		PROCEDURE ^ HandleClick(sender, data: ANY); 
-		PROCEDURE ^ HandleButton(sender, data: ANY); 
+		PROCEDURE ^ HandleClick(sender, data: ANY ); 
+		PROCEDURE ^ HandleButton(sender, data: ANY ); 
 		PROCEDURE ^  & New*(ds: DatasetDescriptor); 
 	END DescriptorView; 
 
@@ -134,7 +134,7 @@ TYPE
 		PROCEDURE ^ SetColors*(CONST colors: ARRAY OF WMGraphics.Color); 
 		PROCEDURE ^ SetWidthOffset*(width, offset: FLOAT64); 
 		PROCEDURE ^ SetVertical*(vertical: BOOLEAN); 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END BarChart; 
 VAR 

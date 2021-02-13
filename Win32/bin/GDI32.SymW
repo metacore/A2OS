@@ -164,7 +164,7 @@ VAR
 	CreateBitmap-: PROCEDURE {WINAPI}(nWidth, nHeight, cPlanes, cBitsPerPixel: SIGNED32; VAR lpvBits: ARRAY OF SYSTEM.BYTE):HBitmap; 
 	CreateCompatibleBitmap-: PROCEDURE {WINAPI}(hdc: User32.HDC; nWidth, nHeight: SIGNED32):HBitmap; 
 	CreateCompatibleDC-: PROCEDURE {WINAPI}(hdc: User32.HDC):User32.HDC; 
-	CreateDC-: PROCEDURE {WINAPI}(VAR lpszDriver, lpszDevice, lpszOuput: ARRAY OF CHAR; lpInitData: ANY):User32.HDC; 
+	CreateDC-: PROCEDURE {WINAPI}(VAR lpszDriver, lpszDevice, lpszOuput: ARRAY OF CHAR; lpInitData: ANY ):User32.HDC; 
 	CreateDIBSection-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpbi: BitmapInfo; iUsage: SIGNED32; VAR adr: SIGNED32; hSection: SIGNED32; dwOffset: SIGNED32):HBitmap; 
 	CreateEnhMetaFile-: PROCEDURE {WINAPI}(VAR hdcRef: User32.HDC; VAR lpFilename: ARRAY OF CHAR; VAR lpRect: User32.Rect; VAR lpDescription: ARRAY OF CHAR):User32.HDC; 
 	CreateFontIndirect-: PROCEDURE {WINAPI}(VAR lplf: LogFont):HFont; 

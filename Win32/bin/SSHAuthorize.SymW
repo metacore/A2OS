@@ -1,36 +1,23 @@
 MODULE SSHAuthorize;
-	IMPORT T := SSHTransport, U := CryptoUtils, B := CryptoBigNumbers, RSA := CryptoRSA, G := SSHGlobals, SHA1 := CryptoSHA1, Strings, Out := KernelLog, Files, WMDialogs, Beep;
+	IMPORT U := CryptoUtils, B := CryptoBigNumbers, RSA := CryptoRSA, SHA1 := CryptoSHA1, G := SSHGlobals, P := SSHPackets, SSHTransport, Strings, Log := KernelLog, Files, WMDialogs, Beep;
 CONST 
-	Closed* = T.Closed; 
-	Connected* = T.Connected; 
-	ServiceRequest = 5X; 
-	ServiceAccept = 6X; 
-	UserauthRequest = 32X; 
-	UserauthFailure = 33X; 
-	UserauthSuccess = 34X; 
-	UserauthBanner = 35X; 
-	UserauthPkOk = 3CX; 
+	Connected = SSHTransport.Connected; 
 TYPE 
-	Connection* = T.Connection; 
+	Connection* = SSHTransport.Connection; 
 
-	Password = POINTER TO RECORD 
-		next: Password; 
-		host, user, pw: ARRAY 64 OF CHAR; 
-	END; 
+	Packet = P.Packet; 
 VAR 
-	passwords: Password; 
 	privKey, pubKey: RSA.Key; 
 
-	PROCEDURE ^ GetPW(CONST host, user: ARRAY OF CHAR; VAR pw: ARRAY OF CHAR); 
-	PROCEDURE ^ AddPW(CONST host, user, pw: ARRAY OF CHAR); 
 	PROCEDURE ^ RequestService(VAR ssh: Connection; CONST service: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ RequestAuthorizeNone(ssh: Connection; CONST user: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ RequestConnPW(ssh: Connection; CONST user, host: ARRAY OF CHAR; try: SIGNED32); 
-	PROCEDURE ^ AuthorizePasswd(ssh: Connection; CONST host, user: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ RequestAuthorizeNone(ssh: Connection; CONST user: ARRAY OF CHAR; VAR allowed: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ RequestPWAuthorizing(ssh: Connection; CONST user, host: ARRAY OF CHAR); 
+	PROCEDURE ^ AuthorizePassword(ssh: Connection; CONST host, user: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ MakePubKeyBlob(VAR buf: ARRAY OF CHAR; VAR len: SIZE); 
-	PROCEDURE ^ CheckAuthorizeKey(ssh: Connection; CONST user: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ RequestAuthorizeKey(ssh: Connection; CONST user: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ AuthorizeKey(ssh: Connection; CONST user: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ MakeSignatureBlob(VAR buf: ARRAY OF CHAR; VAR len: SIZE; sign: B.BigNumber); 
+	PROCEDURE ^ AuthorizePublicKey(ssh: Connection; CONST user: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetPublicKey(msg: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ GetKeys(msg: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ OpenConnection*(CONST host, user: ARRAY OF CHAR): Connection; 
 BEGIN
 END SSHAuthorize.

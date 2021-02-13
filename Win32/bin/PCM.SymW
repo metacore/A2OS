@@ -126,7 +126,7 @@ VAR
 	PROCEDURE ^ LogWHex*(i: SIGNED32); 
 	PROCEDURE ^ LogWNum*(i: SIGNED64); 
 	PROCEDURE ^ LogWBool*(b: BOOLEAN); 
-	PROCEDURE ^ LogWType*(p: ANY); 
+	PROCEDURE ^ LogWType*(p: ANY ); 
 	PROCEDURE ^ LogWLn*; 
 	PROCEDURE ^ LogFlush*; 
 	PROCEDURE ^ Init*(CONST s: ARRAY OF CHAR; l: Streams.Writer; d: Diagnostics.Diagnostics); 

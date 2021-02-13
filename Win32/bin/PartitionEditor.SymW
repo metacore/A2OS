@@ -18,7 +18,7 @@ TYPE
 		reader: Streams.StringReader; 
 
 		PROCEDURE ^ GetBlockNumber(VAR blockNumber: SIGNED32): BOOLEAN; 
-		PROCEDURE ^ HandleButtons(sender, data: ANY); 
+		PROCEDURE ^ HandleButtons(sender, data: ANY ); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(context: WMRestorable.Context); 
 		PROCEDURE ^ Load(deviceName: ARRAY OF CHAR; block: SIGNED32); 

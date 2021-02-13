@@ -70,7 +70,7 @@ VAR
 	PROCEDURE ^ AddPoint(VAR points: ARRAY OF WMGraphics.Point2d; VAR nofPoints: SIGNED32; x, y: SIGNED32); 
 	PROCEDURE ^ SplineReal(canvas: WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h: FLOAT32; color: WMGraphics.Color; mode: SIGNED32); 
 	PROCEDURE ^ AddSplinePoints(VAR points: ARRAY OF WMGraphics.Point2d; VAR nofPoints: SIGNED32; x0, y0, x1, y1, x2, y2, x, y, w, h: FLOAT32); 
-	PROCEDURE ^ CheckFont(obj: ANY; VAR cont: BOOLEAN); 
+	PROCEDURE ^ CheckFont(obj: ANY ; VAR cont: BOOLEAN); 
 	PROCEDURE ^ LoadExactFont*(fi: WMFontManager.FontInfo): WMGraphics.Font; 
 BEGIN
 END WMCCGFonts.

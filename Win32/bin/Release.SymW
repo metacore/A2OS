@@ -1,5 +1,5 @@
 MODULE Release;
-	IMPORT Modules, Streams, Commands, Options, Files, Dates, Strings, Texts, TextUtilities, ReleaseThreadPool, Diagnostics, WMGraphics, Zip, CompilerInterface, Compiler, SyntaxTree := FoxSyntaxTree;
+	IMPORT Modules, Streams, Commands, Options, Files, Dates, Strings, Texts, TextUtilities, ReleaseThreadPool, Diagnostics, WMGraphics, Zip, CompilerInterface, Compiler, SyntaxTree := FoxSyntaxTree, UTF8Strings;
 CONST 
 	VersionMajor = 1; 
 	VersionMinor = 0; 
@@ -223,7 +223,7 @@ TYPE
 		PROCEDURE ^ GetNofSources(VAR nofMarked: SIZE): SIZE; 
 		PROCEDURE ^ GetInfo*(VAR nofSources, nofFiles: SIZE); 
 		PROCEDURE ^ CompileFile(file: File; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; VAR error: BOOLEAN; importCache: SyntaxTree.ModuleScope); 
-		PROCEDURE ^ CompileJob(parameters: ANY; VAR error: BOOLEAN); 
+		PROCEDURE ^ CompileJob(parameters: ANY ; VAR error: BOOLEAN); 
 		PROCEDURE ^ CreateJob(threadpool: ReleaseThreadPool.ThreadPool; file: File; diagnostics: Diagnostics.Diagnostics; importCache: SyntaxTree.ModuleScope); 
 		PROCEDURE ^ Compile*(nofWorkers: SIZE; out, error: Streams.Writer; verbose: BOOLEAN; diagnostics: Diagnostics.DiagnosticsList; VAR err: BOOLEAN); 
 	END BuildObj; 

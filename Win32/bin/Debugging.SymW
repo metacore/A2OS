@@ -25,7 +25,7 @@ VAR
 	PROCEDURE ^ Char*(c: CHAR); 
 	PROCEDURE ^ Update*; 
 	PROCEDURE ^ Ln*; 
-	PROCEDURE ^ Type*(p: ANY); 
+	PROCEDURE ^ Type*(p: ANY ); 
 	PROCEDURE ^ Str0*(idx: StringPool.Index); 
 	PROCEDURE ^ Enter*; 
 	PROCEDURE ^ Exit*; 

@@ -43,13 +43,13 @@ TYPE
 
 	DragDropHandler* = PROCEDURE {DELEGATE}(x, y: SIZE; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
 
-	DragResultHandler* = PROCEDURE {DELEGATE}(accepted: BOOLEAN; recipient: ANY; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
+	DragResultHandler* = PROCEDURE {DELEGATE}(accepted: BOOLEAN; recipient: ANY ; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
 
 	DragAutoStartHandler* = PROCEDURE {DELEGATE}(VAR handled: BOOLEAN); 
 
 	FocusHandler* = PROCEDURE {DELEGATE}(hasFocus: BOOLEAN); 
 
-	ContextMenuHandler* = PROCEDURE {DELEGATE}(sender: ANY; x, y: SIZE); 
+	ContextMenuHandler* = PROCEDURE {DELEGATE}(sender: ANY ; x, y: SIZE); 
 
 	KeyEventHandler* = PROCEDURE {DELEGATE}(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
 
@@ -61,21 +61,21 @@ TYPE
 
 	DropTarget = OBJECT (WMDropTarget.DropTarget)
 	VAR 
-		originator: ANY; 
+		originator: ANY ; 
 		setString: SetStringProcedure; 
 		x, y: SIZE; 
 
-		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; x, y: SIZE); 
+		PROCEDURE ^  & Init(originator: ANY ; setString: SetStringProcedure; x, y: SIZE); 
 		PROCEDURE ^ GetInterface*(type: INTEGER): WMDropTarget.DropInterface; 
 	END DropTarget; 
 
 	DropString = OBJECT (WMDropTarget.DropString)
 	VAR 
-		originator: ANY; 
+		originator: ANY ; 
 		setString: SetStringProcedure; 
 		x, y: SIZE; 
 
-		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; x, y: SIZE); 
+		PROCEDURE ^  & Init(originator: ANY ; setString: SetStringProcedure; x, y: SIZE); 
 		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: INTEGER); 
 	END DropString; 
 
@@ -139,7 +139,7 @@ TYPE
 		internal-: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Write*(w: Streams.Writer; context: ANY; level: SIGNED32); 
+		PROCEDURE ^ Write*(w: Streams.Writer; context: ANY ; level: SIGNED32); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ IsCallFromSequencer*(): BOOLEAN; 
 		PROCEDURE ^ AssertLock*; 
@@ -157,17 +157,17 @@ TYPE
 		PROCEDURE ^ StringToComponent*(str: Strings.String): Component; 
 		PROCEDURE ^ StringToCompCommand*(eventstr: Strings.String): WMEvents.EventListener; 
 		PROCEDURE ^ Finalize*; 
-		PROCEDURE ^ Reset*(sender, data: ANY); 
+		PROCEDURE ^ Reset*(sender, data: ANY ); 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ HandleInternal*(VAR msg: Messages.Message); 
 		PROCEDURE ^ Handle*(VAR msg: Messages.Message); 
 		PROCEDURE ^ BroadcastSubcomponents*(VAR msg: Messages.Message); 
 		PROCEDURE ^ LanguageChanged*(languages: Localization.Languages); 
-		PROCEDURE ^ LinkChanged*(sender, link: ANY); 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ LinkChanged*(sender, link: ANY ); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ InternalPropertyChanged(sender, property: ANY); 
-		PROCEDURE ^ InternalLinkChanged(sender, link: ANY); 
+		PROCEDURE ^ InternalPropertyChanged(sender, property: ANY ); 
+		PROCEDURE ^ InternalLinkChanged(sender, link: ANY ); 
 	END Component; 
 
 	Macro* = ARRAY 128 OF CHAR; 
@@ -222,15 +222,15 @@ TYPE
 		PROCEDURE ^ SetFocusTo(CONST id: ARRAY OF CHAR); 
 		PROCEDURE ^ FocusNext*; 
 		PROCEDURE ^ FocusPrev*; 
-		PROCEDURE ^ LinkChanged*(sender, link: ANY); 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ LinkChanged*(sender, link: ANY ); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ GetVisualComponentRoot*(): VisualComponent; 
 		PROCEDURE ^ AdaptRelativeBounds(inner: Rectangles.Rectangle; parent: XML.Element); 
 		PROCEDURE ^ AlignmentChanged; 
 		PROCEDURE ^ GetClientRect*(): Rectangles.Rectangle; 
 		PROCEDURE ^ SetLayoutManager*(layoutManager: LayoutManager); 
-		PROCEDURE ^ AlignEvent(sender, data: ANY); 
+		PROCEDURE ^ AlignEvent(sender, data: ANY ); 
 		PROCEDURE ^ AlignSubComponents*; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ ToWMCoordinates*(x, y: SIZE; VAR gx, gy: SIZE); 
@@ -242,8 +242,8 @@ TYPE
 		PROCEDURE ^ AddVisualComponent(c: VisualComponent; x, y: SIZE); 
 		PROCEDURE ^ EditDragDropped(x, y: SIZE; dragInfo: WM.DragInfo): BOOLEAN; 
 		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; x, y: SIZE; VAR res: INTEGER); 
-		PROCEDURE ^ DragResult*(accepted: BOOLEAN; recipient: ANY; dragInfo: WM.DragInfo); 
-		PROCEDURE ^ StartDrag*(data: ANY; img: WMGraphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
+		PROCEDURE ^ DragResult*(accepted: BOOLEAN; recipient: ANY ; dragInfo: WM.DragInfo); 
+		PROCEDURE ^ StartDrag*(data: ANY ; img: WMGraphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
 		PROCEDURE ^ ConfirmDrag*(accept: BOOLEAN; dragInfo: WM.DragInfo); 
 		PROCEDURE ^ AutoStartDrag*; 
 		PROCEDURE ^ ShowContextMenu*(x, y: SIZE); 
@@ -257,8 +257,8 @@ TYPE
 		PROCEDURE ^ ScaleFont*(height: SIZE; percent: INTEGER); 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ InvalidateRect*(r: Rectangles.Rectangle); 
-		PROCEDURE ^ PostInvalidateCommand*(sender, par: ANY); 
-		PROCEDURE ^ InvalidateCommand*(sender, par: ANY); 
+		PROCEDURE ^ PostInvalidateCommand*(sender, par: ANY ); 
+		PROCEDURE ^ InvalidateCommand*(sender, par: ANY ); 
 		PROCEDURE ^ Invalidate*; 
 		PROCEDURE ^ DisableUpdate*; 
 		PROCEDURE ^ EnableUpdate*; 
@@ -291,7 +291,7 @@ TYPE
 		PROCEDURE ^ InEditBounds(x, y: SIZE): INTEGER; 
 		PROCEDURE ^ Edit(VAR msg: Messages.Message); 
 		PROCEDURE ^ SetEditMode*(mode: BOOLEAN; recurse: BOOLEAN); 
-		PROCEDURE ^ EditMoved(sender, data: ANY); 
+		PROCEDURE ^ EditMoved(sender, data: ANY ); 
 		PROCEDURE ^ HandleInternal*(VAR msg: Messages.Message); 
 	END VisualComponent; 
 
@@ -334,7 +334,7 @@ TYPE
 		PROCEDURE ^ DisableUpdate*; 
 		PROCEDURE ^ EnableUpdate*; 
 		PROCEDURE ^ InvalidateRect*(rect: Rectangles.Rectangle); 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 	END Form; 
 
 	PropertyListEntry = POINTER TO RECORD 
@@ -373,12 +373,12 @@ TYPE
 		timer: Kernel.Timer; 
 		onChanged-: WMEvents.EventSource; 
 		lock: Locks.RecursiveLock; 
-		rectOwner: ANY; 
+		rectOwner: ANY ; 
 		rect: Rectangles.Rectangle; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Reset(this: VisualComponent); 
-		PROCEDURE ^ Has*(this: ANY): BOOLEAN; 
+		PROCEDURE ^ Has*(this: ANY ): BOOLEAN; 
 		PROCEDURE ^ Add*(this: VisualComponent); 
 		PROCEDURE ^ Remove*(this: VisualComponent); 
 		PROCEDURE ^ GetSelection*(): SelectionArray; 

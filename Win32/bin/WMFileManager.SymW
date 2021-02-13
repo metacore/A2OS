@@ -15,8 +15,8 @@ TYPE
 		list*: WMSystemComponents.FileList; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ TextChanged(sender, data: ANY); 
-		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
+		PROCEDURE ^ TextChanged(sender, data: ANY ); 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY ); 
 	END FileListPanel; 
 
 	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -28,11 +28,11 @@ TYPE
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
-		PROCEDURE ^ PathChanged(sender, data: ANY); 
+		PROCEDURE ^ PathChanged(sender, data: ANY ); 
 		PROCEDURE ^ UpdateStatus(alias: Strings.String); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ RefreshHandler(sender, data: ANY); 
-		PROCEDURE ^ TogglePropsHandler(sender, data: ANY); 
+		PROCEDURE ^ RefreshHandler(sender, data: ANY ); 
+		PROCEDURE ^ TogglePropsHandler(sender, data: ANY ); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 

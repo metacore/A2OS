@@ -27,9 +27,9 @@ TYPE
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
-		PROCEDURE ^ OpenUnicodeMap(sender, data: ANY); 
-		PROCEDURE ^ ChangeVisibility(sender, data: ANY); 
-		PROCEDURE ^ InsertMarker(sender, data: ANY); 
+		PROCEDURE ^ OpenUnicodeMap(sender, data: ANY ); 
+		PROCEDURE ^ ChangeVisibility(sender, data: ANY ); 
+		PROCEDURE ^ InsertMarker(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 

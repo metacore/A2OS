@@ -59,7 +59,7 @@ VAR
 	PROCEDURE ^ AsyncOpenConnection*(VAR C: Connection; locPort: SIGNED16; remIP: IPAdr; remPort: SIGNED16; VAR res: SIGNED16); 
 	PROCEDURE ^ CloseConnection*(C: Connection); 
 	PROCEDURE ^ DiscardConnection*(C: Connection); 
-	PROCEDURE ^ Cleanup(c: ANY); 
+	PROCEDURE ^ Cleanup(c: ANY ); 
 	PROCEDURE ^ Requested*(C: Connection): BOOLEAN; 
 	PROCEDURE ^ Accept*(C: Connection; VAR newC: Connection; VAR res: SIGNED16); 
 	PROCEDURE ^ State*(C: Connection): SIGNED16; 

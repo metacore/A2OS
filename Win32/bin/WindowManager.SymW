@@ -106,7 +106,7 @@ TYPE
 		PROCEDURE ^ PointerEvent(VAR msg: Messages.Message); 
 		PROCEDURE ^ KeyEvent*(VAR m: Messages.Message); 
 		PROCEDURE ^ HandleInternal*(VAR msg: Messages.Message); 
-		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
+		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY ; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
 		PROCEDURE ^ TransferPointer*(to: Window): BOOLEAN; 
 		PROCEDURE ^ AddDirty*(VAR rect: Rectangle); 
 		PROCEDURE ^ AddVisibleDirty*(w: Window; rect: Rectangle); 

@@ -1,89 +1,83 @@
 MODULE SSHTransport;
-	IMPORT TCP, IP, DNS, Out := KernelLog, Ciphers := CryptoCiphers, B := CryptoBigNumbers, DH := CryptoDiffieHellman, HMAC := CryptoHMAC, SHA1 := CryptoSHA1, U := CryptoUtils, G := SSHGlobals, SSHKeys;
+	IMPORT TCP, IP, DNS, Strings, Log := KernelLog, Ciphers := CryptoCiphers, B := CryptoBigNumbers, DH := CryptoDiffieHellman, CryptoHashes, CryptoHMAC, U := CryptoUtils, G := SSHGlobals, P := SSHPackets, SSHKeys;
 CONST 
-	ClientVersion = \"SSH-2.0-A2 SSH-1.7"\; 
+	ClientVersion = \"SSH-2.0-A2 SSH-1.8"\; 
 	SSHport = 22; 
-	KEXAlgorythms = \"diffie-hellman-group14-sha1,diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1"\; 
 	SHKAlgorythms = \"ssh-rsa,ssh-dss"\; 
 	ComprAlgorythms = \"none"\; 
 	Languages = \""\; 
 	CR = 0DX; 
 	NL = 0AX; 
-	Disconn = 1X; 
-	Ignore = 2X; 
-	Unimpl = 3X; 
-	Debug = 4X; 
-	ServiceRequest = 5X; 
-	ServiceAccept = 6X; 
-	KEXInit = 14X; 
-	NewKeys = 15X; 
 	Closed* = 0; 
 	Connected* = 1; 
 	Keyexchange* = 2; 
 TYPE 
-	Key = ARRAY 20 OF CHAR; 
+	Key = ARRAY 64 OF CHAR; 
 
-	Connection* = OBJECT 
-	TYPE 
-		; 
+	ModuleName = ARRAY 32 OF CHAR; 
+
+	Packet* = P.Packet; 
+
+	SSHMac = OBJECT 
 	VAR 
-		state-: SIGNED8; 
-		tcp: TCP.Connection; 
+		size, keySize: SIZE; 
+		name: ARRAY 64 OF CHAR; 
+		key: ARRAY 64 OF CHAR; 
+		hmac: CryptoHMAC.HMac; 
+
+		PROCEDURE ^  & NewMac(CONST modName: ARRAY OF CHAR; macLen: SIZE); 
+		PROCEDURE ^ SetKey(CONST macKey: ARRAY OF CHAR); 
+		PROCEDURE ^ Initialize(nr: SIZE); 
+		PROCEDURE ^ Update(CONST buf: ARRAY OF CHAR; pos, len: SIZE); 
+		PROCEDURE ^ GetMac(VAR buf: ARRAY OF CHAR; pos: SIZE); 
+	END SSHMac; 
+
+	SecurityState = RECORD 
+		incipher, outcipher: Ciphers.Cipher; 
+		inkeybits, outkeybits: SIGNED32; 
+		inmode, outmode: SIGNED8; 
+		inmac, outmac: SSHMac; 
+	END; 
+
+	Connection* = OBJECT {EXCLUSIVE} 
+	VAR 
+		state-: INTEGER; 
+		tcp-: TCP.Connection; 
 		servername: ARRAY 128 OF CHAR; 
 		cvers, svers: ARRAY 260 OF CHAR; 
-		sessionId-, hash: Key; 
+		session_id-: Key; 
+		session_id_size-: SIZE; 
+		session_key: Key; 
+		session_key_size: SIZE; 
 		secret: ARRAY 1024 OF CHAR; 
 		incount, outcount: SIGNED32; 
-		inhkey, outhkey: Key; 
 		incipher, outcipher: Ciphers.Cipher; 
-		inmac, outmac: HMAC.HMac; 
-		inmaclen, outmaclen: SIGNED32; 
-		new: RECORD 
-			incipher, outcipher: Ciphers.Cipher; 
-			inkeybits, outkeybits: SIGNED32; 
-			inmode, outmode: SIGNED8; 
-			inmac, outmac: HMAC.HMac; 
-			inmaclen, outmaclen: SIGNED32; 
-		END; 
-		cipherList, hmacList: ARRAY 1024 OF CHAR; 
+		inmac, outmac: SSHMac; 
+		cipherList, hmacList, kexList: ARRAY 1024 OF CHAR; 
 		clientChannelNo: SIGNED32; 
 
 		PROCEDURE ^  & Open*(CONST hostname: ARRAY OF CHAR); 
-		PROCEDURE ^ ReceiveServerVersion(): BOOLEAN; 
+		PROCEDURE ^ GetServerVersion(): BOOLEAN; 
 		PROCEDURE ^ SendClientVersion; 
 		PROCEDURE ^ SendPacket*(p: Packet); 
-		PROCEDURE ^ ReceivePacket*(VAR buf: ARRAY OF CHAR; VAR size: SIZE): CHAR; 
-		PROCEDURE ^ SendDebug*; 
-		PROCEDURE ^ Disconnect*(reason: SIGNED8; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ GetPacket*(): Packet; 
+		PROCEDURE ^ DebugMessage*(msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Disconnect*(reason: INTEGER; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ GetChannelNo*(): SIGNED32; 
 		PROCEDURE ^ PacketAvailable*(): BOOLEAN; 
 		PROCEDURE ^ NegotiateAlgorythms; 
 		PROCEDURE ^ ClientAlgorythms(): Packet; 
-		PROCEDURE ^ Group1(sha1: SHA1.Hash); 
-		PROCEDURE ^ Group14(sha1: SHA1.Hash); 
-		PROCEDURE ^ CheckSHK(CONST buf: ARRAY OF CHAR; shk, sig: SIZE); 
-		PROCEDURE ^ GroupExchange(sha1: SHA1.Hash); 
-		PROCEDURE ^ ActivateNewKeys; 
-		PROCEDURE ^ DeriveKey(keykind: CHAR; keylen: SIGNED32; VAR key: ARRAY OF CHAR); 
+		PROCEDURE ^ Group1(hash: CryptoHashes.Hash): Packet; 
+		PROCEDURE ^ Group14(hash: CryptoHashes.Hash): Packet; 
+		PROCEDURE ^ GroupExchange(hash: CryptoHashes.Hash): Packet; 
+		PROCEDURE ^ CheckSHK(p: Packet); 
+		PROCEDURE ^ ActivateNewKeys(hash: CryptoHashes.Hash; new: SecurityState); 
+		PROCEDURE ^ DeriveKey(keykind: CHAR; len: SIZE; hash: CryptoHashes.Hash; VAR key: ARRAY OF CHAR); 
 	END Connection; 
 
-	Packet* = OBJECT 
-	VAR 
-		buf-: POINTER TO ARRAY OF CHAR; 
-		len-: SIZE; 
-
-		PROCEDURE ^  & Init*(type: CHAR; size: SIZE); 
-		PROCEDURE ^ AppChar*(c: CHAR); 
-		PROCEDURE ^ AppInteger*(v: SIGNED32); 
-		PROCEDURE ^ AppString*(CONST str: ARRAY OF CHAR); 
-		PROCEDURE ^ AppArray*(CONST arr: ARRAY OF CHAR; pos, arrlen: SIZE); 
-	END Packet; 
-VAR 
-	hexd: ARRAY 17 OF CHAR; 
-
-	PROCEDURE ^ Int2Chars(v: SIGNED32; VAR buf: ARRAY OF CHAR); 
+	PROCEDURE ^ Int2Chars(v: SIZE; VAR buf: ARRAY OF CHAR); 
 	PROCEDURE ^ Head(CONST buf, s: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ ReceiveLine(tcp: TCP.Connection; VAR buf: ARRAY OF CHAR): SIZE; 
-	PROCEDURE ^ algoMatch(CONST cstr, sstr: ARRAY OF CHAR; VAR match: ARRAY OF CHAR); 
+	PROCEDURE ^ AlgoMatch(CONST algo, cstr, sstr: ARRAY OF CHAR; VAR match: ARRAY OF CHAR); 
 BEGIN
 END SSHTransport.

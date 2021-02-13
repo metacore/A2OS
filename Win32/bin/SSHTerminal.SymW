@@ -1,5 +1,5 @@
-MODULE SSHClient;
-	IMPORT WMWindowManager, WMComponents, WMStandardComponents, WMG := WMGraphics, WMPopups, WMMessages, WMEditors, WMRectangles, Commands, Files, Strings, Texts, Inputs, Streams, Out := KernelLog, SSHAuthorize, SSH, Beep;
+MODULE SSHTerminal;
+	IMPORT Kernel, Commands, Files, Inputs, Streams, Log := KernelLog, Beep, WMWindowManager, WMComponents, WMStandardComponents, WMG := WMGraphics, WMMessages, WMEditors, WMRectangles, SSHAuthorize, SSHChannels;
 CONST 
 	TerminalWidth = 80; 
 	TerminalHeight = 24; 
@@ -17,7 +17,10 @@ CONST
 	DEL = 7FX; 
 	CR = 0DX; 
 	NL = 0AX; 
+	DefLogin = \"SSH.DefaultLogin"\; 
 TYPE 
+	SSHChannel = SSHChannels.Channel; 
+
 	WindowCloser = PROCEDURE {DELEGATE}; 
 
 	Attribute = POINTER TO RECORD 
@@ -51,11 +54,10 @@ TYPE
 		; 
 	VAR 
 		rows, cols, boxW, boxH, dX, dY: SIZE; 
-		chan: SSH.Channel; 
-		r: Streams.Reader; 
+		chan: SSHChannel; 
 		w: Streams.Writer; 
 		mode: SET; 
-		closeWindow: WindowCloser; 
+		windowCloser: WindowCloser; 
 		first, top: Line; 
 		bg: WMG.Color; 
 		scrollTop, scrollBottom: Line; 
@@ -71,9 +73,7 @@ TYPE
 		sel: RECORD 
 			beg, end: Position; 
 		END; 
-		popup: WMPopups.Popup; 
 
-		PROCEDURE ^ EFill; 
 		PROCEDURE ^ GetCol(): SIZE; 
 		PROCEDURE ^ GetRow(): SIZE; 
 		PROCEDURE ^ GetNewLine(): Line; 
@@ -100,14 +100,11 @@ TYPE
 		PROCEDURE ^ SetAttributes(CONST attrs: ARRAY OF SIGNED32; n: SIZE); 
 		PROCEDURE ^ Draw*(canvas: WMG.Canvas); 
 		PROCEDURE ^ MoveCursor(dr, dc: SIZE); 
-		PROCEDURE ^ ESCSequence(ch: CHAR); 
-		PROCEDURE ^ Consume(ch: CHAR); 
+		PROCEDURE ^ ESCSequence(ch: CHAR; r: Streams.Reader); 
+		PROCEDURE ^ Consume(ch: CHAR; r: Streams.Reader); 
 		PROCEDURE ^ FocusReceived*; 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ LocateBox(x, y: SIZE; VAR pos: Position); 
-		PROCEDURE ^ Copy; 
-		PROCEDURE ^ Paste; 
-		PROCEDURE ^ ClickHandler(sender, par: ANY); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
@@ -117,10 +114,10 @@ TYPE
 		PROCEDURE ^ resized; 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ SetChannel(c: SSH.Channel); 
-		PROCEDURE ^  & New*(cols, rows: SIZE; close: WindowCloser); 
+		PROCEDURE ^ SetChannel(c: SSHChannel); 
+		PROCEDURE ^  & New*(col, row: SIZE; wc: WindowCloser); 
 		PROCEDURE ^ Setup; 
-		PROCEDURE ^ Dispatch; 
+		PROCEDURE ^ ChannelReader; 
 	BEGIN{ACTIVE} 
 	END Frame; 
 
@@ -130,19 +127,21 @@ TYPE
 		address, user: WMEditors.Editor; 
 		connect, help: WMStandardComponents.Button; 
 		sshConn: SSHAuthorize.Connection; 
-		sshChan: SSH.Channel; 
+		channel: SSHChannel; 
 		frame: Frame; 
 
 		PROCEDURE ^  & New; 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ Connected(): BOOLEAN; 
-		PROCEDURE ^ ConnectHandler(sender, data: ANY); 
-		PROCEDURE ^ HelpHandler(sender, data: ANY); 
+		PROCEDURE ^ ConnectHandler(sender, data: ANY ); 
+		PROCEDURE ^ HelpHandler(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 	END Window; 
 VAR 
-	hexd: ARRAY 17 OF CHAR; 
+	lastHostname, lastUsername: ARRAY 64 OF CHAR; 
 
+	PROCEDURE ^ GetDefaultLogin; 
+	PROCEDURE ^ SetDefaultLogin(CONST host, uid: ARRAY OF CHAR); 
 	PROCEDURE ^ Open*; 
 BEGIN
-END SSHClient.
+END SSHTerminal.

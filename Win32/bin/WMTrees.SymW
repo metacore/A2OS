@@ -20,7 +20,7 @@ TYPE
 		parent, prevSibling, nextSibling, firstChild, lastChild: TreeNode; 
 		caption: String; 
 		img: WMGraphics.Image; 
-		data: ANY; 
+		data: ANY ; 
 		inTree: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
@@ -37,7 +37,7 @@ TYPE
 	Tree* = OBJECT {EXCLUSIVE} 
 	VAR 
 		root: TreeNode; 
-		lockedBy: ANY; 
+		lockedBy: ANY ; 
 		lockLevel: SIZE; 
 		viewChanged: BOOLEAN; 
 		onChanged*: WMEvents.EventSource; 
@@ -67,8 +67,8 @@ TYPE
 		PROCEDURE ^ GetNodeCaption*(node: TreeNode): String; 
 		PROCEDURE ^ SetNodeImage*(node: TreeNode; i: WMGraphics.Image); 
 		PROCEDURE ^ GetNodeImage*(node: TreeNode): WMGraphics.Image; 
-		PROCEDURE ^ SetNodeData*(node: TreeNode; data: ANY); 
-		PROCEDURE ^ GetNodeData*(node: TreeNode): ANY; 
+		PROCEDURE ^ SetNodeData*(node: TreeNode; data: ANY ); 
+		PROCEDURE ^ GetNodeData*(node: TreeNode): ANY ; 
 	END Tree; 
 
 	TreeView* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -94,7 +94,7 @@ TYPE
 		PROCEDURE ^ SetIndent*(indent: SIZE); 
 		PROCEDURE ^ GetTree*(): Tree; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ TreeChanged*(sender, data: ANY); 
+		PROCEDURE ^ TreeChanged*(sender, data: ANY ); 
 		PROCEDURE ^ SetFirstLine*(line: SIZE; adjustScrollbar: BOOLEAN); 
 		PROCEDURE ^ SetDrawNodeProc*(x: DrawNodeProc); 
 		PROCEDURE ^ SetMeasureNodeProc*(x: MeasureNodeProc); 
@@ -116,7 +116,7 @@ TYPE
 		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^ SelectNode*(node: TreeNode); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ ScrollbarChanged*(sender, data: ANY); 
+		PROCEDURE ^ ScrollbarChanged*(sender, data: ANY ); 
 	END TreeView; 
 VAR 
 	ColorPrototype: WMProperties.ColorProperty; 

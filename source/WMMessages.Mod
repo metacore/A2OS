@@ -88,18 +88,17 @@ TYPE
 	(** The TrapHandler must return TRUE if the process should restart. Otherwise the process is stopped *)
 	TrapHandler* = PROCEDURE {DELEGATE} () : BOOLEAN;
 
-	MsgQ = OBJECT
-	VAR
+	MsgQ = RECORD
 		head, num: SIZE;
 		msgQ: POINTER TO ARRAY OF Message;
 		owner: MsgSequencer;
 
-		PROCEDURE &InitQ(o: MsgSequencer; size: SIZE);
+		PROCEDURE Init(o: MsgSequencer; size: SIZE);
 		BEGIN
 			head := 0; num := 0;
 			NEW(msgQ, size);
 			SELF.owner := o;
-		END InitQ;
+		END Init;
 
 		PROCEDURE Grow(trace: BOOLEAN);
 		VAR new: POINTER TO ARRAY (* MsgQSize*)  OF Message; i: SIZE; name: ARRAY 128 OF CHAR; VAR pc: ADDRESS;
@@ -143,7 +142,7 @@ TYPE
 		END Grow;
 
 		(** Add a message to a queue. Discards the message if the queue is full *)
-		PROCEDURE Add*(VAR msg : Message; debug:BOOLEAN): BOOLEAN;
+		PROCEDURE Add(VAR msg : Message; debug:BOOLEAN): BOOLEAN;
 		VAR i, pos: SIZE; name: ARRAY 256 OF CHAR; pc: ADDRESS;
 		type: Modules.TypeDesc;
 		CONST
@@ -376,7 +375,7 @@ TYPE
 			RETURN TRUE
 		END Get;
 
-	END MsgQ;
+	END (*MsgQ*);
 
 	(** Message sequencer *)
 	MsgSequencer* = OBJECT
@@ -400,8 +399,8 @@ TYPE
 			name := NIL;
 			alive := FALSE; continue := TRUE;
 			waiting := FALSE; stopped := FALSE;
-			NEW(invalidateQ, SELF, InitialMsgQSize);
-			NEW(msgQ, SELF, InitialMsgQSize);
+			invalidateQ.Init(SELF, InitialMsgQSize);
+			msgQ.Init(SELF, InitialMsgQSize);
 		END New;
 
 		(** Add a trap handler for this process. This handler only decides whether to continue or to abort the process.

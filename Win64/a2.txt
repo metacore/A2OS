@@ -2,6 +2,7 @@ Heaps.SetMetaData ~
 Traps.Install ~
 Files.AddSearchPath bin~
 Files.AddSearchPath ../source~
+Files.AddSearchPath ../~
 Files.SetWorkPath work~
 Configuration.Init~
 Machine.SetTraceFile~

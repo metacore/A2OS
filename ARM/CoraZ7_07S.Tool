@@ -155,7 +155,7 @@ TraceModules=0
 TraceInterrupts=0
 BootVol1=AOS AosFS SD0#3
 AosFS=DiskVolumes.New DiskFS.NewFS
-Boot=PsSerials.;ShellSerial.Open 2 1000000 8 no 1 "Zynq A2 > "
+Boot=PsSerials.;ShellSerial.Open 1 115200 8 no 1 "Zynq A2 > "
 Boot1=System.
 ~
 

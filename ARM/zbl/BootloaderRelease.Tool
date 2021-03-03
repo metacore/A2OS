@@ -27,7 +27,19 @@ BUILDS
 	Zybo {
 		INCLUDE "ZYNQ ZYBO"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ARM/zbl/Zybo.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --symbolFileExtension=.Syb --traceModule=Trace"
+		TARGET "ARM"
+		LINKER "MinosLinker.Link"
+		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
+		EXCLUDEPACKAGES "Fpga Scheduler"
+		PATH ""
+		DISABLED "FALSE"
+	}
+
+	ZyboZ710 {
+		INCLUDE "ZYNQ ZYBO_Z710"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --symbolFileExtension=.Syb --traceModule=Trace"
 		TARGET "ARM"
 		LINKER "MinosLinker.Link"
 		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
@@ -93,6 +105,7 @@ PACKAGE Bootstrap ARCHIVE "Bootstrap.zip" SOURCE "BootstrapSrc.zip" DESCRIPTION 
 	# Specialization on this file is handled with replacements
 	ZEDBOARD { ARM/zbl/Zedboard.TclInit.Mos }
 	ZYBO { ARM/zbl/Zybo.TclInit.Mos }
+	ZYBO_Z710 { ARM/zbl/ZyboZ710.TclInit.Mos }
 	KRM { ARM/zbl/KRM.TclInit.Mos }
 	TE0726 { ARM/zbl/TE0726.TclInit.Mos }
 	TE0720 { ARM/zbl/TE0720.TclInit.Mos }

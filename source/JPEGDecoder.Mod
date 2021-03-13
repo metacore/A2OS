@@ -1,5 +1,7 @@
 MODULE JPEGDecoder;
 
+(*PH 03/21: performance/memory: eliminate some inner wsptr allocations, replace by outer scope definition and conditional allocation. not thread safe*)
+
 IMPORT
 	SYSTEM, Codecs, KernelLog, Streams, Raster, WMGraphics, 	BIT,  Images := Raster;
 
@@ -395,6 +397,9 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 		dest: Dest;
 		logger*:Streams.Writer;
 		res*:SIGNED32;
+		
+		wsptr: DCTITable; (*PH 2021*)
+		wsptrF: DCTTable; (*PH 2021*)
 
 	(* open the decoder on an InputStream *)
 	PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
@@ -1698,13 +1703,13 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 		z5,z10,z11,z12,z13,dcval1: SIGNED32;
 		dcval: CHAR;
 		inptr: JBlock;
-		quantptr,wsptr: DCTITable;
+		quantptr(*,wsptr*): DCTITable;
 		inws,ctr: SIGNED16;
 		outptr: JSampRow;
 	BEGIN
 		inptr :=coefBlock;
 		quantptr := compptr.dctITable;
-		NEW(wsptr);
+		IF wsptr=NIL THEN NEW(wsptr) END;
 
 		FOR ctr:=0 TO DCTSIZE -1 DO
 			IF (inptr[DCTSIZE * 1 + ctr] = 0) & (inptr[DCTSIZE * 2 + ctr] = 0) &
@@ -1852,14 +1857,14 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 	VAR
 		tmp0,tmp2,tmp10,tmp12,z1,z2,z3,z4,dcval: SIGNED32;
 		inptr: JBlock;
-		quantptr,wsptr: DCTSTable;
+		quantptr(*,wsptr*): DCTSTable;
 		inws,hctr,ctr: SIGNED16;
 		outptr: JSampRow;
 		dcChar: CHAR;
 	BEGIN
 		inptr :=coefBlock;
 		quantptr := compptr.dctSTable;
-		NEW(wsptr);
+		IF wsptr=NIL THEN NEW(wsptr) END;
 
 		hctr := DCTSIZE +1;
 		FOR ctr:=0 TO DCTSIZE -1 DO
@@ -1956,14 +1961,14 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 	VAR
 		tmp0,tmp10,z1,dcval: SIGNED32;
 		inptr: JBlock;
-		quantptr,wsptr: DCTSTable;
+		quantptr(*,wsptr*): DCTSTable;
 		inws,hctr,ctr: SIGNED16;
 		outptr: JSampRow;
 		dcChar: CHAR;
 	BEGIN
 		inptr :=coefBlock;
 		quantptr := compptr.dctSTable;
-		NEW(wsptr);
+		IF wsptr=NIL THEN NEW(wsptr) END;
 
 		hctr := DCTSIZE +1;
 		FOR ctr:=0 TO DCTSIZE -1 DO
@@ -2047,13 +2052,13 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 		tmp0,tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,tmp7,tmp10,tmp11,tmp12,tmp13: FLOAT32;
 		z5,z10,z11,z12,z13,dcval: FLOAT32;
 		inptr: JBlock;
-		quantptr,wsptr: DCTTable;
+		quantptr(*,wsptr*): DCTTable;
 		inws,ctr: SIGNED16;
 		outptr: JSampRow;
 	BEGIN
 		inptr :=coefBlock;
 		quantptr := compptr.dctTable;
-		NEW(wsptr);
+		IF wsptrF=NIL THEN NEW(wsptrF) END;
 
 		FOR ctr:=0 TO DCTSIZE -1 DO
 			IF (inptr[DCTSIZE * 1 + ctr] = 0) & (inptr[DCTSIZE * 2 + ctr] = 0) &
@@ -2062,14 +2067,14 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 				(inptr[DCTSIZE * 7 + ctr] = 0)
 			THEN
 				dcval := inptr[ctr] * quantptr[ctr];
-				wsptr[ctr] := dcval;
-				wsptr[DCTSIZE * 1 +ctr] := dcval;
-				wsptr[DCTSIZE * 2 +ctr] := dcval;
-				wsptr[DCTSIZE * 3 +ctr] := dcval;
-				wsptr[DCTSIZE * 4 +ctr] := dcval;
-				wsptr[DCTSIZE * 5 +ctr] := dcval;
-				wsptr[DCTSIZE * 6 +ctr] := dcval;
-				wsptr[DCTSIZE * 7 +ctr] := dcval;
+				wsptrF[ctr] := dcval;
+				wsptrF[DCTSIZE * 1 +ctr] := dcval;
+				wsptrF[DCTSIZE * 2 +ctr] := dcval;
+				wsptrF[DCTSIZE * 3 +ctr] := dcval;
+				wsptrF[DCTSIZE * 4 +ctr] := dcval;
+				wsptrF[DCTSIZE * 5 +ctr] := dcval;
+				wsptrF[DCTSIZE * 6 +ctr] := dcval;
+				wsptrF[DCTSIZE * 7 +ctr] := dcval;
 			ELSE
 				tmp0 := inptr[ctr] * quantptr[ctr];
 				tmp1 := inptr[DCTSIZE * 2 + ctr] * quantptr[DCTSIZE * 2 + ctr];
@@ -2101,14 +2106,14 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 				tmp5 := tmp11 - tmp6;
 				tmp4 := tmp10 + tmp5;
 
-				wsptr[ctr] := tmp0 + tmp7;
-				wsptr[DCTSIZE * 7 +ctr] := tmp0 - tmp7;
-				wsptr[DCTSIZE * 1 +ctr] := tmp1 + tmp6;
-				wsptr[DCTSIZE * 6 +ctr] := tmp1 - tmp6;
-				wsptr[DCTSIZE * 2 +ctr] := tmp2 + tmp5;
-				wsptr[DCTSIZE * 5 +ctr] := tmp2 - tmp5;
-				wsptr[DCTSIZE * 4 +ctr] := tmp3 + tmp4;
-				wsptr[DCTSIZE * 3 +ctr] := tmp3 - tmp4;
+				wsptrF[ctr] := tmp0 + tmp7;
+				wsptrF[DCTSIZE * 7 +ctr] := tmp0 - tmp7;
+				wsptrF[DCTSIZE * 1 +ctr] := tmp1 + tmp6;
+				wsptrF[DCTSIZE * 6 +ctr] := tmp1 - tmp6;
+				wsptrF[DCTSIZE * 2 +ctr] := tmp2 + tmp5;
+				wsptrF[DCTSIZE * 5 +ctr] := tmp2 - tmp5;
+				wsptrF[DCTSIZE * 4 +ctr] := tmp3 + tmp4;
+				wsptrF[DCTSIZE * 3 +ctr] := tmp3 - tmp4;
 			END;
 		END;
 
@@ -2116,19 +2121,19 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 		FOR ctr := 0 TO DCTSIZE -1 DO
 			outptr := outputBuf.row[ctr + outputRow];
 
-			tmp10 := wsptr[inws] + wsptr[4 + inws];
-			tmp11 := wsptr[inws] - wsptr[4 + inws];
-			tmp13 := wsptr[2 + inws] + wsptr[6 + inws];
-			tmp12 := (wsptr[2 + inws] - wsptr[6 + inws]) * 1.414213562 - tmp13;
+			tmp10 := wsptrF[inws] + wsptrF[4 + inws];
+			tmp11 := wsptrF[inws] - wsptrF[4 + inws];
+			tmp13 := wsptrF[2 + inws] + wsptrF[6 + inws];
+			tmp12 := (wsptrF[2 + inws] - wsptrF[6 + inws]) * 1.414213562 - tmp13;
 			tmp0 := tmp10 + tmp13;
 			tmp3 := tmp10 - tmp13;
 			tmp1 := tmp11 + tmp12;
 			tmp2 := tmp11 - tmp12;
 
-			z13 := wsptr[5 + inws] + wsptr[3 + inws];
-			z10 := wsptr[5 + inws] - wsptr[3 + inws];
-			z11 := wsptr[1 + inws] + wsptr[7 + inws];
-			z12 := wsptr[1 + inws] - wsptr[7 + inws];
+			z13 := wsptrF[5 + inws] + wsptrF[3 + inws];
+			z10 := wsptrF[5 + inws] - wsptrF[3 + inws];
+			z11 := wsptrF[1 + inws] + wsptrF[7 + inws];
+			z12 := wsptrF[1 + inws] - wsptrF[7 + inws];
 			tmp7 := z11 + z13;
 			tmp11 := (z11 -z13) * 1.414213562;
 			z5 := (z10 + z12) * 1.847759065;

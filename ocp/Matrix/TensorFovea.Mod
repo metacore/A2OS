@@ -9,14 +9,307 @@ shift up/down of the data is equivalent to scaling about the center,
 move left/right of the data is equivalent to approximate rotation around the center.
 *)
 
-IMPORT Random, Files, Commands, WMMatrix, WMGraphics, MatrixRaster, WMArrayPanel;
+IMPORT Random, Files, Commands, WMMatrix, WMGraphics, MatrixRaster, WMArrayPanel, Stat:=StatisticsBase;
+
+CONST (*structure*)
+	SingleShell*=1;
+	DoubleShell*=2;
 
 TYPE Datatype* = FLOAT64;
 TYPE Array* = ARRAY [?] OF Datatype;
 	Tensor*=Array;
 	Matrix* = ARRAY [*,*] OF Datatype;
+	SizeVector*=ARRAY [*] OF SIZE;
 	Image* = Array ; (** foveal images have high central resolution and peripheral blur. They are stored as with size 12 in the last dimension due to special structure *)
 	ArrayFunction*= PROCEDURE{DELEGATE}(CONST m:Array): Datatype;
+
+TYPE Transformer*=OBJECT
+	VAR mode: SIGNED32;
+		innerBlockSize, shells: SIGNED32;
+		blockSize: SizeVector;
+		img: Tensor; 
+		
+	PROCEDURE &Init*(innerBlockSize,shells:SIGNED32);
+	BEGIN
+		SELF.innerBlockSize:=innerBlockSize; SELF.shells:=shells;
+		blockSize:=GetBlockSize(innerBlockSize,shells);
+	END Init;
+
+	(*extract foveal representation from matrix at given location; block aspect ratio is =1*)
+	PROCEDURE GetFovea*(CONST m:Matrix; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
+	VAR i, x,y, len, slen:SIZE;
+	BEGIN
+		IF ~HasSize(img, [LEN(m,0), shells+1, 12]) THEN NEW(img, LEN(m,0), shells+1, 12) END; (* subblocks *)
+		(*NEW(img, shells+1, 12);*) (* blocks*)
+		len:=innerBlockSize; (*inner block has four quadrants, each of them has size= len*len, ...*)
+		slen:=len DIV 2;
+		x:=centerX;
+		y:=centerY;
+		img[0, 0..2]:=Mean(m[y..y+len-1, x-len..x-1]); (* rotating from 9 o clock, clockwise*)
+		img[0, 3..5]:=Mean(m[y..y+len-1, x..x+len-1]); 
+		img[0, 6..8]:=Mean(m[y-len..y-1, x..x+len-1]); 
+		img[0, 9..11]:=Mean(m[y-len..y-1, x-len..x-1]); (* core *)(*to do: blocks instead of fixed pixel size*)
+		FOR i:=0 TO shells-1 DO
+			img[i+1, 0] := Mean(m[y+0*len..y+1*len-1, x-2*len..x-1*len-1]); (* performance: could substitute Mean() by simple sampling *)
+			img[i+1, 1] := Mean(m[y+1*len..y+2*len-1, x-2*len..x-1*len-1]);
+			img[i+1, 2] := Mean(m[y+1*len..y+2*len-1, x-1*len..x+0*len-1]);
+			img[i+1, 3] := Mean(m[y+1*len..y+2*len-1, x+0*len..x+1*len-1]);
+			img[i+1, 4] := Mean(m[y+1*len..y+2*len-1, x+1*len..x+2*len-1]);
+			img[i+1, 5] := Mean(m[y+0*len..y+1*len-1, x+1*len..x+2*len-1]);
+			img[i+1, 6] := Mean(m[y-1*len..y+0*len-1, x+1*len..x+2*len-1]);
+			img[i+1, 7] := Mean(m[y-2*len..y-1*len-1, x+1*len..x+2*len-1]);
+			img[i+1, 8] := Mean(m[y-2*len..y-1*len-1, x+0*len..x+1*len-1]);
+			img[i+1, 9] := Mean(m[y-2*len..y-1*len-1, x-1*len..x+0*len-1]);
+			img[i+1,10] := Mean(m[y-2*len..y-1*len-1, x-2*len..x-1*len-1]);
+			img[i+1,11] := Mean(m[y-1*len..y+0*len-1, x-2*len..x-1*len-1]);
+
+			len:=len*2;
+			slen:=len DIV 2
+		END;
+		RETURN img
+	END GetFovea;
+
+	(*extract foveal representation from matrix at given location; block aspect ratio is =2, i.r. thinner shells *)
+	PROCEDURE GetFovea2*(CONST m:Matrix; centerX,centerY:SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
+	VAR i, x,y, len, slen:SIZE;
+	BEGIN
+		IF ~HasSize(img, [LEN(m,0), 2*shells+1, 12]) THEN NEW(img, LEN(m,0), 2*shells+1, 12) END; (* subblocks *)
+		(*NEW(img, 2*shells+1, 12);*) (* subblocks *)
+		len:=innerBlockSize;
+		slen:=len DIV 2;
+		x:=centerX;
+		y:=centerY;
+		img[0, 0..2]:=Mean(m[y..y+len-1, x-len..x-1]); (* rotating from 9 o clock, clockwise*)
+		img[0, 3..5]:=Mean(m[y..y+len-1, x..x+len-1]); 
+		img[0, 6..8]:=Mean(m[y-len..y-1, x..x+len-1]); 
+		img[0, 9..11]:=Mean(m[y-len..y-1, x-len..x-1]); (* core *)(*to do: blocks instead of fixed pixel size*)
+		FOR i:=0 TO shells-1 DO
+			
+			img[2*i+1, 0] := Mean(m[y+0*len..y+1*len-1, x-2*len+slen..x-1*len-1]); (* performance: could substitute Mean() by simple sampling *)
+			img[2*i+1, 1] := Mean(m[y+1*len..y+2*len-1, x-2*len+slen..x-1*len-1]);
+			img[2*i+1, 2] := Mean(m[y+1*len..y+1*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
+			img[2*i+1, 3] := Mean(m[y+1*len..y+1*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
+			img[2*i+1, 4] := Mean(m[y+1*len..y+1*len+MAX(1,slen)-1, x+1*len..x+2*len-1]);
+			img[2*i+1, 5] := Mean(m[y+0*len..y+1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 6] := Mean(m[y-1*len..y+0*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 7] := Mean(m[y-2*len..y-1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 8] := Mean(m[y-2*len+slen..y-1*len-1, x+0*len..x+1*len-1]);
+			img[2*i+1, 9] := Mean(m[y-2*len+slen..y-1*len-1, x-1*len..x+0*len-1]);
+			img[2*i+1,10] := Mean(m[y-2*len+slen..y-1*len-1, x-2*len..x-1*len-1]); (*! there is some indexing problem here ...*)
+			img[2*i+1,11] := Mean(m[y-1*len..y+0*len-1, x-2*len+slen..x-1*len-1]);
+
+			img[2*i+2, 0] := Mean(m[y+0*len..y+1*len-1, x-2*len..x-2*len+MAX(1,slen)-1]); 
+			img[2*i+2, 1] := Mean(m[y+1*len..y+2*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
+			img[2*i+2, 2] := Mean(m[y+1*len+slen..y+2*len-1, x-1*len..x+0*len-1]);
+			img[2*i+2, 3] := Mean(m[y+1*len+slen..y+2*len-1, x+0*len..x+1*len-1]);
+			img[2*i+2, 4] := Mean(m[y+1*len+slen..y+2*len-1, x+1*len..x+2*len-1]);
+			img[2*i+2, 5] := Mean(m[y+0*len..y+1*len-1, x+1*len+slen..x+2*len-1]);
+			img[2*i+2, 6] := Mean(m[y-1*len..y+0*len-1, x+1*len+slen..x+2*len-1]);
+			img[2*i+2, 7] := Mean(m[y-2*len..y-1*len-1, x+1*len+slen..x+2*len-1]);
+			img[2*i+2, 8] := Mean(m[y-2*len..y-2*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
+			img[2*i+2, 9] := Mean(m[y-2*len..y-2*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
+			img[2*i+2,10] := Mean(m[y-2*len..y-2*len+MAX(1,slen)-1, x-2*len..x-1*len-1]);
+			img[2*i+2,11] := Mean(m[y-1*len..y+0*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
+
+			len:=len*2;
+			slen:=len DIV 2
+		END;
+		RETURN img
+	END GetFovea2;
+
+	(*extract multilayer foveal representation from tensor at given location; block aspect ratio is =2, i.r. thinner shells *)
+	PROCEDURE GetFoveaA2*(CONST m:Tensor; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32; func: ArrayFunction): Tensor; (*! tbd: which index position is layer index ? *)
+	VAR i, x,y, len, slen, layer:SIZE;
+	BEGIN
+		ASSERT(DIM(m)=3, 202); (*implementation limitation*)
+		IF ~HasSize(img, [LEN(m,0), 2*shells+1, 12]) THEN NEW(img, LEN(m,0), 2*shells+1, 12) END; (* subblocks *)
+		x:=centerX;
+		y:=centerY;
+		FOR layer:=0 TO LEN(m,0)-1 DO
+			len:=innerBlockSize;
+			slen:=len DIV 2;		
+			img[layer, 0, 0..2]:=func(m[layer, y..y+len-1, x-len..x-1]); (* rotating from 9 o clock, clockwise*)
+			img[layer, 0, 3..5]:=func(m[layer, y..y+len-1, x..x+len-1]); 
+			img[layer, 0, 6..8]:=func(m[layer, y-len..y-1, x..x+len-1]); 
+			img[layer, 0, 9..11]:=func(m[layer, y-len..y-1, x-len..x-1]); (* core *)(*to do: blocks instead of fixed pixel size*)
+			FOR i:=0 TO shells-1 DO	
+				img[layer, 2*i+1, 0] := func(m[layer, y+0*len..y+1*len-1, x-2*len+slen..x-1*len-1]); (* performance: could substitute func() by simple sampling *)
+				img[layer, 2*i+1, 1] := func(m[layer, y+1*len..y+2*len-1, x-2*len+slen..x-1*len-1]);
+				img[layer, 2*i+1, 2] := func(m[layer, y+1*len..y+1*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
+				img[layer, 2*i+1, 3] := func(m[layer, y+1*len..y+1*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
+				img[layer, 2*i+1, 4] := func(m[layer, y+1*len..y+1*len+MAX(1,slen)-1, x+1*len..x+2*len-1]);
+				img[layer, 2*i+1, 5] := func(m[layer, y+0*len..y+1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+				img[layer, 2*i+1, 6] := func(m[layer, y-1*len..y+0*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+				img[layer, 2*i+1, 7] := func(m[layer, y-2*len..y-1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+				img[layer, 2*i+1, 8] := func(m[layer, y-2*len+slen..y-1*len-1, x+0*len..x+1*len-1]);
+				img[layer, 2*i+1, 9] := func(m[layer, y-2*len+slen..y-1*len-1, x-1*len..x+0*len-1]);
+				img[layer, 2*i+1,10] := func(m[layer, y-2*len+slen..y-1*len-1, x-2*len..x-1*len-1]); (*! there is some indexing problem here ...*)
+				img[layer, 2*i+1,11] := func(m[layer, y-1*len..y+0*len-1, x-2*len+slen..x-1*len-1]);
+	 
+				img[layer, 2*i+2, 0] := func(m[layer, y+0*len..y+1*len-1, x-2*len..x-2*len+MAX(1,slen)-1]); 
+				img[layer, 2*i+2, 1] := func(m[layer, y+1*len..y+2*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
+				img[layer, 2*i+2, 2] := func(m[layer, y+1*len+slen..y+2*len-1, x-1*len..x+0*len-1]);
+				img[layer, 2*i+2, 3] := func(m[layer, y+1*len+slen..y+2*len-1, x+0*len..x+1*len-1]);
+				img[layer, 2*i+2, 4] := func(m[layer, y+1*len+slen..y+2*len-1, x+1*len..x+2*len-1]);
+				img[layer, 2*i+2, 5] := func(m[layer, y+0*len..y+1*len-1, x+1*len+slen..x+2*len-1]);
+				img[layer, 2*i+2, 6] := func(m[layer, y-1*len..y+0*len-1, x+1*len+slen..x+2*len-1]);
+				img[layer, 2*i+2, 7] := func(m[layer, y-2*len..y-1*len-1, x+1*len+slen..x+2*len-1]);
+				img[layer, 2*i+2, 8] := func(m[layer, y-2*len..y-2*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
+				img[layer, 2*i+2, 9] := func(m[layer, y-2*len..y-2*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
+				img[layer, 2*i+2,10] := func(m[layer, y-2*len..y-2*len+MAX(1,slen)-1, x-2*len..x-1*len-1]);
+				img[layer, 2*i+2,11] := func(m[layer, y-1*len..y+0*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
+				len:=len*2;
+				slen:=len DIV 2
+			END
+		END;
+		RETURN img
+	END GetFoveaA2;
+
+	(*extract multilayer foveal representation from tensor at given location; block aspect ratio is =2, i.r. thinner shells *)
+	PROCEDURE GetFoveaSampledA2*(CONST m:Tensor; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Tensor; (*! tbd: which index position is layer index ? *)
+	VAR i, x,y, len, slen, layer:SIZE;
+	BEGIN
+		(*img0:=m;*)
+		ASSERT(DIM(m)=3, 202); (*implementation limitation*)
+		IF ~HasSize(img, [LEN(m,0), 2*shells+1, 12]) THEN NEW(img, LEN(m,0), 2*shells+1, 12) END; (* subblocks *)
+		(*NEW(img, LEN(m,0), 2*shells+1, 12);*) (* subblocks *)
+
+		x:=centerX;
+		y:=centerY;
+		FOR layer:=0 TO LEN(m,0)-1 DO
+			len:=innerBlockSize;
+			slen:=len DIV 2;		
+			img[layer, 0, 0..2]:=Mean(m[layer, y..y+len-1, x-len..x-1]); (* rotating from 9 o clock, clockwise*)
+			img[layer, 0, 3..5]:=Mean(m[layer, y..y+len-1, x..x+len-1]); 
+			img[layer, 0, 6..8]:=Mean(m[layer, y-len..y-1, x..x+len-1]); 
+			img[layer, 0, 9..11]:=Mean(m[layer, y-len..y-1, x-len..x-1]); (* core *)(*to do: blocks instead of fixed pixel size*)
+			FOR i:=0 TO shells-1 DO	
+				img[layer, 2*i+1, 0] := Sample(m[layer, y+0*len..y+1*len-1, x-2*len+slen..x-1*len-1]);  
+				img[layer, 2*i+1, 1] := Sample(m[layer, y+1*len..y+2*len-1, x-2*len+slen..x-1*len-1]);
+				img[layer, 2*i+1, 2] := Sample(m[layer, y+1*len..y+1*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
+				img[layer, 2*i+1, 3] := Sample(m[layer, y+1*len..y+1*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
+				img[layer, 2*i+1, 4] := Sample(m[layer, y+1*len..y+1*len+MAX(1,slen)-1, x+1*len..x+2*len-1]);
+				img[layer, 2*i+1, 5] := Sample(m[layer, y+0*len..y+1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+				img[layer, 2*i+1, 6] := Sample(m[layer, y-1*len..y+0*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+				img[layer, 2*i+1, 7] := Sample(m[layer, y-2*len..y-1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+				img[layer, 2*i+1, 8] := Sample(m[layer, y-2*len+slen..y-1*len-1, x+0*len..x+1*len-1]);
+				img[layer, 2*i+1, 9] := Sample(m[layer, y-2*len+slen..y-1*len-1, x-1*len..x+0*len-1]);
+				img[layer, 2*i+1,10] := Sample(m[layer, y-2*len+slen..y-1*len-1, x-2*len..x-1*len-1]); (*! there is some indexing problem here ...*)
+				img[layer, 2*i+1,11] := Sample(m[layer, y-1*len..y+0*len-1, x-2*len+slen..x-1*len-1]);
+	 
+				img[layer, 2*i+2, 0] := Sample(m[layer, y+0*len..y+1*len-1, x-2*len..x-2*len+MAX(1,slen)-1]); 
+				img[layer, 2*i+2, 1] := Sample(m[layer, y+1*len..y+2*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
+				img[layer, 2*i+2, 2] := Sample(m[layer, y+1*len+slen..y+2*len-1, x-1*len..x+0*len-1]);
+				img[layer, 2*i+2, 3] := Sample(m[layer, y+1*len+slen..y+2*len-1, x+0*len..x+1*len-1]);
+				img[layer, 2*i+2, 4] := Sample(m[layer, y+1*len+slen..y+2*len-1, x+1*len..x+2*len-1]);
+				img[layer, 2*i+2, 5] := Sample(m[layer, y+0*len..y+1*len-1, x+1*len+slen..x+2*len-1]);
+				img[layer, 2*i+2, 6] := Sample(m[layer, y-1*len..y+0*len-1, x+1*len+slen..x+2*len-1]);
+				img[layer, 2*i+2, 7] := Sample(m[layer, y-2*len..y-1*len-1, x+1*len+slen..x+2*len-1]);
+				img[layer, 2*i+2, 8] := Sample(m[layer, y-2*len..y-2*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
+				img[layer, 2*i+2, 9] := Sample(m[layer, y-2*len..y-2*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
+				img[layer, 2*i+2,10] := Sample(m[layer, y-2*len..y-2*len+MAX(1,slen)-1, x-2*len..x-1*len-1]);
+				img[layer, 2*i+2,11] := Sample(m[layer, y-1*len..y+0*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
+				len:=len*2;
+				slen:=len DIV 2
+			END
+		END;
+		RETURN img
+	END GetFoveaSampledA2;
+
+	(*extract foveal representation from matrix at given location; block aspect ratio is =2, i.r. thinner shells *)
+	PROCEDURE GetFoveaSampled2*(CONST m:Matrix; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
+	VAR  i, x,y, len, slen:SIZE;
+	BEGIN
+		IF ~HasSize(img, [LEN(m,0), 2*shells+1, 12]) THEN NEW(img, LEN(m,0), 2*shells+1, 12) END; (* subblocks *)
+		(*NEW(img, 2*shells+1, 12);*) (* subblocks *)
+		len:=innerBlockSize;
+		slen:=len DIV 2;
+		x:=centerX;
+		y:=centerY;
+		img[0, 0..2]:=Mean(m[y..y+len-1, x-len..x-1]); (* rotating from 9 o clock, clockwise*)
+		img[0, 3..5]:=Mean(m[y..y+len-1, x..x+len-1]); 
+		img[0, 6..8]:=Mean(m[y-len..y-1, x..x+len-1]); 
+		img[0, 9..11]:=Mean(m[y-len..y-1, x-len..x-1]); (* core *)(*to do: blocks instead of fixed pixel size*)
+		FOR i:=0 TO shells-1 DO
+			
+			img[2*i+1, 0] := Sample(m[y+0*len..y+1*len-1, x-2*len+slen..x-1*len-1]); 
+			img[2*i+1, 1] := Sample(m[y+1*len..y+2*len-1, x-2*len+slen..x-1*len-1]);
+			img[2*i+1, 2] := Sample(m[y+1*len..y+1*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
+			img[2*i+1, 3] := Sample(m[y+1*len..y+1*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
+			img[2*i+1, 4] := Sample(m[y+1*len..y+1*len+MAX(1,slen)-1, x+1*len..x+2*len-1]);
+			img[2*i+1, 5] := Sample(m[y+0*len..y+1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 6] := Sample(m[y-1*len..y+0*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 7] := Sample(m[y-2*len..y-1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 8] := Sample(m[y-2*len+slen..y-1*len-1, x+0*len..x+1*len-1]);
+			img[2*i+1, 9] := Sample(m[y-2*len+slen..y-1*len-1, x-1*len..x+0*len-1]);
+			img[2*i+1,10] := Sample(m[y-2*len+slen..y-1*len-1, x-2*len..x-1*len-1]);
+			img[2*i+1,11] := Sample(m[y-1*len..y+0*len-1, x-2*len+slen..x-1*len-1]);
+
+			img[2*i+2, 0] := Sample(m[y+0*len..y+1*len-1, x-2*len..x-2*len+MAX(1,slen)-1]); 
+			img[2*i+2, 1] := Sample(m[y+1*len..y+2*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
+			img[2*i+2, 2] := Sample(m[y+1*len+slen..y+2*len-1, x-1*len..x+0*len-1]);
+			img[2*i+2, 3] := Sample(m[y+1*len+slen..y+2*len-1, x+0*len..x+1*len-1]);
+			img[2*i+2, 4] := Sample(m[y+1*len+slen..y+2*len-1, x+1*len..x+2*len-1]);
+			img[2*i+2, 5] := Sample(m[y+0*len..y+1*len-1, x+1*len+slen..x+2*len-1]);
+			img[2*i+2, 6] := Sample(m[y-1*len..y+0*len-1, x+1*len+slen..x+2*len-1]);
+			img[2*i+2, 7] := Sample(m[y-2*len..y-1*len-1, x+1*len+slen..x+2*len-1]);
+			img[2*i+2, 8] := Sample(m[y-2*len..y-2*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
+			img[2*i+2, 9] := Sample(m[y-2*len..y-2*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
+			img[2*i+2,10] := Sample(m[y-2*len..y-2*len+MAX(1,slen)-1, x-2*len..x-1*len-1]);
+			img[2*i+2,11] := Sample(m[y-1*len..y+0*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
+
+			len:=len*2;
+			slen:=len DIV 2
+		END;
+		RETURN img
+	END GetFoveaSampled2;
+
+
+	(*extract foveal representation from matrix at given location; block aspect ratio is =1*)
+	PROCEDURE GetFoveaSampled*(CONST m:Matrix; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
+	VAR i, x,y, len:SIZE;
+	BEGIN
+		IF ~HasSize(img, [LEN(m,0), shells+1, 12]) THEN NEW(img, LEN(m,0), shells+1, 12) END; (* subblocks *)
+		(*NEW(img, shells+1, 12);*)
+		len:=innerBlockSize;
+		x:=centerX;
+		y:=centerY;
+		img[0, 0..2]:=Sample(m[y..y+len-1, x-len..x-1]); (* rotating from 9 o clock, clockwise*)
+		img[0, 3..5]:=Sample(m[y..y+len-1, x..x+len-1]); 
+		img[0, 6..8]:=Sample(m[y-len..y-1, x..x+len-1]); 
+		img[0, 9..11]:=Sample(m[y-len..y-1, x-len..x-1]); (* core *)(*to do: blocks instead of fixed pixel size*)
+		FOR i:=0 TO shells-1 DO
+			img[i+1, 0] := Sample(m[y+0*len..y+1*len-1, x-2*len..x-1*len-1]); (* performance: could substitute Mean() by simple sampling *)
+			img[i+1, 1] := Sample(m[y+1*len..y+2*len-1, x-2*len..x-1*len-1]);
+			img[i+1, 2] := Sample(m[y+1*len..y+2*len-1, x-1*len..x+0*len-1]);
+			img[i+1, 3] := Sample(m[y+1*len..y+2*len-1, x+0*len..x+1*len-1]);
+			img[i+1, 4] := Sample(m[y+1*len..y+2*len-1, x+1*len..x+2*len-1]);
+			img[i+1, 5] := Sample(m[y+0*len..y+1*len-1, x+1*len..x+2*len-1]);
+			img[i+1, 6] := Sample(m[y-1*len..y+0*len-1, x+1*len..x+2*len-1]);
+			img[i+1, 7] := Sample(m[y-2*len..y-1*len-1, x+1*len..x+2*len-1]);
+			img[i+1, 8] := Sample(m[y-2*len..y-1*len-1, x+0*len..x+1*len-1]);
+			img[i+1, 9] := Sample(m[y-2*len..y-1*len-1, x-1*len..x+0*len-1]);
+			img[i+1,10] := Sample(m[y-2*len..y-1*len-1, x-2*len..x-1*len-1]);
+			img[i+1,11] := Sample(m[y-1*len..y+0*len-1, x-2*len..x-1*len-1]);
+			len:=len*2;
+		END;
+		RETURN img
+	END GetFoveaSampled;
+	
+	PROCEDURE Transform*(CONST rawData, rawLabels:Tensor; VAR transformedData, labels:Tensor; mode: SIGNED32);
+	BEGIN
+		SELF.mode:=mode;
+		labels:=rawLabels;
+		IF (mode=0) THEN 		(*performance: averaging and distortion more costly than subsampling below*)
+			transformedData:=GetFoveaA2(rawData, blockSize[0] DIV 2, blockSize[1] DIV 2, innerBlockSize, shells, Stat.Mean); (*uses internal*)
+		ELSE
+			transformedData:=GetFoveaSampledA2(rawData, blockSize[0] DIV 2, blockSize[1] DIV 2, innerBlockSize, shells); (*!implementation limitation, uses global function*)(*speedier ? adds noise for more robust learning ?*)
+		END;
+	END Transform;
+BEGIN
+	
+END Transformer;
+
 
 VAR rand:Random.Generator; 
 	oldName: Files.FileName;
@@ -43,6 +336,30 @@ BEGIN
 	END;
 END Max;
 
+PROCEDURE SameSize(CONST a,a1:Array):BOOLEAN;
+VAR i:SIZE;
+BEGIN
+	IF DIM(a)#DIM(a1) THEN RETURN FALSE
+	ELSE
+		FOR i:=0 TO DIM(a)-1 DO
+			IF LEN(a,i)#LEN(a1,i) THEN RETURN FALSE END;
+		END;
+		RETURN TRUE
+	END;
+END SameSize;
+
+PROCEDURE HasSize(CONST a:Array; CONST size:SizeVector):BOOLEAN;
+VAR i:SIZE;
+BEGIN
+	IF DIM(a)#LEN(size,0) THEN RETURN FALSE
+	ELSE
+		FOR i:=0 TO DIM(a)-1 DO
+			IF LEN(a,i)#size[i] THEN RETURN FALSE END;
+		END;
+		RETURN TRUE
+	END;
+END HasSize;
+
 PROCEDURE Sample(CONST m: Array):Datatype;
 VAR x,y: SIGNED32;
 BEGIN
@@ -57,11 +374,34 @@ BEGIN
 	IF LEN(m,1)*LEN(m,0)>0 THEN RETURN m[0, 0] ELSE RETURN 0 END;(*catch zero size subblocks*)
 END Gridpoints;
 
+PROCEDURE GetBlockSize*(innerBlockSize, shells: SIGNED32):SizeVector;
+VAR w,h: SIZE; i:SIGNED32;
+BEGIN
+	IF LEN(RESULT,0)#2 THEN NEW(RESULT,2) END;
+	w:=2*innerBlockSize; 
+	h:=2*innerBlockSize;
+	FOR i:=0 TO shells-1 DO
+		w:=w*2; h:=h*2;
+	END;
+	RESULT[0]:=h; RESULT[1]:=w;
+	RETURN RESULT
+END GetBlockSize;
 
+PROCEDURE GetFoveaSize*(innerBlockSize, shells, shellType: SIGNED32):SizeVector;
+BEGIN
+	IF LEN(RESULT,0)#2 THEN NEW(RESULT,2) END;
+	RESULT[0]:=1+shells*shellType; RESULT[1]:=12;
+	RETURN RESULT
+END GetFoveaSize;
+
+(*extract foveal representation from matrix at given location; block aspect ratio is =1*)
 PROCEDURE GetFovea*(CONST m:Matrix; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
 VAR img: Image; i, x,y, len, slen:SIZE;
+	t:Transformer;
 BEGIN
-	NEW(img, shells+1, 12); (* blocks*)
+	NEW(t,innerBlockSize,shells);
+	RETURN t.GetFovea(m,centerX,centerY,innerBlockSize,shells);
+	(*NEW(img, shells+1, 12); (* blocks*)
 	len:=innerBlockSize; (*inner block has four quadrants, each of them has size= len*len, ...*)
 	slen:=len DIV 2;
 	x:=centerX;
@@ -87,13 +427,17 @@ BEGIN
 		len:=len*2;
 		slen:=len DIV 2
 	END;
-	RETURN img
+	RETURN img*)
 END GetFovea;
 
+(*extract foveal representation from matrix at given location; block aspect ratio is =2, i.r. thinner shells *)
 PROCEDURE GetFovea2*(CONST m:Matrix; centerX,centerY:SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
 VAR img: Image; i, x,y, len, slen:SIZE;
+	t:Transformer;
 BEGIN
-	NEW(img, 2*shells+1, 12); (* subblocks *)
+	NEW(t,innerBlockSize,shells);
+	RETURN t.GetFovea2(m,centerX,centerY,innerBlockSize,shells);
+	(*NEW(img, 2*shells+1, 12); (* subblocks *)
 	len:=innerBlockSize;
 	slen:=len DIV 2;
 	x:=centerX;
@@ -134,13 +478,17 @@ BEGIN
 		slen:=len DIV 2
 	END;
 	RETURN img
+	*)
 END GetFovea2;
 
+(*extract multilayer foveal representation from tensor at given location; block aspect ratio is =2, i.r. thinner shells *)
 PROCEDURE GetFoveaA2*(CONST m:Tensor; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32; func: ArrayFunction): Tensor; (*! tbd: which index position is layer index ? *)
-VAR img0, img: Tensor; i, x,y, len, slen, layer:SIZE;
+VAR img: Tensor; i, x,y, len, slen, layer:SIZE;
+	t:Transformer;
 BEGIN
-	img0:=m;
-	ASSERT(DIM(m)=3, 202); (*implementation limitation*)
+	NEW(t,innerBlockSize,shells);
+	RETURN t.GetFoveaA2(m,centerX,centerY,innerBlockSize,shells,func);
+	(*ASSERT(DIM(m)=3, 202); (*implementation limitation*)
 	NEW(img, LEN(m,0), 2*shells+1, 12); (* subblocks *)
 	x:=centerX;
 	y:=centerY;
@@ -181,13 +529,17 @@ BEGIN
 			slen:=len DIV 2
 		END
 	END;
-	RETURN img
+	RETURN img*)
 END GetFoveaA2;
 
+(*extract multilayer foveal representation from tensor at given location; block aspect ratio is =2, i.r. thinner shells *)
 PROCEDURE GetFoveaSampledA2*(CONST m:Tensor; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Tensor; (*! tbd: which index position is layer index ? *)
 VAR img0, img: Tensor; i, x,y, len, slen, layer:SIZE;
+	t:Transformer;
 BEGIN
-	img0:=m;
+	NEW(t,innerBlockSize,shells);
+	RETURN t.GetFoveaSampledA2(m,centerX,centerY,innerBlockSize,shells);
+(*	img0:=m;
 	ASSERT(DIM(m)=3, 202); (*implementation limitation*)
 	NEW(img, LEN(m,0), 2*shells+1, 12); (* subblocks *)
 
@@ -230,14 +582,17 @@ BEGIN
 			slen:=len DIV 2
 		END
 	END;
-	RETURN img
+	RETURN img*)
 END GetFoveaSampledA2;
 
-
+(*extract foveal representation from matrix at given location; block aspect ratio is =2, i.r. thinner shells *)
 PROCEDURE GetFoveaSampled2*(CONST m:Matrix; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
 VAR img: Image; i, x,y, len, slen:SIZE;
+	t:Transformer;
 BEGIN
-	NEW(img, 2*shells+1, 12); (* subblocks *)
+	NEW(t,innerBlockSize,shells);
+	RETURN t.GetFoveaSampled2(m,centerX,centerY,innerBlockSize,shells);
+(*	NEW(img, 2*shells+1, 12); (* subblocks *)
 	len:=innerBlockSize;
 	slen:=len DIV 2;
 	x:=centerX;
@@ -277,15 +632,18 @@ BEGIN
 		len:=len*2;
 		slen:=len DIV 2
 	END;
-	RETURN img
+	RETURN img*)
 END GetFoveaSampled2;
 
 
-
+(*extract foveal representation from matrix at given location; block aspect ratio is =1*)
 PROCEDURE GetFoveaSampled*(CONST m:Matrix; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
 VAR img: Image; i, x,y, len:SIZE;
+	t:Transformer;
 BEGIN
-	NEW(img, shells+1, 12);
+	NEW(t,innerBlockSize,shells);
+	RETURN t.GetFoveaSampled(m,centerX,centerY,innerBlockSize,shells);
+(*	NEW(img, shells+1, 12);
 	len:=innerBlockSize;
 	x:=centerX;
 	y:=centerY;
@@ -308,7 +666,7 @@ BEGIN
 		img[i+1,11] := Sample(m[y-1*len..y+0*len-1, x-2*len..x-1*len-1]);
 		len:=len*2;
 	END;
-	RETURN img
+	RETURN img*)
 END GetFoveaSampled;
 
 PROCEDURE ReconstructFovea*(CONST img:Matrix; (*centerX,centerY: SIZE; *)innerBlockSize, shells: SIGNED32): Matrix; (* *)
@@ -509,7 +867,7 @@ BEGIN
 	MatrixRaster.ImageToArray(img, raster3);
 	raster:=raster3[1,*,*];
 	len:=LEN(raster,0); 
-	x:=len DIV 2 -64 + rand.Dice(128);
+	x:=len DIV 2 -64 + rand.Dice(128);(*somewhere in the middle*)
 	y:=len DIV 2 -64 + rand.Dice(128);
 	fovea:=GetFovea(raster, x, y, 1, 7); (* compressed averaging sampling*)
 	(*fovea:=GetFoveaSampled(raster, x, y, 2, 6);*) (*compressed random sampling*)
@@ -522,7 +880,7 @@ BEGIN
 	COPY(name, oldName);
 END Test1;
 
-PROCEDURE Test2*(context:Commands.Context); (* 1 layer, split blocks in pheriphery*)
+PROCEDURE Test2*(context:Commands.Context); (* 1 layer, split shell blocks in pheriphery*)
 VAR 
 	raster3 : ARRAY [*,*,*] OF SIGNED16;
 	raster, recon, fovea: Matrix;
@@ -536,7 +894,7 @@ BEGIN
 	MatrixRaster.ImageToArray(img, raster3);
 	raster:=raster3[1,*,*];
 	len:=LEN(raster,0); 
-	x:=len DIV 2 -64 + rand.Dice(128);
+	x:=len DIV 2 -64 + rand.Dice(128);(*somewhere in the middle*)
 	y:=len DIV 2 -64 + rand.Dice(128);
 	fovea:=GetFovea2(raster, x, y, 1, 7); (* compressed averaging sampling*)
 	recon:=ReconstructFovea2(fovea, 1, 7);
@@ -548,7 +906,7 @@ BEGIN
 	COPY(name, oldName);
 END Test2;
 
-PROCEDURE TestA2*(context:Commands.Context); (*n layers, split blocks in periphery. use Mean() of each block for encoding*)
+PROCEDURE TestA2*(context:Commands.Context); (*n layers, split shell blocks in periphery. use Mean() of each block for encoding*)
 VAR 
 	raster3 : ARRAY [*,*,*] OF SIGNED16;
 	raster, recon, fovea: Tensor;
@@ -591,7 +949,7 @@ BEGIN
 	MatrixRaster.ImageToArray(img, raster3);
 	raster:=raster3[*,*,*];
 	len:=LEN(raster,1); 
-	x:=LEN(raster,2) DIV 2 -64 + rand.Dice(128);
+	x:=LEN(raster,2) DIV 2 -64 + rand.Dice(128);(*somewhere in the middle*)
 	y:=LEN(raster,1) DIV 2 -64 + rand.Dice(128);
 	fovea:=GetFoveaA2(raster, x, y, blockSize, nShells, Sample); (* compressed averaging sampling*)
 	recon:=ReconstructFoveaA2(fovea, blockSize, nShells);
@@ -617,7 +975,7 @@ BEGIN
 	MatrixRaster.ImageToArray(img, raster3);
 	raster:=raster3[*,*,*];
 	len:=LEN(raster,1); 
-	x:=LEN(raster,2) DIV 2 -64 + rand.Dice(128);
+	x:=LEN(raster,2) DIV 2 -64 + rand.Dice(128);(*somewhere in the middle*)
 	y:=LEN(raster,1) DIV 2 -64 + rand.Dice(128);
 	fovea:=GetFoveaA2(raster, x, y, blockSize, nShells, Gridpoints); (* sampling at block positions [0,0]*)
 	recon:=ReconstructFoveaA2(fovea, blockSize, nShells);
@@ -644,10 +1002,10 @@ BEGIN
 	MatrixRaster.ImageToArray(img, raster3);
 	raster:=raster3[1,*,*];
 	len:=LEN(raster,0); 
-	x:=len DIV 2 -64 + rand.Dice(128);
+	x:=len DIV 2 -64 + rand.Dice(128);(*somewhere in the middle*)
 	y:=len DIV 2 -64 + rand.Dice(128);
 	fovea:=GetFoveaSampled2(raster, x, y, 2, 6); (*compressed random sampling*)
-	recon:=ReconstructFoveaA2(fovea, 2, 6);
+	recon:=ReconstructFovea2(fovea, 2, 6);
 	IF name#oldName THEN 
 		NEW(im, raster, "raster"); im.AddWindow;
 		NEW(fo, fovea, "fovea"); fo.AddWindow;
@@ -694,6 +1052,7 @@ BEGIN
 	COPY(name, oldName);
 END Test3;
 
+
 BEGIN
 	NEW(rand)
 END TensorFovea.
@@ -706,15 +1065,15 @@ TensorFovea.Test1 SimpleEye.jpg ~
 TensorFovea.Test2 SimpleEye.jpg ~
 TensorFovea.Test2 Yellow_Duck.jpg~
 TensorFovea.TestA2 Yellow_Duck.jpg 1 8~
-TensorFovea.Test2 "C:/Program Files (x86)/A2/HighDim/Code/EyeTracker/EyeDB_Internet/aergaf.jpg"~
-TensorFovea.TestSampled2 "C:/Program Files (x86)/A2/HighDim/Code/EyeTracker/EyeDB_Internet/aergaf.jpg"~
-TensorFovea.TestA2 "C:/Program Files (x86)/A2/HighDim/Code/EyeTracker/EyeDB_Internet/aergaf.jpg"~
-TensorFovea.TestSampledA2 "C:/Program Files (x86)/A2/HighDim/Code/EyeTracker/EyeDB_Internet/aergaf.jpg"~
-TensorFovea.TestGridpointsA2 "C:/Program Files (x86)/A2/HighDim/Code/EyeTracker/EyeDB_Internet/aergaf.jpg"~
-TensorFovea.Test3 "C:/Program Files (x86)/A2/HighDim/Code/EyeTracker/EyeDB_Internet/aergaf.jpg" 4 5 ~
-TensorFovea.Test3 "C:/Program Files (x86)/A2/HighDim/Code/EyeTracker/EyeDB_Internet/aergaf.jpg" 4 5 sampled ~
+TensorFovea.Test2 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/aergaf.jpg"~
+TensorFovea.TestSampled2 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/aergaf.jpg"~
+TensorFovea.TestA2 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/aergaf.jpg"~
+TensorFovea.TestSampledA2 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/aergaf.jpg"~
+TensorFovea.TestGridpointsA2 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/aergaf.jpg"~
+TensorFovea.Test3 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/aergaf.jpg" 4 5 ~
+TensorFovea.Test3 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/aergaf.jpg" 4 5 sampled ~
 TensorFovea.TestA2 SaasFee.jpg 3 7~
-TensorFovea.TestA2 "C:/Program Files (x86)/A2/HighDim/Code/EyeTracker/EyeDB_Internet/8476656067_ee498cc265_b.jpg" 2 7 ~
-TensorFovea.Test3 "C:/Program Files (x86)/A2/HighDim/Code/EyeTracker/EyeDB_Internet/8476656067_ee498cc265_b.jpg" ~
+TensorFovea.TestA2 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/8476656067_ee498cc265_b.jpg" 2 7 ~
+TensorFovea.Test3 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/8476656067_ee498cc265_b.jpg" ~
 
-System.FreeDownTo WMMatrix ~ goetzenich
+System.FreeDownTo WMMatrix ~ 

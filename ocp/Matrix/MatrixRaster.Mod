@@ -29,12 +29,12 @@ TYPE Enumerator*=OBJECT(Files.Enumerator) (*extract single or multiple images fr
 			RETURN currentImg
 		END GetImage;
 
-		PROCEDURE SetRoiSize*(w,h, scale: SIGNED32);
+		PROCEDURE SetRoiSize*(w,h: SIZE; scale:SIGNED32);
 		BEGIN
 			SELF.w:=w; SELF.h:=h;
 			ASSERT(scale=1, 300);SELF.scale:=scale;
 		END SetRoiSize;
-
+	
 		PROCEDURE GetBGR*(img: Raster.Image): ARRAY [?] OF SIGNED16; (* yield [BGR,height, width] of current image.   *)
 		BEGIN
 			(*! implementation limitation: scaling not yet implemented *)
@@ -423,7 +423,9 @@ VAR row,col,p: SIZE; int: SIGNED32; fmt: INTEGER; msg: ARRAY 20 OF CHAR;
 BEGIN
 	p:=0;
 	IF img.fmt.code=Raster.bgr888 THEN
-		NEW(data, 3, img.height, img.width) ;
+		IF (DIM(data)#3) OR (LEN(data,0)#3) OR (LEN(data,1)#img.height) OR (LEN(data,2)#img.width) THEN
+			NEW(data, 3, img.height, img.width)
+		END;
 		FOR row:=0 TO img.height-1 DO
 			FOR col:=0 TO img.width-1 DO
 				data[0,row,col]:= ORD(img.mem[p+2]);
@@ -433,7 +435,9 @@ BEGIN
 			END;
 		END;
 	ELSIF img.fmt.code=Raster.yuv422 THEN
-		NEW(data, 3, img.height, img.width) ;
+		IF (DIM(data)#3) OR (LEN(data,0)#3) OR (LEN(data,1)#img.height) OR (LEN(data,2)#img.width) THEN
+			NEW(data, 3, img.height, img.width)
+		END;
 		FOR row:=0 TO img.height-1 DO
 			FOR col:=0 TO img.width-1 BY 2 DO
 				data[0,row,col]:= ORD(img.mem[p]);
@@ -447,7 +451,9 @@ BEGIN
 			END;
 		END;
 	ELSIF img.fmt.code=Raster.bgra8888 THEN
-		NEW(data, 4, img.height, img.width) ;
+		IF (DIM(data)#3) OR (LEN(data,0)#4) OR (LEN(data,1)#img.height) OR (LEN(data,2)#img.width) THEN
+			NEW(data, 4, img.height, img.width)
+		END;
 		FOR row:=0 TO img.height-1 DO
 			FOR col:=0 TO img.width-1 DO
 				data[0,row,col]:= ORD(img.mem[p+2]);
@@ -458,7 +464,9 @@ BEGIN
 			END;
 		END;
 	ELSIF img.fmt.code=Raster.bgr565 THEN
-		NEW(data, 3, img.height, img.width) ;
+		IF (DIM(data)#3) OR (LEN(data,0)#3) OR (LEN(data,1)#img.height) OR (LEN(data,2)#img.width) THEN
+			NEW(data, 3, img.height, img.width)
+		END;
 		FOR row:=0 TO img.height-1 DO
 			FOR col:=0 TO img.width-1 DO
 				int:=ASH(ORD(img.mem[p+1]), 8) + ORD(img.mem[p]);

@@ -3,8 +3,9 @@ MODULE PlanarWavelets; (** AUTHOR "Patrick Hunziker"; PURPOSE "2D wavelet decomp
 IMPORT Wavelets, WMArrayPanel, PMath;
 
 CONST 
-	Plain*=0; (*can be 1..n levels *)
-	Packet*=1;
+	None*=0;
+	Plain*=1; (*can be 1..n levels *)
+	Packet*=2;
 
 TYPE Datatype*=Wavelets.Datatype;
 	Tensor*=ARRAY [?] OF Datatype;
@@ -17,6 +18,7 @@ TYPE Analyzer*= OBJECT
 		waveletType, boundary: SIGNED32;
 		conv: Wavelets.WaveletConvolver;
 		wavelet*:Wavelets.WaveletFamily;
+		levels*, structure*,nSubbands*: SIGNED32;
 		lineX,resX, lineY,resY: Line;
 		child: Analyzer;
 
@@ -26,7 +28,7 @@ TYPE Analyzer*= OBJECT
 		SELF.waveletType:=waveletType;
 		NEW(wavelet, waveletType);
 		IF boundary=Wavelets.default THEN SELF.boundary:=wavelet.defaultBoundary ELSE SELF.boundary:=boundary END;
-		NEW(conv, wavelet, boundary);
+		NEW(conv, wavelet, SELF.boundary);
 		SetData(data);
 	END Init;
 
@@ -94,6 +96,9 @@ TYPE Analyzer*= OBJECT
 	PROCEDURE Analyze*;
 	VAR i:SIZE; 
 	BEGIN
+		SELF.levels:=1;
+		SELF.structure:=Plain;
+		nSubbands:=4;
 		FOR i:=0 TO LEN(data,0)-1 DO
 			conv.Analyze(data[i], resX);
 			data[i]:=resX; (*could do in-place ?*)
@@ -107,6 +112,9 @@ TYPE Analyzer*= OBJECT
 	PROCEDURE AnalyzeMultiscale*(levels:SIGNED32);
 	BEGIN
 		Analyze;
+		SELF.levels:=levels;
+		SELF.structure:=Plain;
+		nSubbands:=1 + levels*3;
 		IF levels>1 THEN
 			NEW(child, waveletType, boundary, data[..(LEN(data,0)+1)DIV 2-1, ..(LEN(data,1)+1) DIV 2-1]);
 			child.AnalyzeMultiscale(levels-1);
@@ -115,8 +123,13 @@ TYPE Analyzer*= OBJECT
 	END AnalyzeMultiscale;
 
 	PROCEDURE AnalyzePacket*(levels:SIGNED32);
+	VAR i:SIGNED32;
 	BEGIN
 		Analyze;
+		SELF.levels:=levels;
+		SELF.structure:=Packet;
+		nSubbands:=1;
+		FOR i:=0 TO levels-1 DO nSubbands:=nSubbands*4 END;
 		IF levels>1 THEN
 			NEW(child, waveletType, boundary, data[..(LEN(data,0)+1)DIV 2-1, ..(LEN(data,1)+1) DIV 2-1]); (*! should use child.SetData for efficiency*)
 			child.AnalyzePacket(levels-1);
@@ -134,8 +147,53 @@ TYPE Analyzer*= OBJECT
 			child.AnalyzePacket(levels-1);
 			data[(LEN(data,0)+1)DIV 2.., (LEN(data,1)+1) DIV 2..]:=child.data;
 		END;
-
 	END AnalyzePacket;
+	
+	(* precondition for packets: LEN(coeffs)= 4^levels; start with level:=0 *)
+	PROCEDURE GetLocationCoeffs*(VAR d: Matrix; level, x,y:INTEGER; VAR coeffs:Line);
+	VAR w,h,w1,h1,i,n,l:SIZE;
+	BEGIN
+		ASSERT(levels>0, 200); 
+		(*ASSERT(structure=Packet,201); *)(*implementation limitation*)
+		w:=(LEN(d,1)+1) DIV 2; w1:=LEN(d,1) DIV 2; 
+		h:=(LEN(d,0)+1) DIV 2; h1:=LEN(d,0) DIV 2; 
+		x:=x DIV 2; y:=y DIV 2;
+		
+		IF structure=Packet THEN
+			IF level=0 THEN 
+				n:=1;
+				FOR i:=0 TO levels-1 DO n:=n*4 END;
+				IF LEN(coeffs,0)=0 THEN NEW(coeffs,n) END;
+			END;
+			IF level=levels-1 THEN
+				coeffs[0]:= d[y,x];
+				coeffs[1]:= d[y,w+x];
+				coeffs[2]:= d[h+y,x];
+				coeffs[3]:= d[h+y,w+x];
+			ELSE
+				GetLocationCoeffs(d[..h-1,..w-1], level+1, x,y, coeffs[..LEN(coeffs,0) DIV 4 -1]);
+				GetLocationCoeffs(d[..h-1,w..], level+1, x, y, coeffs[LEN(coeffs,0) DIV 4 .. 2*LEN(coeffs,0) DIV 4 -1]);
+				GetLocationCoeffs(d[h..,..w-1], level+1, x, y, coeffs[2*LEN(coeffs,0) DIV 4 .. 3*LEN(coeffs,0) DIV 4 -1]);
+				GetLocationCoeffs(d[h..,w..], level+1, x, y, coeffs[3*LEN(coeffs,0) DIV 4 .. 4*LEN(coeffs,0) DIV 4 -1]);
+			END;
+		ELSIF structure=Plain THEN
+			IF level=0 THEN 
+				n:=1+3*levels;
+				IF LEN(coeffs,0)=0 THEN NEW(coeffs,n) END;
+			END;
+			FOR l:=levels-1 TO 0 BY -1 DO				
+				coeffs[3*l+1]:=d[y,w+x];
+				coeffs[3*l+2]:=d[h+y,x];
+				coeffs[3*l+3]:=d[h+y,w+x];
+				w:=(w+1) DIV 2;
+				h:=(h+1) DIV 2;
+				x:=x DIV 2;
+				y:=y DIV 2;
+			END;
+			coeffs[0]:=d[y,x]
+		END;
+	END GetLocationCoeffs;
+	
 
 	END Analyzer;
 
@@ -153,7 +211,7 @@ TYPE Reconstructor*= OBJECT
 		SELF.waveletType:=waveletType;
 		NEW(wavelet, waveletType);
 		IF boundary=Wavelets.default THEN SELF.boundary:=wavelet.defaultBoundary ELSE SELF.boundary:=boundary END;
-		NEW(conv, wavelet, boundary);
+		NEW(conv, wavelet, SELF.boundary);
 		SetData(data);
 	END Init;
 
@@ -168,7 +226,6 @@ TYPE Reconstructor*= OBJECT
 			SELF.data:=data; (*!copy. could do in-place ?*)
 		END;
 	END SetData;
-
 
 	PROCEDURE Reconstruct*;
 	VAR i:SIZE; 
@@ -235,6 +292,8 @@ TYPE Reconstructor*= OBJECT
 				PROCEDURE Apply*(VAR data: Matrix; CONST coeffs: ARRAY[?] OF Datatype; CONST proc: ARRAY [?] OF ProcessProc; level, levels:INTEGER); 
 				VAR w,h, cw,ch: SIZE; p00,p01,p10,p11: ARRAY [*,*] OF ProcessProc; c00,c01,c10,c11: Matrix;
 				BEGIN
+					
+					(*! not yet working for plain*)
 					ASSERT(
 						(structure=Plain) & ((LEN(coeffs)=[levels,2,2]) OR (LEN(coeffs)=0))		OR
 						(structure=Packet) & ((LEN(coeffs)=[PMath.powerof2(levels-level),PMath.powerof2(levels-level)]) OR (LEN(coeffs)=0))		
@@ -243,6 +302,7 @@ TYPE Reconstructor*= OBJECT
 						(structure=Plain) & ((LEN(proc)=[levels,2,2]) OR (LEN(proc)=0))		OR
 						(structure=Packet) & ((LEN(proc)=[PMath.powerof2(levels-level),PMath.powerof2(levels-level)]) OR (LEN(proc)=0))		
 						, 202);
+					
 					w:=(LEN(data,1)+1) DIV 2; (* can be non-power-of-2 *)
 					h:=(LEN(data,0)+1) DIV 2;
 					cw:=LEN(coeffs,1) DIV 2;(* always power-of-2 *)
@@ -299,7 +359,7 @@ TYPE Reconstructor*= OBJECT
 				END Apply;
 		END Filter;
 	
-PROCEDURE Test*;
+PROCEDURE Test0*;
 CONST levels=3;
 (*	wavelet=Wavelets.Haar;*)
 	wavelet=Wavelets.Spline610;
@@ -310,15 +370,21 @@ VAR a, subHHH, subLLL: Matrix;
 	rec:Reconstructor;
 	filter:Filter;
 	coeff: ARRAY [?] OF Datatype;
+	coeffs: Line; coeffs2: Matrix; 
 	procs: ARRAY [?] OF ProcessProc;
-	d:Matrix;
+	d,d0:Matrix;
 BEGIN
 	NEW(a,200,200); a[50..100,50..100]:=1.0;
 	WMArrayPanel.AddWindow(a,"data");
 	NEW(an, wavelet, Wavelets.default, a);
 	an.AnalyzePacket(levels);
-	WMArrayPanel.AddWindow(an.data,"analysis");
-	d:=an.data;
+	
+	an.GetLocationCoeffs(an.data,0, 100, 100,coeffs); coeffs[0]:=0; (*ide strongest subband to see others*)
+	NEW(coeffs2,1, LEN(coeffs,0)); coeffs2[0,..]:=coeffs;
+	WMArrayPanel.AddWindow(coeffs2,"coeffs at 100,100");
+	
+	d0:=an.data;	d:=d0;
+	WMArrayPanel.AddWindow(d0,"analysis");
 	
 	(*get subband*)
 	subHHH:=an.GetSubband(an.data,[3,3,3]);
@@ -346,9 +412,68 @@ BEGIN
 	WMArrayPanel.AddWindow(rec.data,"filtered reconstruction");
 
 	WMArrayPanel.AddWindow(rec.data-a,"error");
-END Test;
+END Test0;
 
-PROCEDURE {TEST}  Test1*; (* wavelet-decomposition and reconstruction leads to perfect reconstruction of original *)
+PROCEDURE Test1*;
+CONST levels=5;
+(*	wavelet=Wavelets.Haar;*)
+	wavelet=Wavelets.Spline610;
+(*	wavelet=Wavelets.Spline97;*)
+	(*wavelet=Wavelets.Cubicspline;*)
+VAR a, subHHH, subLLL: Matrix;
+	an:Analyzer;
+	rec:Reconstructor;
+	filter:Filter;
+	coeff: ARRAY [?] OF Datatype;
+	coeffs: Line; coeffs2: Matrix; 
+	procs: ARRAY [?] OF ProcessProc;
+	d,d0:Matrix;
+BEGIN
+	NEW(a,200,200); a[50..100,50..100]:=1.0;
+	WMArrayPanel.AddWindow(a,"data");
+	NEW(an, wavelet, Wavelets.mirrorH, a);
+	an.AnalyzeMultiscale(levels);
+	
+	an.GetLocationCoeffs(an.data,0, 100, 100,coeffs); coeffs[0]:=0; (*ide strongest subband to see others*)
+	NEW(coeffs2,1, LEN(coeffs,0)); coeffs2[0,..]:=coeffs;
+	WMArrayPanel.AddWindow(coeffs2,"coeffs at 100,100");
+	
+	d:=an.data;d0:=d;
+	WMArrayPanel.AddWindow(d0,"analysis");
+	
+	(*get subband*)
+	subHHH:=an.GetSubband(an.data,[3,3,3]);
+	WMArrayPanel.AddWindow(subHHH,"HHH");
+	subLLL:=an.GetSubband(an.data,[0,0,0]);
+	WMArrayPanel.AddWindow(subLLL,"LLL");
+	
+	NEW(rec, wavelet, Wavelets.mirrorH, d);
+	rec.ReconstructMultiscale(levels);
+	WMArrayPanel.AddWindow(rec.data,"reconstruction");
+	
+	subLLL:=0; (*filtering via subband setting*)
+	an.SetSubband(an.data, subLLL, [0,0,0]);
+	NEW(rec, wavelet, Wavelets.mirrorH, an.data);
+	rec.ReconstructMultiscale(levels);
+	WMArrayPanel.AddWindow(rec.data,"reconstruction after subband mod");
+
+(*! filter size not yet working for multiscale plain *)
+	(*NEW(filter, Plain, 0, levels);
+	NEW(coeff, levels, 2, 2);
+	coeff:=1.0; coeff[0]:=0;
+	filter.Apply(d, coeff, procs, 0, levels); 
+	
+	NEW(rec, wavelet, Wavelets.finite, d);
+	rec.ReconstructMultiscale(levels);
+	WMArrayPanel.AddWindow(rec.data,"filtered reconstruction");
+
+	WMArrayPanel.AddWindow(rec.data-a,"error");
+	*)
+END Test1;
+
+
+
+PROCEDURE {TEST}  Test*; (* wavelet-decomposition and reconstruction leads to perfect reconstruction of original *)
 VAR a: Matrix;
 	ana:Analyzer;
 	rec:Reconstructor;
@@ -359,11 +484,12 @@ BEGIN
 	NEW(rec, Wavelets.Haar, Wavelets.finite, ana.data);
 	rec.ReconstructPacket(3);
 	ASSERT(SUM(ABS(rec.data-a)) < 0.0001,200);
-END Test1;
+END Test;
 
 END PlanarWavelets.
 
 PlanarWavelets.Test~
+PlanarWavelets.Test0~
 PlanarWavelets.Test1~
 WMArrayPanel.AddWindow(rec.data,"reconstruction");
 System.FreeDownTo PlanarWavelets ~

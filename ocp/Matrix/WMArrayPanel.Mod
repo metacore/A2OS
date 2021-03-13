@@ -189,11 +189,13 @@ TYPE Panel*= OBJECT (WMStandardComponents.ImagePanel) (*! tbd: convert some loca
 		SELF.orientation.Set(orientation);
 	END SetOrientation;
 
-	PROCEDURE SetArray*(CONST m: Tensor);
+	PROCEDURE SetArray*(CONST m: Tensor; deepCopy:=FALSE:BOOLEAN);
 	BEGIN
 		ASSERT(DIM(m) IN {2,3,4}, 200);
 		IF LEN(m)>0 THEN
-			data.m:=ALIAS OF m;
+			IF deepCopy THEN data.m:=m;
+			ELSE data.m:=ALIAS OF m;
+			END;
 			max:=MAX(m); min:=MIN(m); IF min<0 THEN type:=signed ELSE type:=unsigned END;
 			offset:=0;
 			IF max#min THEN gain:= 255/MAX( ABS(max),ABS(min));
@@ -465,11 +467,11 @@ VAR d : Data;
 BEGIN NEW(d); RETURN d
 END GenData;
 
-PROCEDURE GetPanel*(CONST tensor: ARRAY [?] OF FLOAT64): Panel;
+PROCEDURE GetPanel*(CONST tensor: ARRAY [?] OF FLOAT64; deepCopy:=FALSE:BOOLEAN): Panel;
 VAR	panel:Panel; 
 BEGIN
 	NEW(panel);
-	panel.SetArray(tensor);
+	panel.SetArray(tensor, deepCopy);
 	panel.SetOrientation(0);
 	IF (DIM(tensor)>1) & (LEN(tensor)>0) THEN 
 		panel.bounds.Set(WMRectangles.MakeRect(0,0,LEN(tensor)[DIM(tensor)-1],LEN(tensor)[DIM(tensor)-2]))
@@ -519,7 +521,7 @@ BEGIN
 	RETURN window;
 END CreateWindow;
 
-PROCEDURE AddWindow*(CONST tensor: ARRAY [?] OF FLOAT64; CONST title: ARRAY OF CHAR);
+PROCEDURE AddWindow*(CONST tensor: ARRAY [?] OF FLOAT64; CONST title: ARRAY OF CHAR; deepCopy:=FALSE:BOOLEAN);
 VAR window:WMComponents.FormWindow;
 	w,h:SIZE;
 	panel:Panel;
@@ -527,7 +529,7 @@ BEGIN
 	IF DIM(tensor)>1 THEN w:=LEN(tensor)[DIM(tensor)-1]; h:=LEN(tensor)[DIM(tensor)-2];
 	ELSE w:=400; h:=400;
 	END;
-	panel:=GetPanel(tensor);
+	panel:=GetPanel(tensor, deepCopy);
 	window:=CreateWindow(panel,title);
 	WM.DefaultAddWindow(window);
 END AddWindow;

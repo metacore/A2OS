@@ -1,5 +1,5 @@
 MODULE MatrixRaster ;	(**  AUTHOR "Patrick Hunziker"; PURPOSE "visualize Matrix contents";  **)
-IMPORT Raster , Reals, SYSTEM, Files, WMGraphics, Rand:=Random, WM:=WMWindowManager, Strings, RasterPixelFormats;
+IMPORT Raster , Reals, SYSTEM, Files, WMGraphics, Rand:=Random, WM:=WMWindowManager, Strings;
 
 CONST Random*=-1;
 
@@ -419,7 +419,7 @@ BEGIN
 END BoolToImage;
 
 PROCEDURE ImageToArray*(img:Raster.Image; VAR data: ARRAY [?] OF SIGNED16);
-VAR row,col,p: SIZE; int: SIGNED32; fmt: INTEGER; msg: ARRAY 20 OF CHAR;
+VAR row,col,p: SIZE; int: SIGNED32; fmt: INTEGER; msg: ARRAY 20 OF CHAR; vec4:ARRAY[4]OF SIGNED16;
 BEGIN
 	p:=0;
 	IF img.fmt.code=Raster.bgr888 THEN
@@ -456,10 +456,15 @@ BEGIN
 		END;
 		FOR row:=0 TO img.height-1 DO
 			FOR col:=0 TO img.width-1 DO
-				data[0,row,col]:= ORD(img.mem[p+2]);
+				(*data[0,row,col]:= ORD(img.mem[p+2]);
 				data[1,row,col]:= ORD(img.mem[p+1]);
 				data[2,row,col]:= ORD(img.mem[p]);
-				data[3,row,col]:= ORD(img.mem[p+3]);
+				data[3,row,col]:= ORD(img.mem[p+3]);*)
+				vec4[0]:=ORD(img.mem[p+2]);
+				vec4[1]:=ORD(img.mem[p+1]);
+				vec4[2]:=ORD(img.mem[p]);
+				vec4[3]:=ORD(img.mem[p+3]);
+				data[*,row,col]:=vec4;
 				INC(p,4);
 			END;
 		END;

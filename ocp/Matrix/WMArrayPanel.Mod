@@ -412,19 +412,53 @@ BEGIN
 	COPY(title, str);
 END GenerateName;
 
-OPERATOR "SUM"*(CONST t:Tensor; dim: SIGNED32):Tensor; (*implementation limitation: 3D*)
+(*OPERATOR "SUM"*(CONST t:Tensor; dim: SIGNED32):Tensor; (*implementation limitation: 3D*)
 VAR res: Tensor;i:SIZE;
 BEGIN
-	IF dim=0 THEN
-		NEW(res, LEN(t)[1..]); FOR i:=0 TO LEN(t,0)-1 DO res:=res+t[i,*,*] END;
-	ELSIF dim=1 THEN
-		NEW(res, LEN(t,0), LEN(t,2)); FOR i:=0 TO LEN(t,1)-1 DO res:=res+t[*,i,*] END;
-	ELSE
-		NEW(res, LEN(t)[..1]); FOR i:=0 TO LEN(t,2)-1 DO res:=res+t[*,*,i] END;
+	IF DIM(t)=2 THEN
+		HALT(200);
+	ELSIF DIM(t)=3 THEN
+		IF dim=0 THEN
+			NEW(res, LEN(t)[1..]); FOR i:=0 TO LEN(t,0)-1 DO res:=res+t[i,*,*] END;
+		ELSIF dim=1 THEN
+			NEW(res, LEN(t,0), LEN(t,2)); FOR i:=0 TO LEN(t,1)-1 DO res:=res+t[*,i,*] END;
+		ELSE
+			NEW(res, LEN(t)[..1]); FOR i:=0 TO LEN(t,2)-1 DO res:=res+t[*,*,i] END;
+		END;
 	END;
 	RETURN res;
-END "SUM";
+END "SUM";*)
 
+OPERATOR "SUM"*(CONST m:Tensor; dimension:SIGNED32):Tensor; (*! TBD: eliminate allocation of "len"k and of tensor descriptor*)
+VAR len:ARRAY[*]OF SIZE; dims,i:SIZE;
+BEGIN
+	dims:=DIM(m);
+	ASSERT(dimension<DIM(m));
+	NEW(len, DIM(m)-1);
+	FOR i:=0 TO dimension-1 DO			len[i]:=LEN(m,i); 		END;
+	FOR i:=dimension TO LEN(len,0)-1 DO	len[i]:=LEN(m,i+1);	END;
+	IF LEN(RESULT)#len THEN NEW(RESULT,len) ELSE RESULT:=0 END;
+	CASE dimension OF
+		|0:IF dims=3 THEN
+				FOR i:=0 TO LEN(m,0)-1 DO RESULT:=RESULT+m[i,..,..] 		END;(*?does this allocate descriptor ?*)
+			ELSE
+				FOR i:=0 TO LEN(m,0)-1 DO RESULT:=RESULT+m[i,?] 		END;(*?does this allocate descriptor ?*)
+			END;
+		|1:IF dims=3 THEN
+				FOR i:=0 TO LEN(m,1)-1 DO RESULT:=RESULT+m[..,i,..] 		END;
+			ELSE
+				FOR i:=0 TO LEN(m,1)-1 DO RESULT:=RESULT+m[..,i,?] 		END;
+			END;
+		|2:IF dims=3 THEN
+				FOR i:=0 TO LEN(m,2)-1 DO RESULT:=RESULT+m[..,..,i] 	END;
+			ELSE 
+				FOR i:=0 TO LEN(m,2)-1 DO RESULT:=RESULT+m[..,..,i,?] 	END;
+			END;
+		|3:FOR i:=0 TO LEN(m,3)-1 DO RESULT:=RESULT+m[..,..,..,i,?] 	END;
+		ELSE HALT(200);
+	END;
+	RETURN RESULT
+END "SUM";
 
 OPERATOR "MAX"*(CONST t:Tensor; dim: SIGNED32):Tensor; (*implementation limitation: 3D*)
 VAR res: Tensor;i:SIGNED32; a,b: SIZE;

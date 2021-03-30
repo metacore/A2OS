@@ -24,18 +24,22 @@ TYPE ArrayFunctionsPool=OBJECT
 	
 	PROCEDURE Put(f:ArrayFunction);
 	BEGIN {EXCLUSIVE}
-		IF f#NIL THEN f.next:=pool; pool:=f END;
+		IF f#NIL THEN f.Init; f.next:=pool; pool:=f END;
 	END Put;
 END ArrayFunctionsPool;
 
 TYPE ArrayFunction= OBJECT 
-	VAR min,max,sum:REAL;
+	VAR min,max,sum,msq,scale,ssq:REAL;
+		cnt:SIZE;
 		next:ArrayFunction;(*linked list*)
 	PROCEDURE &Init;
 	BEGIN
 		sum:=0;
 		min:=MAX(Datatype);
 		max:=MIN(Datatype);
+		msq:=0; ssq:=0;
+		cnt:=0;
+		scale:=1;
 	END Init;
 	
 	PROCEDURE AddAbs(x:REAL)(*:REAL*);
@@ -55,6 +59,11 @@ TYPE ArrayFunction= OBJECT
 		min:=MIN(min,ABS(x));
 		(*RETURN x*)
 	END MinAbs;
+	
+	PROCEDURE SumSquare(x:REAL);
+	BEGIN
+		ssq:=ssq+ x*x;
+	END SumSquare;
 	
 	END ArrayFunction;
 
@@ -92,9 +101,12 @@ END SameSize;
 PROCEDURE Count*(CONST a: Array):SIZE;
 VAR i:SIZE; res:SIZE;
 BEGIN
-	res:=1;
-	FOR i:=0 TO DIM(a)-1 DO
-		res:=res*LEN(a,i);
+	IF DIM(a)=0 THEN res:=0
+	ELSE
+		res:=1;
+		FOR i:=0 TO DIM(a)-1 DO
+			res:=res*LEN(a,i);
+		END;
 	END;
 	RETURN res
 END Count;
@@ -151,13 +163,30 @@ END SumAbs;
 PROCEDURE Mean*(CONST X: Array): Datatype;
 VAR cnt: SIZE;
 BEGIN
-	(*RETURN SUM(X)/ProdS(LEN(X))*)
 	cnt:=Count(X);
 	IF cnt=0 THEN RETURN 0 (*? or NaN  ?*)
-	ELSE RETURN SUM(X)/Count(X)
+	ELSE RETURN SUM(X)/cnt
 	END;
 END Mean;
 
+PROCEDURE MeanSquare*(CONST X: Array): Datatype;
+VAR cnt: SIZE;
+	f:ArrayFunction;
+	res:Datatype;
+BEGIN
+	IF DIM(X)=0 THEN RETURN 0 END;
+	cnt:=Count(X);
+	IF cnt=0 THEN RETURN 0 
+	ELSE (*in this version, division is applied at each element squaring, to avoid overflow of the sum. More costly, more robust. But no allocations.*)
+		f:=arrayFunctionsPool.Get();
+		f.SumSquare(X);
+		res:=f.ssq/cnt;
+		arrayFunctionsPool.Put(f);
+		RETURN res
+	END;
+END MeanSquare;
+
+ (*
 PROCEDURE MeanSquare*(CONST X: Array): Datatype;
 VAR cnt: SIZE;
 BEGIN
@@ -167,14 +196,20 @@ BEGIN
 	ELSE RETURN X+*X/Count(X)
 	END;
 END MeanSquare;
+*)
 
 PROCEDURE RMS*(CONST X: Array): Datatype; (*root mean square*)
+BEGIN
+	RETURN MathL.sqrt(MeanSquare(X));
+END RMS;
+
+(*PROCEDURE RMS*(CONST X: Array): Datatype; (*root mean square*)
 BEGIN
 	IF DIM(X)=0 THEN RETURN 0 (*!TBD: apply to other structures ? or TRAP ?*)
 	ELSE RETURN MathL.sqrt(X+*X / Count(X))
 	(*ELSE RETURN MathL.sqrt(X+*X / ProdS(LEN(X)))*)
 	END;
-END RMS;
+END RMS;*)
 
 PROCEDURE KSmallest*( VAR a: Vector; (* n,*) k: SIZE ): Datatype;
 (** caution: modifies a , Algorithm by N.Wirth / Hoare, cf. N. Wirth: Algorithms & Datastructures. *)
@@ -247,7 +282,8 @@ PROCEDURE QSort*(VAR X : Vector);
  VAR diff:Array;
  BEGIN
  	 diff:=v-Mean(v);
- 	 RETURN (diff+*diff) / Count(v)
+ 	 RETURN MeanSquare(diff)
+ 	(* RETURN (diff+*diff) / Count(v) *)
  END Variance;
 
  (** of full data *)
@@ -466,19 +502,20 @@ BEGIN
 END TestSoftMax;
 
 PROCEDURE {TEST} Test*;(*! implement more tests ! *)
-CONST TestTolerance=0.0001; 
-VAR v:Vector;
+CONST TestTolerance=0.000000001; 
+VAR v:Vector;x:Datatype;
 BEGIN
 	ASSERT(Count([[[1,2,3],[4,5,6]],[[1,2,3],[4,5,6]]])=12, 200);
 	ASSERT(Mean([1,2,3,4,5,6])=3.5, 201);
 	ASSERT(Median([4,3,2,1,5,6,7])=4, 202);
-	ASSERT(Prod([1,2,3,4,5])=120 ,203);
-	ASSERT(Variance([1,2,3,4,5])= ([1,2,3,4,5]-3)+*([1,2,3,4,5]-3)/5, 204);
-	ASSERT(EstimatedVariance([1,2,3,4,5])= ([1,2,3,4,5]-3)+*([1,2,3,4,5]-3)/4, 205);
-	ASSERT(ABS(StandardDeviation(Normalize([1,2,3,4,5]))-1)<TestTolerance, 206);
-	ASSERT(SumAbs([-1,1,-3,2])=7, 207);
-	ASSERT(MinAbs([-1,1,-3,2])=1, 208);
-	ASSERT(MaxAbs([-1,1,-3,2])=3, 209); 
+	x:=MeanSquare([1,2,3,4,5]) - [1,2,3,4,5]+*[1,2,3,4,5]/5; ASSERT(ABS(x)<TestTolerance, 203);
+	ASSERT(Prod([1,2,3,4,5])=120 ,204);
+	ASSERT(Variance([1,2,3,4,5])= ([1,2,3,4,5]-3)+*([1,2,3,4,5]-3)/5, 205);
+	ASSERT(EstimatedVariance([1,2,3,4,5])= ([1,2,3,4,5]-3)+*([1,2,3,4,5]-3)/4, 206);
+	ASSERT(ABS(StandardDeviation(Normalize([1,2,3,4,5]))-1)<TestTolerance, 207);
+	ASSERT(SumAbs([-1,1,-3,2])=7, 208);
+	ASSERT(MinAbs([-1,1,-3,2])=1, 209);
+	ASSERT(MaxAbs([-1,1,-3,2])=3, 210); 
 	
 	v:=[5,2,1,4,3]; QSort(v); ASSERT(v=[1,2,3,4,5], 207);
 END Test;
@@ -490,5 +527,6 @@ StatisticsBase.TestSort ~
 StatisticsBase.TestSumAbs ~
 StatisticsBase.TestMedian ~
 StatisticsBase.TestSoftMax ~
+StatisticsBase.Test ~
 
 System.FreeDownTo StatisticsBase ~

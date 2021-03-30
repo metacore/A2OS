@@ -793,10 +793,10 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	END WriteBool;
 	*)
 	
-	PROCEDURE WriteHeader*(W: Streams.Writer; datatype: SIGNED32; CONST len: ARRAY [*] OF SIZE);
+	PROCEDURE WriteHeader*(W: Streams.Writer; datatype: SIGNED32; CONST len: ARRAY [*] OF SIZE; comment:=NIL:Strings.String);
 	VAR
 		i: SIZE;
-		comment:ARRAY 16 OF CHAR;
+		(*comment:ARRAY 16 OF CHAR;*)
 	BEGIN
 		W.String("TENSOR 2.0 ");
 		IF(datatype=DatatypeLR) THEN W.String("LR ");
@@ -809,7 +809,8 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		ELSE
 			HALT(202);
 		END;
-		comment:=""; W.String(comment); (*! tbd*)
+		(*comment:=""; *)
+		IF comment#NIL THEN W.String(comment^) END; (*! tbd*)
 		W.Ln;
 		W.Int(LEN(len,0),0);
 		FOR i:=0 TO LEN(len,0)-1 DO
@@ -994,9 +995,9 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	END GetSizeVectorV2;
 	
 	(*parse header of .MtA files storing an ARRAY [?] OF Datatype, or ARRAY [*{*}] OF Datatype*)
-	PROCEDURE ParseHeader*(r:Streams.Reader; VAR version, datatype: SIGNED32; VAR len: ARRAY [*] OF SIZE);
+	PROCEDURE ParseHeader*(r:Streams.Reader; VAR version, datatype: SIGNED32; VAR len: ARRAY [*] OF SIZE; comment:=NIL:Strings.String);
 	VAR 
-		structure, datatypeString, versionString, comment: ARRAY 8 OF CHAR;
+		structure, datatypeString, versionString, dummy (*, comment*): ARRAY 8 OF CHAR;
 	BEGIN
 		IF r.GetString(structure) & r.GetString(versionString) &	r.GetString(datatypeString) THEN
 			ASSERT(structure="TENSOR",202);
@@ -1013,7 +1014,7 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 			ELSIF (datatypeString='HInt') THEN datatype:=DatatypeHInt
 			ELSE HALT(202);
 			END;
-			r.Ln(comment);
+			IF comment#NIL THEN r.Ln(comment^) ELSE r.Ln(dummy) END;
 			
 			IF version=1 THEN len:=GetSizeVectorV1(r);
 			ELSIF version=2 THEN len:=GetSizeVectorV2(r);

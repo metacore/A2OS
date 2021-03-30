@@ -9,7 +9,7 @@ shift up/down of the data is equivalent to scaling about the center,
 move left/right of the data is equivalent to approximate rotation around the center.
 *)
 
-IMPORT Random, Files, Commands, WMMatrix, WMGraphics, MatrixRaster, WMArrayPanel, Stat:=StatisticsBase;
+IMPORT Random, Files, Commands, WMMatrix, WMGraphics, MatrixRaster, WMArrayPanel, Stat:=StatisticsBase, Streams;
 
 CONST (*structure*)
 	SingleShell*=1;
@@ -35,11 +35,11 @@ TYPE Transformer*=OBJECT
 		blockSize:=GetBlockSize(innerBlockSize,shells);
 	END Init;
 
-	(*extract foveal representation from matrix at given location; block aspect ratio is =1*)
+	(*extract foveal representation from matrix at given location; block aspect ratio is =1, i.e. thicker shells*)
 	PROCEDURE GetFovea*(CONST m:Matrix; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
 	VAR i, x,y, len, slen:SIZE;
 	BEGIN
-		IF ~HasSize(img, [LEN(m,0), shells+1, 12]) THEN NEW(img, LEN(m,0), shells+1, 12) END; (* subblocks *)
+		IF ~HasSize(img, [shells+1, 12]) THEN NEW(img, shells+1, 12) END; (* subblocks *)
 		(*NEW(img, shells+1, 12);*) (* blocks*)
 		len:=innerBlockSize; (*inner block has four quadrants, each of them has size= len*len, ...*)
 		slen:=len DIV 2;
@@ -73,7 +73,8 @@ TYPE Transformer*=OBJECT
 	PROCEDURE GetFovea2*(CONST m:Matrix; centerX,centerY:SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
 	VAR i, x,y, len, slen:SIZE;
 	BEGIN
-		IF ~HasSize(img, [LEN(m,0), 2*shells+1, 12]) THEN NEW(img, LEN(m,0), 2*shells+1, 12) END; (* subblocks *)
+		(*ASSERT(DIM(m)=2, 202);*) (*implementation limitation*)		
+		IF ~HasSize(img, [2*shells+1, 12]) THEN NEW(img, 2*shells+1, 12) END; (* subblocks *)
 		(*NEW(img, 2*shells+1, 12);*) (* subblocks *)
 		len:=innerBlockSize;
 		slen:=len DIV 2;
@@ -85,31 +86,31 @@ TYPE Transformer*=OBJECT
 		img[0, 9..11]:=Mean(m[y-len..y-1, x-len..x-1]); (* core *)(*to do: blocks instead of fixed pixel size*)
 		FOR i:=0 TO shells-1 DO
 			
-			img[2*i+1, 0] := Mean(m[y+0*len..y+1*len-1, x-2*len+slen..x-1*len-1]); (* performance: could substitute Mean() by simple sampling *)
-			img[2*i+1, 1] := Mean(m[y+1*len..y+2*len-1, x-2*len+slen..x-1*len-1]);
-			img[2*i+1, 2] := Mean(m[y+1*len..y+1*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
-			img[2*i+1, 3] := Mean(m[y+1*len..y+1*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
-			img[2*i+1, 4] := Mean(m[y+1*len..y+1*len+MAX(1,slen)-1, x+1*len..x+2*len-1]);
-			img[2*i+1, 5] := Mean(m[y+0*len..y+1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
-			img[2*i+1, 6] := Mean(m[y-1*len..y+0*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
-			img[2*i+1, 7] := Mean(m[y-2*len..y-1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
-			img[2*i+1, 8] := Mean(m[y-2*len+slen..y-1*len-1, x+0*len..x+1*len-1]);
-			img[2*i+1, 9] := Mean(m[y-2*len+slen..y-1*len-1, x-1*len..x+0*len-1]);
-			img[2*i+1,10] := Mean(m[y-2*len+slen..y-1*len-1, x-2*len..x-1*len-1]); (*! there is some indexing problem here ...*)
-			img[2*i+1,11] := Mean(m[y-1*len..y+0*len-1, x-2*len+slen..x-1*len-1]);
+			img[2*i+1, 0] := Mean(m[y+0*len..		y+1*len-1, 					x-2*len+slen..	x-1*len-1]); (* performance: could substitute Mean() by simple sampling *)
+			img[2*i+1, 1] := Mean(m[y+1*len..		y+2*len-1, 					x-2*len+slen..	x-1*len-1]);
+			img[2*i+1, 2] := Mean(m[y+1*len..		y+1*len+MAX(1,slen)-1, x-1*len..			x+0*len-1]);
+			img[2*i+1, 3] := Mean(m[y+1*len..		y+1*len+MAX(1,slen)-1, x+0*len..			x+1*len-1]);
+			img[2*i+1, 4] := Mean(m[y+1*len..		y+1*len+MAX(1,slen)-1, x+1*len..			x+2*len-1]);
+			img[2*i+1, 5] := Mean(m[y+0*len..		y+1*len-1, 					x+1*len..			x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 6] := Mean(m[y-1*len..		y+0*len-1, 					x+1*len..			x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 7] := Mean(m[y-2*len..		y-1*len-1, 					x+1*len..			x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 8] := Mean(m[y-2*len+slen..y-1*len-1, 					x+0*len..			x+1*len-1]);
+			img[2*i+1, 9] := Mean(m[y-2*len+slen..y-1*len-1, 					x-1*len..			x+0*len-1]);
+			img[2*i+1,10] := Mean(m[y-2*len+slen..y-1*len-1, 					x-2*len..			x-1*len-1]); (*! there is some indexing problem here ...*)
+			img[2*i+1,11] := Mean(m[y-1*len..		y+0*len-1, 					x-2*len+slen..	x-1*len-1]);
 
-			img[2*i+2, 0] := Mean(m[y+0*len..y+1*len-1, x-2*len..x-2*len+MAX(1,slen)-1]); 
-			img[2*i+2, 1] := Mean(m[y+1*len..y+2*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
-			img[2*i+2, 2] := Mean(m[y+1*len+slen..y+2*len-1, x-1*len..x+0*len-1]);
-			img[2*i+2, 3] := Mean(m[y+1*len+slen..y+2*len-1, x+0*len..x+1*len-1]);
-			img[2*i+2, 4] := Mean(m[y+1*len+slen..y+2*len-1, x+1*len..x+2*len-1]);
-			img[2*i+2, 5] := Mean(m[y+0*len..y+1*len-1, x+1*len+slen..x+2*len-1]);
-			img[2*i+2, 6] := Mean(m[y-1*len..y+0*len-1, x+1*len+slen..x+2*len-1]);
-			img[2*i+2, 7] := Mean(m[y-2*len..y-1*len-1, x+1*len+slen..x+2*len-1]);
-			img[2*i+2, 8] := Mean(m[y-2*len..y-2*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
-			img[2*i+2, 9] := Mean(m[y-2*len..y-2*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
-			img[2*i+2,10] := Mean(m[y-2*len..y-2*len+MAX(1,slen)-1, x-2*len..x-1*len-1]);
-			img[2*i+2,11] := Mean(m[y-1*len..y+0*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
+			img[2*i+2, 0] := Mean(m[y+0*len..		y+1*len-1, 					x-2*len..			x-2*len+MAX(1,slen)-1]); 
+			img[2*i+2, 1] := Mean(m[y+1*len..		y+2*len-1, 					x-2*len..			x-2*len+MAX(1,slen)-1]);
+			img[2*i+2, 2] := Mean(m[y+1*len+slen..y+2*len-1, 					x-1*len..			x+0*len-1]);
+			img[2*i+2, 3] := Mean(m[y+1*len+slen..y+2*len-1, 					x+0*len..			x+1*len-1]);
+			img[2*i+2, 4] := Mean(m[y+1*len+slen..y+2*len-1, 					x+1*len..			x+2*len-1]);
+			img[2*i+2, 5] := Mean(m[y+0*len..		y+1*len-1, 					x+1*len+slen..	x+2*len-1]);
+			img[2*i+2, 6] := Mean(m[y-1*len..		y+0*len-1, 					x+1*len+slen..	x+2*len-1]);
+			img[2*i+2, 7] := Mean(m[y-2*len..		y-1*len-1, 					x+1*len+slen..	x+2*len-1]);
+			img[2*i+2, 8] := Mean(m[y-2*len..		y-2*len+MAX(1,slen)-1, x+0*len..			x+1*len-1]);
+			img[2*i+2, 9] := Mean(m[y-2*len..		y-2*len+MAX(1,slen)-1, x-1*len..			x+0*len-1]);
+			img[2*i+2,10] := Mean(m[y-2*len..		y-2*len+MAX(1,slen)-1, x-2*len..			x-1*len-1]);
+			img[2*i+2,11] := Mean(m[y-1*len..		y+0*len-1, 					x-2*len..			x-2*len+MAX(1,slen)-1]);
 
 			len:=len*2;
 			slen:=len DIV 2
@@ -220,7 +221,7 @@ TYPE Transformer*=OBJECT
 	PROCEDURE GetFoveaSampled2*(CONST m:Matrix; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
 	VAR  i, x,y, len, slen:SIZE;
 	BEGIN
-		IF ~HasSize(img, [LEN(m,0), 2*shells+1, 12]) THEN NEW(img, LEN(m,0), 2*shells+1, 12) END; (* subblocks *)
+		IF ~HasSize(img, [2*shells+1, 12]) THEN NEW(img, 2*shells+1, 12) END; (* subblocks *)
 		(*NEW(img, 2*shells+1, 12);*) (* subblocks *)
 		len:=innerBlockSize;
 		slen:=len DIV 2;
@@ -264,12 +265,91 @@ TYPE Transformer*=OBJECT
 		RETURN img
 	END GetFoveaSampled2;
 
+	(*extract foveal representation from matrix at given location; block aspect ratio is =2, i.r. thinner shells *)
+	PROCEDURE GetFoveaSampled2Dual*(CONST m,m1:Matrix; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
+	CONST Dual=2; D=12;
+	VAR  i, x,y, len, slen:SIZE; d2: ARRAY [2] OF Datatype;
+	BEGIN
+		IF ~HasSize(img, [2*shells+1, Dual*12]) THEN NEW(img, 2*shells+1, Dual*12) END; (* subblocks *)
+		(*NEW(img, 2*shells+1, 12);*) (* subblocks *)
+		len:=innerBlockSize;
+		slen:=len DIV 2;
+		x:=centerX;
+		y:=centerY;
+		img[0, 0..2]:=Mean(m[y..y+len-1, x-len..x-1]); (* rotating from 9 o clock, clockwise*)
+		img[0, 3..5]:=Mean(m[y..y+len-1, x..x+len-1]); 
+		img[0, 6..8]:=Mean(m[y-len..y-1, x..x+len-1]); 
+		img[0, 9..11]:=Mean(m[y-len..y-1, x-len..x-1]); (* core *)(*to do: blocks instead of fixed pixel size*)
+
+		img[0, D+0..D+2]:=Mean(m1[y..y+len-1, x-len..x-1]); (* rotating from 9 o clock, clockwise*)
+		img[0, D+3..D+5]:=Mean(m1[y..y+len-1, x..x+len-1]); 
+		img[0, D+6..D+8]:=Mean(m1[y-len..y-1, x..x+len-1]); 
+		img[0, D+9..D+11]:=Mean(m1[y-len..y-1, x-len..x-1]); (* core *)(*to do: blocks instead of fixed pixel size*)
+
+		FOR i:=0 TO shells-1 DO
+			
+			d2:= Sample2(m[y+0*len..y+1*len-1, x-2*len+slen..x-1*len-1],m1[y+0*len..y+1*len-1, x-2*len+slen..x-1*len-1]); 
+			img[2*i+1, 0] := d2[0]; img[2*i+1, D+0] := d2[1];
+			d2:= Sample2(m[y+1*len..y+2*len-1, x-2*len+slen..x-1*len-1],m1[y+1*len..y+2*len-1, x-2*len+slen..x-1*len-1]);
+			img[2*i+1, 1] :=  d2[0]; img[2*i+1, D+1] := d2[1];			
+			d2:= Sample2(m[y+1*len..y+1*len+MAX(1,slen)-1, x-1*len..x+0*len-1],m1[y+1*len..y+1*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
+			img[2*i+1, 2] := d2[0]; img[2*i+1,D+2] := d2[1]; 			
+			d2:= Sample2(m[y+1*len..y+1*len+MAX(1,slen)-1, x+0*len..x+1*len-1],m1[y+1*len..y+1*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
+			img[2*i+1, 3] := d2[0]; img[2*i+1,D+3] := d2[1]; 			
+			d2:= Sample2(m[y+1*len..y+1*len+MAX(1,slen)-1, x+1*len..x+2*len-1],m1[y+1*len..y+1*len+MAX(1,slen)-1, x+1*len..x+2*len-1]);
+			img[2*i+1, 4] := d2[0]; img[2*i+1,D+4] := d2[1]; 			
+			d2:= Sample2(m[y+0*len..y+1*len-1, x+1*len..x+1*len+MAX(1,slen)-1],m1[y+0*len..y+1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 5] := d2[0]; img[2*i+1,D+5] := d2[1]; 			
+			d2:= Sample2(m[y-1*len..y+0*len-1, x+1*len..x+1*len+MAX(1,slen)-1],m1[y-1*len..y+0*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 6] := d2[0]; img[2*i+1,D+6] := d2[1]; 			
+			d2:= Sample2(m[y-2*len..y-1*len-1, x+1*len..x+1*len+MAX(1,slen)-1],m1[y-2*len..y-1*len-1, x+1*len..x+1*len+MAX(1,slen)-1]);
+			img[2*i+1, 7] := d2[0]; img[2*i+1,D+7] := d2[1]; 			
+			d2:= Sample2(m[y-2*len+slen..y-1*len-1, x+0*len..x+1*len-1],m1[y-2*len+slen..y-1*len-1, x+0*len..x+1*len-1]);
+			img[2*i+1, 8] := d2[0]; img[2*i+1,D+8] := d2[1]; 			
+			d2:= Sample2(m[y-2*len+slen..y-1*len-1, x-1*len..x+0*len-1],m1[y-2*len+slen..y-1*len-1, x-1*len..x+0*len-1]);
+			img[2*i+1, 9] := d2[0]; img[2*i+1,D+9] := d2[1]; 			
+			d2:= Sample2(m[y-2*len+slen..y-1*len-1, x-2*len..x-1*len-1],m1[y-2*len+slen..y-1*len-1, x-2*len..x-1*len-1]);
+			img[2*i+1,10] := d2[0]; img[2*i+1,D+10] := d2[1]; 			
+			d2:= Sample2(m[y-1*len..y+0*len-1, x-2*len+slen..x-1*len-1],m1[y-1*len..y+0*len-1, x-2*len+slen..x-1*len-1]);
+			img[2*i+1,11] := d2[0]; img[2*i+1,D+11] := d2[1]; 
+
+
+			d2:= Sample2(m[y+0*len..y+1*len-1, x-2*len..x-2*len+MAX(1,slen)-1],m1[y+0*len..y+1*len-1, x-2*len..x-2*len+MAX(1,slen)-1]); 
+			img[2*i+2, 0] := d2[0]; img[2*i+2,D+0] := d2[1]; 			
+			d2:= Sample2(m[y+1*len..y+2*len-1, x-2*len..x-2*len+MAX(1,slen)-1],m1[y+1*len..y+2*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
+			img[2*i+2, 1] := d2[0]; img[2*i+2,D+1] := d2[1]; 			
+			d2:= Sample2(m[y+1*len+slen..y+2*len-1, x-1*len..x+0*len-1],m1[y+1*len+slen..y+2*len-1, x-1*len..x+0*len-1]);
+			img[2*i+2, 2] := d2[0]; img[2*i+2,D+2] := d2[1]; 			
+			d2:= Sample2(m[y+1*len+slen..y+2*len-1, x+0*len..x+1*len-1],m1[y+1*len+slen..y+2*len-1, x+0*len..x+1*len-1]);
+			img[2*i+2, 3] := d2[0]; img[2*i+2,D+3] := d2[1]; 			
+			d2:= Sample2(m[y+1*len+slen..y+2*len-1, x+1*len..x+2*len-1],m1[y+1*len+slen..y+2*len-1, x+1*len..x+2*len-1]);
+			img[2*i+2, 4] := d2[0]; img[2*i+2,D+4] := d2[1]; 			
+			d2:= Sample2(m[y+0*len..y+1*len-1, x+1*len+slen..x+2*len-1],m1[y+0*len..y+1*len-1, x+1*len+slen..x+2*len-1]);
+			img[2*i+2, 5] := d2[0]; img[2*i+2,D+5] := d2[1]; 			
+			d2:= Sample2(m[y-1*len..y+0*len-1, x+1*len+slen..x+2*len-1],m1[y-1*len..y+0*len-1, x+1*len+slen..x+2*len-1]);
+			img[2*i+2, 6] := d2[0]; img[2*i+2,D+6] := d2[1]; 			
+			d2:= Sample2(m[y-2*len..y-1*len-1, x+1*len+slen..x+2*len-1],m1[y-2*len..y-1*len-1, x+1*len+slen..x+2*len-1]);
+			img[2*i+2, 7] := d2[0]; img[2*i+2,D+7] := d2[1]; 			
+			d2:= Sample2(m[y-2*len..y-2*len+MAX(1,slen)-1, x+0*len..x+1*len-1],m1[y-2*len..y-2*len+MAX(1,slen)-1, x+0*len..x+1*len-1]);
+			img[2*i+2, 8] := d2[0]; img[2*i+2,D+8] := d2[1]; 			
+			d2:= Sample2(m[y-2*len..y-2*len+MAX(1,slen)-1, x-1*len..x+0*len-1],m1[y-2*len..y-2*len+MAX(1,slen)-1, x-1*len..x+0*len-1]);
+			img[2*i+2, 9] := d2[0]; img[2*i+2,D+9] := d2[1]; 			
+			d2:= Sample2(m[y-2*len..y-2*len+MAX(1,slen)-1, x-2*len..x-1*len-1],m1[y-2*len..y-2*len+MAX(1,slen)-1, x-2*len..x-1*len-1]);
+			img[2*i+2,10] := d2[0]; img[2*i+2,D+10] := d2[1]; 			
+			d2:= Sample2(m[y-1*len..y+0*len-1, x-2*len..x-2*len+MAX(1,slen)-1],m1[y-1*len..y+0*len-1, x-2*len..x-2*len+MAX(1,slen)-1]);
+			img[2*i+2,11] := d2[0]; img[2*i+2,D+11] := d2[1]; 
+			
+			len:=len*2;
+			slen:=len DIV 2
+		END;
+		RETURN img
+	END GetFoveaSampled2Dual;
 
 	(*extract foveal representation from matrix at given location; block aspect ratio is =1*)
 	PROCEDURE GetFoveaSampled*(CONST m:Matrix; centerX,centerY: SIZE; innerBlockSize, shells: SIGNED32): Matrix; (* *)
 	VAR i, x,y, len:SIZE;
 	BEGIN
-		IF ~HasSize(img, [LEN(m,0), shells+1, 12]) THEN NEW(img, LEN(m,0), shells+1, 12) END; (* subblocks *)
+		IF ~HasSize(img, [shells+1, 12]) THEN NEW(img, shells+1, 12) END; (* subblocks *)
 		(*NEW(img, shells+1, 12);*)
 		len:=innerBlockSize;
 		x:=centerX;
@@ -324,16 +404,20 @@ END Prod;
 
 PROCEDURE Mean(CONST m: Array):Datatype;
 BEGIN
-	IF Prod(LEN(m))=0 THEN RETURN 0
+	RETURN Stat.Mean(m);
+	(*IF Prod(LEN(m))=0 THEN RETURN 0
 	ELSE	RETURN SUM(m)/Prod(LEN(m))
-	END;
+	END;*)
 END Mean;
 
 PROCEDURE Max(CONST m: Array):Datatype;
 BEGIN
-	IF Prod(LEN(m))=0 THEN RETURN 0
-	ELSE	RETURN MAX(m)
+	IF DIM(m)=0 THEN RETURN 0
+	ELSE RETURN MAX(m)
 	END;
+	(*IF Prod(LEN(m))=0 THEN RETURN 0
+	ELSE	RETURN MAX(m)
+	END;*)
 END Max;
 
 PROCEDURE SameSize(CONST a,a1:Array):BOOLEAN;
@@ -367,6 +451,15 @@ BEGIN
 	IF LEN(m,0)<=1 THEN y:=0 ELSE y:=rand.Dice(SIGNED32(LEN(m,0))) END;
 	IF LEN(m,1)*LEN(m,0)>0 THEN RETURN m[y, x] ELSE RETURN 0 END;(*catch zero size subblocks*)
 END Sample;
+
+PROCEDURE Sample2(CONST m,m1: Array):ARRAY [2] OF Datatype;
+VAR x,y: SIGNED32; res:ARRAY [2] OF Datatype;
+BEGIN
+	IF LEN(m,1)<=1 THEN x:=0 ELSE x:=rand.Dice(SIGNED32(LEN(m,1))) END; 
+	IF LEN(m,0)<=1 THEN y:=0 ELSE y:=rand.Dice(SIGNED32(LEN(m,0))) END;
+	IF LEN(m,1)*LEN(m,0)>0 THEN res[0]:=m[y, x]; res[1]:=m1[y, x] END;(*catch zero size subblocks*)
+	RETURN res
+END Sample2;
 
 PROCEDURE Gridpoints(CONST m: Array):Datatype;
 VAR x,y: SIZE;
@@ -801,6 +894,59 @@ BEGIN
 	RETURN m
 END ReconstructFoveaA2;
 
+TYPE Reporter*=OBJECT
+	VAR log:Streams.Writer;
+	PROCEDURE &Init(w:Streams.Writer);
+	BEGIN
+		log:=w;
+	END Init;
+	
+	PROCEDURE Report(shell,i, y0,y1, x0,x1:SIZE);
+	BEGIN
+		log.Int(shell,6); log.Int(i,6); log.Int(y0,6); log.Int(y1,6); log.Int(x0,6); log.Int(x1,6); log.Ln;
+	END Report;
+	
+	PROCEDURE ReportShell(shell:SIZE);
+	VAR x,y,len,slen,i:SIZE;
+	BEGIN
+			len:=1;i:=0;
+			FOR i:=0 TO shell-1 DO len:=len*2 END;
+			slen:=len DIV 2;
+			Report(2*shell, 0,y+0*len,		y+1*len-1, 					x-2*len+slen,	x-1*len-1); (* performance: could substitute Mean() by simple sampling *)
+			Report(2*shell, 1,y+1*len,		y+2*len-1, 					x-2*len+slen,	x-1*len-1);
+			Report(2*shell, 2,y+1*len,		y+1*len+MAX(1,slen)-1, x-1*len,			x+0*len-1);
+			Report(2*shell, 3,y+1*len,		y+1*len+MAX(1,slen)-1, x+0*len,			x+1*len-1);
+			Report(2*shell, 4,y+1*len,		y+1*len+MAX(1,slen)-1, x+1*len,			x+2*len-1);
+			Report(2*shell, 5,y+0*len,		y+1*len-1, 					x+1*len,			x+1*len+MAX(1,slen)-1);
+			Report(2*shell, 6,y-1*len,		y+0*len-1, 					x+1*len,			x+1*len+MAX(1,slen)-1);
+			Report(2*shell, 7,y-2*len,		y-1*len-1, 					x+1*len,			x+1*len+MAX(1,slen)-1);
+			Report(2*shell, 8,y-2*len+slen,y-1*len-1, 					x+0*len,			x+1*len-1);
+			Report(2*shell, 9,y-2*len+slen,y-1*len-1, 					x-1*len,			x+0*len-1);
+			Report(2*shell,10,y-2*len+slen,y-1*len-1, 					x-2*len,			x-1*len-1); (*! there is some indexing problem here ,.*)
+			Report(2*shell,11,y-1*len,		y+0*len-1, 					x-2*len+slen,	x-1*len-1);
+			
+			log.Ln;
+
+			Report(2*shell+1, 0,y+0*len,		y+1*len-1, 					x-2*len,			x-2*len+MAX(1,slen)-1); 
+			Report(2*shell+1, 1,y+1*len,		y+2*len-1, 					x-2*len,			x-2*len+MAX(1,slen)-1);
+			Report(2*shell+1, 2,y+1*len+slen,y+2*len-1, 					x-1*len,			x+0*len-1);
+			Report(2*shell+1, 3,y+1*len+slen,y+2*len-1, 					x+0*len,			x+1*len-1);
+			Report(2*shell+1, 4,y+1*len+slen,y+2*len-1, 					x+1*len,			x+2*len-1);
+			Report(2*shell+1, 5,y+0*len,		y+1*len-1, 					x+1*len+slen,	x+2*len-1);
+			Report(2*shell+1, 6,y-1*len,		y+0*len-1, 					x+1*len+slen,	x+2*len-1);
+			Report(2*shell+1, 7,y-2*len,		y-1*len-1, 					x+1*len+slen,	x+2*len-1);
+			Report(2*shell+1, 8,y-2*len,		y-2*len+MAX(1,slen)-1, x+0*len,			x+1*len-1);
+			Report(2*shell+1, 9,y-2*len,		y-2*len+MAX(1,slen)-1, x-1*len,			x+0*len-1);
+			Report(2*shell+1,10,y-2*len,		y-2*len+MAX(1,slen)-1, x-2*len,			x-1*len-1);
+			Report(2*shell+1,11,y-1*len,		y+0*len-1, 					x-2*len,			x-2*len+MAX(1,slen)-1);
+			log.Ln; 
+			log.Update;
+	END ReportShell;
+	
+BEGIN
+	
+END Reporter;
+
 
 PROCEDURE Test*;
 VAR img, recon, fovea: Matrix;
@@ -834,7 +980,7 @@ BEGIN
 	NEW(re, recon, "recon"); re.AddWindow;
 END Test0;
 
-
+(*decompose and reconstruct diagonal test pattern*)
 PROCEDURE TestA*;
 VAR img, recon, fovea: Tensor;
 	i:SIZE;
@@ -852,6 +998,65 @@ BEGIN
 	WMArrayPanel.AddWindow(recon, "recon"); 
 END TestA;
 
+(*decompose and reconstruct diagonal gradient pattern*)
+PROCEDURE TestB*;
+VAR img, recon, fovea: Tensor;
+	i,j:SIZE;
+BEGIN
+	NEW(img, 3, 512, 512);
+	FOR i:=4 TO LEN(img,1)-4 BY 8 DO
+		FOR j:=4 TO LEN(img,2)-4 BY 8 DO
+			img[*,j-4..j+3, i-4..i+3] := i+j;
+		END;
+	END;
+	img[1,?]:=img[0,?] /2; 
+	fovea:=GetFoveaA2(img, 256, 256, 1, 6, Mean);
+	recon:=ReconstructFoveaA2(fovea, 1, 6);
+	
+	WMArrayPanel.AddWindow(img, "img"); 
+	WMArrayPanel.AddWindow(fovea, "fovea"); 
+	WMArrayPanel.AddWindow(recon, "recon"); 
+END TestB;
+
+(*decompose and resize/reconstruct diagonal gradient pattern*)
+PROCEDURE TestC*;
+VAR img, recon, fovea: Tensor;
+	i,j:SIZE;
+BEGIN
+	NEW(img, 3, 512, 512);
+	FOR i:=4 TO LEN(img,1)-4 BY 8 DO
+		FOR j:=4 TO LEN(img,2)-4 BY 8 DO
+			img[*,j-4..j+3, i-4..i+3] := i+j;
+		END;
+	END;
+	img[1,?]:=img[0,?] /2; 
+	fovea:=GetFoveaA2(img, 256, 256, 1, 6, Mean);
+	recon:=ReconstructFoveaA2(fovea, 2, 6);
+	
+	WMArrayPanel.AddWindow(img, "img"); 
+	WMArrayPanel.AddWindow(fovea, "fovea"); 
+	WMArrayPanel.AddWindow(recon, "recon"); 
+END TestC;
+
+(*decompose and resize/reconstruct diagonal gradient pattern*)
+PROCEDURE TestD*;
+VAR img, recon, fovea: Tensor;
+	i,j:SIZE;
+BEGIN
+	NEW(img, 3, 512, 512);
+	FOR i:=4 TO LEN(img,1)-4 BY 8 DO
+		FOR j:=4 TO LEN(img,2)-4 BY 8 DO
+			img[*,j-4..j+3, i-4..i+3] := i+j;
+		END;
+	END;
+	img[1,?]:=img[0,?] /2; 
+	fovea:=GetFoveaSampledA2(img, 256, 256, 1, 6);
+	recon:=ReconstructFoveaA2(fovea, 2, 6);
+	
+	WMArrayPanel.AddWindow(img, "img"); 
+	WMArrayPanel.AddWindow(fovea, "fovea"); 
+	WMArrayPanel.AddWindow(recon, "recon"); 
+END TestD;
 
 PROCEDURE Test1*(context:Commands.Context); (* 1 layer, quadratic blocks in periphery*)
 VAR 
@@ -1052,6 +1257,14 @@ BEGIN
 	COPY(name, oldName);
 END Test3;
 
+PROCEDURE Report*(context:Commands.Context);
+VAR shell:SIZE; reporter:Reporter;
+BEGIN
+	IF context.arg.GetSize(shell,FALSE) THEN
+		NEW(reporter,context.out);
+		reporter.ReportShell(shell);
+	END;
+END Report;
 
 BEGIN
 	NEW(rand)
@@ -1060,6 +1273,9 @@ END TensorFovea.
 TensorFovea.Test ~
 TensorFovea.Test0 ~
 TensorFovea.TestA ~
+TensorFovea.TestB ~
+TensorFovea.TestC ~
+TensorFovea.TestD ~
 TensorFovea.Test1 ~
 TensorFovea.Test1 SimpleEye.jpg ~
 TensorFovea.Test2 SimpleEye.jpg ~
@@ -1075,5 +1291,7 @@ TensorFovea.Test3 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/aergaf.jpg" 4 5 sampl
 TensorFovea.TestA2 SaasFee.jpg 3 7~
 TensorFovea.TestA2 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/8476656067_ee498cc265_b.jpg" 2 7 ~
 TensorFovea.Test3 "HIGHDIM:/Code/EyeTracker/EyeDB_Internet/8476656067_ee498cc265_b.jpg" ~
+TensorFovea.Report 1~
+TensorFovea.Report 3~
 
 System.FreeDownTo WMMatrix ~ 

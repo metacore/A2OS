@@ -989,7 +989,7 @@ TYPE
 			SkipWhitespace;
 			c := Peek();
 			real := RC.ScanReal(Get);
-			RETURN ((c = '-') OR (c >= '0') & (c <= '9')) & (res = Ok);
+			RETURN ((c = '-') OR (c >= '0') & (c <= '9')) & ((res = Ok) OR (res = EOF));
 		END GetReal;
 
 		(** First skip whitespace, then read 1 byte character *)

@@ -1085,7 +1085,7 @@ TYPE
 				first := TRUE;
 				IF x.fixed & (x.extern = NIL) THEN
 					Value(Global.NameOffset,x.alignment,first)
-				ELSIF ~x.fixed & (x.alignment > 1) THEN
+				ELSIF ~x.fixed & (x.alignment > 0) THEN
 					Value(Global.NameAligned,x.alignment,first)
 				ELSIF x.preferRegister THEN
 					Flag(Global.NameRegister,first);

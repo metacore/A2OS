@@ -74,29 +74,16 @@ TYPE
 TYPE
 	TLSService* = OBJECT (Service)	(** TCP service object - handles opening and closing of connections *)
 		VAR
-		  policy: TLS.Policy;
-		  ctx: TLS.Context; cipherSuites: ARRAY TLS.Suites OF SIGNED32;
 
 		(** Start is called indirectly by OpenService. *)
 		PROCEDURE &Start*(port: SIGNED32; new: NewAgent; VAR res: INTEGER);
 			VAR
-				newService: TLS.Connection;
 		   certificate : ARRAY 500 OF CHAR;
 		   pHex, qHex, eHex : ARRAY 1000 OF CHAR;
 		   intstring : ARRAY 20 OF CHAR;
 		   pLen, qLen, eLen : SIGNED32;
 		BEGIN
-			(* Set the policy *)
-			NEW( policy );
-			cipherSuites[ 0 ] := TLS.TlsRsaWithRc4128Md5;
-			(* cipherSuites[ 0 ] := TLS.TlsRsaWith3DesEdeCbcSha; *)
-
-			policy.SetCipherSuites( cipherSuites, 1 );
-
-			(* set up context *)
-			NEW( ctx, policy );
 			Configuration.Get("TLS.Certificate", certificate, res);
-			res := ctx.LoadRsaCertificate( certificate );
 			Configuration.Get("TLS.pHex", pHex, res);
 			Configuration.Get("TLS.qHex", qHex, res);
 			Configuration.Get("TLS.eHex", eHex, res);
@@ -104,11 +91,8 @@ TYPE
 			Configuration.Get("TLS.qLen", intstring, res); Strings.StrToInt(intstring, qLen);
 			Configuration.Get("TLS.eLen", intstring, res); Strings.StrToInt(intstring, eLen);
 
-			ctx.LoadRsaPrivateKey( pHex, qHex, eHex, SHORT(pLen), SHORT(qLen), SHORT(eLen));
-
-			(* set up passive secure connection *)
-			NEW(newService); SELF.service := newService;
-			service(TLS.Connection).SetContext( ctx );
+			(* get a connection with default TLS policy *)
+			service := TLS.GetServerConnection(certificate, pHex, qHex, eHex, pLen, qLen, eLen);
 			service.Open( port, IP.NilAdr, TCP.NilPort, res );
 
 			IF res = Ok THEN
@@ -138,7 +122,9 @@ TYPE
 			SELF.client := c; SELF.s := s;
 			IF Trace & (c # NIL) THEN
 				KernelLog.Enter; KernelLog.String("Agent "); KernelLog.Int(c.lport, 1);
-				KernelLog.String(" on interface "); IP.AdrToStr(c.int.localAdr, str); KernelLog.String(str);
+				IF c.int # NIL THEN
+					KernelLog.String(" on interface "); IP.AdrToStr(c.int.localAdr, str); KernelLog.String(str);
+				END;
 				KernelLog.String(" connected to "); IP.AdrToStr(c.fip, str); KernelLog.String(str);
 				KernelLog.Char(":"); KernelLog.Int(c.fport, 1); KernelLog.Exit;
 			END

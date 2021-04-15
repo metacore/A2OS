@@ -8,16 +8,16 @@ TYPE
 		hash: ARRAY 8 OF SIGNED32; 
 		bitlen: SIGNED64; 
 		cdata: ARRAY BlockSize OF CHAR; 
-		cn: SIGNED32; 
+		cn: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ HashBlock; 
+		PROCEDURE ^ HashBlock(CONST data: ARRAY OF CHAR; pos: SIZE); 
 		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
 		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
 	END Hash; 
 VAR 
-	K256: ARRAY 64 OF SIGNED32; 
+	K256: ARRAY BlockSize OF SIGNED32; 
 
 	PROCEDURE ^ NewHash*(): Hashes.Hash; 
 	PROCEDURE  - Sigma0Maj(x, y, z: SET32): SIGNED32;

@@ -1,7 +1,7 @@
 MODULE TLS;
-	IMPORT TCP, Streams, Files, IP, KernelLog, Pipes, Kernel, Clock, BIT, Dates, Ciphers := CryptoCiphers, Utils := CryptoUtils, HMAC := CryptoHMAC, CSPRNG := CryptoCSPRNG, CryptoMD5, CryptoSHA1, CryptoRSA, CryptoBigNumbers, PKCS1, X509;
+	IMPORT TCP, Streams, Files, IP, KernelLog, Pipes, Kernel, BIT, Dates, Strings, Ciphers := CryptoCiphers, HMAC := CryptoHMAC, CSPRNG := CryptoCSPRNG, CryptoHashes, CryptoMD5, CryptoSHA1, CryptoRSA, CryptoBigNumbers, PKCS1, X509;
 CONST 
-	Trace = TRUE; 
+	Trace = FALSE; 
 	ServerHandshake* = 12; 
 	ClientHandshake* = 13; 
 	NotAValidHandshakeState = 100; 
@@ -207,6 +207,7 @@ TYPE
 		outbuf, inbuf: ARRAY Buflen OF CHAR; 
 		hsMD5send, hsMD5verify: CryptoMD5.Hash; 
 		hsSHAsend, hsSHAverify: CryptoSHA1.Hash; 
+		hsHashSend, hsHashVerify: CryptoHashes.Hash; 
 		pendingSecurityParameters: SecurityParameters; 
 		currentWriteState, pendingWriteState, currentReadState, pendingReadState: ConnectionState; 
 		version-: ARRAY 2 OF CHAR; 
@@ -218,7 +219,7 @@ TYPE
 		PROCEDURE ^ SetState*(s: SIGNED8); 
 		PROCEDURE ^ ChangeWriteState; 
 		PROCEDURE ^ ChangeReadState; 
-		PROCEDURE ^ SetContext*(cxt: Context); 
+		PROCEDURE ^ SetContext*(ctx: Context); 
 		PROCEDURE ^ Open*(lport: SIGNED32; fip: IP.Adr; fport: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ SetDefaultPolicy*; 
 		PROCEDURE ^ SetConnection*(c: TCP.Connection); 

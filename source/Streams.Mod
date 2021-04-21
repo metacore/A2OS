@@ -982,14 +982,18 @@ TYPE
 			RETURN res = Ok;
 		END GetSize;
 
+		PROCEDURE PeekNext(): CHAR;
+		BEGIN
+			IGNORE Get(); RETURN Peek();
+		END PeekNext;
+
 		(** First skip whitespace, then read a real *)
 		PROCEDURE GetReal*(VAR real: FLOAT64): BOOLEAN;
 		VAR c: CHAR;
 		BEGIN
 			SkipWhitespace;
 			c := Peek();
-			real := RC.ScanReal(Get);
-			RETURN ((c = '-') OR (c >= '0') & (c <= '9')) & ((res = Ok) OR (res = EOF));
+			RETURN RC.ScanReal(Peek(), PeekNext, real);
 		END GetReal;
 
 		(** First skip whitespace, then read 1 byte character *)

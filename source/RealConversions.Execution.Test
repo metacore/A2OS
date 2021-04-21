@@ -1,0 +1,425 @@
+# Oberon language test and validation suite
+# options --mayTrap --prolog="Compiler.Compile TesterInput.txt" --command="System.Free Test B A;System.Load Test" --logFile="FoxExecutionTest.Log" --result="RealConversions.Execution.Test.Diff"
+
+# test halt and assert statements and simple procedure call (basics for the test suite)
+
+positive: test RealConversions.ScanReal
+
+	MODULE Test;
+	IMPORT
+		RC := RealConversions, Strings;
+	VAR
+		str: ARRAY 64 OF CHAR;
+		pos, length: SIZE;
+
+		PROCEDURE SetStr(CONST s: ARRAY OF CHAR);
+		BEGIN
+			COPY(s, str); pos := 0; length := Strings.Length(str);
+		END SetStr;
+
+		PROCEDURE Next(): CHAR;
+		BEGIN
+			INC(pos);
+			IF pos < length THEN
+				RETURN str[pos];
+			ELSE RETURN 0X;
+			END;
+		END Next;
+
+		PROCEDURE Test*;
+		VAR v: FLOAT64;
+		BEGIN
+			(*
+				Positive tests
+			*)
+
+			(* only integer part *)
+			SetStr("+1234567890");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("-1234567890");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = -1234567890);
+
+			SetStr("1234567890.");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890);
+
+			(* only fractional part *)
+			SetStr("0.123456789");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = (123456789.D0/1000000000));
+
+			SetStr("+0.123456789");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = (123456789.D0/1000000000));
+
+			SetStr("-0.123456789");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = -(123456789.D0/1000000000));
+
+			SetStr(".123456789");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = (123456789.D0/1000000000));
+
+			SetStr("+.123456789");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = (123456789.D0/1000000000));
+
+			SetStr("-.123456789");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = -(123456789.D0/1000000000));
+
+			(* integer and fractional parts *)
+			SetStr("1234567890.1234567890");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890 + 1234567890.D0/10000000000);
+
+			(* integer part with exponent *)
+			SetStr("1234567890E0");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("1234567890e0");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("1234567890D0");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("1234567890d0");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("1234567890E13");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890.0D13);
+
+			SetStr("1234567890e13");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890.0D13);
+
+			SetStr("1234567890D13");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890.0D13);
+
+			SetStr("1234567890d13");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890.0D13);
+
+			(* fractional and exponent parts *)
+			SetStr(".1234567890E10");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890);
+
+			(* integer and exponent parts *)
+			SetStr("123456789.E3");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 123456789000);
+
+			(* integer, fractional and exponent parts *)
+			SetStr("123456.7890E4");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890);
+
+			(* integer, fractional and exponent parts + signs and leading spaces and zeros  *)
+			SetStr("  +00123456.7890E+004");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("  -00123456.7890E+004");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = -1234567890);
+
+			SetStr("  +00123456.7890E-003");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = (123456 + (7890.D0/10000))*1.0D-3);
+
+			SetStr("  -00123456.7890E-003");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = -(123456 + (7890.D0/10000))*1.0D-3);
+
+			(* check for preservation of characters following the value *)
+			SetStr("123456.7890 ");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 123456 + (7890.D0/10000));
+			ASSERT(pos = 11);
+
+			SetStr("123456.7890a");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 123456 + (7890.D0/10000));
+			ASSERT(pos = 11);
+
+			SetStr("123456. ");
+			ASSERT(RC.ScanReal(str[0], Next, v));
+			ASSERT(v = 123456);
+			ASSERT(pos = 7);
+
+			(*
+				Negative tests
+			*)
+
+			(* non-space non-sign non-point first character *)
+			SetStr("a123456.7890E3");
+			ASSERT(~RC.ScanReal(str[0], Next, v));
+
+			(* non-digit after the sign *)
+			SetStr("+ 123456.7890E3");
+			ASSERT(~RC.ScanReal(str[0], Next, v));
+
+			SetStr("- 123456.7890E3");
+			ASSERT(~RC.ScanReal(str[0], Next, v));
+
+			(* non-digit after the point *)
+			SetStr(". 7890E3");
+			ASSERT(~RC.ScanReal(str[0], Next, v));
+
+			SetStr(".a7890E3");
+			ASSERT(~RC.ScanReal(str[0], Next, v));
+
+			SetStr(".E3");
+			ASSERT(~RC.ScanReal(str[0], Next, v));
+
+			(* non-sign non-digit after the exponent *)
+			SetStr("123456.7890E 3");
+			ASSERT(~RC.ScanReal(str[0], Next, v));
+			ASSERT(pos = 12);
+
+			SetStr("123456.7890Ea");
+			ASSERT(~RC.ScanReal(str[0], Next, v));
+			ASSERT(pos = 12);
+
+			(* non-sign non-digit after the exponent's sign *)
+			SetStr("123456.7890E+ 3");
+			ASSERT(~RC.ScanReal(str[0], Next, v));
+			ASSERT(pos = 13);
+
+			SetStr("123456.7890E- 3");
+			ASSERT(~RC.ScanReal(str[0], Next, v));
+			ASSERT(pos = 13);
+
+			TRACE("Test passed");
+		END Test;
+	END Test.
+
+positive: test RealConversions.StringToReal
+
+	MODULE Test;
+	IMPORT
+		RC := RealConversions, Strings;
+	VAR
+		str: ARRAY 64 OF CHAR;
+		pos, length: SIZE;
+
+		PROCEDURE SetStr(CONST s: ARRAY OF CHAR);
+		BEGIN
+			COPY(s, str); pos := 0; length := Strings.Length(str);
+		END SetStr;
+
+		PROCEDURE Next(): CHAR;
+		BEGIN
+			INC(pos);
+			IF pos < length THEN
+				RETURN str[pos];
+			ELSE RETURN 0X;
+			END;
+		END Next;
+
+		PROCEDURE Test*;
+		VAR v: FLOAT64;
+		BEGIN
+			(*
+				Positive tests
+			*)
+
+			(* only integer part *)
+			SetStr("+1234567890");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("-1234567890");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = -1234567890);
+
+			SetStr("1234567890.");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890);
+
+			(* only fractional part *)
+			SetStr("0.123456789");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = (123456789.D0/1000000000));
+
+			SetStr("+0.123456789");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = (123456789.D0/1000000000));
+
+			SetStr("-0.123456789");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = -(123456789.D0/1000000000));
+
+			SetStr(".123456789");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = (123456789.D0/1000000000));
+
+			SetStr("+.123456789");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = (123456789.D0/1000000000));
+
+			SetStr("-.123456789");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = -(123456789.D0/1000000000));
+
+			(* integer and fractional parts *)
+			SetStr("1234567890.1234567890");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890 + 1234567890.D0/10000000000);
+
+			(* integer part with exponent *)
+			SetStr("1234567890E0");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("1234567890e0");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("1234567890D0");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("1234567890d0");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("1234567890E13");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890.0D13);
+
+			SetStr("1234567890e13");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890.0D13);
+
+			SetStr("1234567890D13");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890.0D13);
+
+			SetStr("1234567890d13");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890.0D13);
+
+			(* fractional and exponent parts *)
+			SetStr(".1234567890E10");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890);
+
+			(* integer and exponent parts *)
+			SetStr("123456789.E3");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 123456789000);
+
+			(* integer, fractional and exponent parts *)
+			SetStr("123456.7890E4");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890);
+
+			(* integer, fractional and exponent parts + signs and leading spaces and zeros  *)
+			SetStr("  +00123456.7890E+004");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("  -00123456.7890E+004");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = -1234567890);
+
+			SetStr("  +00123456.7890E-003");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = (123456 + (7890.D0/10000))*1.0D-3);
+
+			SetStr("  -00123456.7890E-003");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = -(123456 + (7890.D0/10000))*1.0D-3);
+
+			(* trailing spaces *)
+			SetStr("123456.7890 ");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 123456 + (7890.D0/10000));
+
+			SetStr("123456.7890  ");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 123456 + (7890.D0/10000));
+
+			SetStr("123456. ");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 123456);
+
+			SetStr("123456.  ");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 123456);
+
+			SetStr("123456.7890E4 ");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890);
+
+			SetStr("123456.7890E4  ");
+			ASSERT(RC.StringToReal(str, v));
+			ASSERT(v = 1234567890);
+
+			(*
+				Negative tests
+			*)
+
+			(* non-space non-sign non-point first character *)
+			SetStr("a123456.7890E3");
+			ASSERT(~RC.StringToReal(str, v));
+
+			(* non-digit after the sign *)
+			SetStr("+ 123456.7890E3");
+			ASSERT(~RC.StringToReal(str, v));
+
+			SetStr("- 123456.7890E3");
+			ASSERT(~RC.StringToReal(str, v));
+
+			(* non-digit after the point *)
+			SetStr(". 7890E3");
+			ASSERT(~RC.StringToReal(str, v));
+
+			SetStr(".a7890E3");
+			ASSERT(~RC.StringToReal(str, v));
+
+			SetStr(".E3");
+			ASSERT(~RC.StringToReal(str, v));
+
+			(* non-sign non-digit after the exponent *)
+			SetStr("123456.7890E 3");
+			ASSERT(~RC.StringToReal(str, v));
+
+			SetStr("123456.7890Ea");
+			ASSERT(~RC.StringToReal(str, v));
+
+			(* non-sign non-digit after the exponent's sign *)
+			SetStr("123456.7890E+ 3");
+			ASSERT(~RC.StringToReal(str, v));
+
+			SetStr("123456.7890E- 3");
+			ASSERT(~RC.StringToReal(str, v));
+
+			(* invalid characters at the end *)
+			SetStr("123456.7890a");
+			ASSERT(~RC.StringToReal(str, v));
+
+			SetStr("123456.7890 a");
+			ASSERT(~RC.StringToReal(str, v));
+
+			SetStr("123456.7890E3+");
+			ASSERT(~RC.StringToReal(str, v));
+
+			SetStr("123456.7890E3 +");
+			ASSERT(~RC.StringToReal(str, v));
+
+			TRACE("Test passed");
+		END Test;
+	END Test.
+

@@ -3,91 +3,159 @@ MODULE RealConversions;  (* GF *)
 IMPORT SYSTEM;
 
 TYPE
-	ReadProc* = PROCEDURE {DELEGATE} ( ): CHAR;
+	(** Procedure used in ScanReal for peeking the next character from the input character stream.
+
+		An example:
+
+		PROCEDURE Next(): CHAR;
+		BEGIN
+			INC(streamPos); (* preincrement the stream position *)
+			IF streamPos < streamLength THEN
+				RETURN stream(streamPos);
+			ELSE RETURN 0X;
+			END;
+		END Next;
+	*)
+	PeekNext* = PROCEDURE {DELEGATE} ( ): CHAR;
 
 VAR
 	H, L: SIGNED16;
 
-	(**	Scan a floating-point number.
-		EBNF: Real = Digit {Digit} '.' Digit {Digit} ['e'|'E' ['+'|'-'] Digit {Digit}]. *)
-	PROCEDURE ScanReal*( next: ReadProc ): FLOAT64;
-	VAR
-		e: SIGNED16; y, g: FLOAT64; neg, negE: BOOLEAN; ch: CHAR;
+	PROCEDURE -IsDigit(ch: CHAR): BOOLEAN;
 	BEGIN
-		ch := next();
-		WHILE (ch = "0") DO  ch := next()  END;
-		IF ch = "-" THEN  neg := TRUE; ch := next()  ELSE  neg := FALSE  END;
-		WHILE (ch = " ") OR (ch = "0") DO  ch := next()  END;
-		y := 0;
-		WHILE ("0" <= ch) & (ch <= "9") DO
-			y := y * 10 + (ORD(ch) - ORD("0"));
-			ch := next();
-		END;
-		IF ch = "." THEN
-			ch := next();
-			g := 1;
+		RETURN (ch >= "0") & (ch <= "9")
+	END IsDigit;
+
+	(**	Scan a floating-point number.
+		EBNF: Real = [{' '}] ['+'|'-'] [Digit {Digit}] '.' Digit {Digit} ['d'|'D|'e'|'E'' ['+'|'-'] Digit {Digit}].
+
+		ch : first peek from the input character stream
+		next : a procedure to peek the next character
+		r : scanning result
+
+		Returns TRUE in case of a valid conversion. The result value r remains unchanged in case of an error.
+	*)
+	PROCEDURE ScanReal*( ch: CHAR; next: PeekNext; VAR r: FLOAT64 ): BOOLEAN;
+	VAR neg := FALSE, negE := FALSE: BOOLEAN;
+
+		PROCEDURE ScanFractionalPart;
+		BEGIN
+			VAR g := 1: FLOAT64;
 			WHILE ("0" <= ch) & (ch <= "9") DO
 				g := g / 10;  y := y + g * (ORD(ch) - ORD("0"));
 				ch := next()
 			END;
+		END ScanFractionalPart;
+
+	BEGIN
+		VAR y := 0: FLOAT64;
+		(* skip leading spaces *)
+		WHILE (ch = " ") DO ch := next() END;
+		IF ch = "-" THEN  neg := TRUE; ch := next()
+		ELSIF ch = "+" THEN ch := next() END;
+		IF ch # "." THEN (* expecting the integer part *)
+			IF ~IsDigit(ch) THEN RETURN FALSE END;
+			(* skip leading zeros of the integer part *)
+			WHILE (ch = "0") DO ch := next() END;
+			(* scan the integer part *)
+			WHILE ("0" <= ch) & (ch <= "9") DO
+				y := y * 10 + (ORD(ch) - ORD("0"));
+				ch := next()
+			END;
+			IF ch = "." THEN ch := next(); ScanFractionalPart; END;
+		ELSE (* no integer part *)
+			ch := next();
+			IF IsDigit(ch) THEN ScanFractionalPart;
+			ELSE RETURN FALSE END; (*! if the point comes without the integer part it must be followed by a digit *)
 		END;
 		IF (ch = "d") OR (ch = "D") OR (ch = "e") OR (ch = "E") THEN
-			ch := next();  e := 0;
-			IF ch = "-" THEN  negE := TRUE; ch := next()
-			ELSIF ch = "+" THEN  negE := FALSE; ch := next()
-			ELSE  negE := FALSE
+			ch := next();
+			IF ch = "-" THEN negE := TRUE; ch := next()
+			ELSIF ch = "+" THEN ch := next()
 			END;
-			WHILE (ch = "0") DO  ch := next()  END;
+			IF ~IsDigit(ch) THEN RETURN FALSE END; (*! the exponent character must be followed either by the sign or a digit *)
+			(* skip leading zeros *)
+			WHILE (ch = "0") DO ch := next() END;
+			(* scan the exponent value *)
+			VAR e := 0: SIGNED16;
 			WHILE ("0" <= ch) & (ch <= "9") DO
 				e := e * 10 + (ORD(ch) - ORD("0"));
 				ch := next()
 			END;
-			IF negE THEN  y := y / Ten(e)
-			ELSE  y := y * Ten(e)
+			IF negE THEN y := y / Ten(e)
+			ELSE y := y * Ten(e)
 			END;
 		END;
-		IF neg THEN  y := -y  END;
-		RETURN y
+		IF neg THEN y := -y  END;
+		r := y;
+		RETURN TRUE
 	END ScanReal;
 
 	(**	Convert a string to a floating-point number.
-		EBNF: Real = Digit {Digit} '.' Digit {Digit} ['e'|'E' ['+'|'-'] Digit {Digit}]. *)
-	PROCEDURE StringToReal*(CONST s: ARRAY OF CHAR; VAR r: FLOAT64);
-	VAR p, e: SIGNED16; y, g: FLOAT64; neg, negE: BOOLEAN;
-	BEGIN
-		p := 0;
-		WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
-		IF s[p] = "-" THEN neg := TRUE; INC(p) ELSE neg := FALSE END;
-		WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
+		EBNF: Real = [{' '}] ['+'|'-'] [Digit {Digit}] '.' Digit {Digit} ['d'|'D|'e'|'E'' ['+'|'-'] Digit {Digit}] [{' '}].
 
-		y := 0;
-		WHILE ("0" <= s[p]) & (s[p] <= "9") DO
-			y := y * 10 + (ORD(s[p]) - 30H);
-			INC(p);
-		END;
-		IF s[p] = "." THEN
-			INC(p); g := 1;
-			WHILE ("0" <= s[p]) & (s[p] <= "9") DO
-				g := g / 10; y := y + g * (ORD(s[p]) - 30H);
-				INC(p);
+		s : input null-terminated string; absence of the terminating null can cause an index out of range exception
+		r : conversion result
+
+		Returns TRUE in case of a valid conversion. The result value r remains unchanged in case of an error.
+	*)
+	PROCEDURE StringToReal*( CONST s: ARRAY OF CHAR; VAR r: FLOAT64 ): BOOLEAN;
+	VAR neg := FALSE, negE := FALSE: BOOLEAN;
+
+		PROCEDURE ScanFractionalPart;
+		BEGIN
+			VAR g := 1: FLOAT64;
+			WHILE ("0" <= ch) & (ch <= "9") DO
+				g := g / 10;  y := y + g * (ORD(ch) - ORD("0"));
+				INC(p); ch := s[p]
 			END;
-		END;
-		IF (s[p] = "d") OR (s[p] = "D") OR (s[p] = "e") OR (s[p] = "E") THEN
-			INC(p); e := 0;
-			IF s[p] = "-" THEN negE := TRUE; INC(p)
-			ELSIF s[p] = "+" THEN negE := FALSE; INC(p)
-			ELSE negE := FALSE
+		END ScanFractionalPart;
+
+	BEGIN
+		VAR ch := s[0]; VAR p := 0: SIZE;
+		VAR y := 0: FLOAT64;
+		(* skip leading spaces *)
+		WHILE (ch = " ") DO INC(p); ch := s[p] END;
+		IF ch = "-" THEN  neg := TRUE; INC(p); ch := s[p]
+		ELSIF ch = "+" THEN INC(p); ch := s[p] END;
+		IF ch # "." THEN (* expecting the integer part *)
+			IF ~IsDigit(ch) THEN RETURN FALSE END;
+			(* skip leading zeros of the integer part *)
+			WHILE (ch = "0") DO INC(p); ch := s[p] END;
+			(* scan the integer part *)
+			WHILE ("0" <= ch) & (ch <= "9") DO
+				y := y * 10 + (ORD(ch) - ORD("0"));
+				INC(p); ch := s[p]
 			END;
-			WHILE (s[p] = "0") DO INC(p) END;
-			WHILE ("0" <= s[p]) & (s[p] <= "9") DO
-				e := e * 10 + (ORD(s[p]) - 30H);
-				INC(p);
+			IF ch = "." THEN INC(p); ch := s[p]; ScanFractionalPart; END;
+		ELSE (* no integer part *)
+			INC(p); ch := s[p];
+			IF IsDigit(ch) THEN ScanFractionalPart;
+			ELSE RETURN FALSE END; (*! if the point comes without the integer part it must be followed by a digit *)
+		END;
+		IF (ch = "d") OR (ch = "D") OR (ch = "e") OR (ch = "E") THEN
+			INC(p); ch := s[p];
+			IF ch = "-" THEN negE := TRUE; INC(p); ch := s[p]
+			ELSIF ch = "+" THEN INC(p); ch := s[p]
+			END;
+			IF ~IsDigit(ch) THEN RETURN FALSE END; (*! the exponent character must be followed either by the sign or a digit *)
+			(* skip leading zeros *)
+			WHILE (ch = "0") DO INC(p); ch := s[p] END;
+			(* scan the exponent value *)
+			VAR e := 0: SIGNED16;
+			WHILE ("0" <= ch) & (ch <= "9") DO
+				e := e * 10 + (ORD(ch) - ORD("0"));
+				INC(p); ch := s[p]
 			END;
 			IF negE THEN y := y / Ten(e)
-			ELSE y := y * Ten(e) END;
+			ELSE y := y * Ten(e)
+			END;
 		END;
-		IF neg THEN y := -y END;
-		r := y
+		WHILE (ch = " ") DO INC(p); ch := s[p] END;
+		IF (ch # 0X) THEN RETURN FALSE END; (*! only trailing spaces are allowed, nothing else *)
+		IF neg THEN y := -y  END;
+		r := y;
+		RETURN TRUE
 	END StringToReal;
 
 	(**	Convert FLOAT64 x using at least n character positions. *)

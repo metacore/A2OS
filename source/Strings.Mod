@@ -813,7 +813,7 @@ END AddressToStr;
 (** converts a string to a real value *)
 PROCEDURE StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: FLOAT64);
 BEGIN
-	RC.StringToReal(s,r);
+	ASSERT(RC.StringToReal(s,r));
 END StrToFloat;
 
 (** converts a set to a string *)

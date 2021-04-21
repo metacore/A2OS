@@ -2,12 +2,16 @@ MODULE RealConversions;
 	IMPORT SYSTEM;
 CONST 
 TYPE 
-	ReadProc* = PROCEDURE {DELEGATE}():CHAR; 
+	PeekNext* = PROCEDURE {DELEGATE}():CHAR; 
 VAR 
 	H, L: SIGNED16; 
 
-	PROCEDURE ^ ScanReal*(next: ReadProc): FLOAT64; 
-	PROCEDURE ^ StringToReal*(CONST s: ARRAY OF CHAR; VAR r: FLOAT64); 
+	PROCEDURE  - IsDigit(ch: CHAR): BOOLEAN;
+	BEGIN
+		RETURN ((ch >= \"0"\) & (ch <= \"9"\))
+	END IsDigit; 
+	PROCEDURE ^ ScanReal*(ch: CHAR; next: PeekNext; VAR r: FLOAT64): BOOLEAN; 
+	PROCEDURE ^ StringToReal*(CONST s: ARRAY OF CHAR; VAR r: FLOAT64): BOOLEAN; 
 	PROCEDURE ^ RealToString*(x: FLOAT64; n: INTEGER; VAR buf: ARRAY OF CHAR); 
 	PROCEDURE ^ RealToStringFix*(x: FLOAT64; n, f, D: INTEGER; VAR buf: ARRAY OF CHAR); 
 	PROCEDURE ^ NaNCodeL(x: FLOAT64; VAR h, l: SIGNED32); 

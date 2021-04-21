@@ -1,5 +1,5 @@
 MODULE TLS;
-	IMPORT TCP, Streams, Files, IP, KernelLog, Pipes, Kernel, BIT, Dates, Strings, Ciphers := CryptoCiphers, HMAC := CryptoHMAC, CSPRNG := CryptoCSPRNG, CryptoHashes, CryptoMD5, CryptoSHA1, CryptoRSA, CryptoBigNumbers, PKCS1, X509;
+	IMPORT TCP, Streams, Files, IP, KernelLog, Pipes, Kernel, BIT, Dates, Strings, Ciphers := CryptoCiphers, HMAC := CryptoHMAC, CSPRNG := CryptoCSPRNG, CryptoHashes, CryptoMD5, CryptoSHA1, CryptoRSA, CryptoBigNumbers, PKCS1, X509, PrecisionTimer;
 CONST 
 	Trace = FALSE; 
 	ServerHandshake* = 12; 
@@ -212,6 +212,7 @@ TYPE
 		currentWriteState, pendingWriteState, currentReadState, pendingReadState: ConnectionState; 
 		version-: ARRAY 2 OF CHAR; 
 		client, trapped: BOOLEAN; 
+		tMacUpdate, tPreencrypt, tEncrypt, tWrite: PrecisionTimer.Counter; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ AwaitStateNotEqual*(s: SIGNED32); 

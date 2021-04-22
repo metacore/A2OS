@@ -77,9 +77,12 @@ CONST
 	DatatypeUInt8*=10;
 	DatatypeSize*=DatatypeHInt;
 
+(*TYPE SizeVectorPool=RECORD
+			v:ARRAY [*] OF SIZE
+		END;*)
 	
 VAR  RG: RandomGenerator (*Rand.Generator*);
-
+		
 	
 
 
@@ -610,7 +613,7 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		END;
 	END Print;
 	
-	PROCEDURE PrintInt*(w:Streams.Writer; CONST t: ARRAY[?] OF SIGNED32);
+	PROCEDURE PrintInt*(w:Streams.Writer; CONST t: ARRAY[?] OF SIGNED32; digits:=6:INTEGER);
 	VAR i:SIZE;
 	BEGIN
 		IF DIM(t)>1 THEN
@@ -620,13 +623,13 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 			w.Ln;
 		ELSE
 			FOR i:=0 TO LEN(t,0)-1 DO
-				w.Int(t[i],6);
+				w.Int(t[i],digits);
 			END;
 			w.Ln;
 		END;
 	END PrintInt;
 	
-	PROCEDURE PrintSize*(w:Streams.Writer; CONST t: ARRAY[?] OF SIZE);
+	PROCEDURE PrintSize*(w:Streams.Writer; CONST t: ARRAY[?] OF SIZE; digits:=6:INTEGER);
 	VAR i:SIZE;
 	BEGIN
 		IF DIM(t)>1 THEN
@@ -980,9 +983,19 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	PROCEDURE GetSizeVectorV2(r: Streams.Reader): ARRAY [*] OF SIZE;
 	VAR 
 		i,j, k:SIGNED32;
+		len0: ARRAY [0] OF SIZE;
+		len1: ARRAY [1] OF SIZE;
+		len2: ARRAY [2] OF SIZE;
+		len3: ARRAY [3] OF SIZE;
 	BEGIN
 		IF r.GetInteger(k,FALSE) THEN 
-			NEW(RESULT,k);
+			CASE k OF 
+				|0: RESULT:=len0;
+				|1: RESULT:=len1;
+				|2: RESULT:=len2;
+				|3: RESULT:=len3;
+				ELSE NEW(RESULT,k);
+			END;
 			FOR i:=0 TO k-1 DO 
 				IF r.GetInteger(j,FALSE) THEN
 					RESULT[i]:=j 
@@ -1047,7 +1060,8 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	END Load;
 	
 	PROCEDURE LoadLR*(R:Streams.Reader): ARRAY [?] OF Datatype;
-	VAR  len: ARRAY [*] OF SIZE;
+	VAR  
+		len: ARRAY [*] OF SIZE;
 		version, datatype:SIGNED32;
 	BEGIN
 		ParseHeader(R,version, datatype,len);

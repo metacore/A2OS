@@ -221,7 +221,7 @@ TYPE Transformer  = OBJECT (* allow reuse of temporary structures - important fo
 			FOR i:=1 TO LEN(g,1)-1 DO RESULT:=RESULT+g[..,i,..] END;
 		ELSIF orientation=2 THEN
 			RESULT:=g[..,..,0];
-			FOR i:=1 TO LEN(g,2)-1 DO RESULT:=RESULT+g[..,..,i] END;
+			FOR i:=1 TO LEN(g,2)-1 DO RESULT:=RESULT+g[..,..,i] END;(*!optimization by linewise SUM possible*)
 		END;
 		RETURN RESULT
 	END ProjectSum;

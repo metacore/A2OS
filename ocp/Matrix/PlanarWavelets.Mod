@@ -21,6 +21,7 @@ TYPE Analyzer*= OBJECT
 		levels*, structure*,nSubbands*: SIGNED32;
 		lineX,resX, lineY,resY: Line;
 		child: Analyzer;
+		lenA,lenB:ARRAY[2]OF SIZE;
 
 		(*choose wavelet family; need to choose compatible boundary conditions - see Wavelets.Mod*)
 	PROCEDURE &Init*(waveletType, boundary: SIGNED32; CONST data: Matrix);
@@ -34,9 +35,11 @@ TYPE Analyzer*= OBJECT
 
 	PROCEDURE SetData*(CONST data: Matrix);
 	BEGIN
-		IF LEN(data)>0 THEN
-			IF LEN(data)#LEN(SELF.data) THEN
-				NEW(SELF.data, LEN(data));
+		lenA:=LEN(data);
+		IF lenA[0]>0 THEN
+			lenB:=LEN(SELF.data);
+			IF lenA#lenB THEN
+				NEW(SELF.data, lenA);
 				NEW(lineY, LEN(data,0)); NEW(resY, LEN(data,0));
 				NEW(lineX, LEN(data,1)); NEW(resX, LEN(data,1));
 			END;
@@ -116,7 +119,11 @@ TYPE Analyzer*= OBJECT
 		SELF.structure:=Plain;
 		nSubbands:=1 + levels*3;
 		IF levels>1 THEN
-			NEW(child, waveletType, boundary, data[..(LEN(data,0)+1)DIV 2-1, ..(LEN(data,1)+1) DIV 2-1]);
+			IF child=NIL THEN 
+				NEW(child, waveletType, boundary, data[..(LEN(data,0)+1)DIV 2-1, ..(LEN(data,1)+1) DIV 2-1]);
+			ELSE
+				child.Init(waveletType, boundary, data[..(LEN(data,0)+1)DIV 2-1, ..(LEN(data,1)+1) DIV 2-1]);
+			END;
 			child.AnalyzeMultiscale(levels-1);
 			data[..(LEN(data,0)+1)DIV 2-1, ..(LEN(data,1)+1) DIV 2-1]:=child.data;
 		END;
@@ -131,7 +138,11 @@ TYPE Analyzer*= OBJECT
 		nSubbands:=1;
 		FOR i:=0 TO levels-1 DO nSubbands:=nSubbands*4 END;
 		IF levels>1 THEN
-			NEW(child, waveletType, boundary, data[..(LEN(data,0)+1)DIV 2-1, ..(LEN(data,1)+1) DIV 2-1]); (*! should use child.SetData for efficiency*)
+			IF child=NIL THEN
+				NEW(child, waveletType, boundary, data[..(LEN(data,0)+1)DIV 2-1, ..(LEN(data,1)+1) DIV 2-1]); (*! should use child.SetData for efficiency*)
+			ELSE
+				child.Init(waveletType, boundary, data[..(LEN(data,0)+1)DIV 2-1, ..(LEN(data,1)+1) DIV 2-1]); 
+			END;
 			child.AnalyzePacket(levels-1);
 			data[..(LEN(data,0)+1)DIV 2-1, ..(LEN(data,1)+1) DIV 2-1]:=child.data;
 
@@ -150,7 +161,7 @@ TYPE Analyzer*= OBJECT
 	END AnalyzePacket;
 	
 	(* precondition for packets: LEN(coeffs)= 4^levels; start with level:=0 *)
-	PROCEDURE GetLocationCoeffs*(VAR d: Matrix; level, x,y:INTEGER; VAR coeffs:Line);
+	PROCEDURE GetLocationCoeffs*(CONST(*VAR*) d: Matrix; level, x,y:SIZE; VAR coeffs:Line);
 	VAR w,h,w1,h1,i,n,l:SIZE;
 	BEGIN
 		ASSERT(levels>0, 200); 
@@ -358,7 +369,8 @@ TYPE Reconstructor*= OBJECT
 					END;
 				END Apply;
 		END Filter;
-	
+		
+
 PROCEDURE Test0*;
 CONST levels=3;
 (*	wavelet=Wavelets.Haar;*)

@@ -1,5 +1,5 @@
 MODULE MatrixRaster ;	(**  AUTHOR "Patrick Hunziker"; PURPOSE "visualize Matrix contents";  **)
-IMPORT Raster , Reals, SYSTEM, Files, WMGraphics, Rand:=Random, WM:=WMWindowManager, Strings;
+IMPORT Raster , RasterPixelFormats, Reals, SYSTEM, Files, WMGraphics, Rand:=Random, WM:=WMWindowManager, Strings;
 
 CONST Random*=-1;
 
@@ -419,7 +419,8 @@ BEGIN
 END BoolToImage;
 
 PROCEDURE ImageToArray*(img:Raster.Image; VAR data: ARRAY [?] OF SIGNED16);
-VAR row,col,p: SIZE; int: SIGNED32; fmt: INTEGER; msg: ARRAY 20 OF CHAR; vec4:ARRAY[4]OF SIGNED16;
+VAR row,col,p: SIZE; int: SIGNED32; fmt: INTEGER; msg: ARRAY 20 OF CHAR; 
+	vec3:ARRAY [3] OF SIGNED16; vec4:ARRAY[4]OF SIGNED16; y,u,v,r,g,b: CHAR;
 BEGIN
 	p:=0;
 	IF img.fmt.code=Raster.bgr888 THEN
@@ -428,25 +429,40 @@ BEGIN
 		END;
 		FOR row:=0 TO img.height-1 DO
 			FOR col:=0 TO img.width-1 DO
-				data[0,row,col]:= ORD(img.mem[p+2]);
+				(*data[0,row,col]:= ORD(img.mem[p+2]);
 				data[1,row,col]:= ORD(img.mem[p+1]);
-				data[2,row,col]:= ORD(img.mem[p]);
+				data[2,row,col]:= ORD(img.mem[p]);*)
+				
+				vec3[0]:= ORD(img.mem[p+2]);
+				vec3[1]:= ORD(img.mem[p+1]);
+				vec3[2]:= ORD(img.mem[p]);
+				data[*,row,col]:=vec3;
 				INC(p,3);
 			END;
 		END;
-	ELSIF img.fmt.code=Raster.yuv422 THEN
+	ELSIF img.fmt.code=Raster.yuv422 THEN (* this is not accurate. see RasterPixelFormats.Mod and yuv in wikipedia*)
 		IF (DIM(data)#3) OR (LEN(data,0)#3) OR (LEN(data,1)#img.height) OR (LEN(data,2)#img.width) THEN
 			NEW(data, 3, img.height, img.width)
 		END;
 		FOR row:=0 TO img.height-1 DO
 			FOR col:=0 TO img.width-1 BY 2 DO
-				data[0,row,col]:= ORD(img.mem[p]);
+				RasterPixelFormats.YUVtoBGR(img.mem[p],img.mem[p+1],img.mem[p+3], b,g,r);
+				data[0,row,col]:= ORD(b);
+				data[1,row,col]:= ORD(g);
+				data[2,row,col]:= ORD(r);
+				
+				RasterPixelFormats.YUVtoBGR(img.mem[p+2],img.mem[p+1],img.mem[p+3], b,g,r);
+				data[0,row,col+1]:= ORD(b);
+				data[1,row,col+1]:= ORD(g);
+				data[2,row,col+1]:= ORD(r);
+
+				(*data[0,row,col]:= ORD(img.mem[p]);
 				data[1,row,col]:= ORD(img.mem[p+1]);
 				data[2,row,col]:= ORD(img.mem[p+3]);
 
 				data[0,row,col+1]:= ORD(img.mem[p+2]);
 				data[1,row,col+1]:= ORD(img.mem[p+1]);
-				data[2,row,col+1]:= ORD(img.mem[p+3]);
+				data[2,row,col+1]:= ORD(img.mem[p+3]);*)
 				INC(p,4);
 			END;
 		END;
@@ -486,6 +502,59 @@ BEGIN
 		HALT(200);(* not yet implemented*)
 	END;
 END ImageToArray;
+
+PROCEDURE ImageToGrayArray*(img:Raster.Image; VAR data: ARRAY [*,*] OF SIGNED16);
+VAR row,col,p: SIZE; int: SIGNED32; fmt: INTEGER; msg: ARRAY 20 OF CHAR; 
+BEGIN
+	p:=0;
+	IF img.fmt.code=Raster.bgr888 THEN
+		IF (DIM(data)#2) OR (LEN(data,0)#img.height) OR (LEN(data,1)#img.width) THEN
+			NEW(data, img.height, img.width)
+		END;
+		FOR row:=0 TO img.height-1 DO
+			FOR col:=0 TO img.width-1 DO
+				data[row,col]:= ORD(img.mem[p+2])+ORD(img.mem[p+1])+ORD(img.mem[p]);
+				INC(p,3);
+			END;
+		END;
+	ELSIF img.fmt.code=Raster.yuv422 THEN
+		IF (DIM(data)#2) OR (LEN(data,0)#img.height) OR (LEN(data,1)#img.width) THEN
+			NEW(data, img.height, img.width)
+		END;
+		FOR row:=0 TO img.height-1 DO
+			FOR col:=0 TO img.width-1 BY 2 DO (* conversion is not correct, see yuv wikipedia *)
+				data[row,col]:= ORD(img.mem[p]) (* +ORD(img.mem[p+1])+ORD(img.mem[p+3]) *);
+				data[row,col+1]:= ORD(img.mem[p+2]) (* +ORD(img.mem[p+1])+ORD(img.mem[p+3]) *);
+				INC(p,4);
+			END;
+		END;
+	ELSIF img.fmt.code=Raster.bgra8888 THEN
+		IF (DIM(data)#2) OR (LEN(data,0)#img.height) OR (LEN(data,1)#img.width) THEN
+			NEW(data, img.height, img.width)
+		END;
+		FOR row:=0 TO img.height-1 DO
+			FOR col:=0 TO img.width-1 DO
+				data[row,col]:= ORD(img.mem[p+2])+ORD(img.mem[p+1])+ORD(img.mem[p]);
+				INC(p,4);
+			END;
+		END;
+	ELSIF img.fmt.code=Raster.bgr565 THEN
+		IF (DIM(data)#2) OR (LEN(data,0)#img.height) OR (LEN(data,1)#img.width) THEN
+			NEW(data, img.height, img.width)
+		END;
+		FOR row:=0 TO img.height-1 DO
+			FOR col:=0 TO img.width-1 DO
+				int:=ASH(ORD(img.mem[p+1]), 8) + ORD(img.mem[p]);
+				data[row,col]:= SIGNED16(ASH(ASH(int, -11) MOD 20H, 3) + 4)+SIGNED16(ASH(ASH(int, -5) MOD 40H, 2) + 2)+SIGNED16(ASH(int MOD 20H, 3) + 4);
+				INC(p,2);
+			END;
+		END;
+	ELSE 
+		COPY("failed on format ",msg);; fmt:=img.fmt.code;
+		HALT(200);(* not yet implemented*)
+	END;
+END ImageToGrayArray;
+
 
 PROCEDURE ImagePlaneToArray*(img:Raster.Image; planeIndex: SIZE):ARRAY [*,*] OF SIGNED16;
 VAR row,col,p, i0, i1: SIZE; int: SIGNED32; fmt: INTEGER; msg: ARRAY 20 OF CHAR;

@@ -915,6 +915,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	CryptoRSA.Mod
 	CryptoStreams.Mod
 
+	CryptoFortuna.Mod CryptoFortunaRng.Mod
+
 	Checksum.Mod	# MD5, SHA1 and SHA3 checksum generator
 END
 

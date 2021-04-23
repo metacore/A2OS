@@ -47,12 +47,12 @@ TYPE
 				END SetIV;
 
 				PROCEDURE IncIV;
-				VAR i, x: INTEGER;
+				VAR i: INTEGER; x: SIGNED32;
 				BEGIN
 					i := 4;
 					REPEAT
 						DEC( i );
-						x := INTEGER( iv[i] ) + 1;  iv[i] := SET32( x )
+						x := SIGNED32( iv[i] ) + 1;  iv[i] := SET32( x )
 					UNTIL (x # 0) OR (i = 0)
 				END IncIV;
 

@@ -1,0 +1,464 @@
+# Oberon language test and validation suite
+# options --mayTrap --prolog="Compiler.Compile TesterInput.txt" --command="System.Free Test B A;System.Load Test" --logFile="FoxExecutionTest.Log" --result="CryptoFortuna.Execution.Test.Diff"
+
+# test halt and assert statements and simple procedure call (basics for the test suite)
+
+positive: test Fortuna Crc32
+
+	MODULE Test;
+	IMPORT Fortuna := CryptoFortuna;
+
+		PROCEDURE Test*;
+		CONST
+			Data = "97E16435FAFDF5452977C3B467C7999D22C4AC9";
+		VAR crc: Fortuna.Crc32;
+		BEGIN
+			crc.Init;
+			crc("Hello!");
+			ASSERT(crc.Get() = 0x9D2ACC56);
+
+			crc.Init(0xEDB88320, 0x1e6a2c48);
+			crc("Hello!");
+			ASSERT(crc.Get() = 0x760E4113);
+
+			crc.Init(0xEDB88320, 0x1e6a2c48, 0x0);
+			crc("Hello!");
+			ASSERT(crc.Get() = 0x89F1BEEC);
+
+			crc.Init(0xEDB88320, 0x1e6a2c48, 0x12345678);
+			crc("Hello!");
+			ASSERT(crc.Get() = 0x9BC5E894);
+
+			crc.Init(0x82f63b78);
+			crc("Hello!");
+			ASSERT(crc.Get() = 0x09FDEBD6);
+
+			crc.Init(0xEDB88320, 0x1e6a2c48, 0x12345678);
+			crc(Data, 0, 39);
+			ASSERT(crc.Get() = 0x6FCDF62E);
+
+			crc.Init(0xEDB88320, 0x1e6a2c48, 0x12345678);
+			crc(Data, 3, 35);
+			ASSERT(crc.Get() = 0x40FC3958);
+
+			crc.Init(0xEDB88320, 0x1e6a2c48, 0x12345678);
+			crc(CHR(0xA3)); crc(CHR(0x7B)); crc(CHR(0x56));
+			ASSERT(crc.Get() = 0x6D16DE33);
+			crc(SIGNED16(0xA93D)); crc(SIGNED16(0xF3A4)); crc(SIGNED16(0x78C2));
+			ASSERT(crc.Get() = 0xB4E1F9D1);
+			crc(SIGNED32(0x12345678)); crc(SIGNED32(0x3AE6905B)); crc(SIGNED32(0x98765432));
+			ASSERT(crc.Get() = 0x90253398);
+			crc(SIGNED64(0x77C3B467C7999D22)); crc(SIGNED64(0x6435FAFDF5452977)); crc(SIGNED64(0x97E16435FAFDF545));
+			ASSERT(crc.Get() = 0x6DC18126);
+
+			TRACE("Crc32 test passed");
+		END Test;
+	END Test.
+
+positive: test Fortuna Counter
+
+	MODULE Test;
+	IMPORT Fortuna := CryptoFortuna, CryptoUtils;
+
+		PROCEDURE Bin2Hex(CONST bin: ARRAY OF CHAR;  bpos: SIZE; VAR hex: ARRAY OF CHAR; hpos: SIZE; len: SIZE);
+		BEGIN
+			CryptoUtils.Bin2Hex(bin, bpos, hex, hpos, len);
+			hex[2*len] := 0X;
+		END Bin2Hex;
+
+		PROCEDURE Test*;
+		VAR
+			ctr: Fortuna.Counter;
+			k: SIZE;
+			result: ARRAY Fortuna.CipherBlockSize*2+1 OF CHAR;
+		BEGIN
+			Bin2Hex(ctr.data, 0, result, 0, Fortuna.CounterSize);
+			ASSERT(result = "00000000000000000000000000000000");
+
+			ctr.Inc(1);
+			Bin2Hex(ctr.data, 0, result, 0, Fortuna.CounterSize);
+			ASSERT(result = "00000000000000000000000000000001");
+
+			FOR k := 0 TO 255-1-1 DO ctr.Inc(1); END;
+			Bin2Hex(ctr.data, 0, result, 0, Fortuna.CounterSize);
+			ASSERT(result = "000000000000000000000000000000FF");
+
+			ctr.Inc(1);
+			Bin2Hex(ctr.data, 0, result, 0, Fortuna.CounterSize);
+			ASSERT(result = "00000000000000000000000000000100");
+
+			ctr.Inc(255);
+			Bin2Hex(ctr.data, 0, result, 0, Fortuna.CounterSize);
+			ASSERT(result = "000000000000000000000000000001FF");
+
+			ctr.Inc(123456789);
+			Bin2Hex(ctr.data, 0, result, 0, Fortuna.CounterSize);
+			ASSERT(result = "000000000000000000000000075BCF14");
+
+			ctr.Clear;
+			Bin2Hex(ctr.data, 0, result, 0, Fortuna.CounterSize);
+			ASSERT(result = "00000000000000000000000000000000");
+
+			CryptoUtils.Hex2Bin("1234567890ABCDEF1A2B3C4D5E6FEDCB", 0, result, 0, Fortuna.CounterSize);
+			ctr.Set(result, 0);
+			Bin2Hex(ctr.data, 0, result, 0, Fortuna.CounterSize);
+			ASSERT(result = "1234567890ABCDEF1A2B3C4D5E6FEDCB");
+
+			ctr.Inc(1);
+			Bin2Hex(ctr.data, 0, result, 0, Fortuna.CounterSize);
+			ASSERT(result = "1234567890ABCDEF1A2B3C4D5E6FEDCC");
+
+			ctr.Inc(0xFFFFFF);
+			Bin2Hex(ctr.data, 0, result, 0, Fortuna.CounterSize);
+			ASSERT(result = "1234567890ABCDEF1A2B3C4D5F6FEDCB");
+
+			TRACE("Counter test passed");
+		END Test;
+	END Test.
+
+positive: test Fortuna Hash
+
+	MODULE Test;
+	IMPORT Fortuna := CryptoFortuna, CryptoUtils;
+
+		PROCEDURE Bin2Hex(CONST bin: ARRAY OF CHAR;  bpos: SIZE; VAR hex: ARRAY OF CHAR; hpos: SIZE; len: SIZE);
+		BEGIN
+			CryptoUtils.Bin2Hex(bin, bpos, hex, hpos, len);
+			hex[2*len] := 0X;
+		END Bin2Hex;
+
+		PROCEDURE Test*;
+		CONST Data = "349229F05BDD91EC9917EAC87B0F2C961251D98BAE17302D6829CD97E16435FAFDF5452977C3B467C7999D22C4AC919167FCC34AF711BF450FF63B1B51CA8A85";
+		VAR
+			hash: Fortuna.Hash;
+			result: ARRAY 2*Fortuna.HashSize OF CHAR;
+			resultHex: ARRAY Fortuna.HashSize*2+1 OF CHAR;
+		BEGIN
+			hash.Init;
+			hash.Update(Data, 0, 128);
+			hash.GetHash(result, 0);
+			Bin2Hex(result, 0, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "DD476E4B036AC57A40FBC81B52479AD0035AA4AD34E37DDE03AA62D1D106424F");
+
+			hash.Init;
+			hash.Update(Data, 5, 128-5);
+			hash.GetHash(result, 0);
+			Bin2Hex(result, 0, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "F055DACCF5013AE1655DD7DE77BF14979F2FC3A5C45EBA646A517361AE6D3F88");
+
+			hash.Init;
+			hash.Update(Data, Fortuna.HashSize+3, 128-Fortuna.HashSize-13);
+			hash.GetHash(result, 7);
+			Bin2Hex(result, 7, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "C289EFF0488878BFBFE34673F09861AC805F7CD99E35A039E84F65C1C194EC5A");
+
+			(* empty input *)
+			hash.Init;
+			hash.Update(Data, 0, 0);
+			hash.GetHash(result, 0);
+			Bin2Hex(result, 0, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "5DF6E0E2761359D30A8275058E299FCC0381534545F55CF43E41983F5D4C9456");
+
+			TRACE("Hash test passed");
+		END Test;
+	END Test.
+
+positive: test Fortuna Generator
+
+	MODULE Test;
+	IMPORT Fortuna := CryptoFortuna, CryptoUtils;
+
+		PROCEDURE Bin2Hex(CONST bin: ARRAY OF CHAR;  bpos: SIZE; VAR hex: ARRAY OF CHAR; hpos: SIZE; len: SIZE);
+		BEGIN
+			CryptoUtils.Bin2Hex(bin, bpos, hex, hpos, len);
+			hex[2*len] := 0X;
+		END Bin2Hex;
+
+		PROCEDURE Test*;
+		VAR
+			gen: Fortuna.Generator;
+			hash: Fortuna.Hash;
+			buf: POINTER TO ARRAY OF CHAR;
+			resultHex: ARRAY 256+1 OF CHAR;
+		BEGIN
+
+			NEW(buf, 3*1024*1024);
+
+			gen.Init;
+			ASSERT(~gen.isSeeded);
+
+			gen.Reseed("Hello", 0, 5);
+			Bin2Hex(gen.key, 0, resultHex, 0, Fortuna.CipherKeySize);
+			ASSERT(resultHex = "0EA6919D4361551364242A4BA890F8F073676E82CF1A52BB880F7E496648B565");
+
+			gen.Generate(buf^, 0, 32);
+			Bin2Hex(buf^, 0, resultHex, 0, 32);
+			ASSERT(resultHex = "481319795CC560FF6DC36CFF6345A117A25B64475EBAEB55FF263C92B5D18406");
+
+			Bin2Hex(gen.key, 0, resultHex, 0, Fortuna.CipherKeySize);
+			ASSERT(resultHex = "AE2D3DA26BD00E61A351B944CFF63F6FC59EA5BEA30CAA2EB918FD6FE78B088C");
+
+			gen.Generate(buf^, 0, 32);
+			Bin2Hex(buf^, 0, resultHex, 0, 32);
+			ASSERT(resultHex = "8E2D40E65EAF83F20838CEA6CA5A8C67966FCC29DE8215FF971E7B462963047A");
+
+			Bin2Hex(gen.key, 0, resultHex, 0, Fortuna.CipherKeySize);
+			ASSERT(resultHex = "81474466BF2517BCFE450E0166CD4E9DB9BFCD47EFE9AA469B2A1D046EB802EC");
+
+			(* multiple full 1048576 chunks *)
+			gen.Generate(buf^, 0, 1048576*3);
+			hash.Init;
+			hash.Update(buf^, 0, 1048576*3);
+			hash.GetHash(buf^, 7);
+			Bin2Hex(buf^, 7, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "95E1DFB438A69E2834E28D4B8B00BCFC8A45B1416DDCCA6D098F0C641E86EEFA");
+
+			Bin2Hex(gen.key, 0, resultHex, 0, Fortuna.CipherKeySize);
+			ASSERT(resultHex = "9969FD9FD74FE0BC10F081164543F45C4210C03739F5DB283E51EA2043FD5A37");
+
+			(* 1 full 1048576 chunk + multiple full blocks *)
+			gen.Generate(buf^, 0, 1048576+64);
+			hash.Init;
+			hash.Update(buf^, 0, 1048576+64);
+			hash.GetHash(buf^, 7);
+			Bin2Hex(buf^, 7, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "A446BC6A3F1BD15DF2AA29B5F4E6F88B1D401778EFDA5220888AA17AF87C8639");
+
+			Bin2Hex(gen.key, 0, resultHex, 0, Fortuna.CipherKeySize);
+			ASSERT(resultHex = "7F7DFF840819CFF3FF307240202B1CB25CB57E93A54DE869347ABB01DCCA1DA0");
+
+			(* 1 full 1048576 chunk + multiple full blocks + an incomplete block *)
+			gen.Generate(buf^, 0, 1048576+64+13);
+			hash.Init;
+			hash.Update(buf^, 0, 1048576+64+13);
+			hash.GetHash(buf^, 7);
+			Bin2Hex(buf^, 7, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "D259D7EF7A20350C7EAF213C0AD142EAFD4DC4044E92FCE4BC79C6B516F9C110");
+
+			Bin2Hex(gen.key, 0, resultHex, 0, Fortuna.CipherKeySize);
+			ASSERT(resultHex = "349229F05BDD91EC9917EAC87B0F2C961251D98BAE17302D6829CD97E16435FA");
+
+			(* another reseed *)
+			gen.Reseed("D259D7EF7A20350C7EAF213C0AD142EAFD4DC4044E92FCE4BC79C6B516F9C110", 0, Fortuna.CipherKeySize*2);
+
+			gen.Generate(buf^, 0, 1048576+64+13);
+			hash.Init;
+			hash.Update(buf^, 0, 1048576+64+13);
+			hash.GetHash(buf^, 7);
+			Bin2Hex(buf^, 7, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "28F9902D1089623E430D529937DDD1F0CB01238431D0F1E51B4ED30DFDA18615");
+
+			Bin2Hex(gen.key, 0, resultHex, 0, Fortuna.CipherKeySize);
+			ASSERT(resultHex = "D232B2C4A470499BD6E3385D49D44954F607198A83C0C30649CBF51D874A6177");
+
+			TRACE("Generator test passed");
+		END Test;
+	END Test.
+
+positive: test Fortuna Pool
+
+	MODULE Test;
+	IMPORT Fortuna := CryptoFortuna, CryptoUtils;
+
+		PROCEDURE Bin2Hex(CONST bin: ARRAY OF CHAR;  bpos: SIZE; VAR hex: ARRAY OF CHAR; hpos: SIZE; len: SIZE);
+		BEGIN
+			CryptoUtils.Bin2Hex(bin, bpos, hex, hpos, len);
+			hex[2*len] := 0X;
+		END Bin2Hex;
+
+		PROCEDURE Test*;
+		VAR
+			pool: Fortuna.Pool;
+			result: ARRAY 2*Fortuna.HashSize OF CHAR;
+			resultHex: ARRAY Fortuna.HashSize*2+1 OF CHAR;
+		BEGIN
+			pool.Init;
+			pool.GetHash(result, 0);
+			Bin2Hex(result, 0, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "5DF6E0E2761359D30A8275058E299FCC0381534545F55CF43E41983F5D4C9456");
+
+			pool.Init;
+			pool.Append("abc", 0, 3);
+			pool.GetHash(result, 0);
+			Bin2Hex(result, 0, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "4F8B42C22DD3729B519BA6F68D2DA7CC5B2D606D05DAED5AD5128CC03E6C6358");
+			ASSERT(pool.length = 3);
+
+			pool.Init;
+			pool.Append("349229F05BDD91EC9917EAC87B0F2C961251D98BAE17302D6829CD", 0, 54);
+			pool.GetHash(result, 0);
+			Bin2Hex(result, 0, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "CFA4E9203E0D932EBCBD653C48E0ADF8AEF872DAD36AAE63759F257BA247E3AF");
+			ASSERT(pool.length = 54);
+
+			TRACE("Pool test passed");
+		END Test;
+	END Test.
+
+positive: test Fortuna ReseedPoolIndices
+
+	MODULE Test;
+	IMPORT Fortuna := CryptoFortuna;
+
+		PROCEDURE Test*;
+		VAR
+			inds: Fortuna.ReseedPoolIndices;
+			k: SIZE;
+
+			PROCEDURE Check(indices: SET): BOOLEAN;
+			VAR index: SIZE;
+			BEGIN
+				WHILE inds.GetNext(index) DO
+					IF ~(index IN indices) THEN RETURN FALSE; END;
+				END;
+				RETURN TRUE;
+			END Check;
+
+		BEGIN
+			inds.Init(1); ASSERT(Check({0}));
+			inds.Init(2); ASSERT(Check({0,1}));
+			inds.Init(3); ASSERT(Check({0}));
+			inds.Init(4); ASSERT(Check({0,1,2}));
+			inds.Init(5); ASSERT(Check({0}));
+			inds.Init(6); ASSERT(Check({0,1}));
+			inds.Init(7); ASSERT(Check({0}));
+			inds.Init(8); ASSERT(Check({0,1,2,3}));
+
+			FOR k := 1 TO 32-1 DO
+				inds.Init(LSH(SIZE(1),k)-1); ASSERT(Check({0}));
+				inds.Init(LSH(SIZE(1),k)+1); ASSERT(Check({0}));
+				inds.Init(LSH(SIZE(1),k)); ASSERT(Check({0..k}));
+			END;
+
+			TRACE("ReseedPoolIndices test passed");
+		END Test;
+	END Test.
+
+positive: test Fortuna Permutation
+
+	MODULE Test;
+	IMPORT Fortuna := CryptoFortuna;
+	VAR
+		permuteRandPos: INTEGER;
+
+		PROCEDURE PermuteRand(): SIGNED32;
+		CONST table = [179,143,35,70,166,121,54,119,197,215,40,3,165,90,68,76,232,246,
+								83,252,112,37,224,73,134,144,79,173,159,217,33,62,19,234,92,185,
+								10,184,131,15,176,184,28,179,73,235,110,88,227,182,71,32,39,215,
+								84,10,237,220,131,140,61,105,212,201,93,178];
+		BEGIN
+			VAR x := table[permuteRandPos];
+			INC(permuteRandPos);
+			RETURN x;
+		END PermuteRand;
+
+		PROCEDURE Test*;
+		CONST
+			Ref16 = [6,14,2,4,12,0,15,5,7,13,9,11,8,3, 1,10];
+			Ref33 = [29,15,12,28,26,22,11,13,5,9,18,1,10,19,27,17,16,6,7,14,3,32,24,23,0,25,21,8,4,20,30,31,2];
+		VAR
+			pool: Fortuna.Permutation;
+			k, m: SIZE;
+			s: SET64;
+		BEGIN
+			permuteRandPos := 0;
+			pool.Init(PermuteRand, 16);
+			k := 0; s := {};
+			WHILE k < pool.size DO
+				m := pool.Get(k); ASSERT(m = Ref16[k]); ASSERT(~(m IN s));
+				INCL(s, m); INC(k);
+			END;
+			ASSERT(s = {0..15});
+
+			ASSERT(permuteRandPos = 32);
+
+			permuteRandPos := 0;
+			pool.Init(PermuteRand, 33);
+			k := 0; s := {};
+			WHILE k < pool.size DO
+				m := pool.Get(k); ASSERT(m = Ref33[k]); ASSERT(~(m IN s));
+				INCL(s, m); INC(k);
+			END;
+			ASSERT(s = {0..32});
+
+			ASSERT(permuteRandPos = 66);
+
+			TRACE("Permutation test passed");
+		END Test;
+	END Test.
+
+positive: test Fortuna Accumulator
+
+	MODULE Test;
+	IMPORT Fortuna := CryptoFortuna, CryptoUtils;
+
+		PROCEDURE Bin2Hex(CONST bin: ARRAY OF CHAR;  bpos: SIZE; VAR hex: ARRAY OF CHAR; hpos: SIZE; len: SIZE);
+		BEGIN
+			CryptoUtils.Bin2Hex(bin, bpos, hex, hpos, len);
+			hex[2*len] := 0X;
+		END Bin2Hex;
+
+		PROCEDURE Test*;
+		VAR
+			acc: Fortuna.Accumulator;
+			hash: Fortuna.Hash;
+			buf: POINTER TO ARRAY OF CHAR;
+			resultHex: ARRAY 256+1 OF CHAR;
+			k: INTEGER;
+		BEGIN
+			(*! these are the test's assumptions *)
+			ASSERT(Fortuna.HashSize = 32);
+			ASSERT(Fortuna.CipherBlockSize = 16);
+			ASSERT(Fortuna.CipherKeySize = 32);
+			ASSERT(Fortuna.CounterSize = Fortuna.CipherBlockSize);
+			ASSERT(Fortuna.MaxRandomEventDataLen = 32);
+			ASSERT(Fortuna.NumPools = 32);
+			ASSERT(Fortuna.MinPoolSize = 64);
+
+			NEW(buf, 2*1024*1024);
+
+			acc.Init;
+			ASSERT(~acc.IsReady(0));
+			ASSERT(~acc.IsReady(MAX(SIGNED32)));
+
+			FOR k := 0 TO Fortuna.NumPools-1 DO
+				acc.AddRandomEvent(Fortuna.NumPools-1-k, k, "349229F05BDD91EC9917EAC87B0F2C96", 0, 32);
+			END;
+
+			ASSERT(~acc.IsReady(0));
+			ASSERT(~acc.IsReady(MAX(SIGNED32)));
+
+			FOR k := 0 TO Fortuna.NumPools-1 DO
+				acc.AddRandomEvent(k, Fortuna.NumPools-1-k, "9CD97E16435FAFDF5452977C3B467C79", 0, 32);
+			END;
+
+			ASSERT(acc.IsReady(0));
+
+			acc.Generate(0, buf^, 0, 1048576+64+13);
+			hash.Init;
+			hash.Update(buf^, 0, 1048576+64+13);
+			hash.GetHash(buf^, 7);
+			Bin2Hex(buf^, 7, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "AFD522D37161C5AE5BC5D196475AC8E21262F9795048B4A370DC4F2555F1C3AC");
+			ASSERT(acc.reseedCount = 1);
+
+			ASSERT(acc.IsReady(0));
+
+			FOR k := 0 TO Fortuna.NumPools-1 DO
+				acc.AddRandomEvent(Fortuna.NumPools-1-k, k,  "9CD97E16435FAFDF5452977C3B467C79", 0, 32);
+				acc.AddRandomEvent(k, Fortuna.NumPools-1-k, "349229F05BDD91EC9917EAC87B0F2C96", 0, 32);
+			END;
+
+			ASSERT(acc.IsReady(0));
+
+			acc.Generate(101, buf^, 0, 1048576+64+13);
+			hash.Init;
+			hash.Update(buf^, 0, 1048576+64+13);
+			hash.GetHash(buf^, 7);
+			Bin2Hex(buf^, 7, resultHex, 0, Fortuna.HashSize);
+			ASSERT(resultHex = "05B5C3E5881B63647A45828195774630D32FFC00347B5FC424F4791362884544");
+			ASSERT(acc.reseedCount = 2);
+
+			TRACE("Accumulator test passed");
+		END Test;
+	END Test.

@@ -4,39 +4,32 @@ IMPORT
 	Hashes := CryptoHashes, U := CryptoUtils;
 
 CONST
-	BlockSize = 64;
+	BlockSize* = 64; (** hash size in bytes *)
+	HashSize* = 32; (** hash block size in bytes *)
 
 VAR
 	K256: ARRAY BlockSize OF SIGNED32;
 
-
 TYPE
-	Hash* = OBJECT (Hashes.Hash)
-	VAR
-		hash: ARRAY 8 OF SIGNED32;		(* state *)
+	(** SHA256 hash (value type implementation) *)
+	SHA256* = RECORD
+		hash: ARRAY 8 OF SIGNED32;	(* state *)
 		bitlen: SIGNED64;
 		cdata: ARRAY BlockSize OF CHAR;	(* pending data *)
-		cn: SIZE;	(* number of bytes in cdata *)
-
-		PROCEDURE &Init*;
-		BEGIN
-			SetNameAndSize( "sha2-256", 32 );
-			initialized := FALSE
-		END Init;
+		cn := -1: SIZE;	(* number of bytes in cdata *)
 
 		PROCEDURE Initialize*;
 		BEGIN
 			hash[0] := SIGNED32( 6A09E667H );		hash[1] := SIGNED32( 0BB67AE85H );
-			hash[2] := SIGNED32( 3C6EF372H );	hash[3] := SIGNED32( 0A54FF53AH );
+			hash[2] := SIGNED32( 3C6EF372H );		hash[3] := SIGNED32( 0A54FF53AH );
 			hash[4] := SIGNED32( 510E527FH );		hash[5] := SIGNED32( 09B05688CH );
 			hash[6] := SIGNED32( 1F83D9ABH);		hash[7] := SIGNED32( 05BE0CD19H );
 			bitlen := 0;
 			cn := 0;
-			initialized := TRUE
 		END Initialize;
 
 		PROCEDURE HashBlock( CONST data: ARRAY OF CHAR; pos: SIZE );
-		VAR 
+		VAR
 			a, b, c, d, e, f, g, h, s0, s1, s, T1, T2, i: SIGNED32;
 			X: ARRAY 16 OF SIGNED32;
 		BEGIN
@@ -63,37 +56,7 @@ TYPE
 			cn := 0
 		END HashBlock;
 
-
-		(** data: value to be hashed *)
-		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
-		VAR i, n: SIZE;
-		BEGIN
-			ASSERT( initialized );
-			INC( bitlen, len*8 );
-			
-			IF cn > 0 THEN
-				IF cn + len < BlockSize THEN
-					i := cn;  INC( cn, len );
-					WHILE i < cn  DO  cdata[i] := data[pos];  INC( i ); INC( pos )  END;
-					RETURN
-				ELSE
-					WHILE cn < BlockSize  DO
-						cdata[cn] := data[pos];  INC( cn );  INC( pos );  DEC( len )
-					END;
-					HashBlock( cdata, 0 );
-				END
-			END;
-
-			n := 0;
-			WHILE n < len DIV BlockSize  DO
-				HashBlock( data, pos );  INC( n ); INC( pos, BlockSize )
-			END;
-			len := len MOD BlockSize;
-			WHILE cn < len  DO cdata[cn] := data[pos];  INC( cn );  INC( pos )  END;
-		END Update;
-		
-
-		(** get the hashvalue of length SELF.size *)
+		(** get the hashvalue of length HashSize *)
 		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
 			VAR p, i: SIGNED32;
 		BEGIN
@@ -105,11 +68,73 @@ TYPE
 			END;
 			p := BlockSize - 8;
 			WHILE cn < p  DO  cdata[cn] := 0X;  INC( cn )  END;
-			U.IntToBufferBE( SIGNED32( LSH( bitlen, -32 ) ), cdata, p );  
+			U.IntToBufferBE( SIGNED32( LSH( bitlen, -32 ) ), cdata, p );
 			U.IntToBufferBE( SIGNED32( bitlen ), cdata, p + 4 );
 			HashBlock( cdata, 0 );
 
 			FOR i := 0 TO 7 DO  U.IntToBufferBE( hash[i], buf, pos );  INC( pos, 4 )  END;
+		END GetHash;
+	END;
+
+	(** Update the hash with a given data chunk
+
+		data: value to be hashed
+	*)
+	OPERATOR (VAR hash: SHA256) "()"*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
+	BEGIN
+		ASSERT( hash.cn >= 0 );
+		INC( hash.bitlen, len*8 );
+
+		IF hash.cn > 0 THEN
+			IF hash.cn + len < BlockSize THEN
+				VAR i := hash.cn;  INC( hash.cn, len );
+				WHILE i < hash.cn  DO  hash.cdata[i] := data[pos];  INC( i ); INC( pos )  END;
+				RETURN
+			ELSE
+				WHILE hash.cn < BlockSize  DO
+					hash.cdata[hash.cn] := data[pos];  INC( hash.cn );  INC( pos );  DEC( len )
+				END;
+				hash.HashBlock( hash.cdata, 0 );
+			END
+		END;
+
+		VAR n := 0: SIZE;
+		WHILE n < len DIV BlockSize  DO
+			hash.HashBlock( data, pos );  INC( n ); INC( pos, BlockSize )
+		END;
+		len := len MOD BlockSize;
+		WHILE hash.cn < len  DO hash.cdata[hash.cn] := data[pos];  INC( hash.cn );  INC( pos )  END;
+	END "()";
+
+TYPE
+
+	Hash* = OBJECT (Hashes.Hash)
+	VAR
+		hash: SHA256;
+
+		PROCEDURE &Init*;
+		BEGIN
+			SetNameAndSize( "sha2-256", HashSize );
+			initialized := FALSE
+		END Init;
+
+		PROCEDURE Initialize*;
+		BEGIN
+			hash.Initialize;
+			initialized := TRUE
+		END Initialize;
+
+		(** data: value to be hashed *)
+		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
+		BEGIN
+			ASSERT( initialized );
+			hash(data, pos, len);
+		END Update;
+
+		(** get the hashvalue of length SELF.size *)
+		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
+		BEGIN
+			hash.GetHash(buf, pos);
 		END GetHash;
 
 	END Hash;

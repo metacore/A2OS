@@ -11,100 +11,265 @@ positive: test CryptoSHA1
 
 		PROCEDURE Test*;
 		CONST
-			WsClientKey = "dGhlIHNhbXBsZSBub25jZQ==";
-			WsGuid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+			HashSize = CryptoSHA1.HashSize;
+			BlockSize = CryptoSHA1.BlockSize;
+			Data1 = "dGhlIHNhbXBsZSBub25jZQ==";
+			Data2 = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 		VAR
-			sha1: CryptoSHA1.SHA1;
-			hash: CryptoSHA1.Hash;
-			buf: ARRAY CryptoSHA1.BlockSize*3 OF CHAR;
-			result: ARRAY CryptoSHA1.HashSize OF CHAR;
-			resultHex: ARRAY CryptoSHA1.HashSize*2+1 OF CHAR;
+			vhash: CryptoSHA1.SHA1;
+			ohash: CryptoSHA1.Hash;
+			buf: ARRAY BlockSize*3 OF CHAR;
+			result: ARRAY HashSize+7 OF CHAR;
+			resultHex: ARRAY HashSize*2+1 OF CHAR;
 			k: SIZE;
 		BEGIN
-			ASSERT(CryptoSHA1.BlockSize = 64);
+			ASSERT(HashSize = 20);
+			ASSERT(BlockSize = 64);
 
 			FOR k := 0 TO LEN(buf)-1 DO buf[k] := CHR(k); END;
 
 			(*
-				Value-typed hash
+				Value type hash
 			*)
 
+			(* no update *)
+			vhash.Initialize;
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709");
+
 			(* one complete block *)
-			sha1.Initialize;
-			sha1(buf, 0, CryptoSHA1.BlockSize);
-			sha1.GetHash(result, 0);
-			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			vhash.Initialize;
+			vhash(buf, 0, BlockSize);
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
 			ASSERT(resultHex = "C6138D514FFA2135BFCE0ED0B8FAC65669917EC7");
 
 			(* an incomplete block *)
-			sha1.Initialize;
-			sha1(buf, 0, 37);
-			sha1.GetHash(result, 0);
-			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			vhash.Initialize;
+			vhash(buf, 0, 37);
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
 			ASSERT(resultHex = "A82CB42D89DAF5FBC1D4A48476229C495782F98D");
 
 			(* multiple complete blocks *)
-			sha1.Initialize;
-			sha1(buf, 0, LEN(buf));
-			sha1.GetHash(result, 0);
-			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			vhash.Initialize;
+			vhash(buf, 0, LEN(buf));
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
 			ASSERT(resultHex = "995B6F0C8F9EDA20F3E5A2BD89DF908747900008");
 
 			(* multiple complete blocks + an incomplete block *)
-			sha1.Initialize;
-			sha1(buf, 0, CryptoSHA1.BlockSize*2+41);
-			sha1.GetHash(result, 0);
-			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			vhash.Initialize;
+			vhash(buf, 0, BlockSize*2+41);
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
 			ASSERT(resultHex = "C0733DD1C6FF8F9B1463C3E3DDD299CD3F81D8F0");
 
+			(* multiple complete blocks + an incomplete block with an offset *)
+			vhash.Initialize;
+			vhash(buf, 3, BlockSize*2+41);
+			vhash.GetHash(result, 7);
+			CryptoUtils.Bin2Hex(result, 7, resultHex, 0, HashSize);
+			ASSERT(resultHex = "D628C785BBE60B9A0690CC0D04770937295CDCF6");
+
 			(* a real example from WebSocket RFC 6455 *)
-			sha1.Initialize;
-			sha1(WsClientKey, 0, Strings.Length(WsClientKey));
-			sha1(WsGuid, 0, Strings.Length(WsGuid));
-			sha1.GetHash(result, 0);
-			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			vhash.Initialize;
+			vhash(Data1, 0, Strings.Length(Data1));
+			vhash(Data2, 0, Strings.Length(Data2));
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
 			ASSERT(resultHex = "B37A4F2CC0624F1690F64606CF385945B2BEC4EA");
 
 			(*
 				Object hash
 			*)
-			NEW(hash);
+			NEW(ohash);
+
+			(* no update *)
+			ohash.Initialize;
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709");
 
 			(* one complete block *)
-			hash.Initialize;
-			hash.Update(buf, 0, CryptoSHA1.BlockSize);
-			hash.GetHash(result, 0);
-			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ohash.Initialize;
+			ohash.Update(buf, 0, BlockSize);
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
 			ASSERT(resultHex = "C6138D514FFA2135BFCE0ED0B8FAC65669917EC7");
 
 			(* an incomplete block *)
-			hash.Initialize;
-			hash.Update(buf, 0, 37);
-			hash.GetHash(result, 0);
-			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ohash.Initialize;
+			ohash.Update(buf, 0, 37);
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
 			ASSERT(resultHex = "A82CB42D89DAF5FBC1D4A48476229C495782F98D");
 
 			(* multiple complete blocks *)
-			hash.Initialize;
-			hash.Update(buf, 0, LEN(buf));
-			hash.GetHash(result, 0);
-			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ohash.Initialize;
+			ohash.Update(buf, 0, LEN(buf));
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
 			ASSERT(resultHex = "995B6F0C8F9EDA20F3E5A2BD89DF908747900008");
 
 			(* multiple complete blocks + an incomplete block *)
-			hash.Initialize;
-			hash.Update(buf, 0, CryptoSHA1.BlockSize*2+41);
-			hash.GetHash(result, 0);
-			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ohash.Initialize;
+			ohash.Update(buf, 0, BlockSize*2+41);
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
 			ASSERT(resultHex = "C0733DD1C6FF8F9B1463C3E3DDD299CD3F81D8F0");
 
-			(* a real example from WebSocket RFC 6455 *)
-			hash.Initialize;
-			hash.Update(WsClientKey, 0, Strings.Length(WsClientKey));
-			hash.Update(WsGuid, 0, Strings.Length(WsGuid));
-			hash.GetHash(result, 0);
-			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			(* multiple complete blocks + an incomplete block with an offset *)
+			ohash.Initialize;
+			ohash.Update(buf, 3, BlockSize*2+41);
+			ohash.GetHash(result, 7);
+			CryptoUtils.Bin2Hex(result, 7, resultHex, 0, HashSize);
+			ASSERT(resultHex = "D628C785BBE60B9A0690CC0D04770937295CDCF6");
+
+			(* multiple updates *)
+			ohash.Initialize;
+			ohash.Update(Data1, 0, Strings.Length(Data1));
+			ohash.Update(Data2, 0, Strings.Length(Data2));
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
 			ASSERT(resultHex = "B37A4F2CC0624F1690F64606CF385945B2BEC4EA");
+
+			TRACE("Test passed");
+		END Test;
+	END Test.
+
+positive: test CryptoSHA256
+
+	MODULE Test;
+	IMPORT
+		CryptoSHA256, Strings, CryptoUtils;
+
+		PROCEDURE Test*;
+		CONST
+			HashSize = CryptoSHA256.HashSize;
+			BlockSize = CryptoSHA256.BlockSize;
+			Data1 = "dGhlIHNhbXBsZSBub25jZQ==";
+			Data2 = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+		VAR
+			vhash: CryptoSHA256.SHA256;
+			ohash: CryptoSHA256.Hash;
+			buf: ARRAY BlockSize*3 OF CHAR;
+			result: ARRAY HashSize+7 OF CHAR;
+			resultHex: ARRAY HashSize*2+1 OF CHAR;
+			k: SIZE;
+		BEGIN
+			ASSERT(HashSize = 32);
+			ASSERT(BlockSize = 64);
+
+			FOR k := 0 TO LEN(buf)-1 DO buf[k] := CHR(k); END;
+
+			(*
+				Value type hash
+			*)
+
+			(* no update *)
+			vhash.Initialize;
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855");
+
+			(* one complete block *)
+			vhash.Initialize;
+			vhash(buf, 0, BlockSize);
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "FDEAB9ACF3710362BD2658CDC9A29E8F9C757FCF9811603A8C447CD1D9151108");
+
+			(* an incomplete block *)
+			vhash.Initialize;
+			vhash(buf, 0, 37);
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "F4D285F47A1E4959A445EA6528E5DF3EFAB041FA15AAD94DB1E2600B3F395518");
+
+			(* multiple complete blocks *)
+			vhash.Initialize;
+			vhash(buf, 0, LEN(buf));
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "8B4A544837A1A0280FA8A7C82865C27A1064B3CC6281FDA0753566B9BB104A87");
+
+			(* multiple complete blocks + an incomplete block *)
+			vhash.Initialize;
+			vhash(buf, 0, BlockSize*2+41);
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "6E944D621F9E13BC22D4AE68AAA8CB15605ED9680ACD7F16E5B0F94149B634CD");
+
+			(* multiple complete blocks + an incomplete block with an offset *)
+			vhash.Initialize;
+			vhash(buf, 3, BlockSize*2+41);
+			vhash.GetHash(result, 7);
+			CryptoUtils.Bin2Hex(result, 7, resultHex, 0, HashSize);
+			ASSERT(resultHex = "43D8F6BA87C9B4819995FC7A7CF0625A95FD6E961FDCE909CD7B3A7B4A877FFF");
+
+			(* a real example from WebSocket RFC 6455 *)
+			vhash.Initialize;
+			vhash(Data1, 0, Strings.Length(Data1));
+			vhash(Data2, 0, Strings.Length(Data2));
+			vhash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "73CA9E0B1C01F2C24FC6449C91E2FBE9B28BEDFEB8DBE298CC3891EC46CAC936");
+
+			(*
+				Object hash
+			*)
+			NEW(ohash);
+
+			(* no update *)
+			ohash.Initialize;
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855");
+
+			(* one complete block *)
+			ohash.Initialize;
+			ohash.Update(buf, 0, BlockSize);
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "FDEAB9ACF3710362BD2658CDC9A29E8F9C757FCF9811603A8C447CD1D9151108");
+
+			(* an incomplete block *)
+			ohash.Initialize;
+			ohash.Update(buf, 0, 37);
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "F4D285F47A1E4959A445EA6528E5DF3EFAB041FA15AAD94DB1E2600B3F395518");
+
+			(* multiple complete blocks *)
+			ohash.Initialize;
+			ohash.Update(buf, 0, LEN(buf));
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "8B4A544837A1A0280FA8A7C82865C27A1064B3CC6281FDA0753566B9BB104A87");
+
+			(* multiple complete blocks + an incomplete block *)
+			ohash.Initialize;
+			ohash.Update(buf, 0, BlockSize*2+41);
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "6E944D621F9E13BC22D4AE68AAA8CB15605ED9680ACD7F16E5B0F94149B634CD");
+
+			(* multiple complete blocks + an incomplete block with an offset *)
+			ohash.Initialize;
+			ohash.Update(buf, 3, BlockSize*2+41);
+			ohash.GetHash(result, 7);
+			CryptoUtils.Bin2Hex(result, 7, resultHex, 0, HashSize);
+			ASSERT(resultHex = "43D8F6BA87C9B4819995FC7A7CF0625A95FD6E961FDCE909CD7B3A7B4A877FFF");
+
+			(* multiple updates *)
+			ohash.Initialize;
+			ohash.Update(Data1, 0, Strings.Length(Data1));
+			ohash.Update(Data2, 0, Strings.Length(Data2));
+			ohash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, HashSize);
+			ASSERT(resultHex = "73CA9E0B1C01F2C24FC6449C91E2FBE9B28BEDFEB8DBE298CC3891EC46CAC936");
 
 			TRACE("Test passed");
 		END Test;

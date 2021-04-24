@@ -7,7 +7,7 @@
 MODULE CryptoFortuna;
 
 IMPORT
-	CryptoHashes, CryptoCiphers;
+	CryptoSHA256, CryptoCiphers;
 
 CONST
 	HashSize* = 32; (** Fortuna reseed hash size in bytes *)
@@ -57,6 +57,61 @@ TYPE
 			crc := initialValue;
 			xorMsk := xorMask;
 		END Init;
+		
+		(*! exporting this inline operator causes compiler crash when compiling a module that uses the operator *)
+		OPERATOR - "()" (data: SIGNED8);
+		BEGIN
+			crc := UNSIGNED32(table[UNSIGNED8(SET32(crc) / SET32(data))] / SET32(LSH(crc,-8)));
+		END "()";
+
+		OPERATOR  "()"* (data: CHAR);
+		BEGIN
+			crc := UNSIGNED32(table[UNSIGNED8(SET32(crc) / SET32(ORD(data)))] / SET32(LSH(crc,-8)));
+		END "()";
+
+		OPERATOR  "()"* (data: SIGNED16);
+		BEGIN
+			SELF(SIGNED8(data));
+			SELF(SIGNED8(LSH(data,-8)));
+		END "()";
+
+		OPERATOR  "()"* (data: SIGNED32);
+		BEGIN
+			SELF(SIGNED8(data));
+			SELF(SIGNED8(LSH(data,-8)));
+			SELF(SIGNED8(LSH(data,-16)));
+			SELF(SIGNED8(LSH(data,-24)));
+		END "()";
+
+		OPERATOR  "()"* (data: SIGNED64);
+		BEGIN
+			SELF(SIGNED8(data));
+			SELF(SIGNED8(LSH(data,-8)));
+			SELF(SIGNED8(LSH(data,-16)));
+			SELF(SIGNED8(LSH(data,-24)));
+			SELF(SIGNED8(LSH(data,-32)));
+			SELF(SIGNED8(LSH(data,-40)));
+			SELF(SIGNED8(LSH(data,-48)));
+			SELF(SIGNED8(LSH(data,-56)));
+		END "()";
+
+		OPERATOR  "()"* (CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE);
+		BEGIN
+			WHILE dataLen > 0 DO
+				crc := UNSIGNED32(table[UNSIGNED8(SET32(crc) / SET32(ORD(data[dataOffs])))] / SET32(LSH(crc,-8)));
+				INC(dataOffs); DEC(dataLen);
+			END;
+		END "()";
+
+		OPERATOR  "()"* (CONST str: ARRAY OF CHAR);
+		BEGIN
+			VAR k := 0: SIZE;
+			WHILE str[k] # 0X DO
+				SELF(str[k]);
+				(*crc := UNSIGNED32(table[UNSIGNED8(SET32(crc) / SET32(ORD(str[k])))] / SET32(LSH(crc,-8)));*)
+				INC(k);
+			END;
+		END "()";
 
 		(* Get the checksum value with application of the used XOR mask *)
 		PROCEDURE Get*(): UNSIGNED32;
@@ -64,61 +119,6 @@ TYPE
 			RETURN UNSIGNED32(SET32(crc) / SET32(xorMsk));
 		END Get;
 	END;
-
-	(*! exporting this inline operator causes compiler crash when compiling a module that uses the operator *)
-	OPERATOR -(VAR crc: Crc32) "()" (data: SIGNED8);
-	BEGIN
-		crc.crc := UNSIGNED32(crc.table[UNSIGNED8(SET32(crc.crc) / SET32(data))] / SET32(LSH(crc.crc,-8)));
-	END "()";
-
-	OPERATOR (VAR crc: Crc32) "()"* (data: CHAR);
-	BEGIN
-		crc.crc := UNSIGNED32(crc.table[UNSIGNED8(SET32(crc.crc) / SET32(ORD(data)))] / SET32(LSH(crc.crc,-8)));
-	END "()";
-
-	OPERATOR (VAR crc: Crc32) "()"* (data: SIGNED16);
-	BEGIN
-		crc(SIGNED8(data));
-		crc(SIGNED8(LSH(data,-8)));
-	END "()";
-
-	OPERATOR (VAR crc: Crc32) "()"* (data: SIGNED32);
-	BEGIN
-		crc(SIGNED8(data));
-		crc(SIGNED8(LSH(data,-8)));
-		crc(SIGNED8(LSH(data,-16)));
-		crc(SIGNED8(LSH(data,-24)));
-	END "()";
-
-	OPERATOR (VAR crc: Crc32) "()"* (data: SIGNED64);
-	BEGIN
-		crc(SIGNED8(data));
-		crc(SIGNED8(LSH(data,-8)));
-		crc(SIGNED8(LSH(data,-16)));
-		crc(SIGNED8(LSH(data,-24)));
-		crc(SIGNED8(LSH(data,-32)));
-		crc(SIGNED8(LSH(data,-40)));
-		crc(SIGNED8(LSH(data,-48)));
-		crc(SIGNED8(LSH(data,-56)));
-	END "()";
-
-	OPERATOR (VAR crc: Crc32) "()"* (CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE);
-	BEGIN
-		WHILE dataLen > 0 DO
-			crc.crc := UNSIGNED32(crc.table[UNSIGNED8(SET32(crc.crc) / SET32(ORD(data[dataOffs])))] / SET32(LSH(crc.crc,-8)));
-			INC(dataOffs); DEC(dataLen);
-		END;
-	END "()";
-
-	OPERATOR (VAR crc: Crc32) "()"* (CONST str: ARRAY OF CHAR);
-	BEGIN
-		VAR k := 0: SIZE;
-		WHILE str[k] # 0X DO
-			crc(str[k]);
-			(*crc.crc := UNSIGNED32(crc.table[UNSIGNED8(SET32(crc.crc) / SET32(ORD(str[k])))] / SET32(LSH(crc.crc,-8)));*)
-			INC(k);
-		END;
-	END "()";
 
 TYPE
 
@@ -161,22 +161,18 @@ TYPE
 
 	(** Hash function used for Fortuna seeding *)
 	Hash* = RECORD
-		hash: CryptoHashes.Hash;
+		hash: CryptoSHA256.SHA256;
 
 		(** Set the hash to its initial state *)
 		PROCEDURE Init*();
 		BEGIN
-			IF hash = NIL THEN
-				hash := CryptoHashes.NewHash("CryptoSHA256");
-				ASSERT(hash # NIL);
-			END;
 			hash.Initialize;
 		END Init;
 
 		(** Update the hash with a given data *)
 		PROCEDURE Update*(CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE);
 		BEGIN
-			hash.Update(data, dataOffs, dataLen);
+			hash(data, dataOffs, dataLen);
 		END Update;
 
 		(** Get the HashSize byte long hash value *)
@@ -185,7 +181,7 @@ TYPE
 			(* SHAd256 (SHA256-doubled) hash as described in the original algorithm description *)
 			hash.GetHash(hashValue, hashValueOffs);
 			hash.Initialize;
-			hash.Update(hashValue, hashValueOffs, hash.size);
+			hash(hashValue, hashValueOffs, CryptoSHA256.HashSize);
 			hash.GetHash(hashValue, hashValueOffs);
 		END GetHash;
 	END;

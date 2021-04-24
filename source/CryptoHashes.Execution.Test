@@ -1,0 +1,111 @@
+# Oberon language test and validation suite
+# options --mayTrap --prolog="Compiler.Compile TesterInput.txt" --command="System.Free Test B A;System.Load Test" --logFile="FoxExecutionTest.Log" --result="CryptoHashes.Execution.Test.Diff"
+
+# test halt and assert statements and simple procedure call (basics for the test suite)
+
+positive: test CryptoSHA1
+
+	MODULE Test;
+	IMPORT
+		CryptoSHA1, Strings, CryptoUtils;
+
+		PROCEDURE Test*;
+		CONST
+			WsClientKey = "dGhlIHNhbXBsZSBub25jZQ==";
+			WsGuid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+		VAR
+			sha1: CryptoSHA1.SHA1;
+			hash: CryptoSHA1.Hash;
+			buf: ARRAY CryptoSHA1.BlockSize*3 OF CHAR;
+			result: ARRAY CryptoSHA1.HashSize OF CHAR;
+			resultHex: ARRAY CryptoSHA1.HashSize*2+1 OF CHAR;
+			k: SIZE;
+		BEGIN
+			ASSERT(CryptoSHA1.BlockSize = 64);
+
+			FOR k := 0 TO LEN(buf)-1 DO buf[k] := CHR(k); END;
+
+			(*
+				Value-typed hash
+			*)
+
+			(* one complete block *)
+			sha1.Initialize;
+			sha1(buf, 0, CryptoSHA1.BlockSize);
+			sha1.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ASSERT(resultHex = "C6138D514FFA2135BFCE0ED0B8FAC65669917EC7");
+
+			(* an incomplete block *)
+			sha1.Initialize;
+			sha1(buf, 0, 37);
+			sha1.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ASSERT(resultHex = "A82CB42D89DAF5FBC1D4A48476229C495782F98D");
+
+			(* multiple complete blocks *)
+			sha1.Initialize;
+			sha1(buf, 0, LEN(buf));
+			sha1.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ASSERT(resultHex = "995B6F0C8F9EDA20F3E5A2BD89DF908747900008");
+
+			(* multiple complete blocks + an incomplete block *)
+			sha1.Initialize;
+			sha1(buf, 0, CryptoSHA1.BlockSize*2+41);
+			sha1.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ASSERT(resultHex = "C0733DD1C6FF8F9B1463C3E3DDD299CD3F81D8F0");
+
+			(* a real example from WebSocket RFC 6455 *)
+			sha1.Initialize;
+			sha1(WsClientKey, 0, Strings.Length(WsClientKey));
+			sha1(WsGuid, 0, Strings.Length(WsGuid));
+			sha1.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ASSERT(resultHex = "B37A4F2CC0624F1690F64606CF385945B2BEC4EA");
+
+			(*
+				Object hash
+			*)
+			NEW(hash);
+
+			(* one complete block *)
+			hash.Initialize;
+			hash.Update(buf, 0, CryptoSHA1.BlockSize);
+			hash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ASSERT(resultHex = "C6138D514FFA2135BFCE0ED0B8FAC65669917EC7");
+
+			(* an incomplete block *)
+			hash.Initialize;
+			hash.Update(buf, 0, 37);
+			hash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ASSERT(resultHex = "A82CB42D89DAF5FBC1D4A48476229C495782F98D");
+
+			(* multiple complete blocks *)
+			hash.Initialize;
+			hash.Update(buf, 0, LEN(buf));
+			hash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ASSERT(resultHex = "995B6F0C8F9EDA20F3E5A2BD89DF908747900008");
+
+			(* multiple complete blocks + an incomplete block *)
+			hash.Initialize;
+			hash.Update(buf, 0, CryptoSHA1.BlockSize*2+41);
+			hash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ASSERT(resultHex = "C0733DD1C6FF8F9B1463C3E3DDD299CD3F81D8F0");
+
+			(* a real example from WebSocket RFC 6455 *)
+			hash.Initialize;
+			hash.Update(WsClientKey, 0, Strings.Length(WsClientKey));
+			hash.Update(WsGuid, 0, Strings.Length(WsGuid));
+			hash.GetHash(result, 0);
+			CryptoUtils.Bin2Hex(result, 0, resultHex, 0, LEN(result));
+			ASSERT(resultHex = "B37A4F2CC0624F1690F64606CF385945B2BEC4EA");
+
+			TRACE("Test passed");
+		END Test;
+	END Test.

@@ -4,24 +4,18 @@ IMPORT
 	Hashes := CryptoHashes, U := CryptoUtils;
 
 CONST
-	BlockSize = 64;
+	HashSize* = 20; (** hash size in bytes *)
+	BlockSize* = 64; (** hash block size in bytes *)
 
 TYPE
 	State = ARRAY 5 OF SIGNED32;
 
-	Hash* = OBJECT (Hashes.Hash)
-		VAR
-			hash: State;
-			Nl, Nh: SIZE;
-			cdata: ARRAY BlockSize OF CHAR;	(* pending data *)
-			cn: SIZE;	(* number of bytes in cdata *)
-
-
-		PROCEDURE &Init*;
-		BEGIN
-			SetNameAndSize( "sha1", 20 );
-			initialized := FALSE
-		END Init;
+	(** SHA1 hash (value type implementation) *)
+	SHA1* = RECORD
+		hash: State;
+		Nl, Nh: SIZE;
+		cdata: ARRAY BlockSize OF CHAR;	(* pending data *)
+		cn := -1: SIZE;	(* number of bytes in cdata *)
 
 		PROCEDURE Initialize*;
 		BEGIN
@@ -33,60 +27,91 @@ TYPE
 			Nl := 0;
 			Nh := 0;
 			cn := 0;
-			initialized := TRUE
 		END Initialize;
-
 
 		PROCEDURE HashContextBlock;
 		BEGIN
 			HashBlock( hash, cdata, 0 );  cn := 0
 		END HashContextBlock;
 
-		(** data: value to be hashed *)
-		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
-			VAR n, i, l: SIZE;
-		BEGIN
-			ASSERT( initialized );
-			l := Nl + len *8;
-			IF l < Nl THEN INC( Nh )  (* overflow *)  END;
-			Nh := Nh + ASH( len, -29 );  Nl := l;
-
-			IF cn > 0 THEN
-				IF cn + len < BlockSize THEN
-					i := cn;  INC( cn, len );
-					WHILE i < cn  DO  cdata[i] := data[pos];  INC( i ); INC( pos )  END;
-					RETURN
-				ELSE
-					WHILE cn < BlockSize  DO
-						cdata[cn] := data[pos];  INC( cn );  INC( pos );  DEC( len )
-					END;
-					HashContextBlock;
-				END
-			END;
-
-			n := 0;
-			WHILE n < len DIV BlockSize  DO
-				HashBlock( hash, data, pos );  INC( n ); INC( pos, BlockSize )
-			END;
-			len := len MOD BlockSize;
-			WHILE cn < len  DO cdata[cn] := data[pos];  INC( cn );  INC( pos )  END;
-		END Update;
-
-		(** get the hashvalue of length SELF.size *)
+		(** get the hashvalue of length HashSize *)
 		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
-			VAR p: SIGNED32;
 		BEGIN
 			cdata[cn] := 80X;  INC( cn );
 			IF cn > BlockSize - 8 THEN
 				WHILE cn < BlockSize  DO  cdata[cn] := 0X;  INC( cn )  END;
 				HashContextBlock;
 			END;
-			p := BlockSize - 8;
+			VAR p := BlockSize - 8: INTEGER;
 			WHILE cn < p  DO  cdata[cn] := 0X;  INC( cn )  END;
 			U.IntToBufferBE( Nh(SIGNED32), cdata, p );  U.IntToBufferBE( Nl(SIGNED32), cdata, p + 4 );
 
 			HashContextBlock;
 			U.BlockToBufferBE( hash, buf, pos )
+		END GetHash;
+	END;
+
+	(** Update the hash with a given data chunk
+
+		data: value to be hashed
+	*)
+	OPERATOR (VAR hash: SHA1) "()"*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
+	BEGIN
+		ASSERT( hash.cn >= 0 );
+		VAR l := hash.Nl + len *8: SIZE;
+		IF l < hash.Nl THEN INC( hash.Nh )  (* overflow *)  END;
+		hash.Nh := hash.Nh + ASH( len, -29 );  hash.Nl := l;
+
+		IF hash.cn > 0 THEN
+			IF hash.cn + len < BlockSize THEN
+				VAR i := hash.cn;  INC( hash.cn, len );
+				WHILE i < hash.cn  DO  hash.cdata[i] := data[pos];  INC( i ); INC( pos )  END;
+				RETURN
+			ELSE
+				WHILE hash.cn < BlockSize  DO
+					hash.cdata[hash.cn] := data[pos];  INC( hash.cn );  INC( pos );  DEC( len )
+				END;
+				hash.HashContextBlock;
+			END
+		END;
+
+		VAR n := 0: SIZE;
+		WHILE n < len DIV BlockSize  DO
+			HashBlock( hash.hash, data, pos );  INC( n ); INC( pos, BlockSize )
+		END;
+		len := len MOD BlockSize;
+		WHILE hash.cn < len  DO hash.cdata[hash.cn] := data[pos];  INC( hash.cn );  INC( pos )  END;
+	END "()";
+
+TYPE
+
+	Hash* = OBJECT (Hashes.Hash)
+		VAR
+			hash: SHA1;
+
+		PROCEDURE &Init*;
+		BEGIN
+			SetNameAndSize( "sha1", HashSize );
+			initialized := FALSE
+		END Init;
+
+		PROCEDURE Initialize*;
+		BEGIN
+			hash.Initialize;
+			initialized := TRUE
+		END Initialize;
+
+		(** data: value to be hashed *)
+		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
+		BEGIN
+			ASSERT( initialized );
+			hash(data, pos, len);
+		END Update;
+
+		(** get the hashvalue of length SELF.size *)
+		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
+		BEGIN
+			hash.GetHash(buf, pos);
 		END GetHash;
 
 	END Hash;

@@ -55,6 +55,36 @@ TYPE
 			INC( hash[4], e );  INC( hash[5],  f );  INC( hash[6],  g );  INC( hash[7],  h );
 			cn := 0
 		END HashBlock;
+		
+		(** Update the hash with a given data chunk
+
+			data: value to be hashed
+		*)
+		OPERATOR "()"*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
+		BEGIN
+			ASSERT( cn >= 0 );
+			INC( bitlen, len*8 );
+
+			IF cn > 0 THEN
+				IF cn + len < BlockSize THEN
+					VAR i := cn;  INC( cn, len );
+					WHILE i < cn  DO  cdata[i] := data[pos];  INC( i ); INC( pos )  END;
+					RETURN
+				ELSE
+					WHILE cn < BlockSize  DO
+						cdata[cn] := data[pos];  INC( cn );  INC( pos );  DEC( len )
+					END;
+					HashBlock( cdata, 0 );
+				END
+			END;
+
+			VAR n := 0: SIZE;
+			WHILE n < len DIV BlockSize  DO
+				HashBlock( data, pos );  INC( n ); INC( pos, BlockSize )
+			END;
+			len := len MOD BlockSize;
+			WHILE cn < len  DO cdata[cn] := data[pos];  INC( cn );  INC( pos )  END;
+		END "()";
 
 		(** get the hashvalue of length HashSize *)
 		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
@@ -75,36 +105,6 @@ TYPE
 			FOR i := 0 TO 7 DO  U.IntToBufferBE( hash[i], buf, pos );  INC( pos, 4 )  END;
 		END GetHash;
 	END;
-
-	(** Update the hash with a given data chunk
-
-		data: value to be hashed
-	*)
-	OPERATOR (VAR hash: SHA256) "()"*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
-	BEGIN
-		ASSERT( hash.cn >= 0 );
-		INC( hash.bitlen, len*8 );
-
-		IF hash.cn > 0 THEN
-			IF hash.cn + len < BlockSize THEN
-				VAR i := hash.cn;  INC( hash.cn, len );
-				WHILE i < hash.cn  DO  hash.cdata[i] := data[pos];  INC( i ); INC( pos )  END;
-				RETURN
-			ELSE
-				WHILE hash.cn < BlockSize  DO
-					hash.cdata[hash.cn] := data[pos];  INC( hash.cn );  INC( pos );  DEC( len )
-				END;
-				hash.HashBlock( hash.cdata, 0 );
-			END
-		END;
-
-		VAR n := 0: SIZE;
-		WHILE n < len DIV BlockSize  DO
-			hash.HashBlock( data, pos );  INC( n ); INC( pos, BlockSize )
-		END;
-		len := len MOD BlockSize;
-		WHILE hash.cn < len  DO hash.cdata[hash.cn] := data[pos];  INC( hash.cn );  INC( pos )  END;
-	END "()";
 
 TYPE
 

@@ -33,6 +33,38 @@ TYPE
 		BEGIN
 			HashBlock( hash, cdata, 0 );  cn := 0
 		END HashContextBlock;
+		
+		(** Update the hash with a given data chunk
+
+			data: value to be hashed
+		*)
+		OPERATOR "()"*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
+		BEGIN
+			ASSERT( cn >= 0 );
+			VAR l := Nl + len *8: SIZE;
+			IF l < Nl THEN INC( Nh )  (* overflow *)  END;
+			Nh := Nh + ASH( len, -29 );  Nl := l;
+
+			IF cn > 0 THEN
+				IF cn + len < BlockSize THEN
+					VAR i := cn;  INC( cn, len );
+					WHILE i < cn  DO  cdata[i] := data[pos];  INC( i ); INC( pos )  END;
+					RETURN
+				ELSE
+					WHILE cn < BlockSize  DO
+						cdata[cn] := data[pos];  INC( cn );  INC( pos );  DEC( len )
+					END;
+					HashContextBlock;
+				END
+			END;
+
+			VAR n := 0: SIZE;
+			WHILE n < len DIV BlockSize  DO
+				HashBlock( hash, data, pos );  INC( n ); INC( pos, BlockSize )
+			END;
+			len := len MOD BlockSize;
+			WHILE cn < len  DO cdata[cn] := data[pos];  INC( cn );  INC( pos )  END;
+		END "()";
 
 		(** get the hashvalue of length HashSize *)
 		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
@@ -50,38 +82,6 @@ TYPE
 			U.BlockToBufferBE( hash, buf, pos )
 		END GetHash;
 	END;
-
-	(** Update the hash with a given data chunk
-
-		data: value to be hashed
-	*)
-	OPERATOR (VAR hash: SHA1) "()"*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
-	BEGIN
-		ASSERT( hash.cn >= 0 );
-		VAR l := hash.Nl + len *8: SIZE;
-		IF l < hash.Nl THEN INC( hash.Nh )  (* overflow *)  END;
-		hash.Nh := hash.Nh + ASH( len, -29 );  hash.Nl := l;
-
-		IF hash.cn > 0 THEN
-			IF hash.cn + len < BlockSize THEN
-				VAR i := hash.cn;  INC( hash.cn, len );
-				WHILE i < hash.cn  DO  hash.cdata[i] := data[pos];  INC( i ); INC( pos )  END;
-				RETURN
-			ELSE
-				WHILE hash.cn < BlockSize  DO
-					hash.cdata[hash.cn] := data[pos];  INC( hash.cn );  INC( pos );  DEC( len )
-				END;
-				hash.HashContextBlock;
-			END
-		END;
-
-		VAR n := 0: SIZE;
-		WHILE n < len DIV BlockSize  DO
-			HashBlock( hash.hash, data, pos );  INC( n ); INC( pos, BlockSize )
-		END;
-		len := len MOD BlockSize;
-		WHILE hash.cn < len  DO hash.cdata[hash.cn] := data[pos];  INC( hash.cn );  INC( pos )  END;
-	END "()";
 
 TYPE
 

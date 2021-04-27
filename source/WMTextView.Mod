@@ -1276,6 +1276,7 @@ TYPE
 			Acquire;
 			NEW(p); p.SetText(text);
 			p.onChanged := PositionMarkerChanged;
+			p.onChanged.SetMinimalDelay(DefaultMinimalUpdateDelay);(* avoid repetitive firing of messages *)
 			AddPositionMarker(p);
 			Release;
 			RETURN p
@@ -1287,6 +1288,7 @@ TYPE
 			Acquire;
 			NEW(p); p.SetText(text);
 			p.onChanged := PositionMarkerChanged;
+			p.onChanged.SetMinimalDelay(DefaultMinimalUpdateDelay);(* avoid repetitive firing of messages *)
 			AddPositionMarker(p);
 			Release;
 			RETURN p

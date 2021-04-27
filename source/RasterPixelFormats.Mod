@@ -6,7 +6,48 @@ CONST b = Raster.b; g = Raster.g; r = Raster.r; a = Raster.a;
 
 VAR YUV422*: Raster.Format;
 
-	(* xxxInt() version for Integer arithmetic, xxxfloat for float arithmetic*)
+(* https://en.wikipedia.org/wiki/YUV
+YUV versions:
+YUV444    3 bytes per pixel     (12 bytes per 4 pixels)
+YUV422    4 bytes per 2 pixels   (8 bytes per 4 pixels)
+YUV411    6 bytes per 4 pixels
+YUV420p   6 bytes per 4 pixels, reordered
+
+YUV422:
+u  = yuv[0];
+y1 = yuv[1];
+v  = yuv[2];
+y2 = yuv[3];
+
+YUV411:
+u  = yuv[0];
+y1 = yuv[1];
+y2 = yuv[2];
+v  = yuv[3];
+y3 = yuv[4];
+y4 = yuv[5]; 
+
+YUV420p: regrouped blocks of data: see wikipedia: YUV
+size.total = size.width * size.height;
+y = yuv[position.y * size.width + position.x];
+u = yuv[(position.y / 2) * (size.width / 2) + (position.x / 2) + size.total];
+v = yuv[(position.y / 2) * (size.width / 2) + (position.x / 2) + size.total + (size.total / 4)];
+rgb = Y′UV420toRGB888(y, u, v);
+
+Y′UV is often used as a term for YCbCr. 
+However, while related, they are different formats with different scale factors.
+U and V are bipolar signals which can be positive or negative, and are zero for greys, 
+whereas YCbCr usually scales all channels to either the 16–235 range or the 0–255 range, 
+which makes Cb and Cr unsigned quantities which are 128 for greys.
+Nevertheless, the relationship between them in the standard case is simple. 
+In particular, the Y' channels of both are linearly related to each other, both Cb and U are related linearly to (B-Y), 
+and both Cr and V are related linearly to (R-Y). 
+
+More yuv variants are described here:
+http://www.fourcc.org/yuv.php
+*)
+
+	(* xxxInt() version for Integer arithmetic *)
 	PROCEDURE YUVtoBGRInt(y,u,v: CHAR; VAR b,g,r: CHAR);
 	VAR c,d,e: SIGNED32;
 	BEGIN
@@ -25,15 +66,12 @@ VAR YUV422*: Raster.Format;
 	PROCEDURE YUVtoBGR(y,u,v: CHAR; VAR b,g,r: CHAR);
 	VAR B,G,R: FLOAT32;
 	BEGIN
-		B:=ORD(y)+ORD(u)/0.493;
-		R:=ORD(y)+ORD(v)/0.877;
+		B:=ORD(y)+(ORD(u))/0.493;
+		R:=ORD(y)+(ORD(v))/0.877;
 		G:=1.704*ORD(y) - 0.509*R -0.194*B;
 		b:=clamp(B);
 		r:=clamp(R);
-		g:=clamp(G);(*
-		b:=CHR(MAX(0,MIN(255, ENTIER(B))));
-		r:=CHR(MAX(0,MIN(255, ENTIER(R))));
-		g:=CHR(MAX(0,MIN(255, ENTIER(G))));*)
+		g:=clamp(G);
 	END YUVtoBGR;
 
 PROCEDURE BGRtoYUV(blue,green,red: CHAR; VAR y,u,v: CHAR);
@@ -45,10 +83,7 @@ PROCEDURE BGRtoYUV(blue,green,red: CHAR; VAR y,u,v: CHAR);
 		V:=(ORD(red)-Y)*0.877;
 		y:=clamp(Y);
 		u:=clamp(U);
-		v:=clamp(V);(*
-		y:=CHR(MAX(0,MIN(255,ENTIER(Y)))); (* ? +0.5..*)
-		u:=CHR(MAX(0,MIN(255,ENTIER(U))));
-		v:=CHR(MAX(0,MIN(255,ENTIER(V))));*)
+		v:=clamp(V);
 	END BGRtoYUV;
 	
 	PROCEDURE BGRtoYUVInt(blue,green,red: CHAR; VAR y,u,v: CHAR);

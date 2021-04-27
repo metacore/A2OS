@@ -436,7 +436,7 @@ TYPE
 
 		PROCEDURE LineReal*(x0, y0, x1, y1 : Real; color : Color; mode : INTEGER);
 		BEGIN
-			IF ~( Reals.IsNaNL(x0) OR Reals.IsNaNL(y0) OR Reals.IsNaNL(x1) OR Reals.IsNaNL(y1)) THEN
+			IF ~( Reals.IsNaN(x0) OR Reals.IsNaN(y0) OR Reals.IsNaN(x1) OR Reals.IsNaN(y1)) THEN
 				Line(ENTIER(x0),ENTIER(y0),ENTIER(x1),ENTIER(y1),color,mode);
 			END;
 		END LineReal;

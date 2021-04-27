@@ -6,11 +6,11 @@ IMPORT
 	WMComponents, WMStandardComponents, WMTrees, WMTabComponents, WMInspectionComponents, XML, Raster, WMPopups, Models;
 
 CONST
-	WindowWidth = 800; WindowHeight = 500;
+	WindowWidth = 900; WindowHeight = 600;
 
 	(* Maximum number of windows that can be managed by components inside this module *)
 	MaxNofWindows = 100;
-
+	TreeFontSize=12;
 	Bearing = 2;
 
 TYPE
@@ -498,6 +498,7 @@ TYPE
 			Create(simple, vis);
 			currentTree := formTree;
 			formTree.treeView.onClickNode.Add(NodeClicked);
+			formTree.treeView.font.SetSize(TreeFontSize);
 			formTree.Refresh(NIL, NIL);
 			textTree.treeView.onClickNode.Add(NodeClicked);
 			textTree.Refresh(NIL, NIL);
@@ -519,7 +520,7 @@ TYPE
 			tabPanel : WMTabComponents.TabPanel; tabControl : WMTabComponents.Tabs; tabEntry : WMTabComponents.TabEntry;
 		BEGIN
 			NEW(treePanel); treePanel.alignment.Set(WMComponents.AlignLeft);
-			treePanel.bounds.SetWidth(200);
+			treePanel.bounds.SetWidth(300);
 			AddContent(treePanel);
 
 			NEW(resizer); resizer.alignment.Set(WMComponents.AlignRight);

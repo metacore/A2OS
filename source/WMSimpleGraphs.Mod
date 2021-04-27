@@ -7,7 +7,7 @@ MODULE WMSimpleGraphs;	(** AUTHOR "Patrick Hunziker"; PURPOSE "Minimum-overhead 
 
 IMPORT Strings, WMGraphics, WMRectangles, WMMessages, Modules, Reals, Files, Streams, WM:=WMWindowManager, MathL, Raster, Commands;
 
-CONST Colors=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray];
+CONST Colors=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Gold, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray];
 		MinSize=30;
 		MaxSize=2048;
 
@@ -177,13 +177,15 @@ TYPE
 		PROCEDURE &New*(CONST data: ARRAY [*] OF FLOAT64; CONST title: ARRAY OF CHAR);
 		VAR w0,h0:SIZE; range:FLOAT64;
 		BEGIN
-			range:=MAX(ABS(MAX(data)), ABS(MIN(data)));
+			(*range:=MAX(ABS(MAX(data)), ABS(MIN(data)));*)
+			range:=ABS(MAX(data)) - MIN(0,MIN(data));
 			SELF.data:=data;
 			IF (range=0) OR (range>5) THEN
 			ELSE
 				WHILE range <5 DO
 					SELF.data:=10*SELF.data;
-					range:=MAX(ABS(MAX(SELF.data)), ABS(MIN(SELF.data)));
+					(*range:=MAX(ABS(MAX(SELF.data)), ABS(MIN(SELF.data)));*)
+					range:=ABS(MAX(SELF.data)) - MIN(0,MIN(SELF.data));
 				END;
 			END;
 			max:=MAX(1, MAX(data));
@@ -203,7 +205,8 @@ TYPE
 		PROCEDURE NewData*(CONST data: ARRAY [*] OF FLOAT64);
 		VAR range:FLOAT64;
 		BEGIN
-			range:=MAX(ABS(MAX(data)), ABS(MIN(data)));
+			(*range:=MAX(ABS(MAX(data)), ABS(MIN(data)));*)
+			range:=ABS(MAX(data)) - MIN(0,MIN(data));
 			IF range=0 THEN SELF.data:=data
 			ELSIF range<5 THEN SELF.data:=5/range*data
 			ELSE SELF.data:=data;
@@ -241,9 +244,9 @@ TYPE
 			mx:=ENTIER(0.5+max*h / height);
 			FOR i:=0 TO LEN(data,0)-2 DO
 				IF ~Reals.IsNaNL(data[i]) &~Reals.IsNaNL(data[i+1]) THEN
-					x0:=border+i*w DIV width;
+					x0:=(*border+*)i*w DIV width;
 					y0:=h+mn-ENTIER(0.5+data[i]*h / height);
-					x1:=border+(i+1)*w DIV width;
+					x1:=(*border+*)(i+1)*w DIV width;
 					y1:=h+mn-ENTIER(0.5+data[i+1]*h / height);
 					canvas.Line(x0,y0,x1,y1, WMGraphics.Black, WMGraphics.ModeCopy);
 				END;
@@ -296,9 +299,9 @@ Graphs* = OBJECT (Window);
 			FOR j:=0 TO LEN(data,0)-1 DO
 				FOR i:=0 TO LEN(data,1)-2 DO
 					IF ~Reals.IsNaNL(data[j,i]) &~Reals.IsNaNL(data[j,i+1]) THEN
-						x0:=border+i*w DIV width;
+						x0:=(*border+*)i*w DIV width;
 						y0:=h+mn-ENTIER(0.5+data[j,i]*h / height);
-						x1:=border+(i+1)*w DIV width;
+						x1:=(*border+*)(i+1)*w DIV width;
 						y1:=h+mn-ENTIER(0.5+data[j,i+1]*h / height);
 						canvas.Line(x0, y0,	x1, y1, Colors[j MOD LEN(Colors,0)], WMGraphics.ModeCopy);
 					END;

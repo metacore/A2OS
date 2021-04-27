@@ -285,6 +285,17 @@ CONST
 		END;
 	END Wavelet2D;
 	
+	PROCEDURE Smooth*(CONST data:Rect; degree:=7:INTEGER):Rect;
+	VAR fir:Filters.Filter;
+	BEGIN
+		ASSERT(degree IN {2,3,4,5,6,7},200);
+		fir:=Filters.CreateSplineFilter(Filters.InverseBSpline0+degree); (*tbd:performance by avoiding reallocation of filters*)(*with increasing spline degree, b-Spline filters approximate a gaussian*)
+		IF (LEN(RESULT,0)#LEN(data,0)) OR (LEN(RESULT,1)#LEN(data,1)) THEN NEW(RESULT,LEN(data)) END;
+		Filter2D(data,RESULT, fir, {0,1}, mirrorH);
+		RETURN RESULT
+	END Smooth;
+
+	
 	PROCEDURE {TEST} Test*;
 	VAR a,b,c,d,e,f,g,j: ARRAY [*,*] OF REAL;
 		h,i: ARRAY [?] OF REAL;

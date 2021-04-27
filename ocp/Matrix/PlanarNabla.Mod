@@ -20,7 +20,7 @@ TYPE
 	VectorField* = RECORD x*,y*: ScalarField END;
 	TensorField* = RECORD xx*,xy*, yx*, yy*: ScalarField END;
 
-PROCEDURE dx* (CONST sf:ScalarField; sampling:SIGNED32): ScalarField; (* to do: place result directly in return variable *)
+PROCEDURE dx* (CONST sf:ScalarField; sampling:=centered:SIGNED32): ScalarField; (* to do: place result directly in return variable *)
 VAR res:ScalarField;
 BEGIN
 	IF LEN(RESULT)=0 THEN NEW(RESULT, LEN(sf,0), LEN(sf,1)); END;
@@ -51,7 +51,7 @@ BEGIN
 	RETURN RESULT
 END dx;
 
-PROCEDURE dy* (CONST sf:ScalarField; sampling:SIGNED32): ScalarField; (* to do: place result directly in return variable *)
+PROCEDURE dy* (CONST sf:ScalarField; sampling:=centered:SIGNED32): ScalarField; (* to do: place result directly in return variable *)
 VAR res:ScalarField;
 BEGIN
 	IF LEN(RESULT)=0 THEN NEW(RESULT, LEN(sf,0), LEN(sf,1)) END;
@@ -265,3 +265,5 @@ END CylVectorLaplacian;
 
 
 END PlanarNabla.
+
+System.FreeDownTo PlanarNabla ~

@@ -1,0 +1,23 @@
+# Oberon language test and validation suite
+# options --mayTrap --prolog="Compiler.Compile TesterInput.txt" --command="System.Free Test B A;System.Load Test" --logFile="FoxExecutionTest.Log" --result="WebSockets.Execution.Test.Diff"
+
+# test halt and assert statements and simple procedure call (basics for the test suite)
+
+positive: test server handshake generation
+
+	MODULE Test;
+	IMPORT
+		WebSockets;
+
+		PROCEDURE Test*;
+		CONST
+			ClientKey = "dGhlIHNhbXBsZSBub25jZQ==";
+			Guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+		VAR
+			handshake: WebSockets.Handshake;
+		BEGIN
+			handshake.GenerateServerAccept(ClientKey);
+			ASSERT(handshake.result = "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
+		END Test;
+
+	END Test.

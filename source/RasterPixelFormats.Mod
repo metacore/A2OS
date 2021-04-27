@@ -48,7 +48,7 @@ http://www.fourcc.org/yuv.php
 *)
 
 	(* xxxInt() version for Integer arithmetic *)
-	PROCEDURE YUVtoBGRInt(y,u,v: CHAR; VAR b,g,r: CHAR);
+	PROCEDURE YUVtoBGRInt*(y,u,v: CHAR; VAR b,g,r: CHAR);
 	VAR c,d,e: SIGNED32;
 	BEGIN
 		(*"studio swing BT.601"*)
@@ -63,7 +63,7 @@ http://www.fourcc.org/yuv.php
 		RETURN CHR(MAX(0,MIN(255, ENTIER(c))));
 	END clamp;
 	
-	PROCEDURE YUVtoBGR(y,u,v: CHAR; VAR b,g,r: CHAR);
+	PROCEDURE YUVtoBGR*(y,u,v: CHAR; VAR b,g,r: CHAR);
 	VAR B,G,R: FLOAT32;
 	BEGIN
 		B:=ORD(y)+(ORD(u))/0.493;
@@ -86,7 +86,7 @@ PROCEDURE BGRtoYUV(blue,green,red: CHAR; VAR y,u,v: CHAR);
 		v:=clamp(V);
 	END BGRtoYUV;
 	
-	PROCEDURE BGRtoYUVInt(blue,green,red: CHAR; VAR y,u,v: CHAR);
+	PROCEDURE BGRtoYUVInt*(blue,green,red: CHAR; VAR y,u,v: CHAR);
 	BEGIN
 		(*"studio swing BT.601"*)	
 		y:=CHR((66*ORD(red)+129*ORD(green)+25*ORD(blue)+128) DIV 256 +16);

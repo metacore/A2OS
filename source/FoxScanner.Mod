@@ -189,7 +189,7 @@ TYPE
 	END;
 
 	StringMaker* = OBJECT (* taken from TF's scanner *)
-	VAR length : SIZE;
+	VAR length- : SIZE;
 		data : StringType;
 
 		PROCEDURE &Init*(initialSize : SIZE);

@@ -1289,15 +1289,15 @@ BEGIN
 END ReadNum;
 
 PROCEDURE ReadSize*(VAR r: Rider; VAR x: Size);
-VAR ch: CHAR; n, y: SIZE; f: File;
+VAR ch: CHAR; n, y: Size; f: File;
 BEGIN
 	n := 0; y := 0; f := r.file;
 	f.Read(r, ch);
 	WHILE ch >= 80X DO
-		INC(y, LSH(SIZE(ORD(ch)) - 128, n)); INC(n, 7);
+		INC(y, LSH(Size(ORD(ch)) - 128, n)); INC(n, 7);
 		f.Read(r, ch)
 	END;
-	x := ASH(LSH(LONG(ORD(ch)), 25), n-25) + y
+	x := ASH(LSH(Size(ORD(ch)), 25), n-25) + y
 END ReadSize;
 
 (** Portable routines to write the standard Oberon types. DEPRECATED, used Streams instead. *)

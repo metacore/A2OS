@@ -193,9 +193,14 @@ TYPE
 		(* Returns TRUE for a WebSocket upgrade request *)
 		PROCEDURE CanHandle(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; secure: BOOLEAN): BOOLEAN;
 		BEGIN
+			(*BEGIN{EXCLUSIVE}
+				log.String("got a request"); log.Ln;
+				WebHTTP.LogRequestHeader(log, request);
+			END;*)
+
 			IF request.method = WebHTTP.GetM THEN
 				VAR field := WebHTTP.GetAdditionalField(request.additionalFields, "Upgrade");
-				RETURN (field # NIL) & (field.value = "WebSocket");
+				RETURN (field # NIL) & (field.value = "websocket");
 			END;
 			RETURN FALSE;
 		END CanHandle;
@@ -234,7 +239,7 @@ TYPE
 			END;
 
 			reply.statuscode := WebHTTP.SwitchingProtocols;
-			WebHTTP.SetAdditionalFieldValue(reply.additionalFields, "Upgrade", "WebSocket");
+			WebHTTP.SetAdditionalFieldValue(reply.additionalFields, "Upgrade", "websocket");
 			WebHTTP.SetAdditionalFieldValue(reply.additionalFields, "Connection", "Upgrade");
 			handshake.GenerateServerAccept(clientKeyField.value);
 			WebHTTP.SetAdditionalFieldValue(reply.additionalFields, "Sec-WebSocket-Accept", handshake.result);
@@ -1028,6 +1033,11 @@ VAR
 			hl := hl.next
 		END;
 	END TerminateMod;
+
+	PROCEDURE SetEndpoint*(CONST pathPrefix: ARRAY OF CHAR; handler: EndpointHandler; CONST description: ARRAY OF CHAR);
+	BEGIN
+		serverPlugin.SetEndpoint(pathPrefix, handler, description);
+	END SetEndpoint;
 
 	(** list all installed WebSocket endpoints *)
 	PROCEDURE ListEndpoints*(ctx: Commands.Context);

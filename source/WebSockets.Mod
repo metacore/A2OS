@@ -434,8 +434,6 @@ TYPE
 					rxPayloadLen := INTEGER(INTEGERSET(rxHdr1) * INTEGERSET(0x7f));
 					VAR masked := 7 IN INTEGERSET(rxHdr1);
 
-					TRACE(available, rxHdr0, rxHdr1, rxFinal, rxPayloadLen, masked);
-
 					IF isClient THEN
 						IF masked THEN (*! "server MUST NOT mask any frames that it sends to the client"  *)
 							CloseDueError(CloseStatus.ProtocolError, "server must not mask any frames");
@@ -523,9 +521,6 @@ TYPE
 						rxState := ReadState.ReadingMask;
 						rxDataPos := 0;
 					END;
-
-					TRACE(rxFinal, masked, rxPayloadLen, INTEGER(rxOpcode), INTEGER(rxOpcodeFragmented));
-					TRACE(available, INTEGER(rxState), INTEGER(state));
 				END;
 			END HandleReadingHeader;
 
@@ -536,7 +531,6 @@ TYPE
 					DEC(available); INC(rxDataPos);
 				END;
 				IF rxDataPos = rxPayloadLenSize THEN (* finished reading the payload length *)
-					TRACE(rxPayloadLen, available);
 					rxDataPos := 0;
 					IF isClient THEN
 						IF rxOpcode = Opcode.Close THEN
@@ -552,7 +546,6 @@ TYPE
 							rxState := ReadState.ReadingPayload;
 							rxMaskPos := 0;
 							available := MIN(available, dataSize-len);
-							TRACE(available);
 						END;
 					ELSE
 						rxState := ReadState.ReadingMask;
@@ -568,7 +561,6 @@ TYPE
 					DEC(available); INC(rxDataPos);
 				END;
 				IF rxDataPos = 4 THEN
-					TRACE(available, ORD(rxMask[0]), ORD(rxMask[1]), ORD(rxMask[2]), ORD(rxMask[3]));
 					IF rxOpcode # Opcode.Close THEN
 						rxState := ReadState.ReadingPayload;
 						available := MIN(available, dataSize-len);
@@ -591,7 +583,6 @@ TYPE
 				END;
 				DEC(available, n); DEC(rxPayloadLen, n); INC(dataOffs, n); INC(len, n);
 				IF rxPayloadLen = 0 THEN (* finished to read the frame payload *)
-					TRACE(available);
 					IF (rxOpcode = Opcode.Text) OR ((rxOpcode = Opcode.Continuation) & (rxOpcodeFragmented = Opcode.Text)) THEN
 						(*! add a terminating null if received a text message *)
 						IF len < dataSize THEN
@@ -658,7 +649,6 @@ TYPE
 					IF rxDataPos = 2 THEN
 						closeReason[0] := 0X;
 					END;
-					TRACE(closeStatus, rxDataPos, closeReason, INTEGER(state));
 					ASSERT(state # ConnectionState.Open);
 					IF state = ConnectionState.ClosingByRemoteRequest THEN
 						txLock.Acquire;
@@ -670,7 +660,6 @@ TYPE
 							state := ConnectionState.StreamError;
 						END;
 						txLock.Release;
-						TRACE(INTEGER(state));
 					ELSIF state = ConnectionState.ClosingByLocalRequest THEN
 						state := ConnectionState.ClosedByLocalRequest;
 					END;

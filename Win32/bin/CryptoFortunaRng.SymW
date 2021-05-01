@@ -1,0 +1,92 @@
+MODULE CryptoFortunaRng;
+	IMPORT Fortuna := CryptoFortuna, Machine, Kernel, Objects, Clock, Heaps, Random, Strings, Files, Modules, Streams, Commands, KernelLog;
+CONST 
+	CollectEntropyIntervalMs* = 1000; 
+TYPE 
+	EntropySource = PROCEDURE {DELEGATE}(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+
+	EntropySourceDesc = RECORD 
+		name: ARRAY 64 OF CHAR; 
+		source: EntropySource; 
+		lastCollectTime: SIGNED32; 
+		file: Files.File; 
+		writer: Streams.Writer; 
+	END; 
+
+	EntropyCollector = OBJECT {EXCLUSIVE} 
+	VAR 
+		systemTimePrev := 0: INTEGER; 
+		objectsNumReadyPrev := 0: INTEGER; 
+		currentProcessTimePrev := 0: INTEGER; 
+		heapsUsagePrev := 0: INTEGER; 
+		heapsAllocStatsPrev := 0: INTEGER; 
+		heapsCallCountStatsPrev := 0: INTEGER; 
+		heapsObjCountStatsPrev := 0: INTEGER; 
+		heapsGcTimeStatsPrev := 0: INTEGER; 
+		heapsSweepTimeStatsPrev := 0: INTEGER; 
+		sources: ARRAY 256 OF EntropySourceDesc; 
+		numSources: SIZE; 
+		permutedSourceInds: Fortuna.Permutation; 
+		storing: BOOLEAN; 
+		generators: Generator; 
+		rand: Random.Generator; 
+		alive: BOOLEAN; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ SeedRand; 
+		PROCEDURE ^ SeedFirstGenerator(gen: Generator); 
+		PROCEDURE ^ AppendInt16(value: INTEGER; VAR valuePrev: INTEGER; VAR data: ARRAY OF CHAR; VAR dataOffs: SIZE); 
+		PROCEDURE ^ MachineTimerSource(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+		PROCEDURE ^ SystemTimeSource(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+		PROCEDURE ^ ObjectsNumReadySource(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+		PROCEDURE ^ CurrentProcessTimeSource(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+		PROCEDURE ^ HeapsUsageSource(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+		PROCEDURE ^ HeapsAllocStatsSource(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+		PROCEDURE ^ HeapsCallCountStatsSource(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+		PROCEDURE ^ HeapsObjCountStatsSource(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+		PROCEDURE ^ HeapsGcTimeStatsSource(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+		PROCEDURE ^ HeapsSweepTimeStatsSource(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+		PROCEDURE ^ RandSource(timeSinceLastCallMs: SIGNED32; VAR data: ARRAY OF CHAR; VAR dataLen: SIZE); 
+		PROCEDURE ^ RegisterGenerator(gen: Generator); 
+		PROCEDURE ^ UnregisterGenerator(gen: Generator); 
+		PROCEDURE ^ CollectEntropy; 
+		PROCEDURE ^ StartStoring*(): BOOLEAN; 
+		PROCEDURE ^ StopStoring(): BOOLEAN; 
+		PROCEDURE ^ Exit; 
+	BEGIN{ACTIVE} 
+	END EntropyCollector; 
+
+	Generator* = OBJECT {EXCLUSIVE} 
+	VAR 
+		accumulator: Fortuna.Accumulator; 
+		collector: Fortuna.EntropyCollector; 
+		sourceNums: Fortuna.Permutation; 
+		prev: Generator; 
+		next: Generator; 
+
+		PROCEDURE ^  & Init(CONST gen: Generator); 
+		PROCEDURE ^ FeedEntropy(sourceNum: INTEGER; CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE); 
+		PROCEDURE ^ NewInstance*(): Generator; 
+		PROCEDURE ^ Generate*(VAR data: ARRAY OF CHAR; dataOffs, dataLen: SIZE); 
+		PROCEDURE ^ Finalizer; 
+	END Generator; 
+
+	FinalizedCollection = OBJECT {EXCLUSIVE} (Kernel.FinalizedCollection)
+
+		PROCEDURE ^ FinalizeObject(obj: ANY ); 
+		PROCEDURE ^ FinalizeEnumerator(obj: ANY ; VAR cont: BOOLEAN); 
+		PROCEDURE ^ Cleanup; 
+	END FinalizedCollection; 
+VAR 
+	generator-: Generator; 
+	entropyCollector: EntropyCollector; 
+	finalizedCollection: FinalizedCollection; 
+
+	PROCEDURE ^ Generate*(VAR data: ARRAY OF CHAR; dataOffs, dataLen: SIZE); 
+	PROCEDURE ^ NewGenerator*(): Generator; 
+	PROCEDURE ^ StartStoringEntropy*(ctx: Commands.Context); 
+	PROCEDURE ^ StopStoringEntropy*(ctx: Commands.Context); 
+	PROCEDURE ^ TerminateMod; 
+BEGIN
+END CryptoFortunaRng.

@@ -180,7 +180,7 @@ TYPE
 
 	StringMaker* = OBJECT 
 	VAR 
-		length: SIZE; 
+		length-: SIZE; 
 		data: StringType; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 

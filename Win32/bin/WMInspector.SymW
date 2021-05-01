@@ -1,9 +1,10 @@
 MODULE WMInspector;
 	IMPORT Modules, Strings, XMLObjects, Texts, Files, WMRectangles, WMGraphics, WMMessages, WMRestorable, WMWindowManager, WMComponents, WMStandardComponents, WMTrees, WMTabComponents, WMInspectionComponents, XML, Raster, WMPopups, Models;
 CONST 
-	WindowWidth = 800; 
-	WindowHeight = 500; 
+	WindowWidth = 900; 
+	WindowHeight = 600; 
 	MaxNofWindows = 100; 
+	TreeFontSize = 12; 
 	Bearing = 2; 
 TYPE 
 	Windows = ARRAY MaxNofWindows OF WMWindowManager.Window; 

@@ -1,0 +1,118 @@
+MODULE JPEGEncoder;
+	IMPORT SYSTEM, Streams, Codecs, Raster, FoxArrayBase;
+CONST 
+	QuantFracWidth* = 10; 
+	BlockAlignment* = 64; 
+	QuantFactor = 8; 
+TYPE 
+	BitstreamWriter* = RECORD 
+		write: PROCEDURE {DELEGATE}(byte: CHAR); 
+		bufBits, numBufBits: UNSIGNED32; 
+
+		PROCEDURE ^ Init*(writeByte: PROCEDURE {DELEGATE}(byte: CHAR)); 
+		PROCEDURE ^ WriteBits*(bits, numBits: UNSIGNED32); 
+		PROCEDURE ^ Flush*; 
+	END
+	; 
+
+	ChannelEncoder* = RECORD 
+		qTable: ARRAY (8 * 8) OF UNSIGNED8; 
+		huffDcCodes: ARRAY 17 OF UNSIGNED8; 
+		huffDcValues: ARRAY 12 OF UNSIGNED8; 
+		huffAcCodes: ARRAY 17 OF UNSIGNED8; 
+		huffAcValues: ARRAY 162 OF UNSIGNED8; 
+		huffDcTable: ARRAY 12 OF UNSIGNED32; 
+		huffAcTable: ARRAY (16 * 12) OF UNSIGNED32; 
+		qWeights{ALIGNED(64)} : ARRAY (8 * 8) OF INTEGER; 
+		blk{ALIGNED(64)} : ARRAY (8 * 8) OF INTEGER; 
+		dcPrev := 0: INTEGER; 
+		acZerosBits, acZerosNumBits: UNSIGNED32; 
+		acEndOfBlockBits, acEndOfBlockNumBits: UNSIGNED32; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetupDefaultsLuma*; 
+		PROCEDURE ^ SetupDefaultsChroma*; 
+		PROCEDURE ^ SetQuantization*(CONST quantizationTable: ARRAY (8 * 8) OF UNSIGNED8); 
+		PROCEDURE ^ SetHuffman*(CONST dcTable: ARRAY 12 OF UNSIGNED32; CONST acTable: ARRAY (16 * 12) OF UNSIGNED32); 
+		PROCEDURE ^ Encode*(VAR out: BitstreamWriter; CONST x: ARRAY (8 * 8) OF UNSIGNED8); 
+		PROCEDURE ^ HuffmanEncode(VAR out: BitstreamWriter; CONST data: ARRAY (8 * 8) OF INTEGER); 
+	END
+	; 
+
+	HeaderWriter* = RECORD 
+		out: Streams.Writer; 
+
+		PROCEDURE ^ SetOutput*(output: Streams.Writer); 
+		PROCEDURE ^ App0*; 
+		PROCEDURE ^ Sof0*(width, height: INTEGER); 
+		PROCEDURE ^ Sof0Gray*(width, height: INTEGER); 
+		PROCEDURE ^ Sos*; 
+		PROCEDURE ^ SosGray*; 
+		PROCEDURE ^ Dqt*(CONST qLuma, qChroma: ARRAY (8 * 8) OF UNSIGNED8); 
+		PROCEDURE ^ DqtGray*(CONST qLuma: ARRAY (8 * 8) OF UNSIGNED8); 
+		PROCEDURE ^ Dht*(CONST dcNrCodesLuma: ARRAY 17 OF UNSIGNED8; CONST dcValuesLuma: ARRAY 12 OF UNSIGNED8; CONST acNrCodesLuma: ARRAY 17 OF UNSIGNED8; CONST acValuesLuma: ARRAY 162 OF UNSIGNED8; CONST dcNrCodesChroma: ARRAY 17 OF UNSIGNED8; CONST dcValuesChroma: ARRAY 12 OF UNSIGNED8; CONST acNrCodesChroma: ARRAY 17 OF UNSIGNED8; CONST acValuesChroma: ARRAY 162 OF UNSIGNED8); 
+		PROCEDURE ^ DhtGray*(CONST dcNrCodesLuma: ARRAY 17 OF UNSIGNED8; CONST dcValuesLuma: ARRAY 12 OF UNSIGNED8; CONST acNrCodesLuma: ARRAY 17 OF UNSIGNED8; CONST acValuesLuma: ARRAY 162 OF UNSIGNED8); 
+		PROCEDURE ^ WriteHeader*(CONST encoderY, encoderU: ChannelEncoder; width, height: INTEGER); 
+		PROCEDURE ^ WriteHeaderGray*(CONST encoder: ChannelEncoder; width, height: INTEGER); 
+		PROCEDURE ^ EndOfImage*; 
+	END
+	; 
+
+	Block8x8* = ARRAY (8 * 8) OF UNSIGNED8; 
+
+	Block2x2x8x8* = RECORD 
+		d00*{ALIGNED(64)} : Block8x8; 
+		d01*{ALIGNED(64)} : Block8x8; 
+		d10*{ALIGNED(64)} : Block8x8; 
+		d11*{ALIGNED(64)} : Block8x8; 
+	END; 
+
+	Encoder* = OBJECT (Codecs.ImageEncoder)
+	VAR 
+		grayScale-: BOOLEAN; 
+		out: Streams.Writer; 
+		bitstreamWriter: BitstreamWriter; 
+		headerWriter: HeaderWriter; 
+		encoderY, encoderU, encoderV: ChannelEncoder; 
+		r, g, b: Block2x2x8x8; 
+		y: Block2x2x8x8; 
+		u{ALIGNED(64)} : Block8x8; 
+		v{ALIGNED(64)} : Block8x8; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Open*(output: Streams.Writer); 
+		PROCEDURE ^ SetQuality*(quality: SIGNED32); 
+		PROCEDURE ^ SetGrayscale*(enableGrayscale: BOOLEAN); 
+		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: INTEGER); 
+	END Encoder; 
+VAR 
+	ZigZag-: ARRAY 64 OF INTEGER; 
+	DefaultQuantLuma-: ARRAY (8 * 8) OF UNSIGNED8; 
+	DefaultQuantChroma-: ARRAY (8 * 8) OF UNSIGNED8; 
+	DefaultDcNrCodesLuma-: ARRAY 17 OF UNSIGNED8; 
+	DefaultDcValuesLuma-: ARRAY 12 OF UNSIGNED8; 
+	DefaultDcNrCodesChroma-: ARRAY 17 OF UNSIGNED8; 
+	DefaultDcValuesChroma-: ARRAY 12 OF UNSIGNED8; 
+	DefaultAcNrCodesLuma-: ARRAY 17 OF UNSIGNED8; 
+	DefaultAcValuesLuma-: ARRAY 162 OF UNSIGNED8; 
+	DefaultAcNrCodesChroma-: ARRAY 17 OF UNSIGNED8; 
+	DefaultAcValuesChroma-: ARRAY 162 OF UNSIGNED8; 
+	DefaultHuffDcTableLuma-: ARRAY 12 OF UNSIGNED32; 
+	DefaultHuffDcTableChroma-: ARRAY 12 OF UNSIGNED32; 
+	DefaultHuffAcTableLuma-: ARRAY (16 * 12) OF UNSIGNED32; 
+	DefaultHuffAcTableChroma-: ARRAY (16 * 12) OF UNSIGNED32; 
+	QuantFactors: ARRAY 8 OF FLOAT32; 
+	BitsMask: ARRAY (SIZEOF(INTEGER) * 8) OF INTEGERSET; 
+
+	PROCEDURE ^ CountBits*(x: INTEGER): INTEGER; 
+	PROCEDURE ^ QuantizedDct8x8*(CONST x: ARRAY (8 * 8) OF UNSIGNED8; CONST qWeights: ARRAY (8 * 8) OF INTEGER; VAR y: ARRAY (8 * 8) OF INTEGER); 
+	PROCEDURE ^ GetRgbBlock8x8_BGR888*(CONST src: ARRAY OF CHAR; srcOffs: SIZE; x0, x1: INTEGER; rowStride: SIZE; VAR r, g, b: Block8x8); 
+	PROCEDURE ^ GetRgbBlock8x8_BGRA888*(CONST src: ARRAY OF CHAR; srcOffs: SIZE; x0, x1: INTEGER; rowStride: SIZE; VAR r, g, b: Block8x8); 
+	PROCEDURE ^ GetRgbBlock2x2x8x8*(CONST src: ARRAY OF CHAR; srcOffs: SIZE; x0, x1: INTEGER; rowStride: SIZE; getBlock: PROCEDURE (CONST src: ARRAY OF CHAR; srcOffs: SIZE; x0, x1: INTEGER; rowStride: SIZE; VAR r, g, b: Block8x8); VAR r, g, b: Block2x2x8x8); 
+	PROCEDURE ^ GetBlock8x8*(CONST src: ARRAY OF CHAR; x0, x1: INTEGER; rowStride: SIZE; VAR dst: Block8x8); 
+	PROCEDURE ^ RgbToY8x8*(CONST r, g, b: Block8x8; VAR y: Block8x8); 
+	PROCEDURE ^ RgbToCbCr8x8*(CONST r, g, b: Block8x8; x0, x1: INTEGER; VAR u, v: Block8x8); 
+	PROCEDURE ^ RgbToI420*(CONST r, g, b: Block2x2x8x8; VAR y: Block2x2x8x8; VAR u, v: Block8x8); 
+	PROCEDURE ^ InitMod; 
+BEGIN
+END JPEGEncoder.

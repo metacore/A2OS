@@ -1,0 +1,109 @@
+MODULE WebSockets;
+	IMPORT Rng := CryptoFortunaRng, Streams, CryptoSHA1, CryptoBase64, WebHTTP, WebHTTPServer, Objects, Locks, Strings, Commands, Modules;
+CONST 
+	MaxNumEndpoints* = 32; 
+TYPE 
+	Opcode* = ENUM Continuation* = 0, Text* = 1, Binary* = 2, Close* = 8, Ping* = 9, Pong* = 10, None = 255 END; 
+
+	CloseStatus* = ENUM NormalClosure* = 1000, GoingAway* = 1001, ProtocolError* = 1002, NotUnderstood* = 1003, NoStatusCode* = 1005, ClosedAbnormally* = 1006, NotConsistent* = 1007, PolicyViolated* = 1008, MessageTooBig* = 1009, MandatoryExtension* = 1010, UnexpectedCondition* = 1011, TlsHandshakeFailure* = 1015 END; 
+
+	EndpointHandler* = PROCEDURE {DELEGATE}(CONST uri: ARRAY OF CHAR; VAR conn: Connection); 
+
+	ServerPlugin* = OBJECT {EXCLUSIVE} (WebHTTPServer.HTTPPlugin)
+	TYPE 
+		Endpoint = RECORD 
+			pathPrefix: Strings.String; 
+			description: Strings.String; 
+			handler: EndpointHandler; 
+		END; 
+	VAR 
+		numEndpoints-: SIZE; 
+		endpoints: ARRAY MaxNumEndpoints OF Endpoint; 
+
+		PROCEDURE ^ SetEndpoint*(CONST pathPrefix: ARRAY OF CHAR; handler: EndpointHandler; CONST description: ARRAY OF CHAR); 
+		PROCEDURE ^ RemoveEndpoint*(CONST pathPrefix: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ ListEndpoints(out: Streams.Writer); 
+		PROCEDURE ^ FindEndpoint(CONST path: ARRAY OF CHAR): SIZE; 
+		PROCEDURE ^  & Init*(CONST name: WebHTTPServer.Name); 
+		PROCEDURE ^ CanHandle*(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; secure: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ Handle*(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; VAR reply: WebHTTP.ResponseHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+		PROCEDURE ^ SendError(code: SIGNED32; VAR request: WebHTTP.RequestHeader; VAR reply: WebHTTP.ResponseHeader; out: Streams.Writer); 
+	END ServerPlugin; 
+
+	Handshake* = RECORD 
+		result-: ARRAY 64 OF CHAR; 
+		hash: CryptoSHA1.SHA1; 
+
+		PROCEDURE ^ GenerateClientKey*; 
+		PROCEDURE ^ GenerateServerAccept*(CONST clientKey: ARRAY OF CHAR); 
+	END
+	; 
+
+	ConnectionState* = ENUM Open* = 0, ClosingByLocalRequest* = 1, ClosingByRemoteRequest* = 2, ClosedByLocalRequest* = 3, ClosedByRemoteRequest* = 4, Aborted* = 5, StreamError* = 6 END; 
+
+	Connection* = OBJECT 
+	TYPE 
+		ReadState = ENUM ReadingHeader = 0, ReadingExtPayloadLen = 1, ReadingMask = 2, ReadingPayload = 3, ReadingPingPayload = 4, ReadingClosePayload = 5 END; 
+	VAR 
+		isClient-: BOOLEAN; 
+		state-: ConnectionState; 
+		closeStatus-: INTEGER; 
+		closeReason-: ARRAY 1024 OF CHAR; 
+		in: Streams.Reader; 
+		out: Streams.Writer; 
+		txLock: Locks.Lock; 
+		sendingFragmentedMessage: BOOLEAN; 
+		txOpcode: Opcode; 
+		txMask: ARRAY 4 OF CHAR; 
+		txBuf: ARRAY 4096 OF CHAR; 
+		rxLock: Locks.Lock; 
+		rxState: ReadState; 
+		rxHdr0: INTEGER; 
+		rxOpcode, rxOpcodeFragmented: Opcode; 
+		rxFinal: BOOLEAN; 
+		rxPayloadLen: UNSIGNED64; 
+		rxPayloadLenSize: INTEGER; 
+		rxDataPos: SIZE; 
+		rxMask: ARRAY 4 OF CHAR; 
+		rxMaskPos: INTEGER; 
+		rxTerminatingNull: BOOLEAN; 
+
+		PROCEDURE ^  & Init(input: Streams.Reader; output: Streams.Writer; isClientConnection: BOOLEAN); 
+		PROCEDURE ^ SetDataMode*(binaryMode: BOOLEAN); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; offset, length: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; dataOffs, dataSize, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ SendClose(status: CloseStatus; CONST reason: ARRAY OF CHAR); 
+		PROCEDURE ^ CloseDueError(status: CloseStatus; CONST reason: ARRAY OF CHAR); 
+		PROCEDURE ^ Close*(status: CloseStatus; CONST reason: ARRAY OF CHAR); 
+		PROCEDURE ^ Abort*; 
+		PROCEDURE ^ GetReadyForNextFrame; 
+		PROCEDURE  - IsFullyClosed(): BOOLEAN;
+		CONST 
+			FullyClosedStates = {INTEGER(ConnectionState.ClosedByLocalRequest), INTEGER(ConnectionState.ClosedByRemoteRequest), INTEGER(ConnectionState.Aborted)}; 
+		BEGIN
+			RETURN (INTEGER(state) IN FullyClosedStates)
+		END IsFullyClosed; 
+	END Connection; 
+VAR 
+	serverPlugin: ServerPlugin; 
+
+	PROCEDURE  - IsControlFrame(opcode: INTEGER): BOOLEAN;
+	BEGIN
+		RETURN (3 IN INTEGERSET(opcode))
+	END IsControlFrame; 
+	PROCEDURE ^ ApplyMask*(VAR data: ARRAY OF CHAR; dataOffs, dataLen: SIZE; CONST mask: ARRAY 4 OF CHAR; VAR maskPos: INTEGER); 
+	PROCEDURE ^ WritePayloadLen*(out: Streams.Writer; payloadLen: SIZE; masked: BOOLEAN); 
+	PROCEDURE ^ WriteHeader*(out: Streams.Writer; final: BOOLEAN; opcode: Opcode; payloadLen: SIZE); 
+	PROCEDURE ^ WriteHeaderMasked*(out: Streams.Writer; final: BOOLEAN; opcode: Opcode; payloadLen: SIZE; CONST mask: ARRAY 4 OF CHAR); 
+	PROCEDURE ^ WritePayloadMasked*(out: Streams.Writer; CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE; CONST mask: ARRAY 4 OF CHAR; VAR maskPos: INTEGER; VAR buf: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteFrame*(out: Streams.Writer; final: BOOLEAN; opcode: Opcode; CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE); 
+	PROCEDURE ^ WriteFrameMasked*(out: Streams.Writer; final: BOOLEAN; opcode: Opcode; CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE; CONST mask: ARRAY 4 OF CHAR; VAR buf: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteClose*(out: Streams.Writer; status: CloseStatus; CONST reason: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteCloseMasked*(out: Streams.Writer; status: CloseStatus; CONST reason: ARRAY OF CHAR; CONST mask: ARRAY 4 OF CHAR; VAR buf: ARRAY OF CHAR); 
+	PROCEDURE ^ InstallPlugin*(ctx: Commands.Context); 
+	PROCEDURE ^ TerminateMod; 
+	PROCEDURE ^ SetEndpoint*(CONST pathPrefix: ARRAY OF CHAR; handler: EndpointHandler; CONST description: ARRAY OF CHAR); 
+	PROCEDURE ^ RemoveEndpoint*(CONST pathPrefix: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ListEndpoints*(ctx: Commands.Context); 
+BEGIN
+END WebSockets.

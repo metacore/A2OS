@@ -758,7 +758,9 @@ BEGIN
 		IF (h.location # "") THEN
 			dst.String("Location: "); dst.String(h.location); dst.Ln()
 		END;
-		dst.String("Content-Type: "); dst.String(h.contenttype); dst.Ln();
+		IF h.contenttype # "" THEN
+			dst.String("Content-Type: "); dst.String(h.contenttype); dst.Ln();
+		END;
 		IF (h.contentlength >= 0) THEN
 			dst.String("Content-Length: "); dst.Int( h.contentlength, 1); dst.Ln()
 		END;

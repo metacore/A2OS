@@ -87,7 +87,7 @@ TYPE
 								(modsince = reply.lastmodified)
 							THEN
 								reply.statuscode := WebHTTP.NotModified;
-								f := NIL
+								f.Close; f := NIL
 							ELSE
 								(* TODO: move to Configuration.XML / separate plugins *)
 								IF ext = ".html" THEN COPY("text/html; charset=utf-8", reply.contenttype)
@@ -172,7 +172,9 @@ TYPE
 			ELSE
 				reply.statuscode := WebHTTP.NotImplemented;
 				WebHTTP.WriteStatus(reply, out)
-			END
+			END;
+		FINALLY
+			IF f # NIL THEN f.Close; END;
 		END Handle;
 	END DefaultPlugin;
 
@@ -699,7 +701,7 @@ PC.Compile \s TFLog.Mod WebHTTP.Mod WebHTTPServer.Mod WebSSMPPlugin.Mod WebDefau
 
 START THE SERVER
 Configuration.DoCommands
-WebHTTPServerTools.Start \r:../httproot \l:WebHTTP.Log ~
+WebHTTPServerTools.Start \s:on \r:httproot \l:WebHTTP.Log ~
 WebHTTPServerTools.AddHost livepc.inf.ethz.ch \r:FAT:/httproot/test~
 WebSSMPPlugin.Install~
 WebDefaultSSMP.Install~

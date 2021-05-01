@@ -875,7 +875,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	# Image codecs
 	PNGDecoder.Mod BMPCodec.Mod GIFCodec.Mod
-	JPEGDecoder.Mod
+	JPEGDecoder.Mod JPEGEncoder.Mod
 
 	# Animation codecs
 	AnimationCodec.Mod
@@ -966,6 +966,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	WebHTTPServerTools.Mod WebSSMPPlugin.Mod
 	NATIVE, WIN { WebDefaultSSMP.Mod }
 	WebHTTPServerStatistics.Mod
+	WebSockets.Mod
 
 	NATIVE { WebWormWatch.Mod }
 

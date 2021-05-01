@@ -577,7 +577,7 @@ TYPE
 			PROCEDURE HandleReadingPayload();
 			BEGIN
 				VAR n := 0: SIZE;
-				in.Bytes(data, dataOffs, MIN(rxPayloadLen,available), n);
+				in.Bytes(data, dataOffs, SIZE(MIN(rxPayloadLen,available)), n);
 				IF ~isClient THEN
 					ApplyMask(data, dataOffs, n, rxMask, rxMaskPos);
 				END;
@@ -606,7 +606,7 @@ TYPE
 				WHILE (rxPayloadLen # 0) & (available > 0) & (state = ConnectionState.Open) DO
 					txLock.Acquire;
 					VAR n := 0: SIZE;
-					in.Bytes(txBuf, 0, MIN(MIN(rxPayloadLen,available),LEN(txBuf)), n);
+					in.Bytes(txBuf, 0, MIN(SIZE(MIN(rxPayloadLen,available)),LEN(txBuf)), n);
 					DEC(available, n); DEC(rxPayloadLen, n);
 					IF isClient THEN
 						WritePayloadMasked(out, txBuf, 0, n, rxMask, rxMaskPos, txBuf);
@@ -639,7 +639,7 @@ TYPE
 			PROCEDURE HandleReadingClosePayload();
 			BEGIN
 				VAR n := 0: SIZE;
-				in.Bytes(closeReason, rxDataPos, MIN(rxPayloadLen,available), n);
+				in.Bytes(closeReason, rxDataPos, SIZE(MIN(rxPayloadLen,available)), n);
 				IF ~isClient THEN
 					ApplyMask(closeReason, rxDataPos, n, rxMask, rxMaskPos);
 				END;

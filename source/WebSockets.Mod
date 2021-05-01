@@ -225,9 +225,7 @@ TYPE
 			END;
 
 			BEGIN{EXCLUSIVE}
-				TRACE(request.uri);
 				VAR k := FindEndpoint(request.uri);
-				TRACE(k);
 				IF k >= 0 THEN
 					endpointHandler := endpoints[k].handler;
 				END;
@@ -1038,6 +1036,11 @@ VAR
 	BEGIN
 		serverPlugin.SetEndpoint(pathPrefix, handler, description);
 	END SetEndpoint;
+
+	PROCEDURE RemoveEndpoint*(CONST pathPrefix: ARRAY OF CHAR): BOOLEAN;
+	BEGIN
+		RETURN serverPlugin.RemoveEndpoint(pathPrefix);
+	END RemoveEndpoint;
 
 	(** list all installed WebSocket endpoints *)
 	PROCEDURE ListEndpoints*(ctx: Commands.Context);

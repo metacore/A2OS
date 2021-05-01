@@ -274,6 +274,7 @@ TYPE
 		VAR i, j: SIGNED32;
 			path, pattern: ARRAY 256 OF CHAR;
 			attr: SET;  curPath, longname: FileName;
+			fileSize: Files.Size;
 
 			PROCEDURE EnumeratePath;
 			VAR h: Kernel32.HANDLE;  FD: Kernel32.FindData;  ft: Kernel32.FileTime;  st: Kernel32.SystemTime;  i, j, t, d: SIGNED32;
@@ -295,10 +296,15 @@ TYPE
 							d := LONG( st.wYear - 1900 ) * 200H + LONG( st.wMonth ) * 20H + LONG( st.wDay );  t := LONG( st.wHour ) * 1000H + LONG( st.wMinute ) * 40H + LONG( st.wSecond );
 						END;
 						Join( curPath, "/", FD.cFileName, longname );
+						IF SIZEOF(Files.Size) > 4 THEN
+							fileSize := LSH(Files.Size(FD.nFileSizeHigh),32) + FD.nFileSizeLow;
+						ELSE
+							fileSize := FD.nFileSizeLow;
+						END;
 						IF ~(Kernel32.FileAttributeDirectory IN FD.dwFileAttributes) THEN
-							enum.PutEntry( longname, {}, t, d, FD.nFileSizeLow )
+							enum.PutEntry( longname, {}, t, d, fileSize )
 						ELSIF (FD.cFileName # ".") & ((FD.cFileName # "..")) THEN
-							enum.PutEntry( longname, {Files.Directory}, t, d, FD.nFileSizeLow )
+							enum.PutEntry( longname, {Files.Directory}, t, d, fileSize )
 						END;
 					UNTIL Kernel32.FindNextFile( h, FD ) = Kernel32.False;
 					IGNORE Kernel32.FindClose( h )

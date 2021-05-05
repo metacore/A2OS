@@ -989,13 +989,14 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		len3: ARRAY [3] OF SIZE;
 	BEGIN
 		IF r.GetInteger(k,FALSE) THEN 
-			CASE k OF 
+			IF LEN(RESULT,0)#k THEN NEW(RESULT,k) END;
+			(*CASE k OF 
 				|0: RESULT:=len0;
 				|1: RESULT:=len1;
 				|2: RESULT:=len2;
 				|3: RESULT:=len3;
 				ELSE NEW(RESULT,k);
-			END;
+			END;*)
 			FOR i:=0 TO k-1 DO 
 				IF r.GetInteger(j,FALSE) THEN
 					RESULT[i]:=j 
@@ -1066,7 +1067,7 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	BEGIN
 		ParseHeader(R,version, datatype,len);
 		ASSERT(datatype=DatatypeLR);
-		IF (DIM(RESULT)#LEN(len,0)) OR (LEN(RESULT)#len) THEN NEW(RESULT,len) END;
+		IF ~HasSize(RESULT,len) THEN NEW(RESULT,len) END;
 		IF DIM(RESULT)>0 THEN ReadLR(R,RESULT) END;
 		RETURN RESULT
 	END LoadLR;

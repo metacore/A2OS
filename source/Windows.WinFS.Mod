@@ -297,7 +297,7 @@ TYPE
 						END;
 						Join( curPath, "/", FD.cFileName, longname );
 						IF SIZEOF(Files.Size) > 4 THEN
-							fileSize := LSH(Files.Size(FD.nFileSizeHigh),32) + FD.nFileSizeLow;
+							fileSize := LSH(Files.Size(FD.nFileSizeHigh),32) + Files.Size(SET64(SET32(FD.nFileSizeLow)));
 						ELSE
 							fileSize := FD.nFileSizeLow;
 						END;
@@ -454,13 +454,12 @@ TYPE
 			fileSystem := fs
 		END Init;
 
-		PROCEDURE GetFileSize(): Files.Position;
-		VAR size: Files.Position;
+		PROCEDURE GetFileSize(): Files.Size;
 		BEGIN
-			IF SIZEOF(Files.Position) > 4 THEN (* compile-time condition, will be optimized out *)
+			IF SIZEOF(Files.Size) > 4 THEN (* compile-time condition, will be optimized out *)
 				VAR hSize: SIGNED32;
-				size := UNSIGNED32(Kernel32.GetFileSize(hfile, hSize));
-				INC(size, LSH(Files.Position(hSize), 32));
+				VAR size := Files.Size(SET64(SET32(Kernel32.GetFileSize(hfile, hSize))));
+				INC(size, LSH(Files.Size(hSize), 32));
 				RETURN size;
 			ELSE
 				RETURN Kernel32.GetFileSize(hfile, NIL);

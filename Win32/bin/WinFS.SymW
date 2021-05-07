@@ -108,7 +108,7 @@ TYPE
 		fileSystem: WinFileSystem; 
 
 		PROCEDURE ^  & Init*(VAR name: ARRAY OF CHAR; hfile: Kernel32.HANDLE; key: SIGNED32; fs: WinFileSystem); 
-		PROCEDURE ^ GetFileSize(): Files.Position; 
+		PROCEDURE ^ GetFileSize(): Files.Size; 
 		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: Files.Position); 
 		PROCEDURE ^ Pos*(VAR r: Files.Rider): Files.Position; 
 		PROCEDURE ^ SetFilePointer(pos: Files.Position): Files.Position; 

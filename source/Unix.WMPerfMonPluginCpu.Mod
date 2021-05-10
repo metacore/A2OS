@@ -1,7 +1,7 @@
 MODULE WMPerfMonPluginCpu; (** AUTHOR "staubesv"; PURPOSE "Performance Monitor CPU load plugin"; *)
 
 IMPORT
-	WMPerfMonPlugins, Modules;
+	WMPerfMonPlugins, Modules, Objects;
 
 CONST
 
@@ -18,14 +18,14 @@ TYPE
 
 		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		BEGIN
-			p.name := "CPU Load (not implemented)"; p.description := "CPU Load (not yet implemented)";
+			p.name := "NumReady"; p.description := "Number of processes in ready queue";
 			p.modulename := ModuleName;
 			p.autoMin := TRUE; p.autoMax := TRUE; p.minDigits := 2;
 		END Init;
 
 		PROCEDURE UpdateDataset*;
 		BEGIN
-			dataset[0] := 0;
+			dataset[0] := Objects.NumReady();
 		END UpdateDataset;
 
 	END CpuLoad;

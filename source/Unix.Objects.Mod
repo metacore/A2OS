@@ -654,6 +654,17 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		p := CurrentProcess();
 		RETURN p.id;
 	END GetProcessID;
+	
+	PROCEDURE NumReady*( ): SIGNED32;
+	VAR n: SIGNED32; p: Process;
+	BEGIN
+		n := 0;
+		Unix.MtxLock( processList );
+		p := root;
+		WHILE p # NIL DO IF p.mode = Running THEN INC( n ); END;  p := p.nextProcess END;
+		Unix.MtxUnlock( processList );
+		RETURN n
+	END NumReady;
 
 
 	PROCEDURE GetCpuCycles*( process : Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN );

@@ -1342,7 +1342,11 @@ TYPE
 				Indent;
 				Comments(x.comment,x,FALSE);
 				Keyword("OPERATOR ");
-				
+
+				IF (mode = SymbolFile) & ~x.isInline & ~x.isOberonInline THEN
+					w.String("^ ");
+				END;
+
 				type := x.type(SyntaxTree.ProcedureType);
 				IF type.isConst THEN
 					Keyword("CONST ");
@@ -1353,7 +1357,6 @@ TYPE
 					ASSERT(~x.isDynamic);
 					w.String("-");
 				ELSE
-					IF mode = SymbolFile THEN w.String("^ ") END;
 					IF x.isDynamic THEN Flag(Global.NameDynamic, first) END;
 					IF ~first THEN w.String("}") END;
 				END;

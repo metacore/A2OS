@@ -1,0 +1,121 @@
+MODULE CryptoFortuna;
+	IMPORT CryptoSHA256, CryptoCiphers;
+CONST 
+	HashSize* = 32; 
+	CipherBlockSize* = 16; 
+	CipherKeySize* = 32; 
+	CounterSize* = CipherBlockSize; 
+	MaxRandomEventDataLen* = 32; 
+	NumPools* = 32; 
+	MinPoolSize* = 64; 
+	ReseedIntervalMs = 100; 
+TYPE 
+	Crc32* = RECORD 
+		poly- := 0: UNSIGNED32; 
+		xorMsk- := 4294967295: UNSIGNED32; 
+		table-: ARRAY 256 OF SET32; 
+		crc- := 4294967295: UNSIGNED32; 
+
+		PROCEDURE ^ Init*(polynomial:= 3988292384: UNSIGNED32; initialValue:= 4294967295: UNSIGNED32; xorMask:= 4294967295: UNSIGNED32); 
+		OPERATOR -"()"(data: SIGNED8);
+		BEGIN
+			@Self.crc := UNSIGNED32((@Self.table[UNSIGNED8((SET32(@Self.crc) / SET32(data)))] / SET32(LSH(@Self.crc,  -8))))
+		END "()"; 
+		OPERATOR ^ "()"-(data: CHAR); 
+		OPERATOR ^ "()"-(data: SIGNED16); 
+		OPERATOR ^ "()"-(data: SIGNED32); 
+		OPERATOR ^ "()"-(data: SIGNED64); 
+		OPERATOR ^ "()"-(CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE); 
+		OPERATOR ^ "()"-(CONST str: ARRAY OF CHAR); 
+		PROCEDURE ^ Get*(): UNSIGNED32; 
+	END
+	; 
+
+	Counter* = RECORD 
+		data-: ARRAY CounterSize OF CHAR; 
+
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ Set*(CONST value: ARRAY OF CHAR; offs: SIZE); 
+		PROCEDURE ^ Inc*(increment: SIGNED32); 
+	END
+	; 
+
+	Hash* = RECORD 
+		hash: CryptoSHA256.SHA256; 
+
+		PROCEDURE ^ Init*; 
+		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE); 
+		PROCEDURE ^ GetHash*(VAR hashValue: ARRAY OF CHAR; hashValueOffs: SIZE); 
+	END
+	; 
+
+	Generator* = RECORD 
+		isSeeded-: BOOLEAN; 
+		key-: ARRAY CipherKeySize OF CHAR; 
+		ctr: Counter; 
+		hash: Hash; 
+		cipher: CryptoCiphers.Cipher; 
+
+		PROCEDURE ^ Init*; 
+		PROCEDURE ^ Reseed*(CONST seed: ARRAY OF CHAR; seedOffs, seedLen: SIZE); 
+		PROCEDURE ^ GenerateBlocksPrivate(VAR buf: ARRAY OF CHAR; bufOffs, numBlocks: SIZE); 
+		PROCEDURE ^ ChangeKeyPrivate; 
+		PROCEDURE ^ Generate*(VAR data: ARRAY OF CHAR; dataOffs, dataLen: SIZE); 
+	END
+	; 
+
+	Pool* = RECORD 
+		length-: SIZE; 
+		hash: Hash; 
+
+		PROCEDURE ^ Init*; 
+		PROCEDURE ^ Append*(CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE); 
+		PROCEDURE ^ GetHash*(VAR hashValue: ARRAY OF CHAR; hashValueOffs: SIZE); 
+	END
+	; 
+
+	ReseedPoolIndices* = RECORD 
+		r, k, mask: SIZE; 
+
+		PROCEDURE ^ Init*(reseedCount: SIZE); 
+		PROCEDURE ^ GetNext*(VAR index: SIZE): BOOLEAN; 
+	END
+	; 
+
+	Accumulator* = RECORD 
+		reseedCount-: SIZE; 
+		generator: Generator; 
+		pools: ARRAY NumPools OF Pool; 
+		lastReseedTime: SIGNED64; 
+		seedBuf: ARRAY (NumPools * HashSize) OF CHAR; 
+
+		PROCEDURE ^ Init*; 
+		PROCEDURE ^ Generate*(currentTimeMs: SIGNED32; VAR data: ARRAY OF CHAR; dataOffs, dataLen: SIZE); 
+		PROCEDURE ^ AddRandomEvent*(sourceNum: INTEGER; poolIndex: SIZE; CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE); 
+		PROCEDURE ^ IsReady*(currentTimeMs: SIGNED32): BOOLEAN; 
+	END
+	; 
+
+	Permutation* = RECORD 
+		size-: SIZE; 
+		values: ARRAY 256 OF UNSIGNED8; 
+
+		PROCEDURE ^ Init*(rand: PROCEDURE {DELEGATE}():SIGNED32; poolSize: SIZE); 
+		PROCEDURE ^ Get*(pos: SIZE): SIZE; 
+	END
+	; 
+
+	EntropyCollector* = RECORD 
+		poolIndex: INTEGER; 
+
+		PROCEDURE ^ Init*; 
+		PROCEDURE ^ Collect*(VAR accumulator: Accumulator; sourceNum: INTEGER; CONST data: ARRAY OF CHAR; dataOffs, dataLen: SIZE); 
+	END
+	; 
+
+	PROCEDURE ^ Int16ToBytes*(v: INTEGER; VAR bytes: ARRAY OF CHAR; VAR bytesOffs: SIZE); 
+	PROCEDURE ^ Int24ToBytes*(v: SIGNED32; VAR bytes: ARRAY OF CHAR; VAR bytesOffs: SIZE); 
+	PROCEDURE ^ Int32ToBytes*(v: SIGNED32; VAR bytes: ARRAY OF CHAR; VAR bytesOffs: SIZE); 
+	PROCEDURE ^ IntToBytes*(v: SIGNED64; VAR bytes: ARRAY OF CHAR; VAR bytesOffs: SIZE; byteCount: SIZE); 
+BEGIN
+END CryptoFortuna.

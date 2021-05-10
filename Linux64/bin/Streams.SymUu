@@ -149,6 +149,7 @@ TYPE
 		PROCEDURE ^ GetString*(VAR string: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ GetInteger*(VAR integer: SIGNED32; isHexadecimal: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ GetSize*(VAR size: SIZE; isHexadecimal: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ PeekNext(): CHAR; 
 		PROCEDURE ^ GetReal*(VAR real: FLOAT64): BOOLEAN; 
 		PROCEDURE ^ GetChar*(VAR ch: CHAR): BOOLEAN; 
 		PROCEDURE ^ RawChar16*(VAR u16: Char16): BOOLEAN; 

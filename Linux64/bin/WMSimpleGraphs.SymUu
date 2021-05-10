@@ -1,7 +1,7 @@
 MODULE WMSimpleGraphs;
 	IMPORT Strings, WMGraphics, WMRectangles, WMMessages, Modules, Reals, Files, Streams, WM := WMWindowManager, MathL, Raster, Commands, FoxArrayBase;
 CONST 
-	Colors = [WMGraphics.Red, WMGraphics.Blue, WMGraphics.Green, WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray]; 
+	Colors = [WMGraphics.Red, WMGraphics.Blue, WMGraphics.Green, WMGraphics.Gold, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray]; 
 	MinSize = 30; 
 	MaxSize = 2048; 
 TYPE 

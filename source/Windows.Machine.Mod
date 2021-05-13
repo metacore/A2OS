@@ -843,12 +843,12 @@ PROCEDURE GetFreeK* (VAR total, lowFree, highFree: SIZE);
 VAR
 	stat: Kernel32.MemoryStatusEx;
 BEGIN
-	total := MAX(SIGNED32); lowFree := 0; highFree := total;
+	total := MAX(SIZE); lowFree := 0; highFree := total;
 	(*<< added by Alexey *)
 	IF GetMemStatus(stat) THEN
-		total := SHORT(stat.ullTotalVirtual DIV 1024);
+		total := SIZE(stat.ullTotalVirtual DIV 1024);
 		lowFree := 0;
-		highFree := SHORT(stat.ullAvailVirtual DIV 1024);
+		highFree := SIZE(stat.ullAvailVirtual DIV 1024);
 	END;
 	(* added by Alexey >>*)
 END GetFreeK;

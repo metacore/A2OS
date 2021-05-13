@@ -7,7 +7,6 @@ IMPORT SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
 
 CONST
 	ConcurrentGC = TRUE; (* if TRUE then release needs to be compiled with --writeBarriers *)
-	LinuxHost = Unix.Version = "Linux";
 
 	(*! Process flags, meaningless in Unix ports !!! *)
 	PleaseHalt* = 10;		(* Process requested to Halt itself soon *)
@@ -661,7 +660,10 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		n := 0;
 		Unix.MtxLock( processList );
 		p := root;
-		WHILE p # NIL DO IF p.mode = Running THEN INC( n ); END;  p := p.nextProcess END;
+		WHILE p # NIL DO
+			IF p.mode = Running THEN INC( n ) END;  
+			p := p.nextProcess
+		END;
 		Unix.MtxUnlock( processList );
 		RETURN n
 	END NumReady;
@@ -819,16 +821,18 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 
 	PROCEDURE GetContext( ctxt: Unix.Ucontext );
-	VAR t: Process; context: Unix.McontextDesc;
+	VAR p: Process; context: Unix.McontextDesc;
 	BEGIN
-		t := CurrentProcess( );
-		Unix.CopyContext( ctxt.mc, context );
-		t.state.PC := context.r_pc;
-		t.state.BP := context.r_bp;
-		t.state.SP := context.r_sp
+		p := CurrentProcess( );
+		IF p.gcContext.nextPos = 0 THEN  (* in A2 *)
+			Unix.CopyContext( ctxt.mc, context );
+			p.state.PC := context.r_pc;
+			p.state.BP := context.r_bp;
+			p.state.SP := context.r_sp
+		END
 	END GetContext;
 
-	(* called by WMProcessInfo to obtain the current state of a running process *)
+	(* called by WMProcessInfo to obtain the current state of a process *)
 	PROCEDURE UpdateProcessState*( p: Process );
 	BEGIN
 		Machine.Acquire(Machine.Heaps);  (* must not run concurrently with GC *)
@@ -839,7 +843,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		ELSE
 			IF p.mode = Running THEN
 				timerStopped := TRUE;
-				IF p.mode = Running THEN	(* still running *)
+				IF p.gcContext.nextPos = 0 THEN	(* in A2 *)
 					Suspend(p);
 					Resume(p);
 				END;
@@ -907,19 +911,21 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 	(* Leave A2 is called when a process leaves A2 by a call to the underlying OS API *)
 	PROCEDURE LeaveA2*;
-	VAR cur {UNTRACED}: Process; ebp,pc: ADDRESS;
+	VAR cur {UNTRACED}: Process; ebp, pc, sp: ADDRESS;
 	BEGIN{UNTRACKED}
 		IF CAS(startedMainProcess,FALSE,FALSE) THEN
 			cur := CurrentProcess();
 			IF cur # NIL THEN
 				ebp := SYSTEM.GetFramePointer();
+				sp := SYSTEM.GetStackPointer();
 				SYSTEM.GET(ebp+SIZEOF(ADDRESS), pc);
 				SYSTEM.GET(ebp, ebp);
-				cur.gcContext.AddContext(ebp, pc, SYSTEM.GetStackPointer());
-				IF ~LinuxHost THEN
+				cur.gcContext.AddContext(ebp, pc, sp);
+				IF cur.gcContext.nextPos = 1 THEN
+					(* values needed by UpdateProcessState() *)
 					cur.state.PC := pc;
 					cur.state.BP := ebp;
-					cur.state.SP := SYSTEM.GetStackPointer();
+					cur.state.SP := sp;
 				END
 			END;
 		END;

@@ -1174,9 +1174,9 @@ VAR
 
 	(** Open a string reader *)
 	PROCEDURE OpenStringReader*( VAR b: StringReader; CONST string: ARRAY OF CHAR );
-	VAR len := 0: SIZE;
+	VAR len: SIZE;
 	BEGIN
-		WHILE ( string[ len ] # 0X ) DO INC( len ) END;
+		len := LEN( string );
 		NEW( b, len );
 		b.SetRaw( string, 0, len );
 	END OpenStringReader;

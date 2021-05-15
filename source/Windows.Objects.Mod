@@ -991,7 +991,7 @@ VAR globalRunning: Process;
 
 (* The procedure Lock, Unlock and Await do not use header locks since it turned out that the header locks sometimes were finalized
      too early. *)
-PROCEDURE Await*( cond: Condition;  slink: SIGNED32;  obj: ProtectedObject;  flags: SET );
+PROCEDURE Await*( cond: Condition;  slink: ADDRESS;  obj: ProtectedObject;  flags: SET );
 VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r, c, t: Process;  res: INTEGER;
 BEGIN
 	IF 1 IN flags THEN  (* compiler did not generate IF *)

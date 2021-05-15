@@ -138,16 +138,18 @@ TYPE
 				SYSTEM.GET(pc + Heaps.HeapBlockOffset, pc);
 				IF pc # 0 THEN
 					i := 0; WHILE (i < LEN(types)) & (i < nofElements) & (types[i].pc # pc) DO INC(i) END;
-					IF (i < nofElements) THEN
-						INC(types[i].count);
-						INC(types[i].size, block.size);
-					ELSIF (i = nofElements) & (i < LEN(types)) THEN
-						types[i].ptag := 0;
-						types[i].count := 1;
-						types[i].size := block.size;
-						types[i].type := type;
-						types[i].pc := pc;
-						INC(nofElements)
+					IF (i < LEN(types)) THEN
+						IF (i < nofElements) THEN
+							INC(types[i].count);
+							INC(types[i].size, block.size);
+						ELSIF (i = nofElements) THEN
+							types[i].ptag := 0;
+							types[i].count := 1;
+							types[i].size := block.size;
+							types[i].type := type;
+							types[i].pc := pc;
+							INC(nofElements)
+						END;
 					END;
 				END;
 			END AddByPC;
@@ -458,6 +460,7 @@ VAR
 	heapBlock : Heaps.HeapBlock;
 	p : ADDRESS;
 	mask : ARRAY 128 OF CHAR;
+	byPC: BOOLEAN;
 BEGIN
 	NEW(options);
 	options.Add("s", "sort", Options.Integer);
@@ -465,6 +468,7 @@ BEGIN
 	options.Add(0X, "gc", Options.Flag);
 	IF options.Parse(context.arg, context.error) THEN
 		IF ~options.GetInteger("sort", sortMode) THEN sortMode := SortNone; END;
+		byPC := options.GetFlag("pc");
 		context.arg.SkipWhitespace; context.arg.String(mask);
 		NEW(analyzer, MaxNofTypes);
 		IF options.GetFlag("gc") THEN Heaps.LazySweepGC END; (* slight inaccuracy here: other processes can kick in now *)
@@ -475,7 +479,7 @@ BEGIN
 			p := memBlock.beginBlockAdr;
 			WHILE p # memBlock.endBlockAdr DO
 				heapBlock := SYSTEM.VAL(Heaps.HeapBlock, p + Heaps.BlockHeaderSize); (* get heap block *)
-				analyzer.Add(heapBlock, options.GetFlag("pc"));
+				analyzer.Add(heapBlock, byPC);
 				p := p + heapBlock.size
 			END;
 			memBlock := memBlock.next
@@ -735,9 +739,9 @@ PROCEDURE AnalyzeMarkedBlocks(analyzer : Analyzer);
 VAR
 	memBlock {UNTRACED}: Machine.MemoryBlock;
 	heapBlock : Heaps.HeapBlock;
-	currentMarkValue : SIGNED32;
+	currentMarkValue : SIZE;
 	blockAdr : ADDRESS;
-	mark : SIGNED32;
+	mark : SIZE;
 BEGIN
 	ASSERT(analyzer # NIL);
 	currentMarkValue := GetCurrentMarkValue();
@@ -746,10 +750,10 @@ BEGIN
 		blockAdr := memBlock.beginBlockAdr;
 		WHILE blockAdr # memBlock.endBlockAdr DO
 			heapBlock := SYSTEM.VAL(Heaps.HeapBlock, blockAdr + Heaps.BlockHeaderSize); (* get heap block *)
-			mark := SYSTEM.GET32(blockAdr + Heaps.BlockHeaderSize); (* access to private field heapBlock.mark *)
+			SYSTEM.GET(blockAdr + Heaps.BlockHeaderSize, mark); (* access to private field heapBlock.mark *)
 			IF (mark = currentMarkValue) THEN
 				analyzer.Add(heapBlock, FALSE);
-				SYSTEM.PUT32(blockAdr + Heaps.BlockHeaderSize, currentMarkValue - 1);
+				SYSTEM.PUT(blockAdr + Heaps.BlockHeaderSize, currentMarkValue - 1);
 			END;
 			blockAdr := blockAdr + heapBlock.size
 		END;
@@ -792,14 +796,16 @@ END GetName;
 
 (* Access to private field Heaps.currentMarkValue *)
 
-PROCEDURE GetCurrentMarkValue() : SIGNED32;
+PROCEDURE GetCurrentMarkValue() : SIZE;
+VAR mark: SIZE;
 BEGIN
-	RETURN SYSTEM.GET32(currentMarkValueAddress);
+	SYSTEM.GET(currentMarkValueAddress, mark);
+	RETURN mark;
 END GetCurrentMarkValue;
 
-PROCEDURE SetCurrentMarkValue(value : SIGNED32);
+PROCEDURE SetCurrentMarkValue(value : SIZE);
 BEGIN
-	SYSTEM.PUT32(currentMarkValueAddress, value);
+	SYSTEM.PUT(currentMarkValueAddress, value);
 END SetCurrentMarkValue;
 
 PROCEDURE IncrementCurrentMarkValue;
@@ -885,3 +891,4 @@ Info.RecentAllocators    --scale=2400000 ~
 Info.RecentAllocators --clear ~
 Info.ClearRecentAllocators  ~
 
+System.Free Info~

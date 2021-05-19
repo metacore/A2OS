@@ -2,7 +2,6 @@ MODULE Objects;
 	IMPORT SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
 CONST 
 	ConcurrentGC = TRUE; 
-	LinuxHost = (Unix.Version = \"Linux"\); 
 	PleaseHalt* = 10; 
 	Unbreakable* = 11; 
 	SelfTermination* = 12; 

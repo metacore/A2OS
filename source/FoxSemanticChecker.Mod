@@ -7286,7 +7286,8 @@ TYPE
 				procedureCallDesignator :=  left(SyntaxTree.ProcedureCallDesignator);
 				RETURN SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);
 			ELSIF CheckVariable(left) THEN
-				IF ~(right IS SyntaxTree.ProcedureCallDesignator) OR ~CompatibleTo(system,right.type,left.type) THEN
+				IF ~(right IS SyntaxTree.ProcedureCallDesignator) OR ~right.type.SameType(left.type)
+				THEN
 					expression := NewBinaryOperatorCall(assignment.position, NIL, Scanner.Becomes, left, right, NIL);
 				END;
 				IF (expression # NIL) & (expression IS SyntaxTree.ProcedureCallDesignator) THEN

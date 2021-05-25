@@ -535,7 +535,11 @@ BEGIN (* {t # NIL & t.next = NIL & t.prev = NIL} *)
 	queue.tail := t
 END Put;
 
-
+(*! Exception handler to be registered with Kernel32.AddVectoredExceptionHandler. 
+	It is important to keep in mind that in case of an exception generated via the use of Structured Exception Handling (SEH)
+	in a DLL code, ExcpFrmHandler will be called before any SEH handler and, therefore, could cause a failure to execute a
+	code that is meant to continue its execution after handling the exception in an SEH handler.
+*)
 PROCEDURE {WINAPI} ExcpFrmHandler( CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD ;
 VAR m: Modules.Module;  eip, ebp, stack: ADDRESS;  pc, handler, fp, sp: ADDRESS;  handled: BOOLEAN;  t {UNTRACED}: Process;
 BEGIN{UNTRACKED}
@@ -549,7 +553,12 @@ BEGIN{UNTRACKED}
 	SetCurrent(excpFrame);
 	*)
 	t := SYSTEM.VAL(Process, Kernel32.TlsGetValue(tlsIndex));
-	IF t = gcProcess THEN
+	IF t = NIL THEN (*! an exception generated in a foreign thread created in a DLL *)
+		Trace.String("foreign thread EXCEPTION "); Trace.Address(exceptionPointers.exception.ExceptionCode);
+		Trace.String(" at "); Trace.Address(exceptionPointers.exception.ExceptionAddress); Trace.Ln;
+		Kernel32.LeaveCriticalSection( excplock );
+		RETURN Kernel32.ExceptionContinueSearch; (*! we assume the exception will be handled by the foreign thread code *)
+	ELSIF t = gcProcess THEN
 		(*Machine.Release(Machine.GC); *)
 		Machine.Release(Machine.Heaps);
 		Heaps.StopMarking

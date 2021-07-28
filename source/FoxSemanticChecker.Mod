@@ -8492,8 +8492,12 @@ TYPE
 									ASSERT(thatOperator.type IS SyntaxTree.ProcedureType);
 									thisProcedureType := thisOperator.type(SyntaxTree.ProcedureType);
 									thatProcedureType := thatOperator.type(SyntaxTree.ProcedureType);
-									IF thisProcedureType.numberParameters = thatProcedureType.numberParameters THEN
-										(* both operators have the same paramter count *)
+									IF ((thisProcedureType.selfParameter = NIL) # (thatProcedureType.selfParameter = NIL))
+										OR (thisProcedureType.selfParameter # NIL) & ~SameType(thisProcedureType.selfParameter.type,thatProcedureType.selfParameter.type) THEN
+										operandsAreEqual := FALSE;
+										operandsAreCompatible := FALSE;
+									ELSIF thisProcedureType.numberParameters = thatProcedureType.numberParameters THEN
+										(* both operators have the same parameter count *)
 										thisParameter := thisProcedureType.firstParameter;
 										thatParameter := thatProcedureType.firstParameter;
 										operandsAreEqual := TRUE;

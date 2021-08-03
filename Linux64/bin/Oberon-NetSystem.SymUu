@@ -45,6 +45,7 @@ VAR
 	anyIP*, allIP*: IPAdr; 
 	hostName*: ARRAY 65 OF CHAR; 
 	hostInfos: HostInfo; 
+	W: Texts.Writer; 
 	passwords: Password; 
 
 	PROCEDURE ^ Start*; 
@@ -89,5 +90,6 @@ VAR
 	PROCEDURE ^ PutLInt*(VAR buf: ARRAY OF S.BYTE; pos: SIGNED16; x: SIGNED32); 
 	PROCEDURE ^ GetInt*(CONST buf: ARRAY OF S.BYTE; pos: SIGNED16; VAR x: SIGNED16); 
 	PROCEDURE ^ GetLInt*(CONST buf: ARRAY OF S.BYTE; pos: SIGNED16; VAR x: SIGNED32); 
+	PROCEDURE ^ Show*; 
 BEGIN
 END NetSystem.

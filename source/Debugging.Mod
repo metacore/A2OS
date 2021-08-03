@@ -236,6 +236,7 @@ VAR
 					Log.Ln;
 				END;
 			END;
+			Log.Update;
 			m := m.next;
 		END;
 	END ReportProcedureDescriptors;

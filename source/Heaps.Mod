@@ -1206,6 +1206,24 @@ BEGIN
 	END;
 END MarkPointer;
 
+PROCEDURE CopyRecord*(src, dest : ADDRESS; tag: StaticTypeBlockU);
+VAR i: SIZE; sval {UNTRACED}: ANY; offset: ADDRESS;
+BEGIN
+	FOR i := 0 TO LEN(tag.pointerOffsets)-1 DO
+		offset := tag.pointerOffsets[i]; 
+		SYSTEM.GET(src+offset, sval);
+		SYSTEM.PUT(dest+offset, sval);
+	END;
+	SYSTEM.MOVE(src,dest,tag.recSize);
+	
+	IF CAS(marking,FALSE,FALSE) THEN
+		FOR i := 0 TO LEN(tag.pointerOffsets)-1 DO
+			SYSTEM.GET(dest+tag.pointerOffsets[i], sval);
+			Mark(sval);
+		END;
+	END;
+END CopyRecord;
+
 PROCEDURE MarkRecord*(adr: ADDRESS; tag: StaticTypeBlockU);
 VAR i: SIZE; sval {UNTRACED}: ANY;
 BEGIN
@@ -1216,6 +1234,30 @@ BEGIN
 		END;
 	END;
 END MarkRecord;
+
+PROCEDURE CopyArray*(src, dest: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE);
+VAR i, j: SIZE; offset: ADDRESS; sval {UNTRACED}: ANY;
+BEGIN
+
+	FOR i := 0 TO numElems-1 DO
+		FOR j := 0 TO LEN(tag.pointerOffsets)-1 DO
+			offset := i * tag.recSize + tag.pointerOffsets[j];
+			SYSTEM.GET(src+offset, sval);
+			SYSTEM.PUT(dest+offset, sval);
+		END;
+	END;
+	SYSTEM.MOVE(src,dest,tag.recSize*numElems);
+
+	IF CAS(marking,FALSE,FALSE) THEN
+		FOR i := 0 TO numElems-1 DO
+			FOR j := 0 TO LEN(tag.pointerOffsets)-1 DO
+				offset := i * tag.recSize + tag.pointerOffsets[j];
+				SYSTEM.GET(dest+offset, sval);
+				Mark(sval);
+			END;
+		END;
+	END;
+END CopyArray;
 
 PROCEDURE MarkArray*(adr: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE);
 VAR i, j: SIZE; offset: ADDRESS; sval {UNTRACED}: ANY;

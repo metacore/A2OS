@@ -829,6 +829,9 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 			p.state.PC := context.r_pc;
 			p.state.BP := context.r_bp;
 			p.state.SP := context.r_sp
+		ELSE
+			VAR contextPos := p.gcContext.nextPos;
+			IF p.gcContext.GetNextContext(contextPos, p.state.BP, p.state.PC, p.state.SP) THEN END;
 		END
 	END GetContext;
 
@@ -843,10 +846,8 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		ELSE
 			IF p.mode = Running THEN
 				timerStopped := TRUE;
-				IF p.gcContext.nextPos = 0 THEN	(* in A2 *)
-					Suspend(p);
-					Resume(p);
-				END;
+				Suspend(p);
+				Resume(p);
 				timerStopped := FALSE
 			END
 		END;
@@ -920,13 +921,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 				sp := SYSTEM.GetStackPointer();
 				SYSTEM.GET(ebp+SIZEOF(ADDRESS), pc);
 				SYSTEM.GET(ebp, ebp);
-				cur.gcContext.AddContext(ebp, pc, sp);
-				IF cur.gcContext.nextPos = 1 THEN
-					(* values needed by UpdateProcessState() *)
-					cur.state.PC := pc;
-					cur.state.BP := ebp;
-					cur.state.SP := sp;
-				END
+				cur.gcContext.AddContext(ebp, pc, sp);				
 			END;
 		END;
 	END LeaveA2;

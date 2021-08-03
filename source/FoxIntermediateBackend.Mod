@@ -2894,7 +2894,7 @@ TYPE
 		
 		PROCEDURE DesignateConditionalExpression(x: SyntaxTree.ConditionalExpression; VAR result: Operand);
 		VAR variable: SyntaxTree.Variable; variableDesignator: SyntaxTree.Designator;
-				falseL, end: Label; op, target: Operand;
+				falseL, end: Label;
 		BEGIN
 				variable :=  GetTemporaryVariable(SyntaxTree.VarParameter,x.type, FALSE, FALSE (* untraced *));
 				variableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, NIL, variable);
@@ -8483,30 +8483,28 @@ TYPE
 			END;
 		END MarkPointer;
 
-		PROCEDURE MarkRecord(CONST op, tag: IntermediateCode.Operand);
-		VAR saved: RegisterEntry; label: Label;
+		PROCEDURE CopyRecord(CONST src, dest, tag: IntermediateCode.Operand);
+		VAR saved: RegisterEntry;
 		BEGIN
-				label := IfMarking();
 				SaveRegisters();ReleaseUsedRegisters(saved);
-				Emit(Push(position, op));
+				Emit(Push(position, src));
+				Emit(Push(position, dest));
 				Emit(Push(position, tag));
-				CallThis(position,"Heaps","MarkRecord",2);
+				CallThis(position,"Heaps","CopyRecord",3);
 				RestoreRegisters(saved);
-				SetLabel(label);
-		END MarkRecord;
+		END CopyRecord;
 
-		PROCEDURE MarkArray(CONST adr, tag, size: IntermediateCode.Operand);
-		VAR saved: RegisterEntry; label: Label;
+		PROCEDURE CopyArray(CONST src, dest, tag, size: IntermediateCode.Operand);
+		VAR saved: RegisterEntry;
 		BEGIN
-				label := IfMarking();
 				SaveRegisters();ReleaseUsedRegisters(saved);
-				Emit(Push(position,adr));
+				Emit(Push(position,src));
+				Emit(Push(position,dest));
 				Emit(Push(position,tag));
 				Emit(Push(position,size));
-				CallThis(position,"Heaps","MarkArray",3);
+				CallThis(position,"Heaps","CopyArray",4);
 				RestoreRegisters(saved);
-				SetLabel(label);
-		END MarkArray;
+		END CopyArray;
 
 		PROCEDURE DesignateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand);
 		VAR
@@ -10711,11 +10709,12 @@ TYPE
 			ELSIF (leftType IS SyntaxTree.RecordType) THEN
 				Designate(right,rightO);
 				Designate(left,leftO);
-				sizeOp := CopySize(left, leftO.tag);
-				Emit(Copy(position,leftO.op,rightO.op,sizeOp));
-				ReleaseIntermediateOperand(sizeOp);
-				IF backend.writeBarriers & left.NeedsTrace() THEN
-					MarkRecord(rightO.op, leftO.tag);
+				IF left.NeedsTrace() THEN
+					CopyRecord(rightO.op, leftO.op, leftO.tag);
+				ELSE
+					sizeOp := CopySize(left, leftO.tag);
+					Emit(Copy(position,leftO.op,rightO.op,sizeOp));
+					ReleaseIntermediateOperand(sizeOp);
 				END;
 				ReleaseOperand(leftO);
 				ReleaseOperand(rightO);
@@ -10725,11 +10724,12 @@ TYPE
 				ELSIF ((rightType IS SyntaxTree.ArrayType) & (rightType(SyntaxTree.ArrayType).staticLength # 0) OR (rightType IS SyntaxTree.MathArrayType) & (rightType(SyntaxTree.MathArrayType).staticLength # 0)) & (leftType(SyntaxTree.ArrayType).staticLength # 0) THEN
 					Designate(right,rightO);
 					Designate(left,leftO);
-					size := ToMemoryUnits(system,system.SizeOf(rightType));
-					Emit(Copy(position,leftO.op, rightO.op, IntermediateCode.Immediate(addressType,size)));
-					IF backend.writeBarriers & left.NeedsTrace() THEN
+					IF left.NeedsTrace() THEN
 						base := StaticArrayBaseType(leftType);
-						MarkArray(rightO.op, TypeDescriptorAdr(base), IntermediateCode.Immediate(addressType,StaticArrayNumElements(leftType)));
+						CopyArray(rightO.op, leftO.op, TypeDescriptorAdr(base), IntermediateCode.Immediate(addressType,StaticArrayNumElements(leftType)));
+					ELSE
+						size := ToMemoryUnits(system,system.SizeOf(rightType));
+						Emit(Copy(position,leftO.op, rightO.op, IntermediateCode.Immediate(addressType,size)));
 					END;
 					ReleaseOperand(leftO); ReleaseOperand(rightO);
 				ELSE
@@ -10750,7 +10750,6 @@ TYPE
 					ELSE
 						Designate(right, rightO);
 						Designate(left,leftO);
-
 						IF IntermediateCode.IsVectorRegister(rightO.op) &  IntermediateCode.IsVectorRegister(leftO.op) THEN
 							Emit(Mov(position, leftO.op, rightO.op));
 						ELSIF IntermediateCode.IsVectorRegister(rightO.op) THEN
@@ -10762,15 +10761,15 @@ TYPE
 							Emit(Mov(position, leftO.op, mem));
 							ReleaseIntermediateOperand(mem);
 						ELSE
-							size := ToMemoryUnits(system,system.SizeOf(rightType));
-							Emit(Copy(position,leftO.op, rightO.op, IntermediateCode.Immediate(addressType,size)));
+							IF left.NeedsTrace() THEN
+								base := StaticArrayBaseType(leftType);
+								CopyArray(rightO.op, leftO.op, TypeDescriptorAdr(base), IntermediateCode.Immediate(addressType,StaticArrayNumElements(leftType)));
+							ELSE
+								size := ToMemoryUnits(system,system.SizeOf(rightType));
+								Emit(Copy(position,leftO.op, rightO.op, IntermediateCode.Immediate(addressType,size)));
+							END;
 						END;
 					END;
-					IF backend.writeBarriers & left.NeedsTrace() THEN
-						base := StaticArrayBaseType(leftType);
-						MarkArray(rightO.op, TypeDescriptorAdr(base), IntermediateCode.Immediate(addressType,StaticArrayNumElements(leftType)));
-					END;
-
 					ReleaseOperand(leftO); ReleaseOperand(rightO);
 				ELSE
 					AssignMathArray(left,right);

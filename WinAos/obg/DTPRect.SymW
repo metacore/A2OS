@@ -49,11 +49,11 @@ TYPE
 		PROCEDURE ^ RectColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ RectColor2Handler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ FillModeHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ FillModePopupHandler(sender, data: ANY); 
+		PROCEDURE ^ FillModePopupHandler(sender, data: ANY ); 
 		PROCEDURE ^ Show*(x, y: SIZE); 
 		PROCEDURE ^ Hide*; 
 		PROCEDURE ^ RefreshValues; 
-		PROCEDURE ^ SetValueHandler(sender, data: ANY); 
+		PROCEDURE ^ SetValueHandler(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 	END RectPropWindow; 
 VAR 

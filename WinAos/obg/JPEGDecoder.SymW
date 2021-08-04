@@ -350,6 +350,8 @@ TYPE
 		dest: Dest; 
 		logger*: Streams.Writer; 
 		res*: SIGNED32; 
+		wsptr: DCTITable; 
+		wsptrF: DCTTable; 
 
 		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
 		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: SIGNED32); 

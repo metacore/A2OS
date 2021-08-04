@@ -1,23 +1,33 @@
 MODULE CryptoSHA256;
 	IMPORT Hashes := CryptoHashes, U := CryptoUtils;
 CONST 
-	BlockSize = 64; 
+	BlockSize* = 64; 
+	HashSize* = 32; 
 TYPE 
-	Hash* = OBJECT (Hashes.Hash)
-	VAR 
+	SHA256* = RECORD 
 		hash: ARRAY 8 OF SIGNED32; 
 		bitlen: SIGNED64; 
 		cdata: ARRAY BlockSize OF CHAR; 
-		cn: SIGNED32; 
+		cn :=  -1: SIZE; 
+
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ HashBlock(CONST data: ARRAY OF CHAR; pos: SIZE); 
+		OPERATOR ^ "()"-(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
+		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
+	END
+	; 
+
+	Hash* = OBJECT (Hashes.Hash)
+	VAR 
+		hash: SHA256; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ HashBlock; 
 		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
 		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
 	END Hash; 
 VAR 
-	K256: ARRAY 64 OF SIGNED32; 
+	K256: ARRAY BlockSize OF SIGNED32; 
 
 	PROCEDURE ^ NewHash*(): Hashes.Hash; 
 	PROCEDURE  - Sigma0Maj(x, y, z: SET32): SIGNED32;

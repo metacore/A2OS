@@ -698,7 +698,6 @@ TYPE
 		PROCEDURE ^ NewOpcode*(): Decoder.Opcode; 
 	END IA32Decoder; 
 
-	PROCEDURE ^ IntToHex(h, width: SIGNED32; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ IA32DecoderFactory(reader: Streams.Reader): Decoder.Decoder; 
 	PROCEDURE ^ Init*; 
 BEGIN

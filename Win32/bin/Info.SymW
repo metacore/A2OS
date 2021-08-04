@@ -63,8 +63,8 @@ VAR
 	PROCEDURE ^ AnalyzeMarkedBlocks(analyzer: Analyzer); 
 	PROCEDURE ^ WriteType(adr: SIGNED32; out: Streams.Writer); 
 	PROCEDURE ^ GetName(adr: ADDRESS; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ GetCurrentMarkValue(): SIGNED32; 
-	PROCEDURE ^ SetCurrentMarkValue(value: SIGNED32); 
+	PROCEDURE ^ GetCurrentMarkValue(): SIZE; 
+	PROCEDURE ^ SetCurrentMarkValue(value: SIZE); 
 	PROCEDURE ^ IncrementCurrentMarkValue; 
 	PROCEDURE ^ GetCurrentMarkValueAddress(): ADDRESS; 
 	PROCEDURE ^ Terminate; 

@@ -15,7 +15,7 @@ TYPE
 
 	ComponentIdentifier = RECORD 
 		name: Identifier; 
-		component: ANY; 
+		component: ANY ; 
 	END; 
 
 	IdentifierArray = POINTER TO ARRAY OF ComponentIdentifier; 
@@ -38,7 +38,7 @@ TYPE
 		variables: VariableDeclaration; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Add(CONST identifier: Identifier; CONST moduleName, typeName: Modules.Name; component: ANY); 
+		PROCEDURE ^ Add(CONST identifier: Identifier; CONST moduleName, typeName: Modules.Name; component: ANY ); 
 		PROCEDURE ^ FindByType(CONST moduleName, typeName: Modules.Name): VariableDeclaration; 
 		PROCEDURE ^ ToStream(w: Streams.Writer); 
 	END VariableDeclarations; 
@@ -60,10 +60,10 @@ TYPE
 		nofNames: SIZE; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Add(CONST name: ARRAY OF CHAR; component: ANY); 
+		PROCEDURE ^ Add(CONST name: ARRAY OF CHAR; component: ANY ); 
 		PROCEDURE ^ IndexOf(CONST identifier: ARRAY OF CHAR): SIZE; 
-		PROCEDURE ^ GetNameOf(component: ANY; VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ GenerateIdentifier(caption: ARRAY OF CHAR; CONST moduleName, typeName: ARRAY OF CHAR; component: ANY): Identifier; 
+		PROCEDURE ^ GetNameOf(component: ANY ; VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ GenerateIdentifier(caption: ARRAY OF CHAR; CONST moduleName, typeName: ARRAY OF CHAR; component: ANY ): Identifier; 
 		PROCEDURE ^ Resize; 
 	END Names; 
 

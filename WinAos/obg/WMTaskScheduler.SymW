@@ -43,7 +43,7 @@ TYPE
 		PROCEDURE ^ Update(dt: Dates.DateTime); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
-		PROCEDURE ^ RightClickAction(sender, data: ANY); 
+		PROCEDURE ^ RightClickAction(sender, data: ANY ); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END TaskView; 
 
@@ -62,8 +62,8 @@ TYPE
 		PROCEDURE ^ EditTask(VAR task: TaskScheduler.Task; VAR error: BOOLEAN); 
 		PROCEDURE ^ GetTaskContent(VAR info: TaskScheduler.TaskInfo; VAR error: BOOLEAN); 
 		PROCEDURE ^ SetTaskContent(task: TaskScheduler.Task); 
-		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
-		PROCEDURE ^ HandleDateSelected(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY ); 
+		PROCEDURE ^ HandleDateSelected(sender, data: ANY ); 
 		PROCEDURE ^ SetState(state: SIGNED32); 
 	END InputWindow; 
 
@@ -86,7 +86,7 @@ TYPE
 
 		PROCEDURE ^  & New(context: WMRestorable.Context); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
-		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY ); 
 		PROCEDURE ^ AddTask; 
 		PROCEDURE ^ EditTask(task: TaskScheduler.Task); 
 		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR); 

@@ -1,5 +1,5 @@
 MODULE WMPerfMonPluginCpu;
-	IMPORT WMPerfMonPlugins, Modules;
+	IMPORT WMPerfMonPlugins, Modules, Objects;
 CONST 
 	ModuleName = \"WMPerfMonPluginCpu"\; 
 TYPE 

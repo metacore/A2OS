@@ -23,10 +23,10 @@ TYPE
 		alive, dead: BOOLEAN; 
 
 		PROCEDURE ^ EstimateClockRate(): SIGNED32; 
-		PROCEDURE ^ HandleGcButton(sender, data: ANY); 
-		PROCEDURE ^ HandleDetectButton(sender, data: ANY); 
-		PROCEDURE ^ HandleTimerButton(sender, data: ANY); 
-		PROCEDURE ^ HandleUnloadButton(sender, data: ANY); 
+		PROCEDURE ^ HandleGcButton(sender, data: ANY ); 
+		PROCEDURE ^ HandleDetectButton(sender, data: ANY ); 
+		PROCEDURE ^ HandleTimerButton(sender, data: ANY ); 
+		PROCEDURE ^ HandleUnloadButton(sender, data: ANY ); 
 		PROCEDURE ^ CreateSysinfoPanel(): WMStandardComponents.Panel; 
 		PROCEDURE ^ CreateGcStatisticsPanel(): WMStandardComponents.Panel; 
 		PROCEDURE ^ CreateCPUClockratePanel(): WMStandardComponents.Panel; 

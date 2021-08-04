@@ -17,21 +17,21 @@ TYPE
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ SetOriginator*(extView: ANY); 
+		PROCEDURE ^ SetOriginator*(extView: ANY ); 
 		PROCEDURE ^ UpdatePages; 
 		PROCEDURE ^ TryLoad(CONST name: ARRAY OF CHAR; pos: SIGNED32); 
 		PROCEDURE ^ LoadPages*; 
-		PROCEDURE ^ Refresh(sender, data: ANY); 
-		PROCEDURE ^ TabSelected(sender, data: ANY); 
+		PROCEDURE ^ Refresh(sender, data: ANY ); 
+		PROCEDURE ^ TabSelected(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 	END Window; 
 
 	Starter = OBJECT {EXCLUSIVE} 
 	VAR 
-		originator: ANY; 
+		originator: ANY ; 
 		w: Window; 
 
-		PROCEDURE ^  & Init*(o: ANY); 
+		PROCEDURE ^  & Init*(o: ANY ); 
 	BEGIN{ACTIVE} 
 	END Starter; 
 VAR 

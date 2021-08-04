@@ -110,27 +110,28 @@ CONST
 	Cell* = 95; 
 	CellNet* = 96; 
 	Extern* = 97; 
-	Array* = 98; 
-	Object* = 99; 
-	Record* = 100; 
-	Pointer* = 101; 
-	Enum* = 102; 
-	Port* = 103; 
-	Address* = 104; 
-	Size* = 105; 
-	Alias* = 106; 
-	Ln* = 107; 
-	PC* = 108; 
-	PCOffset* = 109; 
-	Shortint* = 110; 
-	Integer* = 111; 
-	Longint* = 112; 
-	Hugeint* = 113; 
-	Real* = 114; 
-	Longreal* = 115; 
-	Comment* = 116; 
-	EndOfText* = 117; 
-	Escape* = 118; 
+	Any* = 98; 
+	Array* = 99; 
+	Object* = 100; 
+	Record* = 101; 
+	Pointer* = 102; 
+	Enum* = 103; 
+	Port* = 104; 
+	Address* = 105; 
+	Size* = 106; 
+	Alias* = 107; 
+	Ln* = 108; 
+	PC* = 109; 
+	PCOffset* = 110; 
+	Shortint* = 111; 
+	Integer* = 112; 
+	Longint* = 113; 
+	Hugeint* = 114; 
+	Real* = 115; 
+	Longreal* = 116; 
+	Comment* = 117; 
+	EndOfText* = 118; 
+	Escape* = 119; 
 	SingleQuote = 27X; 
 	DoubleQuote* = 22X; 
 	Ellipsis = 7FX; 
@@ -179,7 +180,7 @@ TYPE
 
 	StringMaker* = OBJECT 
 	VAR 
-		length: SIZE; 
+		length-: SIZE; 
 		data: StringType; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 

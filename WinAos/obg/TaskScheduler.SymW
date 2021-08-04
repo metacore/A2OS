@@ -29,7 +29,7 @@ TYPE
 		id-: SIGNED32; 
 		timestamp-: SIGNED32; 
 		info: TaskInfo; 
-		user*: ANY; 
+		user*: ANY ; 
 		handled: BOOLEAN; 
 		week, weekDay: SIGNED32; 
 		list-: TaskList; 

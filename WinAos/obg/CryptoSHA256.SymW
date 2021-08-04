@@ -1,61 +1,58 @@
 MODULE CryptoSHA256;
-	IMPORT S := SYSTEM, Hashes := CryptoHashes, U := CryptoUtils;
+	IMPORT Hashes := CryptoHashes, U := CryptoUtils;
 CONST 
-	BlockSize = 64; 
+	BlockSize* = 64; 
+	HashSize* = 32; 
 TYPE 
+	SHA256* = RECORD 
+		hash: ARRAY 8 OF SIGNED32; 
+		bitlen: SIGNED64; 
+		cdata: ARRAY BlockSize OF CHAR; 
+		cn :=  -1: SIZE; 
+
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ HashBlock(CONST data: ARRAY OF CHAR; pos: SIZE); 
+		OPERATOR ^ "()"-(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
+		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
+	END
+	; 
+
 	Hash* = OBJECT (Hashes.Hash)
 	VAR 
-		hash: ARRAY 8 OF SIGNED32; 
-		Nl, Nh: SIZE; 
-		cdata: ARRAY BlockSize OF CHAR; 
-		cn: SIZE; 
+		hash: SHA256; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ HashBlock(CONST buf: ARRAY OF CHAR; pos: SIZE); 
-		PROCEDURE ^ HashContextBlock; 
 		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
 		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
 	END Hash; 
 VAR 
-	K256: ARRAY 64 OF SIGNED32; 
+	K256: ARRAY BlockSize OF SIGNED32; 
 
 	PROCEDURE ^ NewHash*(): Hashes.Hash; 
-	PROCEDURE  - Sigma0Maj(px, py, pz: SIGNED32): SIGNED32;
+	PROCEDURE  - Sigma0Maj(x, y, z: SET32): SIGNED32;
 	VAR 
-		x, y, z, a, b: SET32; 
+		a, b: SET32; 
 	BEGIN
-		x := S.VAL(SET32, px); 
-		y := S.VAL(SET32, py); 
-		z := S.VAL(SET32, pz); 
 		a := ((ROT(x, 30) / ROT(x, 19)) / ROT(x, 10)); 
 		b := (((x * y) / (x * z)) / (y * z)); 
-		RETURN (S.VAL(SIGNED32, a) + S.VAL(SIGNED32, b))
+		RETURN (SIGNED32(a) + SIGNED32(b))
 	END Sigma0Maj; 
-	PROCEDURE  - Sigma1Ch(px, py, pz: SIGNED32): SIGNED32;
+	PROCEDURE  - Sigma1Ch(x, y, z: SET32): SIGNED32;
 	VAR 
-		x, y, z, a, b: SET32; 
+		a, b: SET32; 
 	BEGIN
-		x := S.VAL(SET32, px); 
-		y := S.VAL(SET32, py); 
-		z := S.VAL(SET32, pz); 
 		a := ((ROT(x, 26) / ROT(x, 21)) / ROT(x, 7)); 
 		b := ((x * y) / ( -x * z)); 
-		RETURN (S.VAL(SIGNED32, a) + S.VAL(SIGNED32, b))
+		RETURN (SIGNED32(a) + SIGNED32(b))
 	END Sigma1Ch; 
-	PROCEDURE  - sigma0(px: SIGNED32): SIGNED32;
-	VAR 
-		x: SET32; 
+	PROCEDURE  - sigma0(x: SET32): SIGNED32;
 	BEGIN
-		x := S.VAL(SET32, px); 
-		RETURN S.VAL(SIGNED32, ((ROT(x, 25) / ROT(x, 14)) / LSH(x,  -3)))
+		RETURN SIGNED32(((ROT(x, 25) / ROT(x, 14)) / LSH(x,  -3)))
 	END sigma0; 
-	PROCEDURE  - sigma1(px: SIGNED32): SIGNED32;
-	VAR 
-		x: SET32; 
+	PROCEDURE  - sigma1(x: SET32): SIGNED32;
 	BEGIN
-		x := S.VAL(SET32, px); 
-		RETURN S.VAL(SIGNED32, ((ROT(x, 15) / ROT(x, 13)) / LSH(x,  -10)))
+		RETURN SIGNED32(((ROT(x, 15) / ROT(x, 13)) / LSH(x,  -10)))
 	END sigma1; 
 	PROCEDURE ^ InitializeK; 
 BEGIN

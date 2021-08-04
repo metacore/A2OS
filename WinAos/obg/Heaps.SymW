@@ -38,12 +38,12 @@ TYPE
 		head*, tail*: ProcessLink; 
 	END; 
 
-	Finalizer* = PROCEDURE {DELEGATE}(obj: ANY); 
+	Finalizer* = PROCEDURE {DELEGATE}(obj: ANY ); 
 
 	FinalizerNode* = POINTER TO RECORD 
-		objWeak*{UNTRACED} : ANY; 
+		objWeak*{UNTRACED} : ANY ; 
 		nextFin: FinalizerNode; 
-		objStrong*: ANY; 
+		objStrong*: ANY ; 
 		finalizer*{UNTRACED} : Finalizer; 
 		finalizerStrong: Finalizer; 
 		collection*: FinalizedCollection; 
@@ -51,7 +51,7 @@ TYPE
 
 	FinalizedCollection* = OBJECT 
 
-		PROCEDURE ^ RemoveAll*(obj: ANY); 
+		PROCEDURE ^ RemoveAll*(obj: ANY ); 
 	END FinalizedCollection; 
 
 	HeapBlock* = POINTER TO HeapBlockDesc; 
@@ -95,9 +95,9 @@ TYPE
 		count*: SIGNED32; 
 		locked*: BOOLEAN; 
 		awaitingLock*, awaitingCond*: ProcessQueue; 
-		lockedBy*: ANY; 
+		lockedBy*: ANY ; 
 		waitingPriorities*: ARRAY NumPriorities OF SIGNED32; 
-		lock*: ANY; 
+		lock*: ANY ; 
 	END; 
 
 	ArrayBlock* = POINTER TO ArrayBlockDesc; 
@@ -168,7 +168,7 @@ VAR
 	marking-: BOOLEAN; 
 	markStack: MarkStack; 
 	GC*: PROCEDURE ; 
-	initBlock{UNTRACED} : ANY; 
+	initBlock{UNTRACED} : ANY ; 
 	currentMarkValue: SIZE; 
 	sweepMarkValue: SIZE; 
 	sweepBlockAdr: ADDRESS; 
@@ -188,15 +188,15 @@ VAR
 	gcStatus*: GCStatus; 
 	GCType*: INTEGER; 
 	trace-: BOOLEAN; 
-	allocationLogger-: PROCEDURE (p: ANY); 
+	allocationLogger-: PROCEDURE (p: ANY ); 
 	endMark: HeapBlockU; 
 	throughput* := 0: SIZE; 
 
-	PROCEDURE ^ SetAllocationLogger*(a: PROCEDURE (p: ANY)); 
+	PROCEDURE ^ SetAllocationLogger*(a: PROCEDURE (p: ANY )); 
 	PROCEDURE ^ CheckPointer(p: ADDRESS): BOOLEAN; 
 	PROCEDURE ^ AppendToMarkStackC(heapBlock: HeapBlockU); 
 	PROCEDURE ^ ExtractMarkStack(): HeapBlockU; 
-	PROCEDURE ^ Mark*(block{UNTRACED} : ANY); 
+	PROCEDURE ^ Mark*(block{UNTRACED} : ANY ); 
 	PROCEDURE ^ TraverseMarkStack; 
 	PROCEDURE ^ WriteType*(t: ADDRESS); 
 	PROCEDURE ^ GetFreeBlock(size: SIZE; VAR p: FreeBlock); 
@@ -214,16 +214,18 @@ VAR
 	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlockU; mark: SIZE; dataAdr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ NewBlock(size: SIZE): ADDRESS; 
 	PROCEDURE ^ SetPC*(p: DataBlockU); 
-	PROCEDURE ^ NewSys*(VAR p: ANY; size: SIZE; isRealtime: BOOLEAN); 
-	PROCEDURE ^ NewRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
-	PROCEDURE ^ NewProtRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
-	PROCEDURE ^ NewArr*(VAR p: ANY; elemTag: ADDRESS; numElems, numDims: SIZE; isRealtime: BOOLEAN); 
-	PROCEDURE ^ NewArray*(CONST a: ARRAY OF SIZE; tag: ADDRESS; staticElements, elementSize: SIZE; VAR dest: ANY); 
+	PROCEDURE ^ NewSys*(VAR p: ANY ; size: SIZE; isRealtime: BOOLEAN); 
+	PROCEDURE ^ NewRec*(VAR p: ANY ; tag: ADDRESS; isRealtime: BOOLEAN); 
+	PROCEDURE ^ NewProtRec*(VAR p: ANY ; tag: ADDRESS; isRealtime: BOOLEAN); 
+	PROCEDURE ^ NewArr*(VAR p: ANY ; elemTag: ADDRESS; numElems, numDims: SIZE; isRealtime: BOOLEAN); 
+	PROCEDURE ^ NewArray*(CONST a: ARRAY OF SIZE; tag: ADDRESS; staticElements, elementSize: SIZE; VAR dest: ANY ); 
 	PROCEDURE ^ FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE; numPtrs, numSlots: SIZE); 
-	PROCEDURE ^ AddFinalizer*(obj: ANY; n: FinalizerNode); 
+	PROCEDURE ^ AddFinalizer*(obj: ANY ; n: FinalizerNode); 
 	PROCEDURE ^ GetHeapInfo*(VAR total, free, largest: SIZE); 
 	PROCEDURE ^ MarkPointer*(adr: ADDRESS); 
+	PROCEDURE ^ CopyRecord*(src, dest: ADDRESS; tag: StaticTypeBlockU); 
 	PROCEDURE ^ MarkRecord*(adr: ADDRESS; tag: StaticTypeBlockU); 
+	PROCEDURE ^ CopyArray*(src, dest: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE); 
 	PROCEDURE ^ MarkArray*(adr: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE); 
 	PROCEDURE ^ NilGC; 
 	PROCEDURE ^ Init; 

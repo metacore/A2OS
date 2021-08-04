@@ -45,15 +45,15 @@ TYPE
 		showPublicOnly: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
-		PROCEDURE ^ ShowDetailsHandler(sender, data: ANY); 
-		PROCEDURE ^ ShowPublicHandler(sender, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY ); 
+		PROCEDURE ^ ShowDetailsHandler(sender, data: ANY ); 
+		PROCEDURE ^ ShowPublicHandler(sender, data: ANY ); 
 		PROCEDURE ^ SetNodeVisibilities(parent: WMTrees.TreeNode; showPublicOnly: BOOLEAN); 
 		PROCEDURE ^ AddModule(node: WMTrees.TreeNode; module: ModuleParser.Module; expand, showPublicOnly, showTypeHierarchy, showImportedModules: BOOLEAN); 
 		PROCEDURE ^ GetNewNode*(): PETTrees.TreeNode; 
 		PROCEDURE ^ AddNodes*(parent: PETTrees.TreeNode; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer); 
-		PROCEDURE ^ ClickNode*(sender, data: ANY); 
-		PROCEDURE ^ MiddleClickNode*(sender, data: ANY); 
+		PROCEDURE ^ ClickNode*(sender, data: ANY ); 
+		PROCEDURE ^ MiddleClickNode*(sender, data: ANY ); 
 		PROCEDURE ^ SetNodeInfo(node: TreeNode; mnode: ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic: BOOLEAN; sortHint: INTEGER; color: WMGraphics.Color; style: SET); 
 		PROCEDURE ^ IsPublic(identDef: ModuleParser.IdentDef): BOOLEAN; 
 		PROCEDURE ^ IsNodeGreater*(left, right: WMTrees.TreeNode): BOOLEAN; 
@@ -74,6 +74,7 @@ TYPE
 		PROCEDURE ^ AddVarDecl(parent: WMTrees.TreeNode; varDecl: ModuleParser.VarDecl); 
 		PROCEDURE ^ AddTypeDecl(parent: WMTrees.TreeNode; typeDecl: ModuleParser.TypeDecl); 
 		PROCEDURE ^ AddType(parent: WMTrees.TreeNode; type: ModuleParser.Type; anonymous: BOOLEAN); 
+		PROCEDURE ^ AddAnyType(parent: WMTrees.TreeNode; any: ModuleParser.Any); 
 		PROCEDURE ^ AddRecord(parent: WMTrees.TreeNode; record: ModuleParser.Record; anonymous, addSuperRecords: BOOLEAN); 
 		PROCEDURE ^ AddEnumeration(parent: WMTrees.TreeNode; enumeration: ModuleParser.Enumeration); 
 		PROCEDURE ^ AddFieldDecl(parent: WMTrees.TreeNode; fieldDecl: ModuleParser.FieldDecl); 
@@ -94,7 +95,7 @@ TYPE
 	END ModuleTree; 
 VAR 
 	PrototypeShowTypeHierarchy, PrototypeShowImportedModules: WMProperties.BooleanProperty; 
-	StrUNKNOWN, StrVAR, StrCONST, StrIMPORT, StrIN, StrBODY, StrRETURN, StrARRAY, StrOF, StrBecomes, StrAmpersand, StrMinus, StrStar, StrQuote, StrOverwritten, StrOverwrite, StrUNDEFPostfix, StrPARAMETERS, StrARGUMENTS, StrVARPostfix, StrCONSTPostfix, StrTYPEPostfix, StrParenthesis: Strings.String; 
+	StrUNKNOWN, StrVAR, StrCONST, StrIMPORT, StrIN, StrBODY, StrRETURN, StrARRAY, StrOF, StrBecomes, StrAmpersand, StrMinus, StrStar, StrQuote, StrOverwritten, StrOverwrite, StrUNDEFPostfix, StrPARAMETERS, StrARGUMENTS, StrVARPostfix, StrCONSTPostfix, StrTYPEPostfix, StrIMPORTPostfix, StrAUTOPostfix, StrParenthesis: Strings.String; 
 
 	PROCEDURE ^ GetColor(modifiers: SET; defaultColor: WMGraphics.Color): WMGraphics.Color; 
 	PROCEDURE ^ GenModuleTree*(): PETTrees.Tree; 

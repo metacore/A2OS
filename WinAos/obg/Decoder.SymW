@@ -1,7 +1,7 @@
 MODULE Decoder;
 	IMPORT SYSTEM, Modules, Streams, MemoryReader, Strings, Files, KernelLog, TextUtilities, Commands, WMGraphics, WMEditors, WMTextView, WMComponents, WMStandardComponents, WMDialogs, WMRestorable, WMTrees, WMMessages, WM := WMWindowManager, D := Debugging, Reflection;
 CONST 
-	maxDecoders = 5; 
+	maxDecoders = 16; 
 	MaxOpcodeSize = 20; 
 	RepresentationModePlain = 0; 
 	RepresentationModeMeta = 1; 
@@ -209,7 +209,7 @@ TYPE
 		PROCEDURE ^ DecodeField(reader: Streams.Reader): FieldInfo; 
 		PROCEDURE ^ FindProcedureFromPC(pc: SIGNED32): ProcedureInfo; 
 		PROCEDURE ^ Init; 
-		PROCEDURE ^ ClickNode(sender, data: ANY); 
+		PROCEDURE ^ ClickNode(sender, data: ANY ); 
 		PROCEDURE ^ OutlineNamedProcedure(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ OutlinePC(pc: SIGNED32); 
 		PROCEDURE ^ InitializeOutline(panel: WMStandardComponents.Panel): Streams.Writer; 
@@ -275,9 +275,9 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New(CONST fileName: ARRAY OF CHAR; c: WMRestorable.Context); 
 		PROCEDURE ^ AdjustTitle(CONST str: ARRAY OF CHAR); 
-		PROCEDURE ^ DecodeFileHandler(sender, data: ANY); 
-		PROCEDURE ^ DecodeModuleHandler(sender, data: ANY); 
-		PROCEDURE ^ DecodeBytesHandler(sender, data: ANY); 
+		PROCEDURE ^ DecodeFileHandler(sender, data: ANY ); 
+		PROCEDURE ^ DecodeModuleHandler(sender, data: ANY ); 
+		PROCEDURE ^ DecodeBytesHandler(sender, data: ANY ); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ OutlineProcedure(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ OutlinePC(pc: SIGNED32); 
@@ -305,7 +305,6 @@ VAR
 	PROCEDURE ^ MakeHeader(module: Modules.Module; VAR header: ObjHeader); 
 	PROCEDURE ^ RemoveTypeName(VAR procName: ARRAY OF CHAR; CONST typeName: ARRAY OF CHAR); 
 	PROCEDURE ^ HexBytes2Code(CONST bytes: ARRAY OF CHAR): Modules.Bytes; 
-	PROCEDURE ^ IntToHex(h: SIZE; width: SIGNED32; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 
 	PROCEDURE ^ Cleanup; 

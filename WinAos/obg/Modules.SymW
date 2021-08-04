@@ -85,7 +85,7 @@ TYPE
 		export*: ExportDesc; 
 		term*: TerminationHandler; 
 		exTable*: ExceptionTable; 
-		internal-: POINTER TO ARRAY OF ANY; 
+		internal-: POINTER TO ARRAY OF ANY ; 
 		body*: PROCEDURE ; 
 		flags*: SET; 
 		crc*: SIGNED32; 
@@ -129,8 +129,8 @@ VAR
 	PROCEDURE ^ GetProcedure*(CONST moduleName, procedureName: ARRAY OF CHAR; argTdAdr, retTdAdr: ADDRESS; VAR entryAdr: ADDRESS); 
 	PROCEDURE ^ ThisType*(m: Module; CONST name: ARRAY OF CHAR): TypeDesc; 
 	PROCEDURE ^ ThisTypeByAdr*(adr: ADDRESS; VAR m: Module; VAR t: TypeDesc); 
-	PROCEDURE ^ NewObj*(t: TypeDesc; isRealtime: BOOLEAN): ANY; 
-	PROCEDURE ^ TypeOf*(obj: ANY): TypeDesc; 
+	PROCEDURE ^ NewObj*(t: TypeDesc; isRealtime: BOOLEAN): ANY ; 
+	PROCEDURE ^ TypeOf*(obj: ANY ): TypeDesc; 
 	PROCEDURE ^ FindProc*(pc: ADDRESS; p: ProcedureDescs): ProcedureDescPointer; 
 	PROCEDURE ^ InstallTermHandler*(h: TerminationHandler); 
 	PROCEDURE ^ FreeModule*(CONST name: ARRAY OF CHAR; VAR res: INTEGER; VAR msg: ARRAY OF CHAR); 

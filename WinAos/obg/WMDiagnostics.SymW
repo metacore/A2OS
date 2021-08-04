@@ -87,12 +87,12 @@ TYPE
 		summary: ARRAY 256 OF CHAR; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ OnClickHandler(sender, data: ANY); 
+		PROCEDURE ^ OnClickHandler(sender, data: ANY ); 
 		PROCEDURE ^ ShowMarkers(enable: BOOLEAN); 
 		PROCEDURE ^ SortBy(mode: INTEGER); 
-		PROCEDURE ^ GetCellData*(column, row: SIZE): ANY; 
+		PROCEDURE ^ GetCellData*(column, row: SIZE): ANY ; 
 		PROCEDURE ^ AddPositionMarkers; 
 		PROCEDURE ^ RemovePositionMarkers; 
 		PROCEDURE ^ GetFirstPosition*(VAR positions: ARRAY OF SIZE; VAR type: SIGNED32); 
@@ -101,7 +101,7 @@ TYPE
 		PROCEDURE ^ SortEntries(compare: CompareProcedure; ascending: BOOLEAN); 
 		PROCEDURE ^ SetTextViews*(CONST textViews: ARRAY OF WMTextView.TextView); 
 		PROCEDURE ^ SetModel*(model: Model); 
-		PROCEDURE ^ ModelChanged(sender, data: ANY); 
+		PROCEDURE ^ ModelChanged(sender, data: ANY ); 
 		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
 	END DiagnosticsView; 
 VAR 

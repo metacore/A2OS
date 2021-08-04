@@ -35,7 +35,7 @@ TYPE
 		found: File; 
 
 		PROCEDURE ^ Init(name: ARRAY OF CHAR); 
-		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+		PROCEDURE ^ EnumFile(f: ANY ; VAR cont: BOOLEAN); 
 	END SearchByName; 
 
 	Collection = OBJECT {EXCLUSIVE} 
@@ -53,7 +53,7 @@ TYPE
 		PROCEDURE ^ ByName(VAR fname: ARRAY OF CHAR): File; 
 		PROCEDURE ^ ByNameNotGC(VAR fname: ARRAY OF CHAR): File; 
 		PROCEDURE ^ Finalize; 
-		PROCEDURE ^ FinalizeFile(obj: ANY); 
+		PROCEDURE ^ FinalizeFile(obj: ANY ); 
 	END Collection; 
 
 	AliasFileSystem* = OBJECT (Files.FileSystem)
@@ -108,7 +108,7 @@ TYPE
 		fileSystem: WinFileSystem; 
 
 		PROCEDURE ^  & Init*(VAR name: ARRAY OF CHAR; hfile: Kernel32.HANDLE; key: SIGNED32; fs: WinFileSystem); 
-		PROCEDURE ^ GetFileSize(): Files.Position; 
+		PROCEDURE ^ GetFileSize(): Files.Size; 
 		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: Files.Position); 
 		PROCEDURE ^ Pos*(VAR r: Files.Rider): Files.Position; 
 		PROCEDURE ^ SetFilePointer(pos: Files.Position): Files.Position; 
@@ -136,7 +136,7 @@ VAR
 	notifications: Notification; 
 	winFS: WinFileSystem; 
 
-	PROCEDURE ^ EnumFinalize(f: ANY; VAR cont: BOOLEAN); 
+	PROCEDURE ^ EnumFinalize(f: ANY ; VAR cont: BOOLEAN); 
 	PROCEDURE ^ DebugFile(f: File); 
 	PROCEDURE ^ IsLocalPath(path: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ FixDriveLetter(VAR path: ARRAY OF CHAR); 

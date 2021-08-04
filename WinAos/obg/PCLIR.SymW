@@ -166,13 +166,13 @@ TYPE
 
 		PROCEDURE ^ NewInstruction; 
 		PROCEDURE ^ GetPiece*(VAR src: SIGNED32; VAR p: Piece); 
-		PROCEDURE ^ Traverse*(proc: TraverseProc; reversed: BOOLEAN; context: ANY); 
+		PROCEDURE ^ Traverse*(proc: TraverseProc; reversed: BOOLEAN; context: ANY ); 
 		PROCEDURE ^  & Init*; 
 	END Code; 
 
 	EmitProc* = PROCEDURE (code: Code; VAR instr: Instruction; pc: SIGNED32); 
 
-	TraverseProc* = PROCEDURE (code: Code; VAR instr: Instruction; pc: SIGNED32; context: ANY); 
+	TraverseProc* = PROCEDURE (code: Code; VAR instr: Instruction; pc: SIGNED32; context: ANY ); 
 
 	AsmFixup* = POINTER TO RECORD 
 		offset*: SIGNED32; 
@@ -258,13 +258,13 @@ VAR
 	PROCEDURE ^ FixList*(code: Code; VAR pos: SIGNED32; val: SIGNED32); 
 	PROCEDURE ^ MergeList*(code: Code; l1, l2: SIGNED32): SIGNED32; 
 	PROCEDURE ^ SwapSources*(VAR instr: Instruction); 
-	PROCEDURE ^ DumpCode*(code: Code; VAR instr: Instruction; pc: SIGNED32; context: ANY); 
+	PROCEDURE ^ DumpCode*(code: Code; VAR instr: Instruction; pc: SIGNED32; context: ANY ); 
 	PROCEDURE ^ Emit*(code: Code); 
 	PROCEDURE ^ SetMethods*(op: Opcode; p: EmitProc); 
 	PROCEDURE ^ CGInit(): BOOLEAN; 
 	PROCEDURE ^ CGDone(VAR res: INTEGER); 
 	PROCEDURE ^ CGGetCode(VAR code: CodeArray; VAR codelen, hdrlen, addressFactor: SIGNED32); 
-	PROCEDURE ^ CGDumpCode(code: Code; VAR instr: Instruction; pc: SIGNED32; context: ANY); 
+	PROCEDURE ^ CGDumpCode(code: Code; VAR instr: Instruction; pc: SIGNED32; context: ANY ); 
 	PROCEDURE ^ InitDefaultSyscalls*; 
 	PROCEDURE ^ ShowStatistics*; 
 	PROCEDURE ^ InitModule; 

@@ -63,14 +63,14 @@ TYPE
 		PROCEDURE ^ Discard*; 
 		PROCEDURE ^ Requested*(): BOOLEAN; 
 		PROCEDURE ^ Available*(): SIGNED32; 
-		PROCEDURE ^ Finalize(ptr: ANY); 
+		PROCEDURE ^ Finalize(ptr: ANY ); 
 	END Connection; 
 VAR 
 	pool*: Kernel.FinalizedCollection; 
 	selectTimeout: WSock32.TimeVal; 
 
 	PROCEDURE ^ Init; 
-	PROCEDURE ^ Finalize(obj: ANY; VAR cont: BOOLEAN); 
+	PROCEDURE ^ Finalize(obj: ANY ; VAR cont: BOOLEAN); 
 	PROCEDURE ^ Cleanup; 
 	PROCEDURE ^ ReportState(state: SIGNED32); 
 	PROCEDURE ^ Report(c: Connection); 

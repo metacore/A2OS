@@ -18,10 +18,6 @@ TYPE
 	END Service; 
 
 	TLSService* = OBJECT {EXCLUSIVE} (Service)
-	VAR 
-		policy: TLS.Policy; 
-		ctx: TLS.Context; 
-		cipherSuites: ARRAY TLS.Suites OF SIGNED32; 
 
 		PROCEDURE ^  & Start*(port: SIGNED32; new: NewAgent; VAR res: INTEGER); 
 	END TLSService; 

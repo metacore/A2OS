@@ -78,7 +78,7 @@ TYPE
 		timer: Kernel.Timer; 
 		alive, terminated: BOOLEAN; 
 		i: SIZE; 
-		p: ANY; 
+		p: ANY ; 
 		prevSys: PrevalenceSystem; 
 
 	BEGIN{ACTIVE} 

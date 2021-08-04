@@ -24,7 +24,7 @@ VAR
 	PROCEDURE ^ DumpProcDecl(p: TS.ProcDecl); 
 	PROCEDURE ^ DumpDeclarations(d: TS.Scope); 
 	PROCEDURE ^ DumpM*(m: TS.Module); 
-	PROCEDURE ^ Dump*(par: ANY): ANY; 
+	PROCEDURE ^ Dump*(par: ANY ): ANY ; 
 	PROCEDURE ^ Open*(name: ARRAY OF CHAR); 
 BEGIN
 END TFDumpTS.

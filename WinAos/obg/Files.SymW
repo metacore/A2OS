@@ -171,7 +171,7 @@ TYPE
 		key: SIGNED32; 
 		found: File; 
 
-		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+		PROCEDURE ^ EnumFile(f: ANY ; VAR cont: BOOLEAN); 
 	END FileSearcher; 
 
 	Parameters* = OBJECT (Commands.Context)

@@ -65,7 +65,7 @@ VAR
 	PROCEDURE ^ MsgToXY*(x, y: SIGNED16; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ SplitNameM(str: ARRAY OF CHAR; VAR mod: Modules.Module; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ GetType*(type: ARRAY OF CHAR): antsPortability.Type; 
-	PROCEDURE ^ IsType*(obj: ANY; t: antsPortability.Type): BOOLEAN; 
+	PROCEDURE ^ IsType*(obj: ANY ; t: antsPortability.Type): BOOLEAN; 
 	PROCEDURE ^ TypedLayer*(llist: vyLinks.Link; type: ARRAY OF CHAR): Objects.Object; 
 	PROCEDURE ^ TypedLayerXY*(x, y: SIGNED16; type: ARRAY OF CHAR; VAR pict: vyPort.Picture): vyPort.tLayer; 
 	PROCEDURE ^ MsgToTypedXY*(x, y: SIGNED16; VAR msg: Objects.ObjMsg; type: ARRAY OF CHAR); 

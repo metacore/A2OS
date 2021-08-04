@@ -1,5 +1,5 @@
 MODULE CryptoHMAC;
-	IMPORT Hashes := CryptoHashes, BIT;
+	IMPORT Hashes := CryptoHashes, Strings, BIT;
 CONST 
 TYPE 
 	HMac* = OBJECT 
@@ -7,9 +7,12 @@ TYPE
 		size-: SIZE; 
 		name-: ARRAY 64 OF CHAR; 
 		ih, oh: Hashes.Hash; 
+		L: SIZE; 
+		n: SIZE; 
 
 		PROCEDURE ^  & Init*(CONST hashmod: ARRAY OF CHAR); 
-		PROCEDURE ^ Initialize*(CONST key: ARRAY OF CHAR; keyLen: SIZE); 
+		PROCEDURE ^ ShrinkLength*(len: SIZE); 
+		PROCEDURE ^ Initialize*(CONST key: ARRAY OF CHAR; len: SIZE); 
 		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
 		PROCEDURE ^ GetMac*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
 	END HMac; 

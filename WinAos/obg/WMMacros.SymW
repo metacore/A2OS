@@ -27,7 +27,7 @@ VAR
 	PROCEDURE ^ FindMacro*(parent: XML.Element; CONST key: ARRAY OF CHAR): XML.Element; 
 	PROCEDURE ^ ExecuteMacro(text: Texts.Text; r: Texts.TextReader; cursor: WMTextView.PositionMarker; parameters: ParameterList; macro: XML.Element); 
 	PROCEDURE ^ Insert(text: Texts.Text; cursor: WMTextView.PositionMarker); 
-	PROCEDURE ^ Handle*(sender, data: ANY); 
+	PROCEDURE ^ Handle*(sender, data: ANY ); 
 	PROCEDURE ^ GetMacroKeySym(): SIGNED32; 
 	PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Read(CONST name: ARRAY OF CHAR); 

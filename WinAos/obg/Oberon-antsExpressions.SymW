@@ -55,7 +55,7 @@ TYPE
 		y*: FLOAT64; 
 		s*: OPS.String; 
 		ptr*: SIGNED32; 
-		p*: ANY; 
+		p*: ANY ; 
 		adr*: SIGNED32; 
 		obj*: OPT.Object; 
 	END; 
@@ -126,8 +126,8 @@ VAR
 	PROCEDURE ^ WClass(c: SIGNED16); 
 	PROCEDURE ^ WMode(c: SIGNED16); 
 	PROCEDURE ^ WComp(c: SIGNED16); 
-	PROCEDURE ^ OutType*(p: ANY); 
-	PROCEDURE ^ WType*(p: ANY); 
+	PROCEDURE ^ OutType*(p: ANY ); 
+	PROCEDURE ^ WType*(p: ANY ); 
 	PROCEDURE ^ OutVal(VAR val: Value); 
 	PROCEDURE ^ Red; 
 	PROCEDURE ^ Black; 
@@ -155,9 +155,9 @@ VAR
 	PROCEDURE ^ SimpleExpr(VAR stack: Stack); 
 	PROCEDURE ^ Expr(VAR stack: Stack); 
 	PROCEDURE ^ StringPtr(VAR s: OPS.String): SIGNED32; 
-	PROCEDURE ^ Ptr(ptr: SIGNED32): ANY; 
-	PROCEDURE ^ AsPointer(a: Value; VAR varadr: SIGNED32): ANY; 
-	PROCEDURE ^ ValPointer(VAR val: Value; p: ANY); 
+	PROCEDURE ^ Ptr(ptr: SIGNED32): ANY ; 
+	PROCEDURE ^ AsPointer(a: Value; VAR varadr: SIGNED32): ANY ; 
+	PROCEDURE ^ ValPointer(VAR val: Value; p: ANY ); 
 	PROCEDURE ^ EvalOp(VAR stack: Stack; op: OpItem; VAR val: Value); 
 	PROCEDURE ^ GetRefNum(mod: Modules.Module; VAR i, num: SIGNED32); 
 	PROCEDURE ^ FindAdr(mod: Modules.Module; obj: OPT.Object): SIGNED32; 
@@ -165,7 +165,7 @@ VAR
 	PROCEDURE ^ SplitName(str: ARRAY OF CHAR; VAR mod: Modules.Module; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ TryDefaultMods(str: ARRAY OF CHAR; VAR mod: Modules.Module; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ IsTypeOf*(t: Types.Type; ref: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ PointerIs*(p: ANY; ref: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ PointerIs*(p: ANY ; ref: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetObjClass(obj: OPT.Object): SIGNED8; 
 	PROCEDURE ^ EvalConObj(obj: OPT.Object; VAR val: Value); 
 	PROCEDURE ^ FindPtrs(typ: OPT.Struct; adr: SIGNED32); 
@@ -191,7 +191,7 @@ VAR
 	PROCEDURE ^ PI7Call(VAR call: CallStack); 
 	PROCEDURE ^ PI8Finish(VAR call: CallStack; VAR res: Value); 
 	PROCEDURE ^ EvalProcObj(VAR stack: Stack; obj: OPT.Object; VAR res: Value); 
-	PROCEDURE ^ EvalPtrObj(obj: ANY; VAR val: Value): BOOLEAN; 
+	PROCEDURE ^ EvalPtrObj(obj: ANY ; VAR val: Value): BOOLEAN; 
 	PROCEDURE ^ EvalGlobalObj(name: ARRAY OF CHAR; VAR val: Value): BOOLEAN; 
 	PROCEDURE ^ EvalName(VAR stack: Stack; itm: NameItem; VAR val: Value); 
 	PROCEDURE ^ Eval*(VAR stack: Stack; VAR val: Value); 

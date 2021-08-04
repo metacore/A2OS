@@ -223,7 +223,9 @@ VAR
 	PROCEDURE ^ AddFinalizer*(obj: ANY ; n: FinalizerNode); 
 	PROCEDURE ^ GetHeapInfo*(VAR total, free, largest: SIZE); 
 	PROCEDURE ^ MarkPointer*(adr: ADDRESS); 
+	PROCEDURE ^ CopyRecord*(src, dest: ADDRESS; tag: StaticTypeBlockU); 
 	PROCEDURE ^ MarkRecord*(adr: ADDRESS; tag: StaticTypeBlockU); 
+	PROCEDURE ^ CopyArray*(src, dest: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE); 
 	PROCEDURE ^ MarkArray*(adr: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE); 
 	PROCEDURE ^ NilGC; 
 	PROCEDURE ^ Init; 

@@ -22,7 +22,7 @@ VAR
 	ticks-: SIGNED32; 
 	w: Texts.Writer; 
 
-	PROCEDURE ^ Addr*(p: ANY): ADDRESS; 
+	PROCEDURE ^ Addr*(p: ANY ): ADDRESS; 
 	PROCEDURE ^ GetCaret*(VAR F: Frame; VAR text: Texts.Text; VAR pos: SIGNED32); 
 	PROCEDURE ^ GetSelectionText*(VAR text: Texts.Text; VAR beg, end: SIGNED32); 
 	PROCEDURE ^ GetPar*; 

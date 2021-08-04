@@ -262,7 +262,7 @@ TYPE
 		ullAvailExtendedVirtual*: SIGNED64; 
 	END; 
 
-	ThreadProc* = PROCEDURE {WINAPI}(lpParameter{UNTRACED} : ANY):SIGNED32; 
+	ThreadProc* = PROCEDURE {WINAPI}(lpParameter{UNTRACED} : ANY ):SIGNED32; 
 
 	ProcessInformation* = RECORD 
 		hProcess*, hThread*: HANDLE; 
@@ -355,12 +355,12 @@ VAR
 	ClearCommError-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpErrors: DWORD; VAR lpStat: ComStat):BOOL; 
 	CloseHandle-: PROCEDURE {WINAPI}(hObject: HANDLE):BOOL; 
 	CopyFile-: PROCEDURE {WINAPI}(VAR lpExistingFileName, lpNewFileName: ARRAY OF CHAR; bFailIfExists: BOOL):BOOL; 
-	CreateDirectory-: PROCEDURE {WINAPI}(VAR lpPathName: ARRAY OF CHAR; lpSecurityAttributes: ANY):BOOL; 
-	CreateEvent-: PROCEDURE {WINAPI}(lpEventAttributes: ANY; bManualReset, bInitialState: BOOL; CONST lpName: ARRAY OF CHAR):HANDLE; 
-	CreateFile-: PROCEDURE {WINAPI}(CONST lpFileName: ARRAY OF CHAR; dwDesiredAccess, dwShareMode: INTEGERSET; lpSecurityAttributes: ANY; dwCreationDistribution: SIGNED32; dwFlagsAndAttributes: INTEGERSET; hTemplateFile: HANDLE):HANDLE; 
-	CreateProcess-: PROCEDURE {WINAPI}(CONST lpApplicationName, lpCommandLine: ARRAY OF CHAR; lpProcessAttributes, lpThreadAttributes: ANY; bInheritHandles: BOOL; dwCreationFlags: SIGNED32; lpEnvironment: ANY; VAR lpCurrentDirectory: ARRAY OF CHAR; VAR lpStartupInfo: StartupInfo; VAR lpProcessInformation: ProcessInformation):BOOL; 
+	CreateDirectory-: PROCEDURE {WINAPI}(VAR lpPathName: ARRAY OF CHAR; lpSecurityAttributes: ANY ):BOOL; 
+	CreateEvent-: PROCEDURE {WINAPI}(lpEventAttributes: ANY ; bManualReset, bInitialState: BOOL; CONST lpName: ARRAY OF CHAR):HANDLE; 
+	CreateFile-: PROCEDURE {WINAPI}(CONST lpFileName: ARRAY OF CHAR; dwDesiredAccess, dwShareMode: INTEGERSET; lpSecurityAttributes: ANY ; dwCreationDistribution: SIGNED32; dwFlagsAndAttributes: INTEGERSET; hTemplateFile: HANDLE):HANDLE; 
+	CreateProcess-: PROCEDURE {WINAPI}(CONST lpApplicationName, lpCommandLine: ARRAY OF CHAR; lpProcessAttributes, lpThreadAttributes: ANY ; bInheritHandles: BOOL; dwCreationFlags: SIGNED32; lpEnvironment: ANY ; VAR lpCurrentDirectory: ARRAY OF CHAR; VAR lpStartupInfo: StartupInfo; VAR lpProcessInformation: ProcessInformation):BOOL; 
 	CreateSemaphore-: PROCEDURE {WINAPI}(lpThreadAttributes: ADDRESS; lInitialCount: SIGNED32; lMaximumCount: SIGNED32; lpName: LPSTR):HANDLE; 
-	CreateThread-: PROCEDURE {WINAPI}(lpThreadAttributes: ADDRESS; dwStackSize: SIGNED32; lpStartAddress: ThreadProc; lpParameter: ANY; dwCreationFlags: INTEGERSET; VAR lpThreadId: SIGNED32):HANDLE; 
+	CreateThread-: PROCEDURE {WINAPI}(lpThreadAttributes: ADDRESS; dwStackSize: SIGNED32; lpStartAddress: ThreadProc; lpParameter: ANY ; dwCreationFlags: INTEGERSET; VAR lpThreadId: SIGNED32):HANDLE; 
 	DeleteCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	DeleteFile-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):BOOL; 
 	DisableThreadLibraryCalls-: PROCEDURE {WINAPI}(hLibModule: HMODULE):BOOL; 

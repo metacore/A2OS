@@ -54,7 +54,7 @@ TYPE
 		eRun*: EventListenerInfo; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Run*(sender, par: ANY); 
+		PROCEDURE ^ Run*(sender, par: ANY ); 
 	END SubMenuOpener; 
 
 	MenuButtons = ARRAY MaxMenuButtons OF WMStandardComponents.Button; 
@@ -88,9 +88,9 @@ TYPE
 
 	Starter = OBJECT {EXCLUSIVE} 
 	VAR 
-		originator: ANY; 
+		originator: ANY ; 
 
-		PROCEDURE ^  & Init*(o: ANY); 
+		PROCEDURE ^  & Init*(o: ANY ); 
 	BEGIN{ACTIVE} 
 	END Starter; 
 VAR 

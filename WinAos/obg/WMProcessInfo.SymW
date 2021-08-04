@@ -32,7 +32,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetSelection*(): Selection; 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ CheckVisibility; 
 		PROCEDURE ^ CheckSort; 
@@ -65,12 +65,12 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Decision(CONST message: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ HaltThread(unbreakable: BOOLEAN); 
-		PROCEDURE ^ HandleHalt(sender, data: ANY); 
-		PROCEDURE ^ HandleUnbreakableHalt(sender, data: ANY); 
-		PROCEDURE ^ HandleSort(sender, data: ANY); 
-		PROCEDURE ^ HandleSortPopup(sender, data: ANY); 
-		PROCEDURE ^ HandleShowStack(sender, data: ANY); 
-		PROCEDURE ^ HandleCpuLoad(sender, data: ANY); 
+		PROCEDURE ^ HandleHalt(sender, data: ANY ); 
+		PROCEDURE ^ HandleUnbreakableHalt(sender, data: ANY ); 
+		PROCEDURE ^ HandleSort(sender, data: ANY ); 
+		PROCEDURE ^ HandleSortPopup(sender, data: ANY ); 
+		PROCEDURE ^ HandleShowStack(sender, data: ANY ); 
+		PROCEDURE ^ HandleCpuLoad(sender, data: ANY ); 
 	END ProcessManager; 
 VAR 
 	StrProcessSelector, StrProcessManager: Strings.String; 

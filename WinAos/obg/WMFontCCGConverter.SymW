@@ -22,8 +22,8 @@ TYPE
 		scale: SIZE; 
 
 		PROCEDURE ^  & New*(f: RawCCGFont); 
-		PROCEDURE ^ Rescale(sender, data: ANY); 
-		PROCEDURE ^ GlyphSelected(sender, data: ANY); 
+		PROCEDURE ^ Rescale(sender, data: ANY ); 
+		PROCEDURE ^ GlyphSelected(sender, data: ANY ); 
 		PROCEDURE ^ PaintBoxPaint(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
 		PROCEDURE ^ RenderGlyphReal(canvas: WMGraphics.Canvas; glyph: Glyph; x, y, w, h: FLOAT32; level: SIGNED32; trace: BOOLEAN); 

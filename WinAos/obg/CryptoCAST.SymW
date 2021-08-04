@@ -1,9 +1,7 @@
 MODULE CryptoCAST;
-	IMPORT S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
+	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils;
 CONST 
 TYPE 
-	LI = SIGNED32; 
-
 	Key = RECORD 
 		val: SIGNED32; 
 		rot: SIGNED8; 
@@ -21,7 +19,7 @@ TYPE
 		keys: Keys; 
 		iv: Block; 
 
-		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIGNED32); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIZE); 
 		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 

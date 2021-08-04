@@ -1,7 +1,7 @@
 MODULE WebBrowser;
 	IMPORT WebBrowserPanel, Strings, KernelLog, WMGraphics, WMComponents, WMStandardComponents, WMWindowManager, WMEditors, Modules, WMRestorable, XML, WMRectangles, WMMessages, Commands, Files;
 CONST 
-	HomePage = \"http://bluebottle.ethz.ch"\; 
+	HomePage = \"http://cas.inf.ethz.ch/projects/a2"\; 
 	BrowserTitle = \"BimBrowser"\; 
 	BookmarkPage = \"file://bookmarks.html"\; 
 	BookmarkFile = \"bookmarks.html"\; 
@@ -31,15 +31,15 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(c: WMRestorable.Context; url: String); 
 		PROCEDURE ^ Load; 
-		PROCEDURE ^ Go(sender, data: ANY); 
-		PROCEDURE ^ Back(sender, data: ANY); 
-		PROCEDURE ^ Forward(sender, data: ANY); 
-		PROCEDURE ^ Reload(sender, data: ANY); 
-		PROCEDURE ^ Home(sender, data: ANY); 
-		PROCEDURE ^ Bookmarks(sender, data: ANY); 
-		PROCEDURE ^ LoadExternal*(sender, data: ANY); 
-		PROCEDURE ^ Notify(sender, data: ANY); 
-		PROCEDURE ^ AddBookmark(sender, data: ANY); 
+		PROCEDURE ^ Go(sender, data: ANY ); 
+		PROCEDURE ^ Back(sender, data: ANY ); 
+		PROCEDURE ^ Forward(sender, data: ANY ); 
+		PROCEDURE ^ Reload(sender, data: ANY ); 
+		PROCEDURE ^ Home(sender, data: ANY ); 
+		PROCEDURE ^ Bookmarks(sender, data: ANY ); 
+		PROCEDURE ^ LoadExternal*(sender, data: ANY ); 
+		PROCEDURE ^ Notify(sender, data: ANY ); 
+		PROCEDURE ^ AddBookmark(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 

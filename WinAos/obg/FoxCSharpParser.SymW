@@ -36,7 +36,7 @@ TYPE
 		token-: Scanner.Token; 
 		diagnostics: Diagnostics.Diagnostics; 
 		currentScope: SyntaxTree.Scope; 
-		recentCommentItem: ANY; 
+		recentCommentItem: ANY ; 
 		recentLine: Streams.Position; 
 		recentComment: SyntaxTree.Comment; 
 		moduleScope: SyntaxTree.ModuleScope; 
@@ -88,7 +88,7 @@ TYPE
 		PROCEDURE ^ Identifier(VAR position: Position): SyntaxTree.Identifier; 
 		PROCEDURE ^ Optional(symbol: Scanner.Symbol): BOOLEAN; 
 		PROCEDURE ^ Ignore(symbol: Scanner.Symbol); 
-		PROCEDURE ^ SetNextInComment(c: SyntaxTree.Comment; this: ANY); 
+		PROCEDURE ^ SetNextInComment(c: SyntaxTree.Comment; this: ANY ); 
 		PROCEDURE ^ CommentSymbol(symbol: SyntaxTree.Symbol); 
 		PROCEDURE ^ MapOperator(symbol: Scanner.Symbol): SIGNED32; 
 		PROCEDURE ^ NewUnaryExpression(position: Position; operand: SyntaxTree.Expression; operator: SIGNED32): SyntaxTree.Expression; 

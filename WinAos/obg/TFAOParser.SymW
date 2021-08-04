@@ -6,7 +6,7 @@ TYPE
 	VAR 
 		s: S.Scanner; 
 		m*: TS.Module; 
-		pos: SIGNED32; 
+		pos: SIZE; 
 		comments: TS.Comments; 
 		lastStatement: TS.Statement; 
 

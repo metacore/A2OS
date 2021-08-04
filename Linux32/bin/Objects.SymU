@@ -2,7 +2,6 @@ MODULE Objects;
 	IMPORT SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
 CONST 
 	ConcurrentGC = TRUE; 
-	LinuxHost = (Unix.Version = \"Linux"\); 
 	PleaseHalt* = 10; 
 	Unbreakable* = 11; 
 	SelfTermination* = 12; 
@@ -176,6 +175,7 @@ VAR
 	PROCEDURE ^ GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE); 
 	PROCEDURE ^ NextValidStackSegment*(p: Process; VAR bp, pc, sp: ADDRESS; VAR contextPos: SIZE): BOOLEAN; 
 	PROCEDURE ^ GetProcessID*(): INTEGER; 
+	PROCEDURE ^ NumReady*(): SIGNED32; 
 	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
 	PROCEDURE ^ RegisterFinalizer(obj: ANY ; fin: Heaps.Finalizer); 
 	PROCEDURE ^ FinalizeActiveObj(obj: ANY ); 

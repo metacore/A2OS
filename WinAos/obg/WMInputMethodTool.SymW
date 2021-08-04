@@ -19,9 +19,9 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ ResetButtonColors; 
-		PROCEDURE ^ ChangeIME(sender, data: ANY); 
-		PROCEDURE ^ SwitchIME(sender, data: ANY); 
-		PROCEDURE ^ SetUtfMode(sender, data: ANY); 
+		PROCEDURE ^ ChangeIME(sender, data: ANY ); 
+		PROCEDURE ^ SwitchIME(sender, data: ANY ); 
+		PROCEDURE ^ SetUtfMode(sender, data: ANY ); 
 		PROCEDURE ^ ChangeAppearance; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 

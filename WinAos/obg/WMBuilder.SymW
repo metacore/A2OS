@@ -1,10 +1,10 @@
 MODULE WMBuilder;
-	IMPORT Modules, Kernel, KernelLog, Streams, Commands, Inputs, Strings, Files, XML, XMLObjects, XMLScanner, XMLParser, Math, Repositories, WMRepositories, WMUtilities, WMRectangles, WMGraphics, WMMessages, WMWindowManager, WMRestorable, WMProperties, WMComponents, WMStandardComponents, WMEditors, WMTrees, WMInspectionComponents, WMDialogs, Models;
+	IMPORT Modules, Kernel, KernelLog, Streams, Commands, Inputs, Strings, UTF8Strings, Files, XML, XMLObjects, XMLScanner, XMLParser, Math, Repositories, WMRepositories, WMUtilities, WMRectangles, WMGraphics, WMMessages, WMWindowManager, WMRestorable, WMProperties, WMComponents, WMStandardComponents, WMEditors, WMTrees, WMInspectionComponents, WMDialogs, Models, StringCollections := GenericCollections(Strings.String,LessString);
 CONST 
-	WindowWidth = 128; 
+	WindowWidth = 130; 
 	WindowHeight = 320; 
-	EditWindowWidth = 640; 
-	EditWindowHeight = 480; 
+	EditWindowWidth = 400; 
+	EditWindowHeight = 320; 
 	Invalid = MIN(SIGNED32); 
 	UseMode = 0; 
 	EditMode = 1; 
@@ -56,12 +56,12 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ SetStatusLabel(CONST m1, m2, m3: ARRAY OF CHAR); 
 		PROCEDURE ^ LoadRepository(CONST filename: ARRAY OF CHAR); 
-		PROCEDURE ^ HandleButtons(sender, data: ANY); 
-		PROCEDURE ^ OnEnter(sender, data: ANY); 
+		PROCEDURE ^ HandleButtons(sender, data: ANY ); 
+		PROCEDURE ^ OnEnter(sender, data: ANY ); 
 		PROCEDURE ^ GetSelectedComponent(): Repositories.Component; 
-		PROCEDURE ^ OnRepositoriesClicked(sender, data: ANY); 
-		PROCEDURE ^ OnComponentClicked(sender, data: ANY); 
-		PROCEDURE ^ OnClickedSelected(sender, data: ANY); 
+		PROCEDURE ^ OnRepositoriesClicked(sender, data: ANY ); 
+		PROCEDURE ^ OnComponentClicked(sender, data: ANY ); 
+		PROCEDURE ^ OnClickedSelected(sender, data: ANY ); 
 	END ComponentWindow; 
 
 	TreeNode = OBJECT (WMTrees.TreeNode)
@@ -78,18 +78,42 @@ TYPE
 		tree: WMTrees.Tree; 
 		rootComponent: Repositories.Component; 
 		selection: Selection; 
-		insertAtObj: ANY; 
+		insertAtObj: ANY ; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ AddComponents(component: Repositories.Component; parent: WMTrees.TreeNode); 
-		PROCEDURE ^ Refresh(sender, data: ANY); 
+		PROCEDURE ^ Refresh(sender, data: ANY ); 
 		PROCEDURE ^ UpdateNodeColor(node: WMTrees.TreeNode); 
 		PROCEDURE ^ TraverseNodes(parent: WMTrees.TreeNode); 
 		PROCEDURE ^ UpdateColors; 
 		PROCEDURE ^ DrawNode(canvas: WMGraphics.Canvas; w, h: SIZE; node: WMTrees.TreeNode; state: SET); 
 		PROCEDURE ^ SetComponent(rootComponent: Repositories.Component; selection: Selection); 
-		PROCEDURE ^ SetInsertAtObj(insertAtObj: ANY); 
+		PROCEDURE ^ SetInsertAtObj(insertAtObj: ANY ); 
 	END ComponentTree; 
+
+	CodeMode = ENUM cmImport = 0, cmVar = 1, cmWire = 2 END; 
+
+	ComponentCode = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		rootComponent: Repositories.Component; 
+		moduleName: Strings.String; 
+		editor: WMEditors.Editor; 
+		importList: StringCollections.Vector; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetComponent(rootComponent: Repositories.Component); 
+		PROCEDURE ^ SetModuleName(moduleName: Strings.String); 
+		PROCEDURE ^ Refresh(sender, data: ANY ); 
+		PROCEDURE ^ WriteModule(w: Streams.Writer); 
+		PROCEDURE ^ WriteModuleImports(w: Streams.Writer); 
+		PROCEDURE ^ WriteModuleTypes(w: Streams.Writer); 
+		PROCEDURE ^ WriteWindow(w: Streams.Writer); 
+		PROCEDURE ^ WriteWindowVariables(w: Streams.Writer); 
+		PROCEDURE ^ WriteWindowProcs(writer: Streams.Writer); 
+		PROCEDURE ^ WriteModuleProcs(writer: Streams.Writer); 
+		PROCEDURE ^ PostprocessGenerator(CONST generator: ARRAY OF CHAR): Strings.String; 
+		PROCEDURE ^ TraverseComponent(component: Repositories.Component; mode: CodeMode; writer: Streams.Writer); 
+	END ComponentCode; 
 
 	Indicator = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
 	VAR 
@@ -106,7 +130,7 @@ TYPE
 		propertyPanel: WMInspectionComponents.PropertyPanel; 
 
 		PROCEDURE ^  & Init*(width, height: SIZE; alpha: BOOLEAN); 
-		PROCEDURE ^ SetComponent(sender, component: ANY); 
+		PROCEDURE ^ SetComponent(sender, component: ANY ); 
 	END PropertyWindow; 
 
 	ComponentArray = POINTER TO ARRAY OF Repositories.Component; 
@@ -251,7 +275,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetPanel(panel: WMComponents.VisualComponent); 
-		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ SetPaint(paint: BOOLEAN); 
 		PROCEDURE ^ SetMode(mode: SIGNED32); 
@@ -337,9 +361,11 @@ TYPE
 		toggleSnapGridBtn, toggleHelperLinesBtn, toggleFramesBtn: WMStandardComponents.Button; 
 		toggleEditBtn, toggleComponentsBtn, toggleStructureBtn, togglePropertiesBtn: WMStandardComponents.Button; 
 		componentTree: ComponentTree; 
+		componentCode: ComponentCode; 
 		windowList: WindowList; 
 		componentWindow: ComponentWindow; 
 		componentTreeWindow: HelperWindow; 
+		componentCodeWindow: HelperWindow; 
 		propertyWindow: PropertyWindow; 
 		windowInfo: WMWindowManager.WindowInfo; 
 
@@ -349,19 +375,19 @@ TYPE
 		PROCEDURE ^ HandleDocumentInfo(CONST info: WMWindowManager.DocumentInfo; new: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ SetActiveEditor(window: EditWindow); 
 		PROCEDURE ^ RemoveEditor(window: EditWindow); 
-		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
-		PROCEDURE ^ HandleOpenBtn(sender, data: ANY); 
-		PROCEDURE ^ HandleSaveBtn(sender, data: ANY); 
-		PROCEDURE ^ HandleAddBtn(sender, data: ANY); 
-		PROCEDURE ^ HandlePaintBtn(sender, data: ANY); 
-		PROCEDURE ^ HandleLoadBtn(sender, data: ANY); 
-		PROCEDURE ^ HandleDeleteBtn(sender, data: ANY); 
-		PROCEDURE ^ HandleToFrontBtn(sender, data: ANY); 
-		PROCEDURE ^ HandleGetXmlBtn(sender, data: ANY); 
-		PROCEDURE ^ HandleStoreBtn(sender, data: ANY); 
-		PROCEDURE ^ HandleToggleEditModeBtn(sender, data: ANY); 
-		PROCEDURE ^ HandleNodeClicked(sender, data: ANY); 
-		PROCEDURE ^ HandleNodeContextMenu(sender: ANY; x, y: SIZE); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY ); 
+		PROCEDURE ^ HandleOpenBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleSaveBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleAddBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandlePaintBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleLoadBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleDeleteBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleToFrontBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleGetXmlBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleStoreBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleToggleEditModeBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleNodeClicked(sender, data: ANY ); 
+		PROCEDURE ^ HandleNodeContextMenu(sender: ANY ; x, y: SIZE); 
 		PROCEDURE ^ UpdateCursorPosition(x, y: SIZE); 
 		PROCEDURE ^ UpdateFramePosition(valid: BOOLEAN; frame: WMRectangles.Rectangle); 
 		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
@@ -391,6 +417,7 @@ VAR
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
 	PROCEDURE ^ LoadCursors; 
 	PROCEDURE ^ LoadRepositories; 
+	PROCEDURE ^ LessString(l, r: Strings.String): BOOLEAN; 
 	PROCEDURE ^ GetId(): SIGNED32; 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 

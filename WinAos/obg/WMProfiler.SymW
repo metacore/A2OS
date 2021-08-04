@@ -25,11 +25,11 @@ TYPE
 		PROCEDURE ^ ClearExternField(node: HierarchicalProfiler.Node); 
 		PROCEDURE ^ UpdateTree; 
 		PROCEDURE ^ UpdateStatusBar(forceUpdate: BOOLEAN); 
-		PROCEDURE ^ HandleNodeClicked(sender, data: ANY); 
-		PROCEDURE ^ HandleNodeSelected(sender, data: ANY); 
+		PROCEDURE ^ HandleNodeClicked(sender, data: ANY ); 
+		PROCEDURE ^ HandleNodeSelected(sender, data: ANY ); 
 		PROCEDURE ^ GetTypeAndInfo(VAR type, info: SIGNED32); 
 		PROCEDURE ^ GetFilterMask(VAR mask: ARRAY OF CHAR; VAR minPercent: SIGNED32); 
-		PROCEDURE ^ HandleButtons(sender, data: ANY); 
+		PROCEDURE ^ HandleButtons(sender, data: ANY ); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(context: WMRestorable.Context); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 

@@ -175,7 +175,7 @@ VAR
 	PROCEDURE ^ Lock*(obj: ProtectedObject; exclusive: BOOLEAN); 
 	PROCEDURE ^ FindCondition(VAR q: ProcessQueue): Process; 
 	PROCEDURE ^ Unlock*(obj: ProtectedObject; dummy: BOOLEAN); 
-	PROCEDURE ^ Await*(cond: Condition; slink: SIGNED32; obj: ProtectedObject; flags: SET); 
+	PROCEDURE ^ Await*(cond: Condition; slink: ADDRESS; obj: ProtectedObject; flags: SET); 
 	PROCEDURE ^ Break*(t: Process); 
 	PROCEDURE ^ TerminateThis*(t: Process; halt: BOOLEAN); 
 	PROCEDURE ^ Terminate*; 

@@ -28,8 +28,8 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(filename: Files.FileName); 
 		PROCEDURE ^ FillList(OGGlist: ARRAY OF CHAR); 
-		PROCEDURE ^ Play(sender, data: ANY); 
-		PROCEDURE ^ Stop(sender, data: ANY); 
+		PROCEDURE ^ Play(sender, data: ANY ); 
+		PROCEDURE ^ Stop(sender, data: ANY ); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 

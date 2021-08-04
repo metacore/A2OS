@@ -1,25 +1,25 @@
 MODULE CryptoTestCiphers;
-	IMPORT U := CryptoUtils, Ciphers := CryptoCiphers, Kernel, Commands, Out := KernelLog;
+	IMPORT U := CryptoUtils, Ciphers := CryptoCiphers, Kernel, Commands, Log := KernelLog;
 CONST 
 
-	PROCEDURE ^ Ecb1*(context: Commands.Context); 
-	PROCEDURE ^ Cbc1*(context: Commands.Context); 
-	PROCEDURE ^ Ctr1*(context: Commands.Context); 
-	PROCEDURE ^ Ecb2*(CONST modname, input, output, key: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
-	PROCEDURE ^ Cbc2*(CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
-	PROCEDURE ^ DecryptCbc2*(CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
-	PROCEDURE ^ Ctr2*(CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
-	PROCEDURE ^ MeasureTime*(context: Commands.Context); 
-	PROCEDURE ^ DesEcb2*; 
-	PROCEDURE ^ Des3Ecb2*; 
-	PROCEDURE ^ IdeaEcb2*; 
-	PROCEDURE ^ AesEcb2*; 
-	PROCEDURE ^ Arc4Ecb2*; 
-	PROCEDURE ^ CastEcb2*; 
-	PROCEDURE ^ DesCbc2*; 
-	PROCEDURE ^ IdeaCbc2*; 
-	PROCEDURE ^ AesCbc2*; 
-	PROCEDURE ^ AesCtr2*; 
-	PROCEDURE ^ CbcRandom*(context: Commands.Context); 
+	PROCEDURE ^ Ecb1*(c: Commands.Context); 
+	PROCEDURE ^ Cbc1*(c: Commands.Context); 
+	PROCEDURE ^ Ctr1*(c: Commands.Context); 
+	PROCEDURE ^ Ecb2(c: Commands.Context; CONST modname, input, output, key: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
+	PROCEDURE ^ Cbc2(c: Commands.Context; CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
+	PROCEDURE ^ DecryptCbc2(c: Commands.Context; CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
+	PROCEDURE ^ Ctr2(c: Commands.Context; CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
+	PROCEDURE ^ MeasureTime*(c: Commands.Context); 
+	PROCEDURE ^ DesEcb2*(c: Commands.Context); 
+	PROCEDURE ^ Des3Ecb2*(c: Commands.Context); 
+	PROCEDURE ^ IdeaEcb2*(c: Commands.Context); 
+	PROCEDURE ^ AesEcb2*(c: Commands.Context); 
+	PROCEDURE ^ Arc4Ecb2*(c: Commands.Context); 
+	PROCEDURE ^ CastEcb2*(c: Commands.Context); 
+	PROCEDURE ^ DesCbc2*(c: Commands.Context); 
+	PROCEDURE ^ IdeaCbc2*(c: Commands.Context); 
+	PROCEDURE ^ AesCbc2*(c: Commands.Context); 
+	PROCEDURE ^ AesCtr2*(c: Commands.Context); 
+	PROCEDURE ^ CbcRandom*(c: Commands.Context); 
 BEGIN
 END CryptoTestCiphers.

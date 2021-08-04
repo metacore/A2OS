@@ -2,10 +2,10 @@ MODULE antsPortability IN Oberon;
 	IMPORT Display, Objects, Strings, vyHost, Gadgets, antsCommandInvoker, Oberon, Modules, SYSTEM, Attributes, ListRiders, Desktops, vyPortability, Out, Kernel, AosModules := Modules IN A2, Machine IN A2;
 CONST 
 TYPE 
-	display* = ANY; 
+	display* = ANY ; 
 
 	dialog* = POINTER TO RECORD (Objects.ObjDesc)
-		context*: ANY; 
+		context*: ANY ; 
 		cmd*: ARRAY 64 OF CHAR; 
 		time: SIGNED32; 
 		filter: ARRAY 256 OF CHAR; 
@@ -42,7 +42,7 @@ VAR
 	PROCEDURE ^ ShowDialog*(d: dialog); 
 	PROCEDURE ^ FinishDialog*; 
 	PROCEDURE ^ TypesThis*(m: Modules.Module; name: ARRAY OF CHAR): Type; 
-	PROCEDURE ^ TypesTypeOf*(p: ANY): Type; 
+	PROCEDURE ^ TypesTypeOf*(p: ANY ): Type; 
 	PROCEDURE ^ TypesLevelOf*(t: Type): SIGNED16; 
 	PROCEDURE ^ TypesBaseOf*(t: Type; level: SIGNED16): Type; 
 	PROCEDURE ^ GetWorkingDirectory*(VAR path: ARRAY OF CHAR); 

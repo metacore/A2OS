@@ -70,7 +70,7 @@ TYPE
 		ch : CHAR; (* single character name *)
 		name : Name; (* multi character name *)
 		type : SIGNED32; (* Flag, String or Integer *)
-		value : SIGNED32; (* Integer value if type = Integer *)
+		value : SIGNED64; (* Integer value if type = Integer *)
 		rvalue: FLOAT64; (*real value if type = real*)
 		string : Parameter; (* String value if type = String *)
 	END;
@@ -152,6 +152,29 @@ TYPE
 		(** Check whether an option of type Integer is set and retrieve its value if so *)
 		PROCEDURE GetInteger*( CONST name : Name; VAR integer : SIGNED32) : BOOLEAN;
 		VAR index : SIGNED32;
+			value: SIGNED64;
+		BEGIN {EXCLUSIVE}
+			index := FindOption(name);
+			IF (index # Invalid) THEN
+				IF (options[index].type = Integer) THEN
+					IF (options[index].isSet) THEN
+						value := options[index].value;
+						IF value IS SIGNED32 THEN
+							integer := SIGNED32(options[index].value);
+							RETURN TRUE;
+						ELSE
+							WrongUsage(options[index]);
+						END;
+					END;
+				ELSE
+					WrongUsage(options[index]);
+				END;
+			END;
+			RETURN FALSE;
+		END GetInteger;
+
+		PROCEDURE GetInteger64*( CONST name : Name; VAR integer : SIGNED64) : BOOLEAN;
+		VAR index : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			index := FindOption(name);
 			IF (index # Invalid) THEN
@@ -165,7 +188,7 @@ TYPE
 				END;
 			END;
 			RETURN FALSE;
-		END GetInteger;
+		END GetInteger64;
 
 		PROCEDURE SetInteger*(ch : CHAR; CONST name : Name; CONST string : ARRAY OF CHAR) : BOOLEAN;
 		VAR index : SIGNED32; optionName : Name;
@@ -730,8 +753,8 @@ BEGIN
 	RETURN (" " < ch) & (ch < CHR(128)) & (ch # OptionDelimiter) & (ch # Assignment);
 END IsValidChar;
 
-PROCEDURE StringToInteger*(CONST string : ARRAY OF CHAR;  VAR x: SIGNED32;  hex: BOOLEAN) : BOOLEAN;
-VAR pos, vd, vh, sign, d: SIGNED32;  ch: CHAR;  ok: BOOLEAN;
+PROCEDURE StringToInteger*(CONST string : ARRAY OF CHAR; VAR x: SIGNED64; hex: BOOLEAN) : BOOLEAN;
+VAR pos, sign, d: SIGNED32; vd, vh: SIGNED64; ch: CHAR; ok: BOOLEAN;
 BEGIN
 	IF (LEN(string) <= 0) THEN RETURN FALSE; END;
 

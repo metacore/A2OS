@@ -174,7 +174,11 @@ BEGIN
 	IF options.Parse(context.arg, context.error) THEN
 		context.arg.SkipWhitespace; context.arg.String(filename);
 		context.arg.SkipWhitespace; context.arg.Int(nbrOfBlocks, FALSE);
-		IF ~options.GetInteger("blocksize", blocksize) THEN blocksize := DefaultBlocksize; END;
+		IF ~options.GetInteger("blocksize", blocksize) THEN
+			IF ~context.arg.GetInteger(blocksize, FALSE) THEN
+				blocksize := DefaultBlocksize;
+			END;
+		END;
 		IF (filename # "") THEN
 			IF (nbrOfBlocks > 0) THEN
 				file := Files.New(filename);

@@ -160,7 +160,7 @@ TYPE
 					IF (options[index].isSet) THEN
 						value := options[index].value;
 						IF value IS SIGNED32 THEN
-							integer := SIGNED32(options[index].value);
+							integer := SIGNED32(value);
 							RETURN TRUE;
 						ELSE
 							WrongUsage(options[index]);

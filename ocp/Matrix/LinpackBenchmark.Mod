@@ -16,6 +16,7 @@ If your platform has a MathArrayBaseOptimized.Mod implementation, it will be use
 IMPORT Objects, MatrixBase, MatrixStandardSolvers, MatrixBlockSolvers, MatrixUtilities, Kernel, Out:=KernelLog, MathL, MatrixFastMatrixMultiply;
 
 TYPE
+	Datatype = MatrixBase.Datatype;
 	Matrix = MatrixBase.Matrix;
 	Vector = MatrixBase.Vector;
 
@@ -35,7 +36,7 @@ TYPE
 
 	(* compare linpack based on several programming paradigms *)
 	PROCEDURE Linpack( size: SIGNED32; details:BOOLEAN);
-	VAR A, A1, A2, B, C, R, dummy: Matrix;  x, b, r: Vector;  a,c, c1:FLOAT64;
+	VAR A, A1, A2, B, C, R, dummy: Matrix;  x, b, r: Vector;  a,c, c1:Datatype;
 		timer: Kernel.MilliTimer;  t, t1, i, j: SIGNED32;  loops:SIGNED32; ops, flops: FLOAT64;
 		residual, result: FLOAT64;
 		lu: MatrixStandardSolvers.LU; blu: MatrixBlockSolvers.LU; bluA:MatrixBlockSolvers.LUAgent;
@@ -68,7 +69,7 @@ TYPE
 		t := Kernel.Elapsed( timer );   (*in ms*)
 		x:=lu.Solve(b);
 		ops := 2 / 3 * size * size * size + size * size;   (* computational cost of LU decomposition is 2/3 n^3 + n^2 *)
-		r := A1 * x - b;  residual := MathL.sqrt( r +* r );
+		r := A1 * x - b;  residual := sqrt( r +* r );
 		flops := ops / (t / 1000);   (*per second*)
 		flops := flops * loops;
 		Out.String( "; time, flops, residual: " );  Out.String( " " );  Out.Int( t, 6 );  Out.String( "ms  " );
@@ -94,7 +95,7 @@ TYPE
 		t := Kernel.Elapsed( timer );   (*in ms*)
 		x:=blu.Solve(b);
 		ops := 2 / 3 * size * size * size + size * size;   (* computational cost of LU decomposition is 2/3 n^3 + n^2 *)
-		r := A1 * x - b;  residual := MathL.sqrt( r +* r );
+		r := A1 * x - b;  residual := sqrt( r +* r );
 		flops := ops / (t / 1000);   (*per second*)
 		flops := flops * loops;
 		Out.String( "; time, flops, residual: " );  Out.String( " " );  Out.Int( t, 6 );  Out.String( "ms  " );
@@ -118,7 +119,7 @@ TYPE
 		t := Kernel.Elapsed( timer );   (*in ms*)
 		x:=blu.Solve(b);
 		ops := 2 / 3 * size * size * size + size * size;   (* computational cost of LU decomposition is 2/3 n^3 + n^2 *)
-		r := A1 * x - b;  residual := MathL.sqrt( r +* r );
+		r := A1 * x - b;  residual := sqrt( r +* r );
 		flops := ops / (t / 1000);   (*per second*)
 		flops := flops * loops;
 		Out.String( "; time, flops, residual: " );  Out.String( " " );  Out.Int( t, 6 );  Out.String( "ms  " );
@@ -143,7 +144,7 @@ TYPE
 		x:=blu.Solve(b);
 		blu:=NIL;
 		ops := 2 / 3 * size * size * size + size * size;   (* computational cost of LU decomposition is 2/3 n^3 + n^2 *)
-		r := A1 * x - b;  residual := MathL.sqrt( r +* r );
+		r := A1 * x - b;  residual := sqrt( r +* r );
 		flops := ops / (t / 1000);   (*per second*)
 		flops := flops * loops;
 		Out.String( "; time, flops, residual: " );  Out.String( " " );  Out.Int( t, 6 );  Out.String( "ms  " );
@@ -170,7 +171,7 @@ TYPE
 			A1:=A;
 
 			ops := 2 / 3 * size * size * size + size * size;   (* computational cost of LU decomposition is 2/3 n^3 + n^2 *)
-			r := A1 * x - b;  residual := MathL.sqrt( r +* r );
+			r := A1 * x - b;  residual := sqrt( r +* r );
 			flops := ops / (t / 1000);   (*per second*)
 			(*flops := flops * loops;*)
 			Out.String( "; time, flops, residual: " );  Out.String( " " );  Out.Int( t, 6 );  Out.String( "ms  " );
@@ -197,7 +198,7 @@ TYPE
 			x:=bluA.Solve(b);
 			A1:=A;
 			ops := 2 / 3 * size * size * size + size * size;   (* computational cost of LU decomposition is 2/3 n^3 + n^2 *)
-			r := A1 * x - b;  residual := MathL.sqrt( r +* r );
+			r := A1 * x - b;  residual := sqrt( r +* r );
 			flops := ops / (t / 1000);   (*per second*)
 			(*flops := flops * loops;*)
 			Out.String( "; time, flops, residual: " );  Out.String( " " );  Out.Int( t, 6 );  Out.String( "ms  " );
@@ -226,7 +227,7 @@ TYPE
 			bluA:=NIL;
 			Kernel.GC;
 			ops := 2 / 3 * size * size * size + size * size;   (* computational cost of LU decomposition is 2/3 n^3 + n^2 *)
-			r := A1 * x - b;  residual := MathL.sqrt( r +* r );
+			r := A1 * x - b;  residual := sqrt( r +* r );
 			flops := ops / (t / 1000);   (*per second*)
 			(*flops := flops * loops;*)
 			Out.String( "; time, flops, residual: " );  Out.String( " " );  Out.Int( t, 6 );  Out.String( "ms  " );
@@ -840,7 +841,7 @@ END;
 			bluA:=NIL;
 			Kernel.GC;
 			ops := 2 / 3 * size * size * size + size * size;   (* computational cost of LU decomposition is 2/3 n^3 + n^2 *)
-			(*r := A1 * x - b;*)  residual := MathL.sqrt( r +* r );
+			(*r := A1 * x - b;*)  residual := sqrt( r +* r );
 			flops0 := ops / (t0 / 1000);
 			flops := ops / (t / 1000);   (*per second*)
 			flops1 := ops / (t1 / 1000);   (*per second*)
@@ -855,6 +856,11 @@ END;
 			blocksize:=2*blocksize;
 		END;
 	END LinpackBlockLUA;
+	
+	PROCEDURE sqrt(x: Datatype): Datatype;
+	BEGIN
+		RETURN Datatype(MathL.sqrt(x));
+	END sqrt;
 
 	PROCEDURE Linpack1000d*;
 	BEGIN

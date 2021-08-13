@@ -25,7 +25,7 @@ CONST
 	CGOLD = 0.38196601125010515179;   (* 2 - GOLD *)
 
 TYPE
-	Real* = FLOAT64;
+	Real* = MatrixBase.Datatype;
 	Vector* = ARRAY [ * ] OF Real;
 	Matrix* = ARRAY [ * , * ] OF Real;
 
@@ -126,7 +126,7 @@ VAR
 		END minBrack;
 	*)
 	BEGIN
-		MinTol := MathL.sqrt( MatrixBase.EPS );
+		MinTol := Real(MathL.sqrt( MatrixBase.EPS ));
 		IF Tol < MinTol THEN Tol := MinTol END;
 		(*minBrack( A, B, C, Fa, Fb, Fc );  *)
 		MinBrack( Func, A, B, C, Fa, Fb, Fc );
@@ -629,7 +629,7 @@ VAR
 
 	PROCEDURE power( base, exponent: Real ): Real;
 	BEGIN
-		IF ABS( base ) < Eps THEN RETURN 0 ELSE RETURN MathL.exp( exponent * MathL.ln( base ) );  END;
+		IF ABS( base ) < Eps THEN RETURN 0 ELSE RETURN Real(MathL.exp( exponent * MathL.ln( base ) ));  END;
 	END power;
 
 	PROCEDURE MaxAbsV( CONST m: Vector ): Real;  (*to do: more generic approach*)

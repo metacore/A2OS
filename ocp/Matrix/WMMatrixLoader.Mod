@@ -35,7 +35,7 @@ BEGIN
 	f:=Files.Old(name);
 	IF f#NIL THEN
 		Files.OpenReader(r,f,0);
-		MatrixUtilities.ParseHeader(r,version, datatype,len);
+		(*MatrixUtilities.ParseHeader(r,version, datatype,len);
 		NEW(d,len);
 		CASE datatype OF
 		MatrixUtilities.DatatypeUInt8: NEW(d16,len); MatrixUtilities.ReadUInt8(r,d16); d:=d16;
@@ -43,7 +43,8 @@ BEGIN
 		| MatrixUtilities.DatatypeR : NEW(d, len); MatrixUtilities.ReadR(r,dr); d:=dr;
 		| MatrixUtilities.DatatypeLR : NEW(d, len); MatrixUtilities.ReadLR(r,d);
 		ELSE HALT(200);
-		END;
+		END;*)
+		d := MatrixUtilities.Load(r);
 		IF DIM(d)=2 THEN
 			NEW(mWindow, d, name);
 			mWindow.AddWindow;

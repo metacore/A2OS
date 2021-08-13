@@ -109,7 +109,7 @@ TYPE
 						FOR i := 0 TO LEN(RESULT,0)-1 DO
 							FOR j := 0 TO LEN(RESULT,1)-1 DO
 								IF RESULT[i,j] # 0 THEN
-									RESULT[i,j] := Math.exp(q*Math.ln(ABS(RESULT[i,j])));
+									RESULT[i,j] := Scalar(Math.exp(q*Math.ln(ABS(RESULT[i,j]))));
 								END;
 							END;
 						END;
@@ -123,7 +123,7 @@ TYPE
 					f := -0.5D0/(sigma*sigma);
 					FOR i := 0 TO LEN(RESULT,0)-1 DO
 						FOR j := 0 TO LEN(RESULT,1)-1 DO
-							RESULT[i,j] := Math.exp(f*RESULT[i,j]);
+							RESULT[i,j] := Scalar(Math.exp(f*RESULT[i,j]));
 						END;
 					END;
 
@@ -135,7 +135,7 @@ TYPE
 						FOR i := 0 TO LEN(RESULT,0)-1 DO
 							FOR j := 0 TO LEN(RESULT,1)-1 DO
 								IF RESULT[i,j] # 0 THEN
-									RESULT[i,j] := Math.exp(splineOrder*Math.ln(RESULT[i,j]));
+									RESULT[i,j] := Scalar(Math.exp(splineOrder*Math.ln(RESULT[i,j])));
 								END;
 							END;
 						END;
@@ -144,8 +144,8 @@ TYPE
 						FOR i := 0 TO LEN(RESULT,0)-1 DO
 							FOR j := 0 TO LEN(RESULT,1)-1 DO
 								IF RESULT[i,j] # 0 THEN
-									f := Math.ln(RESULT[i,j]);
-									RESULT[i,j] := Math.exp(splineOrder*f)*f;
+									f := Scalar(Math.ln(RESULT[i,j]));
+									RESULT[i,j] := Scalar(Math.exp(splineOrder*f)*f);
 								END;
 							END;
 						END;

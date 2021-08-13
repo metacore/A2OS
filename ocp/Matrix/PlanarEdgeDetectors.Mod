@@ -29,12 +29,12 @@ BEGIN
 	RETURN PlanarNabla.Grad(p, sampling);
 END DifferentialEdgeDirection;
 
-PROCEDURE arctan2(x,y:FLOAT64):FLOAT64; (*arctan in range 0..2pi*)
+PROCEDURE arctan2(x,y:Datatype):Datatype; (*arctan in range 0..2pi*)
 BEGIN
-	IF (x>0) & (y>=0) THEN RETURN Mathe.arctan(y/x)
-	ELSIF (x>0) & (y<0) THEN RETURN Mathe.arctan(y/x)+2*Mathe.pi
-	ELSIF x<0 THEN RETURN Mathe.arctan(y/x)+Mathe.pi	ELSIF (x=0) & (y>0) THEN RETURN Mathe.pi/2
-	ELSIF (x=0) & (y<0) THEN RETURN 3*Mathe.pi/2
+	IF (x>0) & (y>=0) THEN RETURN Datatype(Mathe.arctan(y/x))
+	ELSIF (x>0) & (y<0) THEN RETURN Datatype(Mathe.arctan(y/x)+2*Mathe.pi)
+	ELSIF x<0 THEN RETURN Datatype(Mathe.arctan(y/x)+Mathe.pi)	ELSIF (x=0) & (y>0) THEN RETURN Datatype(Mathe.pi/2)
+	ELSIF (x=0) & (y<0) THEN RETURN Datatype(3*Mathe.pi/2)
 	ELSE (*( x=0) & (y=0) *) RETURN 0 (*or RETURN NaN ?*)
 	END
 END arctan2;
@@ -61,7 +61,7 @@ VAR line: Line;
 	d1,deriv, pix, InvSqrt2: Datatype;
 	nil: ScalarField;
 BEGIN
-	InvSqrt2:=1/Mathe.sqrt(2);
+	InvSqrt2:=1/Datatype(Mathe.sqrt(2));
 	width:=LEN(in,1); height:=LEN(in,0);
 	IF height=0  THEN RETURN nil END;
 	IF LEN(RESULT,0)=0 THEN NEW(RESULT, LEN(in,0), LEN(in,1)); END;

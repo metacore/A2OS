@@ -4,7 +4,7 @@ MODULE PlanarMath;
 Kenneth Kreutz-Delgado : The Complex Gradient Operator and the CR-Calculus.
 ECE275A - Lecture Supplement - Fall 2006: "complex_derivatives.pdf *)
 
-IMPORT MatrixBase, LinearMath, Mathe:=MathL, PMath;
+IMPORT MatrixBase, LinearMath;
 
 TYPE
 	Datatype=MatrixBase.Datatype;
@@ -38,65 +38,51 @@ TYPE
 	END Sqr;
 
 	PROCEDURE Sqrt*(CONST in:Array):Array;
-	VAR i:SIGNED32;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in,0),LEN(in,1)) END;
-		RESULT:=ALL(in, Mathe.sqrt);
-		(*FOR i:=0 TO LEN(in,0)-1 DO
-			RESULT[i]:=LinearMath.Sqrt(in[i])
-		END;*)
+		RESULT:=ALL(in, LinearMath.sqrt);
 		RETURN RESULT
 	END Sqrt;
 
 	PROCEDURE Sin*(CONST in:Array):Array;
-	VAR i:SIGNED32;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in,0),LEN(in,1)) END;
-		RESULT:=ALL(in, Mathe.sin);
-		(*FOR i:=0 TO LEN(in,0)-1 DO
-			RESULT[i]:=LinearMath.Sin(in[i])
-		END;*)
+		RESULT:=ALL(in, LinearMath.sin);
 		RETURN RESULT
 	END Sin;
 
 	PROCEDURE Cos*(CONST in:Array):Array;
-	VAR i:SIGNED32;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in,0),LEN(in,1)) END;
-		RESULT:=ALL(in, Mathe.cos);
-		(*FOR i:=0 TO LEN(in,0)-1 DO
-			RESULT[i]:=LinearMath.Cos(in[i])
-		END;*)
+		RESULT:=ALL(in, LinearMath.cos);
 		RETURN RESULT
 	END Cos;
 
 	PROCEDURE Arctan*(CONST in:Array):Array;
-	VAR i:SIGNED32;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in,0),LEN(in,1)) END;
-		RESULT:=ALL(in, Mathe.arctan);
-		(*FOR i:=0 TO LEN(in,0)-1 DO
-			RESULT[i]:=LinearMath.Arctan(in[i])
-		END;*)
+		RESULT:=ALL(in, LinearMath.arctan);
 		RETURN RESULT
 	END Arctan;
 
 	PROCEDURE Tanh*(CONST in:Array):Array;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in))  END;
-		RESULT:=ALL(in, PMath.tanhL);
+		RESULT:=ALL(in, LinearMath.tanh);
 		RETURN RESULT
 	END Tanh;
 
+	PROCEDURE Logistic*(CONST in:Array):Array;
+	BEGIN
+		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in))  END;
+		RESULT:=ALL(in, LinearMath.logistic);
+		RETURN RESULT
+	END Logistic;
 
 	PROCEDURE Ln*(CONST in:Array):Array;
-	VAR i:SIGNED32;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in,0),LEN(in,1)) END;
-		RESULT:=ALL(in, Mathe.ln);
-		(*FOR i:=0 TO LEN(in,0)-1 DO
-			RESULT[i]:=LinearMath.Ln(in[i])
-		END;*)
+		RESULT:=ALL(in, LinearMath.ln);
 		RETURN RESULT
 	END Ln;
 
@@ -111,7 +97,6 @@ TYPE
 	END ComplexDivision;
 
 	PROCEDURE ComplexMultiplication*(CONST R1,I1,R2,I2: Array; VAR outR,outI:Array);
-	VAR rsqr:Array;
 	BEGIN
 		outR := R1 .* R2;
 		outR := outR - I1 .* I2;

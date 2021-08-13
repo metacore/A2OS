@@ -577,7 +577,7 @@ TYPE
 				Sum := A[K, K];
 				FOR J := 0 TO K - 1 DO Sum := Sum - Sqr( L[K, J] ) END;
 				IF Sum <= 0.0 THEN res := NOTPOSDEFINITE;  handleError( res, "Cholesky: matrix not positive definite " );  RETURN END;
-				L[K, K] := Math.sqrt( Sum );
+				L[K, K] := Datatype(Math.sqrt( Sum ));
 				FOR I := K + 1 TO Ubound DO
 					Sum := A[I, K] - L[I, .. K - 1] +* L[K, .. K - 1];  L[I, K] := Sum / L[K, K];
 				END;
@@ -609,7 +609,7 @@ TYPE
 			FOR K := 0 TO LEN( Q, 1 ) - 1 DO
 				Sum:=Q[..,K] +* Q[..,K];
 				IF Sum = 0.0 THEN res := SINGULAR;  handleError( res, "QR: singular matrix " );  RETURN END;
-				R[K, K] := Math.sqrt( Sum );
+				R[K, K] := Datatype(Math.sqrt( Sum ));
 				Q[.. , K] := Q[.. , K] / R[K, K];
 				R[K, K+1..] := Q[.. , K] * Q[.. , K+1..];
 				Q[.., K+1..] := Q[.., K+1..] -Q[.., K] ** R[K, K+1..];

@@ -1,6 +1,6 @@
 MODULE TestVolumePDE;   (**  AUTHOR "Patrick Hunziker"; PURPOSE "Tests PDE computations for 3D";  **)
 
-IMPORT VolumePDE, Out:=KernelLog, Utilities:=Strings, Files, WMMatrix, WMArrayPanel, MatrixUtilities;
+IMPORT VolumePDE, Out:=KernelLog, Utilities:=Strings, Files, WMMatrix, WMArrayPanel, MatrixBase, MatrixUtilities;
 
 CONST TestFileName*="Matrix/VolumePDE_ConstrainedLaplace.MtA";
 
@@ -119,8 +119,10 @@ END TestAdvection;
 		NEW( laplace );  laplace.SolveMultigrid( d, threshold, 32, 20, 200, con.Constrain );
 		f:=Files.Old(TestFileName);
 		Files.OpenReader(r,f,0);
-		e:=MatrixUtilities.LoadLR(r);
-		ASSERT(d=e);
+		e:=MatrixUtilities.Load(r);
+		VAR err:=d-e;
+		VAR errNrm:=err+*err;
+		ASSERT(errNrm <= MatrixBase.EPS);
 	END Test;
 
 END TestVolumePDE.

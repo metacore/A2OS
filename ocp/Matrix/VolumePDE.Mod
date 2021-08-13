@@ -589,7 +589,7 @@ PROCEDURE Stencil333( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite dif
 		RETURN [[[a0,a1],[b0,b1]],[[c0,c1],[d0,d1]]];
 	END Cast2x2x2X;
 *)
-	PROCEDURE -Cast2x2x2*(a0,a1,b0,b1,c0,c1,d0,d1: FLOAT64):ARRAY [2,2,2] OF FLOAT64;
+	PROCEDURE -Cast2x2x2*(a0,a1,b0,b1,c0,c1,d0,d1: Datatype):ARRAY [2,2,2] OF Datatype;
 	BEGIN
 		RESULT[0,0,0]:=a0;
 		RESULT[0,0,1]:=a1;

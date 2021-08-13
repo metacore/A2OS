@@ -40,7 +40,7 @@ BEGIN
 	(*divisor:=SUM(PlanarMath.Sqr( reference-test));*)
 	tmp:=reference-test;
 	divisor:= tmp+*tmp;
-	RETURN 10*PMath.log (SHORT(dividend/divisor))
+	RETURN 10*PMath.log (FLOAT32(dividend/divisor))
 END SNR;
 
 PROCEDURE SNRComplex*(CONST test, reference:ComplexPlane):Datatype; (* see http://mathworld.wolfram.com/AveragePower.htm and http://bigwww.epfl.ch/sage/soft/snr/ *)
@@ -51,7 +51,7 @@ BEGIN
 	tmpC:=reference-test;
 	tmp:=ABS(tmpC);
 	divisor:=tmp+*tmp;
-	RETURN 10*PMath.log (SHORT(dividend/divisor))
+	RETURN 10*PMath.log (FLOAT32(dividend/divisor))
 END SNRComplex;
 
 
@@ -61,13 +61,13 @@ VAR dividend, divisor: Datatype;
 BEGIN
 	dividend:=MAX(reference .* reference);
 	divisor:=SUM(PlanarMath.Sqr( reference-test));
-	RETURN 10*PMath.log (SHORT(dividend*LEN(test,0)*LEN(test,1)/divisor))
+	RETURN 10*PMath.log (FLOAT32(dividend*LEN(test,0)*LEN(test,1)/divisor))
 END PSNR;
 
 (** root mean square error*)
 PROCEDURE RMSE*(CONST test, reference:Plane):Datatype;
 BEGIN
-	RETURN MathL.sqrt(SUM(PlanarMath.Sqr( reference-test))/(LEN(test,0)*LEN(test,1)))
+	RETURN Datatype(MathL.sqrt(SUM(PlanarMath.Sqr( reference-test))/(LEN(test,0)*LEN(test,1))))
 END RMSE;
 
 (** mean absolute error *)

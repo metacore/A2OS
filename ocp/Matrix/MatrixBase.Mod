@@ -1,6 +1,6 @@
 MODULE MatrixBase;  (**  AUTHOR "Patrick Hunziker"; PURPOSE "Base Types for Oberon 'Matrix' Library based on Felix Friedrichs enhanced compiler for arrays.";  **)
 
-IMPORT KernelLog,Streams;
+IMPORT SYSTEM, KernelLog,Streams, FoxArrayBase;
 
 CONST
 	OK* = 0;
@@ -63,7 +63,7 @@ TYPE
 	END Solver;
 
 VAR
-	EPS-: FLOAT64;
+	EPS-: Datatype;
 
 	PROCEDURE SolveGeneric*( VAR A: Matrix;  CONST b: Vector ): Vector;   (** example of procedural interface to solvers *)
 	END SolveGeneric;
@@ -101,46 +101,94 @@ VAR
 			x := x / 2;
 		END;
 	END ComputeEpsL;
-
-	PROCEDURE WriteLVector*(W:Streams.Writer; CONST v:Vector);
-	VAR i:SIZE;
+	
+	PROCEDURE WriteVectorD32(W:Streams.Writer; CONST vDesc:FoxArrayBase.UnsafeArrayT);
 	BEGIN
-		FOR i:=0 TO LEN(v,0)-1 DO
-			W.RawLReal(v[i]);
+		VAR addr := vDesc.adr;
+		VAR n := vDesc.lens[0].len, inc := vDesc.lens[0].inc: SIZE;
+		WHILE n > 0 DO
+			VAR d := SYSTEM.GET32(addr): SIGNED32;
+			W.RawLInt(d);
+			INC(addr, inc); DEC(n);
+		END;
+	END WriteVectorD32;
+
+	PROCEDURE WriteVectorD64(W:Streams.Writer; CONST vDesc:FoxArrayBase.UnsafeArrayT);
+	BEGIN
+		VAR addr := vDesc.adr;
+		VAR n := vDesc.lens[0].len, inc := vDesc.lens[0].inc: SIZE;
+		WHILE n > 0 DO
+			VAR d := SYSTEM.GET64(addr): SIGNED64;
+			W.RawHInt(d);
+			INC(addr, inc); DEC(n);
+		END;
+	END WriteVectorD64;
+	
+	PROCEDURE ReadVectorD32(R:Streams.Reader; CONST vDesc:FoxArrayBase.UnsafeArrayT);
+	BEGIN
+		VAR addr := vDesc.adr;
+		VAR n := vDesc.lens[0].len, inc := vDesc.lens[0].inc: SIZE;
+		VAR d: SIGNED32;
+		WHILE n > 0 DO
+			R.RawLInt(d);
+			SYSTEM.PUT32(addr, d);
+			INC(addr, inc); DEC(n);
+		END;
+	END ReadVectorD32;
+	
+	PROCEDURE ReadVectorD64(R:Streams.Reader; CONST vDesc:FoxArrayBase.UnsafeArrayT);
+	BEGIN
+		VAR addr := vDesc.adr;
+		VAR n := vDesc.lens[0].len, inc := vDesc.lens[0].inc: SIZE;
+		VAR d: SIGNED64;
+		WHILE n > 0 DO
+			R.RawHInt(d);
+			SYSTEM.PUT64(addr, d);
+			INC(addr, inc); DEC(n);
+		END;
+	END ReadVectorD64;
+
+	PROCEDURE WriteVector*(W:Streams.Writer; CONST v:Vector);
+	BEGIN
+		IF SIZEOF(Datatype) = SIZEOF(FLOAT32) THEN
+			WriteVectorD32(W, ADDRESS OF v);
+		ELSE
+			WriteVectorD64(W, ADDRESS OF v);
 		END;
 		W.Update;
-	END WriteLVector;
+	END WriteVector;
 
-	PROCEDURE WriteLMatrix*(W:Streams.Writer; CONST m:Matrix);
+	PROCEDURE WriteMatrix*(W:Streams.Writer; CONST m:Matrix);
 	VAR i:SIZE;
 	BEGIN
 		FOR i:=0 TO LEN(m,0)-1 DO
-			WriteLVector(W,m[i])
+			WriteVector(W,m[i])
 		END;
 		W.Update;
-	END WriteLMatrix;
+	END WriteMatrix;
 
 
 
 
-	PROCEDURE ReadLVector*(R:Streams.Reader; VAR v:Vector);
-	VAR i:SIZE;
+	PROCEDURE ReadVector*(R:Streams.Reader; VAR v:Vector);
 	BEGIN
-		FOR i:=0 TO LEN(v,0)-1 DO
-			R.RawLReal(v[i]);
+		IF SIZEOF(Datatype) = SIZEOF(FLOAT32) THEN
+			ReadVectorD32(R, ADDRESS OF v);
+		ELSE
+			ReadVectorD64(R, ADDRESS OF v);
 		END;
-	END ReadLVector;
+	END ReadVector;
 
-	PROCEDURE ReadLMatrix*(R:Streams.Reader; VAR m:Matrix);
+	PROCEDURE ReadMatrix*(R:Streams.Reader; VAR m:Matrix);
 	VAR i:SIZE;
 	BEGIN
 		FOR i:=0 TO LEN(m,0)-1 DO
-			ReadLVector(R,m[i])
+			ReadVector(R,m[i])
 		END;
-	END ReadLMatrix;
+	END ReadMatrix;
 
 	BEGIN
-	IF SIZEOF( Datatype ) = 4 THEN EPS := ComputeEps() ELSE EPS := ComputeEpsL();  END;
+	IF SIZEOF( Datatype ) = SIZEOF(FLOAT32) THEN EPS := ComputeEps() ELSE EPS := Datatype(ComputeEpsL());  END;
 END MatrixBase.
 
 

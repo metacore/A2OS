@@ -14,6 +14,8 @@ see wikipedia: "Del": Del can also be applied to a vector field with the result 
  =  = 2  is Laplacian
  *)
 
+IMPORT MatrixBase;
+
 CONST
 	x=0; y=1; z=2;
 	(*sampling type*)
@@ -26,7 +28,7 @@ CONST
 
 
 TYPE
-	Datatype* = FLOAT64;
+	Datatype* = MatrixBase.Datatype;
 	ScalarField* = ARRAY [*,*,*] OF Datatype;
 	VectorField* = ARRAY [*,*,*,*] OF Datatype; (* dimension in first index: [3, *,*,*]  *)
 	Field= ARRAY [*,*,*,*] OF Datatype; (* scalar & vector quantity at a point *)

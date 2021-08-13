@@ -661,7 +661,7 @@ BEGIN
 	
 	Inv:=lu.Inverse();
 	B:=A*Inv;
-	error:=SUM(ABS(B))-LEN(B,0);
+	error:=SUM(ABS(B))/LEN(B,0) - 1;
 	ASSERT(ABS(error)<TestTolerance, 202);
 	
 	(*! TBD: test LU Agen*)

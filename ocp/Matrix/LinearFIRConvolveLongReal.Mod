@@ -1,9 +1,12 @@
 MODULE LinearFIRConvolveLongReal;	(** Patrick Hunziker & dk(assembler)   **)
 (** implements basic FIR convolutions for convolve, convolve+downsample, convolve+upsample *)
 
-IMPORT LinearFilters;
+IMPORT LinearFilters, MatrixBase;
 
-PROCEDURE Convolve*(CONST filter:ARRAY[*]  OF FLOAT64; CONST data:ARRAY [*] OF FLOAT64; VAR result:ARRAY [*] OF FLOAT64);
+TYPE
+	Datatype = MatrixBase.Datatype;
+
+PROCEDURE Convolve*(CONST filter:ARRAY[*]  OF Datatype; CONST data:ARRAY [*] OF Datatype; VAR result:ARRAY [*] OF Datatype);
 VAR d,filterlen,reslen:SIZE;
 BEGIN
 	filterlen:=LEN(filter,0);
@@ -13,7 +16,7 @@ BEGIN
 	END;
 END Convolve;
 
-PROCEDURE ConvolveDown2*(CONST filter:ARRAY[*]  OF FLOAT64;  CONST data:ARRAY [*] OF FLOAT64;VAR result:ARRAY [*] OF FLOAT64; shift:SIZE);
+PROCEDURE ConvolveDown2*(CONST filter:ARRAY[*]  OF Datatype;  CONST data:ARRAY [*] OF Datatype;VAR result:ARRAY [*] OF Datatype; shift:SIZE);
 VAR d,filterlen,datalen,resPos:SIZE;
 BEGIN
 	ASSERT(shift IN {0,1},200); (* this is used for even/odd algorithm variants *)
@@ -26,7 +29,7 @@ BEGIN
 	END;
 END ConvolveDown2;
 
-PROCEDURE ConvolveUp2_scalar(CONST filter:ARRAY[*]  OF FLOAT64; CONST data: ARRAY [*] OF FLOAT64;VAR result:ARRAY [*] OF FLOAT64; shift:SIZE);
+PROCEDURE ConvolveUp2_scalar(CONST filter:ARRAY[*]  OF Datatype; CONST data: ARRAY [*] OF Datatype;VAR result:ARRAY [*] OF Datatype; shift:SIZE);
 	(** upsampling by 2 and convolution with filter; admissible types should include all basic Oberon number types *)
 VAR f,d,filterlen,reslen,filterstart:SIZE;
 BEGIN
@@ -45,7 +48,7 @@ BEGIN
 END ConvolveUp2_scalar;
 
 (* rewritten as array math, not fully tested *)
-PROCEDURE ConvolveUp2*(CONST filter:ARRAY[*]  OF FLOAT64; CONST data: ARRAY [*] OF FLOAT64;VAR result:ARRAY [*] OF FLOAT64; shift:SIZE);
+PROCEDURE ConvolveUp2*(CONST filter:ARRAY[*]  OF Datatype; CONST data: ARRAY [*] OF Datatype;VAR result:ARRAY [*] OF Datatype; shift:SIZE);
 	(** upsampling by 2 and convolution with filter; admissible types should include all basic Oberon number types *)
 VAR d,filterlen,reslen,filterstart:SIZE;
 BEGIN
@@ -61,7 +64,7 @@ BEGIN
 END ConvolveUp2;
 
 PROCEDURE {TEST} Test*;
-VAR a,b,c,d: ARRAY [*] OF FLOAT64;
+VAR a,b,c,d: ARRAY [*] OF Datatype;
 	down,up: LinearFilters.Filter;
 BEGIN
 	a:=[0,1,2,3,4,5,6,7,6,5,4,3,2,1,0,1,2,3,4,5,6,7,6,5,4,3,2,1,0,1,2,3,4,5,6,7,6,5,4,3,2,1,0,1,2,3,4,5,6,7,6,5,4,3,2,1,0,1,2,3,4,5,6,7,6,5,4,3,2,1,0,1,2,3,4,5,6,7,6,5,4,3,2,1,0];

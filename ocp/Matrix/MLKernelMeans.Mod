@@ -8,7 +8,7 @@ MODULE MLKernelMeans;
 *)
 
 IMPORT
-	ErrorBase, MLBase, MLKernels, ExtraSort, Strings;
+	SYSTEM, ErrorBase, MLBase, MLKernels, ExtraSort, Strings;
 
 TYPE
 	Scalar = MLBase.Scalar;
@@ -142,7 +142,7 @@ TYPE
 
 					(* sort labels and after the data *)
 					y := labels;
-					ExtraSort.QuickSortExLR(y,ind);
+					sortEx(y,ind);
 
 					(* find first element >= 1 *)
 					i := 0;
@@ -211,4 +211,13 @@ VAR
 		RETURN x;
 	END ColSum;
 
+TYPE SortEx = PROCEDURE ( VAR x: ARRAY [ * ] OF Scalar;  VAR ind: ARRAY [ * ] OF SIZE );
+VAR sortEx: SortEx;
+
+BEGIN
+	IF SIZEOF(Scalar) = SIZEOF(FLOAT32) THEN
+		sortEx := SYSTEM.VAL(SortEx, ExtraSort.QuickSortExR);
+	ELSE
+		sortEx := SYSTEM.VAL(SortEx, ExtraSort.QuickSortExLR);
+	END;
 END MLKernelMeans.

@@ -4,7 +4,7 @@ MODULE TensorMath;
 Kenneth Kreutz-Delgado : The Complex Gradient Operator and the CR-Calculus.
 ECE275A - Lecture Supplement - Fall 2006: "complex_derivatives.pdf *)
 
-IMPORT MatrixBase, LinearMath, Mathe:=MathL, PMath;
+IMPORT MatrixBase, LinearMath;
 
 TYPE
 	Datatype=MatrixBase.Datatype;
@@ -48,49 +48,49 @@ TYPE
 	PROCEDURE Sqrt*(CONST in:Array):Array;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in))  END;
-		RESULT:=ALL(in, Mathe.sqrt);
+		RESULT:=ALL(in, LinearMath.sqrt);
 		RETURN RESULT
 	END Sqrt;
 
 	PROCEDURE Sin*(CONST in:Array):Array;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in))  END;
-		RESULT:=ALL(in, Mathe.sin);
+		RESULT:=ALL(in, LinearMath.sin);
 		RETURN RESULT
 	END Sin;
 
 	PROCEDURE Cos*(CONST in:Array):Array;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in))  END;
-		RESULT:=ALL(in, Mathe.cos);
+		RESULT:=ALL(in, LinearMath.cos);
 		RETURN RESULT
 	END Cos;
 
 	PROCEDURE Arctan*(CONST in:Array):Array;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in))  END;
-		RESULT:=ALL(in, Mathe.arctan);
+		RESULT:=ALL(in, LinearMath.arctan);
 		RETURN RESULT
 	END Arctan;
 
 	PROCEDURE Tanh*(CONST in:Array):Array;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in))  END;
-		RESULT:=ALL(in, PMath.tanhL);
+		RESULT:=ALL(in, LinearMath.tanh);
 		RETURN RESULT
 	END Tanh;
 
 	PROCEDURE Logistic*(CONST in:Array):Array;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in))  END;
-		RESULT:=ALL(in, PMath.logisticL);
+		RESULT:=ALL(in, LinearMath.logistic);
 		RETURN RESULT
 	END Logistic;
 
 	PROCEDURE Ln*(CONST in:Array):Array;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in))  END;
-		RESULT:=ALL(in, Mathe.ln);
+		RESULT:=ALL(in, LinearMath.ln);
 		RETURN RESULT
 	END Ln;
 
@@ -105,7 +105,6 @@ TYPE
 	END ComplexDivision;
 
 	PROCEDURE ComplexMultiplication*(CONST R1,I1,R2,I2: Array; VAR outR,outI:Array);
-	VAR rsqr:Array;
 	BEGIN
 		outR := R1 .* R2;
 		outR := outR - I1 .* I2;

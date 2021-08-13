@@ -4,8 +4,6 @@
 
 	AUTHOR:
 		Alexey Morozov
-
-
 **)
 MODULE KrylovCGS;
 
@@ -19,11 +17,13 @@ TYPE
 	MatrixToVectorProc* = PROCEDURE {DELEGATE} ( CONST X: Vector; VAR Y: Vector );
 
 	Solver* = OBJECT (MatrixBase.Solver)
-	VAR Tolerance*: Datatype;   (* tolerance of solution accuracy *)
-		nMaxIterations*, nIterations-: SIGNED32;   (* maximum number of iterations and number of done iterations *)
-		SysMatrix: Matrix;   (* copy of system matrix *)
-		Tracer*: Streams.Writer;
-		Tiny: Datatype;
+	VAR
+		tolerance*: Datatype;   (* tolerance of solution accuracy *)
+		nMaxIterations*, nIterations-: SIZE;   (* maximum number of iterations and number of done iterations *)
+		tracer*: Streams.Writer;
+
+		sysMatrix: Matrix;   (* copy of system matrix *)
+		tiny: Datatype;
 
 		resid0, resid, p, q, u, v: Vector;
 
@@ -32,10 +32,10 @@ TYPE
 			handleError := MatrixBase.HandleError;  res := MatrixBase.OK;
 
 			(* parameters by default *)
-			Tolerance := 1.0 / 1000000.0;   (* tolerance of solution residual *)
+			tolerance := 1 / 1000000;   (* tolerance of solution residual *)
 			nMaxIterations := 30;   (* maximum number of iterations *)
 
-			Tiny := 10.0 * MatrixBase.EPS;
+			tiny := 10 * MatrixBase.EPS;
 
 			IF LEN( A ) = 0 THEN RETURN;
 			END;
@@ -43,24 +43,31 @@ TYPE
 				res := MatrixBase.NOTSQUARE;  handleError( res, 'KrylovCGS: matrix is not square!' );  RETURN;
 			END;
 
-			SysMatrix := A;
+			sysMatrix := A;
 
-			(* allocate arrays for further needs *)
-			NEW( resid0, LEN( A,0 ) );  NEW( resid, LEN( A,0 ) );  NEW( u, LEN( A,0 ) );
-			NEW( v, LEN( A,0 ) );  NEW( p, LEN( A,0 ) );  NEW( q, LEN( A,0 ) );
-
-			(* initial guess/solution *)
-			NEW( x, LEN( A,0 ) );
+			ReallocateIfNecessary(LEN( A, 0 ));
 		END Init;
+
+		PROCEDURE ReallocateIfNecessary(problemSize: SIZE);
+		BEGIN
+			(* allocate arrays for further needs *)
+			IF LEN( resid0, 0 ) # problemSize THEN
+				NEW( resid0, problemSize );  NEW( resid, problemSize );  NEW( u, problemSize );
+				NEW( v, problemSize );  NEW( p, problemSize );  NEW( q, problemSize );
+			END;
+			(* initial guess/solution *)
+			IF LEN( x, 0 ) # problemSize THEN
+				NEW( x, problemSize );
+			END;
+		END ReallocateIfNecessary;
 
 		PROCEDURE Solve*( CONST b: Vector ): Vector;
 		BEGIN
-			IF LEN( b, 0 ) # LEN( SysMatrix, 0 ) THEN
+			IF LEN( b, 0 ) # LEN( sysMatrix, 0 ) THEN
 				res := MatrixBase.SIZEMISMATCH;  handleError( res, 'KrylovCGS: matrix-vector size missmatch!' );  RETURN x;
 			END;
 
-			(* solve system *)
-			RETURN CGS( SysMatrix, b, x, Tolerance, nMaxIterations );
+			RETURN CGS( sysMatrix, b, x, tolerance, nMaxIterations );
 		END Solve;
 
 		PROCEDURE SolveNoCopy*( VAR A: Matrix;CONST b: Vector ): Vector;
@@ -73,51 +80,39 @@ TYPE
 				res := MatrixBase.SIZEMISMATCH;  handleError( res, 'KrylovCGS: matrix-vector size missmatch!' );  RETURN x;
 			END;
 
-			(* if necessary reallocate all arrays *)
-			IF LEN( b, 0 ) > LEN( x, 0 ) THEN
-				NEW( x, LEN( b, 0 ) );
-			END;
-			IF LEN( b, 0 ) > LEN( resid0, 0 ) THEN
-				NEW( resid0, LEN( b, 0 ) );  NEW( resid, LEN( b, 0 ) );  NEW( u, LEN( b, 0 ) );  NEW( v, LEN( b, 0 ) );
-				NEW( p, LEN( b, 0 ) );  NEW( q, LEN( b, 0 ) );
-			END;
+			ReallocateIfNecessary(LEN( b, 0 ));
 
-			(* solve system *)
-			RETURN CGS( A, b, x, Tolerance, nMaxIterations );
+			RETURN CGS( A, b, x, tolerance, nMaxIterations );
 		END SolveNoCopy;
 
-		PROCEDURE SolveProcBased*( MatrixToVector: MatrixToVectorProc;CONST b: Vector ): Vector;
+		PROCEDURE SolveProcBased*( matrixToVector: MatrixToVectorProc;CONST b: Vector ): Vector;
 		BEGIN
-			IF MatrixToVector = NIL THEN
+			IF matrixToVector = NIL THEN
 				res := MatrixBase.NILPROC;  handleError( res, 'KrylovCGS: invalid Matrix to Vector procedure pointer!' );  RETURN x;
 			END;
-			(* if necessary - reallocate all arrays *)
-			IF LEN( b, 0 ) > LEN( x, 0 ) THEN
-				NEW( x, LEN( b, 0 ) );
-				x := 0;   (* implicit in NEW  *)
-			END;
-			IF LEN( b, 0 ) > LEN( resid0, 0 ) THEN
-				NEW( resid0, LEN( b,0 ) );  NEW( resid, LEN( b,0 ) );
-				NEW( u, LEN( b,0 ) );  NEW( v, LEN( b,0 ) );
-				NEW( p, LEN( b,0 ) );  NEW( q, LEN( b,0 ) );
-			END;
-			(* solve system *)
-			RETURN CGSProcBased( MatrixToVector, b, x, Tolerance, nMaxIterations );
+
+			ReallocateIfNecessary(LEN( b, 0 ));
+
+			RETURN CGSProcBased( matrixToVector, b, x, tolerance, nMaxIterations );
 		END SolveProcBased;
 
-		PROCEDURE CGS( CONST A: Matrix;  CONST b: Vector;
-					   VAR x: Vector;  Tolerance: Datatype;
-					   nMaxIterations: SIGNED32 ): Vector;
+		PROCEDURE CGS(
+								CONST A: Matrix;
+								CONST b: Vector;
+								VAR x: Vector;
+								tolerance: Datatype;
+								nMaxIterations: SIZE
+								): Vector;
 		VAR alpha, beta, rho, rho_1, residnrm: Datatype;
 		BEGIN
 			resid0 := A * x;  resid0 := b - resid0;  resid := resid0;  beta := 0;
 			residnrm := 1.0;
 			nIterations := 0;
-			WHILE (nIterations < nMaxIterations) & (residnrm > Tolerance) DO
+			WHILE (nIterations < nMaxIterations) & (residnrm > tolerance) DO
 				rho_1 := rho;  rho := resid0 +* resid;
-				IF ABS( rho ) <= Tiny THEN
-					IF Tracer # NIL THEN
-						Tracer.String( 'Premature exit due to very small rho value!' );  Tracer.Ln;  Tracer.Update();  RETURN x;
+				IF ABS( rho ) <= tiny THEN
+					IF tracer # NIL THEN
+						tracer.String( 'Premature exit due to very small rho value!' );  tracer.Ln;  tracer.Update();  RETURN x;
 					END;
 				END;
 				IF nIterations > 0 THEN
@@ -129,35 +124,36 @@ TYPE
 				u := u + q;  x := x + alpha * u;
 				v := A * u;
 				resid := resid - alpha * v;
-				residnrm := Math.sqrt( resid +* resid );
-				IF Tracer # NIL THEN
-					Tracer.String( 'iteration ' );  Tracer.Int( nIterations, 0 );
-					Tracer.String( ':' );  Tracer.String( ' res norm = ' );
-					Tracer.FloatFix( residnrm, 16, 16, 0 );  Tracer.Ln;
-					Tracer.Update();
+				residnrm := Datatype(Math.sqrt( resid +* resid ));
+				IF tracer # NIL THEN
+					tracer.String( 'iteration ' );  tracer.Int( nIterations, 0 );
+					tracer.String( ':' );  tracer.String( ' res norm = ' );
+					tracer.FloatFix( residnrm, 16, 16, 0 );  tracer.Ln;
+					tracer.Update();
 				END;
 				INC( nIterations );
 			END;
 			RETURN x;
 		END CGS;
 
-		PROCEDURE CGSProcBased( MatrixToVector: MatrixToVectorProc;
-								CONST b: Vector;
-								VAR x: Vector;  Tolerance: Datatype;
-								nMaxIterations: SIGNED32 ): Vector;
-		VAR
+		PROCEDURE CGSProcBased(
+											matrixToVector: MatrixToVectorProc;
+											CONST b: Vector;
+											VAR x: Vector;  tolerance: Datatype;
+											nMaxIterations: SIZE
+											): Vector;
 		VAR alpha, beta, rho, rho_1, residnrm: Datatype;
 		BEGIN
-			MatrixToVector( x, resid0 );  resid0 := b - resid0;  resid := resid0;
-			beta := 0;  residnrm := 1.0;
+			matrixToVector( x, resid0 );  resid0 := b - resid0;  resid := resid0;
+			beta := 0;  residnrm := 1;
 
 			nIterations := 0;
-			WHILE (nIterations < nMaxIterations) & (residnrm > Tolerance) DO
+			WHILE (nIterations < nMaxIterations) & (residnrm > tolerance) DO
 				rho_1 := rho;  rho := resid0 +* resid;
 
-				IF ABS( rho ) <= Tiny THEN
-					IF Tracer # NIL THEN
-						Tracer.String( 'Premature exit due to very small rho value!' );  Tracer.Ln;  Tracer.Update();  RETURN x;
+				IF ABS( rho ) <= tiny THEN
+					IF tracer # NIL THEN
+						tracer.String( 'Premature exit due to very small rho value!' );  tracer.Ln;  tracer.Update();  RETURN x;
 					END;
 				END;
 
@@ -167,17 +163,17 @@ TYPE
 				ELSE u := resid;  p := u;
 				END;
 
-				MatrixToVector( p, q );  alpha := rho / (resid0 +* q);
+				matrixToVector( p, q );  alpha := rho / (resid0 +* q);
 				q := u - alpha * q;
 				u := u + q;  x := x + alpha * u;
-				MatrixToVector( u, v );
+				matrixToVector( u, v );
 				resid := resid - alpha * v;
-				residnrm := Math.sqrt( resid +* resid );
-				IF Tracer # NIL THEN
-					Tracer.String( 'iteration ' );  Tracer.Int( nIterations, 0 );
-					Tracer.String( ':' );  Tracer.String( ' res norm = ' );
-					Tracer.FloatFix( residnrm, 16, 16, 0 );  Tracer.Ln;
-					Tracer.Update();
+				residnrm := Datatype(Math.sqrt( resid +* resid ));
+				IF tracer # NIL THEN
+					tracer.String( 'iteration ' );  tracer.Int( nIterations, 0 );
+					tracer.String( ':' );  tracer.String( ' res norm = ' );
+					tracer.FloatFix( residnrm, 16, 16, 0 );  tracer.Ln;
+					tracer.Update();
 				END;
 				INC( nIterations );
 			END;
@@ -198,10 +194,10 @@ TYPE
 	BEGIN
 		NEW(cgs,dummy); RETURN cgs.SolveNoCopy(A,b);
 	END Solve;
-	
+
 	PROCEDURE {TEST} Test*;
-	CONST TestThreshold = 1.0 / 1000000.0;
-	VAR 
+	CONST TestThreshold = 1 / 1000000;
+	VAR
 		s: Solver; A: Matrix;  b, x1, x2, e: Vector;  error:Datatype; log: Streams.Writer;
 		procObj: ProcObj;
 	TYPE
@@ -225,7 +221,7 @@ TYPE
 
 		Streams.OpenWriter(log, KernelLog.Send);
 
-		NEW(s, A); s.Tracer := log;
+		NEW(s, A); s.tracer := log;
 
 		x1 := s.Solve(b);
 		e := A*x1-b; error:= (e+*e) / (b+*b);
@@ -235,7 +231,7 @@ TYPE
 		x2 := s.SolveNoCopy( A, b );
 		e := A*x2-b; error:= (e+*e) / (b+*b);
 		ASSERT(x2 = x1, 201);
-		
+
 		s.x := 0;
 		NEW(procObj, A);
 		x2 := s.SolveProcBased( procObj.Proc, b );
@@ -246,7 +242,7 @@ TYPE
 		e := A*x2-b; error:= (e+*e) / (b+*b);
 		ASSERT(x2 = x1, 201);
 	END Test;
-	
+
 END KrylovCGS.
 
 System.FreeDownTo KrylovCGS ~

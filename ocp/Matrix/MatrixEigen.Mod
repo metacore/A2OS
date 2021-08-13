@@ -12,11 +12,16 @@ CONST
 		RETURN x * x;
 	END sqr;
 
+	PROCEDURE sqrt( x: Datatype ): Datatype;
+	BEGIN
+		RETURN Datatype(Math.sqrt(x));
+	END sqrt;
+
 	PROCEDURE Eigenvalue22*( CONST A: Matrix ): Vector;   (*limitation: real case; add check for entry conditions*)
 	VAR L: Vector;  l0, l1: Datatype;
 	BEGIN
-		ASSERT( (LEN( A ) = 2) & (LEN( A, 1 ) = 2), 100 );  NEW( L, 2 );  l0 := (A[0, 0] + A[1, 1]) / 2 + Math.sqrt( sqr( A[0, 0] + A[1, 1] ) / 4 + A[0, 1] * A[1, 0] - A[0, 0] * A[1, 1] );
-		l1 := (A[0, 0] + A[1, 1]) / 2 - Math.sqrt( sqr( A[0, 0] + A[1, 1] ) / 4 + A[0, 1] * A[1, 0] - A[0, 0] * A[1, 1] );
+		ASSERT( (LEN( A ) = 2) & (LEN( A, 1 ) = 2), 100 );  NEW( L, 2 );  l0 := (A[0, 0] + A[1, 1]) / 2 + sqrt( sqr( A[0, 0] + A[1, 1] ) / 4 + A[0, 1] * A[1, 0] - A[0, 0] * A[1, 1] );
+		l1 := (A[0, 0] + A[1, 1]) / 2 - sqrt( sqr( A[0, 0] + A[1, 1] ) / 4 + A[0, 1] * A[1, 0] - A[0, 0] * A[1, 1] );
 		IF ABS( l0 ) > ABS( l1 ) THEN L[0] := l0;  L[1] := l1 ELSE L[0] := l1;  L[1] := l0 END;
 		RETURN L
 	END Eigenvalue22;

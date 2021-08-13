@@ -83,11 +83,11 @@ END Arrow;
 
 PROCEDURE arctan2*(x,y:Datatype):Datatype; (*arctan in range 0..2pi*)
 BEGIN
-	IF (x>0) & (y>=0) THEN RETURN Mathe.arctan(y/x)
-	ELSIF (x>0) & (y<0) THEN RETURN Mathe.arctan(y/x)+2*Mathe.pi
-	ELSIF x<0 THEN RETURN Mathe.arctan(y/x)+Mathe.pi
-	ELSIF (x=0) & (y>0) THEN RETURN Mathe.pi/2
-	ELSIF (x=0) & (y<0) THEN RETURN 3*Mathe.pi/2
+	IF (x>0) & (y>=0) THEN RETURN Datatype(Mathe.arctan(y/x))
+	ELSIF (x>0) & (y<0) THEN RETURN Datatype(Mathe.arctan(y/x)+2*Mathe.pi)
+	ELSIF x<0 THEN RETURN Datatype(Mathe.arctan(y/x)+Mathe.pi)
+	ELSIF (x=0) & (y>0) THEN RETURN Datatype(Mathe.pi/2)
+	ELSIF (x=0) & (y<0) THEN RETURN Datatype(3*Mathe.pi/2)
 	ELSE (*( x=0) & (y=0) *) RETURN 0 (*or RETURN NaN ?*)
 	END
 END arctan2;

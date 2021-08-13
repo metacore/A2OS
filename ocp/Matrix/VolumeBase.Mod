@@ -1,13 +1,13 @@
 MODULE VolumeBase;   (**  AUTHOR "Patrick Hunziker"; PURPOSE "";  **)
 
-IMPORT Out := KernelLog, SYSTEM;
+IMPORT MatrixBase, Out := KernelLog, SYSTEM;
 
 CONST
 	cachesize* = 256 * 1024;   (* make dynamic *)
 	cachefraction = 0.5;   (* how much of cache should be used for temporary data structure. This might be a good starting point for  ATLAS like machine-adaptive optimizations *)
 
 TYPE
-	Datatype* = FLOAT64;
+	Datatype* = MatrixBase.Datatype;
 	OneD = ARRAY [*] OF Datatype;
 	TwoD = ARRAY [*,*] OF Datatype;
 	ThreeD = ARRAY [*,*,*] OF Datatype;

@@ -29,7 +29,7 @@ TYPE ArrayFunctionsPool=OBJECT
 END ArrayFunctionsPool;
 
 TYPE ArrayFunction= OBJECT 
-	VAR min,max,sum,msq,scale,ssq:REAL;
+	VAR min,max,sum,msq,scale,ssq:Datatype;
 		cnt:SIZE;
 		next:ArrayFunction;(*linked list*)
 	PROCEDURE &Init;
@@ -42,25 +42,25 @@ TYPE ArrayFunction= OBJECT
 		scale:=1;
 	END Init;
 	
-	PROCEDURE AddAbs(x:REAL)(*:REAL*);
+	PROCEDURE AddAbs(x:Datatype)(*:Datatype*);
 	BEGIN
 		sum:=sum+ABS(x);
 		(*RETURN x*)
 	END AddAbs;
 
-	PROCEDURE MaxAbs(x:REAL)(*:REAL*);
+	PROCEDURE MaxAbs(x:Datatype)(*:Datatype*);
 	BEGIN
 		max:=MAX(max,ABS(x));
 		(*RETURN x*)
 	END MaxAbs;
 
-	PROCEDURE MinAbs(x:REAL)(*:REAL*);
+	PROCEDURE MinAbs(x:Datatype)(*:Datatype*);
 	BEGIN
 		min:=MIN(min,ABS(x));
 		(*RETURN x*)
 	END MinAbs;
 	
-	PROCEDURE SumSquare(x:REAL);
+	PROCEDURE SumSquare(x:Datatype);
 	BEGIN
 		ssq:=ssq+ x*x;
 	END SumSquare;
@@ -200,14 +200,14 @@ END MeanSquare;
 
 PROCEDURE RMS*(CONST X: Array): Datatype; (*root mean square*)
 BEGIN
-	RETURN MathL.sqrt(MeanSquare(X));
+	RETURN sqrt(MeanSquare(X));
 END RMS;
 
 (*PROCEDURE RMS*(CONST X: Array): Datatype; (*root mean square*)
 BEGIN
 	IF DIM(X)=0 THEN RETURN 0 (*!TBD: apply to other structures ? or TRAP ?*)
-	ELSE RETURN MathL.sqrt(X+*X / Count(X))
-	(*ELSE RETURN MathL.sqrt(X+*X / ProdS(LEN(X)))*)
+	ELSE RETURN sqrt(X+*X / Count(X))
+	(*ELSE RETURN sqrt(X+*X / ProdS(LEN(X)))*)
 	END;
 END RMS;*)
 
@@ -216,7 +216,7 @@ PROCEDURE KSmallest*( VAR a: Vector; (* n,*) k: SIZE ): Datatype;
 VAR i, j, l, m, n: SIZE;  x: Datatype;
 
 	PROCEDURE swap( VAR x, y: Datatype );
-	VAR z: FLOAT64;
+	VAR z: Datatype;
 	BEGIN
 		z := x;  x := y;  y := z
 	END swap;
@@ -289,7 +289,7 @@ PROCEDURE QSort*(VAR X : Vector);
  (** of full data *)
  PROCEDURE StandardDeviation*(CONST v:Array): Datatype;
  BEGIN
- 	RETURN MathL.sqrt(Variance(v))
+ 	RETURN sqrt(Variance(v))
  END StandardDeviation;
 
 
@@ -304,7 +304,7 @@ PROCEDURE QSort*(VAR X : Vector);
  (** subset of data , divisor is (N-1)*)
  PROCEDURE EstimatedStandardDeviation*(CONST v:Array): Datatype;
  BEGIN
- 	RETURN MathL.sqrt(EstimatedVariance(v))
+ 	RETURN sqrt(EstimatedVariance(v))
  END EstimatedStandardDeviation;
 
  PROCEDURE Skewness*(CONST X : Array) : Datatype;
@@ -335,13 +335,13 @@ MODULE Test;
 IMPORT Commands;
 
 TYPE Summer*= OBJECT
-	VAR sum:REAL;
+	VAR sum:Datatype;
 	PROCEDURE &Init*;
 	BEGIN
 		sum:=0;
 	END Init;
 	
-	PROCEDURE AddAbs(x:REAL):REAL;
+	PROCEDURE AddAbs(x:Datatype):Datatype;
 	BEGIN
 		sum:=sum+ABS(x);
 		RETURN x
@@ -350,7 +350,7 @@ TYPE Summer*= OBJECT
 	END Summer;
 	
 PROCEDURE Do*(c:Commands.Context);
-	VAR a: ARRAY [*] OF REAL;
+	VAR a: ARRAY [*] OF Datatype;
 		summer:Summer;
 	BEGIN
 		a:=[-1,-1,-1,1,1,1];
@@ -375,7 +375,7 @@ VAR N:SIZE; sd: Datatype;
 BEGIN
 	N:=Count(a);
 	RESULT:=a-SUM(a)/N;
-	sd:=MathL.sqrt( RESULT+*RESULT / N);
+	sd:=sqrt( RESULT+*RESULT / N);
 	IF sd=0 THEN RETURN RESULT (* avoid NaN result in this case*)
 	ELSE RETURN 1/sd * RESULT
 	END;
@@ -389,7 +389,7 @@ BEGIN
 	meanVector := (onesR * A)/LEN(A,0);
 	meanMatrix := onesR ** meanVector;
 	A:=A-meanMatrix;
-	sdVector := MatrixUtilities.ApplyUnaryVec(onesR * (A.*A), MathL.sqrt) / MathL.sqrt(LEN(A,0));
+	sdVector := MatrixUtilities.ApplyUnaryVec(onesR * (A.*A), sqrt) / sqrt(LEN(A,0));
 	sdMatrix:= onesR ** sdVector;
 	A:= A ./ sdMatrix;
 END NormalizeColumns;
@@ -409,7 +409,7 @@ END ZeroMeanColumns;
  y[i] = softmax(x[i]) = exp(x[i])/sum(exp(x)) *)
 PROCEDURE SoftMax*(VAR x: Array):Array;
 	BEGIN
-		RESULT :=ALL(x, MathL.exp);
+		RESULT :=ALL(x, exp);
 		RESULT:=1/SUM(RESULT) * RESULT;
 		RETURN RESULT
 END SoftMax;
@@ -418,7 +418,7 @@ PROCEDURE Logistic*(X : Datatype) : Datatype;  (* logistic function as nonlinear
 	BEGIN
 		IF X >= 18.3684002848 (*expNegligibleL*) THEN RETURN 1
 		ELSIF (-X) > 18.3684002848 (*expNegligibleL*) THEN RETURN 0
-		ELSE RETURN 1 / (1 + MathL.exp( -X ));
+		ELSE RETURN 1 / (1 + Datatype(MathL.exp( -X )));
 		END;
 	END Logistic;
 
@@ -431,6 +431,18 @@ PROCEDURE SoftMaxNormalize*(CONST x: Array):Array;
 		RESULT :=ALL(RESULT, Logistic);
 		RETURN RESULT
 END SoftMaxNormalize;
+
+PROCEDURE sqrt(x: Datatype): Datatype;
+BEGIN
+	RETURN Datatype(MathL.sqrt(x));
+END sqrt;
+
+PROCEDURE exp(x: Datatype): Datatype;
+BEGIN
+	RETURN Datatype(MathL.exp(x));
+END exp;
+
+
 (*
 PROCEDURE Test*;
 CONST a=[1,2,3,4]; b=[1,2,2,1]; c=[1,2,3,2]; d=[1,1,2,3,1]
@@ -502,9 +514,10 @@ BEGIN
 END TestSoftMax;
 
 PROCEDURE {TEST} Test*;(*! implement more tests ! *)
-CONST TestTolerance=0.000000001; 
+(*CONST TestTolerance=0.000000001;*)
 VAR v:Vector;x:Datatype;
 BEGIN
+	VAR TestTolerance := MatrixBase.EPS;
 	ASSERT(Count([[[1,2,3],[4,5,6]],[[1,2,3],[4,5,6]]])=12, 200);
 	ASSERT(Mean([1,2,3,4,5,6])=3.5, 201);
 	ASSERT(Median([4,3,2,1,5,6,7])=4, 202);

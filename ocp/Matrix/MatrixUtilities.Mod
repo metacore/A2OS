@@ -1,6 +1,6 @@
 MODULE MatrixUtilities;   (**  AUTHOR "Patrick Hunziker"; PURPOSE "";    **)
 
-IMPORT Rand:=Random, MatrixBase, ComplexMathL, KernelLog, Strings, Reals, Streams, Files(*, Shortreal*);  
+IMPORT Rand:=Random, MatrixBase, ComplexMathL, KernelLog, Strings, Reals, Streams, Files, FoxArrayBase(*, Shortreal*);  
 
 TYPE 
 	
@@ -105,7 +105,7 @@ VAR  RG: RandomGenerator (*Rand.Generator*);
 
 (*inverted diagonal, whereby for very small elements, the inverse is set to zero. *)
 	PROCEDURE InvDiag*( CONST M: Matrix ): Vector;  
-	VAR x: Vector;  i: SIZE;  a: FLOAT64;
+	VAR x: Vector;  i: SIZE;  a: Datatype;
 	BEGIN 
 		NEW( x, MAX( LEN( M, 0 ), LEN( M, 1 ) ) );  
 		FOR i := 0 TO LEN( x,0 ) - 1 DO 
@@ -698,7 +698,24 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	END FloatToMatrix;
 	
 	(* raw *)
-	PROCEDURE WriteLR*(W:Streams.Writer; CONST t: ARRAY [?] OF Datatype);
+	PROCEDURE Write*(W:Streams.Writer; CONST t: ARRAY [?] OF Datatype);
+	VAR i:SIZE;
+	BEGIN
+		ASSERT(DIM(t)>0);
+		IF  DIM(t)=1 THEN 
+			MatrixBase.WriteVector(W, t[*]);
+		ELSIF DIM(t)=2 THEN (*performance*)
+			MatrixBase.WriteMatrix(W, t[*,*]);
+		ELSIF DIM(t)=3 THEN
+			FOR i:=0 TO LEN(t,0)-1 DO
+				MatrixBase.WriteMatrix(W, t[i,*,*]);
+			END;
+		ELSE
+			FOR i:=0 TO LEN(t,0)-1 DO Write(W, t[i,?]) END;
+		END;
+	END Write;
+
+	PROCEDURE WriteLR*(W:Streams.Writer; CONST t: ARRAY [?] OF FLOAT64);
 	VAR i:SIZE;
 	BEGIN
 		ASSERT(DIM(t)>0);
@@ -824,7 +841,18 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		W.Update;
 	END WriteHeader;
 	
-	PROCEDURE StoreLR*(W:Streams.Writer; CONST t: ARRAY [?] OF Datatype);
+	PROCEDURE Store*(W:Streams.Writer; CONST t: ARRAY [?] OF Datatype);
+	BEGIN
+		IF SIZEOF(Datatype) = SIZEOF(FLOAT32) THEN
+			WriteHeader(W, DatatypeR, LEN(t));
+		ELSE
+			WriteHeader(W, DatatypeLR, LEN(t));
+		END;
+		IF DIM(t)>0 THEN Write(W,t) END;
+		W.Update;
+	END Store;
+	
+	PROCEDURE StoreLR*(W:Streams.Writer; CONST t: ARRAY [?] OF FLOAT64);
 	BEGIN
 		WriteHeader(W, DatatypeLR, LEN(t));
 		IF DIM(t)>0 THEN WriteLR(W,t) END;
@@ -866,8 +894,47 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		IF DIM(t)>0 THEN WriteSize(W,t) END;
 		W.Update;
 	END StoreSize;
+
+	PROCEDURE Read*(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
+	VAR i:SIZE;
+	BEGIN
+		ASSERT(DIM(t)>0);
+		IF  DIM(t)=1 THEN 
+			MatrixBase.ReadVector(R, t[*]);
+		ELSIF DIM(t)=2 THEN (*performance*)
+			MatrixBase.ReadMatrix(R, t[*,*]);
+		ELSIF DIM(t)=3 THEN
+			FOR i:=0 TO LEN(t,0)-1 DO
+				MatrixBase.ReadMatrix(R, t[i,*,*]);
+			END;
+		ELSE
+			FOR i:=0 TO LEN(t,0)-1 DO Read(R, t[i,?]) END;
+		END;
+	END Read;
 	
-	PROCEDURE ReadLR*(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
+	PROCEDURE ReadDatatypeFromLR(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
+	VAR i,j,k:SIZE; d: FLOAT64;
+	BEGIN
+		ASSERT(DIM(t)>0);
+		ASSERT(DIM(t)>0);
+		IF  DIM(t)=1 THEN 
+			FOR i:=0 TO LEN(t,0)-1 DO R.RawLReal(d); t[i] := Datatype(d); END;
+		ELSIF DIM(t)=2 THEN (*performance*)
+			FOR j:=0 TO LEN(t,0)-1 DO
+				FOR i:=0 TO LEN(t,1)-1 DO R.RawLReal(d); t[j,i] := Datatype(d); END;
+			END;
+		ELSIF DIM(t)=3 THEN
+			FOR k:=0 TO LEN(t,0)-1 DO
+				FOR j:=0 TO LEN(t,1)-1 DO
+					FOR i:=0 TO LEN(t,2)-1 DO R.RawLReal(d); t[k,j,i] := Datatype(d); END;
+				END;
+			END;
+		ELSE
+			FOR i:=0 TO LEN(t,0)-1 DO ReadDatatypeFromLR(R, t[i,?]) END;
+		END;
+	END ReadDatatypeFromLR;
+
+	PROCEDURE ReadLR*(R:Streams.Reader; VAR t: ARRAY [?] OF FLOAT64);
 	VAR i,j,k:SIZE;
 	BEGIN
 		ASSERT(DIM(t)>0);
@@ -1050,7 +1117,7 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		pos:=R.Pos();
 		ParseHeader(R,version, datatype,len);
 		IF R.CanSetPos() THEN R.SetPos(pos) ELSE HALT(200) END;
-		IF datatype=DatatypeLR THEN RETURN LoadLR(R)
+		IF datatype=DatatypeLR THEN RETURN LoadDatatypeFromLR(R);
 		ELSIF datatype=DatatypeR THEN RETURN LoadR(R)
 		(*ELSIF datatype=DatatypeSR THEN RETURN LoadSR(R)*)
 		ELSIF datatype=DatatypeLInt THEN RETURN LoadLInt(R)
@@ -1059,8 +1126,20 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		ELSIF datatype=DatatypeUInt8 THEN RETURN LoadUInt8(R)
 		END;
 	END Load;
-	
-	PROCEDURE LoadLR*(R:Streams.Reader): ARRAY [?] OF Datatype;
+
+	PROCEDURE LoadDatatypeFromLR(R:Streams.Reader): ARRAY [?] OF Datatype;
+	VAR  
+		len: ARRAY [*] OF SIZE;
+		version, datatype:SIGNED32;
+	BEGIN
+		ParseHeader(R,version, datatype,len);
+		ASSERT(datatype=DatatypeLR);
+		IF ~HasSize(RESULT,len) THEN NEW(RESULT,len) END;
+		IF DIM(RESULT)>0 THEN ReadDatatypeFromLR(R,RESULT) END;
+		RETURN RESULT
+	END LoadDatatypeFromLR;
+
+	PROCEDURE LoadLR*(R:Streams.Reader): ARRAY [?] OF FLOAT64;
 	VAR  
 		len: ARRAY [*] OF SIZE;
 		version, datatype:SIGNED32;
@@ -1155,7 +1234,7 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	
 (*
 	PROCEDURE Test*(context:Commands.Context);
-	VAR a,b: ARRAY [?] OF FLOAT64; len: ARRAY [*] OF SIGNED32; f:Files.File; w:Files.Writer; r:Files.Reader;
+	VAR a,b: ARRAY [?] OF Datatype; len: ARRAY [*] OF SIGNED32; f:Files.File; w:Files.Writer; r:Files.Reader;
 	BEGIN
 		len:=[2,3,4];
 		NEW(a,len);
@@ -1248,13 +1327,13 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		END;
 	END SameSize;
 
-	PROCEDURE HasSize*(CONST a: Tensor; CONST size: ARRAY [*] OF SIZE):BOOLEAN;
+	PROCEDURE HasSize*(CONST a: FoxArrayBase.UnsafeArrayT; CONST size: ARRAY [*] OF SIZE):BOOLEAN;
 	VAR i:SIZE;
 	BEGIN
-		IF (DIM(a)#LEN(size,0)) THEN RETURN FALSE
+		IF (a.dim#LEN(size,0)) THEN RETURN FALSE
 		ELSE
-			FOR i:=0 TO DIM(a)-1 DO
-				IF LEN(a,i)#size[i] THEN RETURN FALSE END;
+			FOR i:=0 TO a.dim-1 DO
+				IF a.lens[i].len#size[i] THEN RETURN FALSE END;
 			END;
 			RETURN TRUE;
 		END;

@@ -5765,7 +5765,7 @@ TYPE
 
 			IF procedureType.selfParameter # NIL THEN (* type bound procedure in a record *)
 				Designate(x.left(SyntaxTree.Designator).left, operand);
-				IF ~procedureType.selfParameter.type.resolved(SyntaxTree.RecordType).isFinal THEN
+				IF (procedureType.selfParameter.type.resolved IS SyntaxTree.RecordType) & ~procedureType.selfParameter.type.resolved(SyntaxTree.RecordType).isFinal THEN
 					Emit(Push(position, operand.tag));
 				END;
 				Emit(Push(position, operand.op));

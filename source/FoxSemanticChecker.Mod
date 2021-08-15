@@ -612,7 +612,7 @@ TYPE
 			END;
 			x.SetState(SyntaxTree.Resolved);
 		END ResolvePortType;
-
+		
 		(**
 			deferred procedure type resolving
 			- resolve return type
@@ -3957,10 +3957,21 @@ TYPE
 				Error(position, "forbidden call of non-realtime procedure in realtime block");
 			END;
 
-			IF (procedureType.selfParameter # NIL) & (procedureType.selfParameter.kind = SyntaxTree.VarParameter) THEN
+			IF (procedureType.selfParameter # NIL) THEN 
 				self := left(SyntaxTree.Designator).left;
-				IF (self # NIL) & ~IsVariable(self) THEN
-					Error(self.position, "Non-variable expression on variable receiver");
+				IF (procedureType.selfParameter.type.IsPointer()) & (self(SyntaxTree.Designator).left # NIL) THEN
+					(* remove auto-deref *)
+					self := self(SyntaxTree.Designator).left;
+				END;
+				IF ParameterCompatible(procedureType.selfParameter,self) THEN
+					IF (procedureType.selfParameter.kind = SyntaxTree.VarParameter) THEN
+						IF (self # NIL) & ~IsVariable(self) THEN
+							Error(self.position, "Non-variable expression on variable receiver");
+						END;
+					END;
+				ELSE
+					Printout.Info("self parameter",procedureType.selfParameter);
+					Printout.Info("expression",self);						
 				END;
 			END;
 
@@ -8308,7 +8319,12 @@ TYPE
 								procedureType.selfParameter.SetState(SyntaxTree.Resolved);
 								declaredType := typeDeclaration.declaredType;
 								IF declaredType IS SyntaxTree.PointerType THEN
-									declaredType := declaredType(SyntaxTree.PointerType).pointerBase.resolved
+									IF declaredType(SyntaxTree.PointerType).pointerBase.resolved = NIL THEN
+										typeDeclaration := currentScope.FindTypeDeclaration(declaredType(SyntaxTree.PointerType).pointerBase(SyntaxTree.QualifiedType).qualifiedIdentifier.suffix);
+										declaredType := typeDeclaration.declaredType
+									ELSE
+										declaredType := declaredType(SyntaxTree.PointerType).pointerBase.resolved
+									END;
 								END;
 								IF declaredType IS SyntaxTree.RecordType THEN
 									declaredType(SyntaxTree.RecordType).recordScope.AddProcedure(procedure);

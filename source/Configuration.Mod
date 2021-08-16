@@ -46,7 +46,7 @@ END GetNamedElement;
 TYPE
 
 	Configuration* = OBJECT
-		VAR config := NIL: XML.Document;	(** internalized config file *)
+		VAR config- := NIL: XML.Document;	(** internalized config file *)
 		VAR origin, configName: Files.FileName;
 		VAR error := FALSE: BOOLEAN;
 
@@ -188,6 +188,16 @@ TYPE
 			END;
 		END GetInteger;
 
+		PROCEDURE GetInteger64*(CONST key : ARRAY OF CHAR; VAR value : SIGNED64; VAR res : INTEGER);
+		VAR string : ARRAY 21 OF CHAR;
+		BEGIN
+			Get(key, string, res);
+			IF (res = Ok) THEN
+				Strings.TrimWS(string);
+				Strings.StrToHInt(string, value);
+			END;
+		END GetInteger64;
+
 		(** update (or insert if necessairy) the setting specified by the key. if the specified section/setting is not yet existing, it will be created *)
 		PROCEDURE Put*(CONST key, val : ARRAY OF CHAR; VAR res : INTEGER);
 		VAR e, child : XML.Element; i, j : SIGNED32; name : ARRAY 64 OF CHAR;
@@ -232,8 +242,8 @@ TYPE
 			Put(key, string, res);
 		END PutColor;
 
-		PROCEDURE PutInteger*(CONST key : ARRAY OF CHAR; value : SIGNED32; VAR res : INTEGER);
-		VAR string : ARRAY 16 OF CHAR;
+		PROCEDURE PutInteger*(CONST key : ARRAY OF CHAR; value : SIGNED64; VAR res : INTEGER);
+		VAR string : ARRAY 21 OF CHAR;
 		BEGIN
 			Strings.IntToStr(value, string);
 			Put(key, string, res);
@@ -302,6 +312,11 @@ BEGIN
 	system.GetInteger(key, value, res);
 END GetInteger;
 
+PROCEDURE GetInteger64*(CONST key : ARRAY OF CHAR; VAR value : SIGNED64; VAR res : INTEGER);
+BEGIN
+	system.GetInteger64(key, value, res);
+END GetInteger64;
+
 (** update (or insert if necessairy) the setting specified by the key. if the specified section/setting is not yet existing, it will be created *)
 PROCEDURE Put*(CONST key, value : ARRAY OF CHAR; VAR res : INTEGER);
 BEGIN
@@ -318,7 +333,7 @@ BEGIN
 	system.PutColor(key, value, res);
 END PutColor;
 
-PROCEDURE PutInteger*(CONST key : ARRAY OF CHAR; value : SIGNED32; VAR res : INTEGER);
+PROCEDURE PutInteger*(CONST key : ARRAY OF CHAR; value : SIGNED64; VAR res : INTEGER);
 BEGIN
 	system.PutInteger(key, value, res);
 END PutInteger;

@@ -197,6 +197,7 @@ TYPE
 				i := 0; e := config.GetRoot();
 				WHILE key[i] # 0X DO
 					j := 0; WHILE (key[i] # 0X) & (key[i] # '.') DO name[j] := key[i]; INC(i); INC(j) END;
+					name[j] := 0X;
 					IF key[i] = '.' THEN (* section *)
 						child := GetNamedElement(e, Section, name);
 						IF child = NIL THEN (* create section *)

@@ -11392,7 +11392,7 @@ TYPE
 
 		PROCEDURE PushSelfPointer;
 		VAR scope: SyntaxTree.Scope;  op: Operand; moduleSection: IntermediateCode.Section; moduleOffset: SIZE; parametersSize: SIGNED32; procedure: SyntaxTree.Procedure;
-			procedureType: SyntaxTree.ProcedureType;
+			procedureType: SyntaxTree.ProcedureType; offset: SIZE;
 		BEGIN
 			scope := currentScope;
 			WHILE(scope.outerScope IS SyntaxTree.ProcedureScope) DO
@@ -11411,7 +11411,15 @@ TYPE
 				procedure := scope(SyntaxTree.ProcedureScope).ownerProcedure;
 				procedureType := procedure.type(SyntaxTree.ProcedureType);
 				parametersSize := ProcParametersSize(procedure);
-				IntermediateCode.AddOffset(op.op,ToMemoryUnits(system,addressType.sizeInBits)*(procedureType.parametersOffset+1)+parametersSize);
+				offset := ToMemoryUnits(system,addressType.sizeInBits)*(procedureType.parametersOffset+1)+parametersSize;
+				IF procedureType.selfParameter # NIL THEN 
+					offset := procedureType.selfParameter.offsetInBits DIV 8;
+				ELSIF procedureType.selfParameterInObject # NIL THEN
+					offset := procedureType.selfParameterInObject.offsetInBits DIV 8;
+				ELSE
+					Error(procedure.position,"compiler implementation error: missing self parameter ? ");
+				END;
+				IntermediateCode.AddOffset(op.op,offset);
 				IF backend.cooperative THEN
 					IntermediateCode.AddOffset(op.op,ToMemoryUnits(system,addressType.sizeInBits));
 				END;

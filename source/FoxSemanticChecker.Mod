@@ -8054,7 +8054,11 @@ TYPE
 				IF currentIsExclusive THEN
 					Error (statementBlock.position,"forbidden recursive exclusive")
 				ELSIF currentIsRealtime THEN
-					Error( statementBlock.position,"forbidden exculsive in realtime block");
+					Error( statementBlock.position,"forbidden exclusive in realtime block");
+				END;
+				VAR par := GetSelfParameter(currentScope);
+				IF (par # NIL) & ~par.type.IsPointer() THEN
+					Error(statementBlock.position, "forbidden exclusive in record");
 				END;
 			END;
 			recentExclusive := currentIsExclusive;
@@ -8775,6 +8779,25 @@ TYPE
 				(numberParameters = 1) & (procedureType.firstParameter.ownerType.resolved IS SyntaxTree.AnyType) & (procedureType.returnType.resolved IS SyntaxTree.AnyType)
 		END;
 	END GetProcedureAllowed;
+	
+	PROCEDURE GetSelfParameter(scope: SyntaxTree.Scope): SyntaxTree.Parameter;
+	BEGIN
+		WHILE(scope.outerScope IS SyntaxTree.ProcedureScope) DO
+			scope := scope.outerScope;
+		END;
+		IF scope.outerScope IS SyntaxTree.ModuleScope THEN
+			RETURN NIL
+		ELSE
+			VAR procedure := scope(SyntaxTree.ProcedureScope).ownerProcedure;
+			VAR procedureType := procedure.type(SyntaxTree.ProcedureType);
+			IF procedureType.selfParameter # NIL THEN
+				RETURN procedureType.selfParameter
+			ELSE
+				RETURN procedureType.selfParameterInObject
+			END;
+		END;	
+	END GetSelfParameter;
+	
 
 	(** check import cache: if module x is in current import cache then remove x and all modules importing x from the cache **)
 	PROCEDURE RemoveModuleFromCache*(importCache: SyntaxTree.ModuleScope; x: SyntaxTree.Module);
@@ -9163,11 +9186,6 @@ TYPE
 						INC(result,distance);
 					END;
 				END;
-				(*
-				Printout.Info("actual=", actualParameter);
-				Printout.Info("formal=", formalParameter);
-				TRACE(result);
-				*)
 
 				IF ~actualParameter.assignable & (formalParameter.kind = SyntaxTree.VarParameter) THEN
 					result := Infinity;

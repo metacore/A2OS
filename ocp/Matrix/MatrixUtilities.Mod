@@ -714,6 +714,58 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 			FOR i:=0 TO LEN(t,0)-1 DO Write(W, t[i,?]) END;
 		END;
 	END Write;
+	
+	PROCEDURE WriteAsType*(W:Streams.Writer; asDatatype:SIGNED32; CONST t: ARRAY [?] OF Datatype);
+	BEGIN
+		CASE asDatatype OF
+			|DatatypeLR: WriteAsLR(W, t);
+			|DatatypeR: WriteAsR(W, t);
+		END;
+	END WriteAsType;
+
+	PROCEDURE WriteAsLR(W:Streams.Writer; CONST t: ARRAY [?] OF Datatype);
+	VAR i,j,k:SIZE;
+	BEGIN
+		ASSERT(DIM(t)>0);
+		ASSERT(DIM(t)>0);
+		IF  DIM(t)=1 THEN 
+			FOR i:=0 TO LEN(t,0)-1 DO W.RawLReal(FLOAT64(t[i])); END;
+		ELSIF DIM(t)=2 THEN (*performance*)
+			FOR j:=0 TO LEN(t,0)-1 DO
+				FOR i:=0 TO LEN(t,1)-1 DO W.RawLReal(FLOAT64(t[j,i])); END;
+			END;
+		ELSIF DIM(t)=3 THEN
+			FOR k:=0 TO LEN(t,0)-1 DO
+				FOR j:=0 TO LEN(t,1)-1 DO
+					FOR i:=0 TO LEN(t,2)-1 DO W.RawLReal(FLOAT64(t[k,j,i])); END;
+				END;
+			END;
+		ELSE
+			FOR i:=0 TO LEN(t,0)-1 DO WriteAsLR(W, t[i,?]) END;
+		END;
+	END WriteAsLR;
+
+	PROCEDURE WriteAsR(W:Streams.Writer; CONST t: ARRAY [?] OF Datatype);
+	VAR i,j,k:SIZE;
+	BEGIN
+		ASSERT(DIM(t)>0);
+		ASSERT(DIM(t)>0);
+		IF  DIM(t)=1 THEN 
+			FOR i:=0 TO LEN(t,0)-1 DO W.RawReal(FLOAT32(t[i])); END;
+		ELSIF DIM(t)=2 THEN (*performance*)
+			FOR j:=0 TO LEN(t,0)-1 DO
+				FOR i:=0 TO LEN(t,1)-1 DO W.RawReal(FLOAT32(t[j,i])); END;
+			END;
+		ELSIF DIM(t)=3 THEN
+			FOR k:=0 TO LEN(t,0)-1 DO
+				FOR j:=0 TO LEN(t,1)-1 DO
+					FOR i:=0 TO LEN(t,2)-1 DO W.RawReal(FLOAT32(t[k,j,i])); END;
+				END;
+			END;
+		ELSE
+			FOR i:=0 TO LEN(t,0)-1 DO WriteAsR(W, t[i,?]) END;
+		END;
+	END WriteAsR;
 
 	PROCEDURE WriteLR*(W:Streams.Writer; CONST t: ARRAY [?] OF FLOAT64);
 	VAR i:SIZE;
@@ -850,7 +902,14 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		IF DIM(t)>0 THEN Write(W,t) END;
 		W.Update;
 	END Store;
-	
+
+	PROCEDURE StoreAsType*(W:Streams.Writer; asDatatype:SIGNED32; CONST t: ARRAY [?] OF Datatype);
+	BEGIN
+		WriteHeader(W, asDatatype, LEN(t));
+		IF DIM(t)>0 THEN WriteAsType(W,asDatatype,t) END;
+		W.Update;
+	END StoreAsType;
+
 	PROCEDURE StoreLR*(W:Streams.Writer; CONST t: ARRAY [?] OF FLOAT64);
 	BEGIN
 		WriteHeader(W, DatatypeLR, LEN(t));
@@ -911,16 +970,16 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		END;
 	END Read;
 
-	PROCEDURE ReadFromType*(R:Streams.Reader; fromDatatype: INTEGER; VAR t: ARRAY [?] OF Datatype);
+	PROCEDURE ReadFromType*(R:Streams.Reader; fromDatatype:SIGNED32; VAR t: ARRAY [?] OF Datatype);
 	BEGIN
 		CASE fromDatatype OF
-			|DatatypeLR: ReadDatatypeFromLR(R, t);
-			|DatatypeR: ReadDatatypeFromR(R, t);
-			|DatatypeUInt8: ReadDatatypeFromUInt8(R, t);
+			|DatatypeLR: ReadFromLR(R, t);
+			|DatatypeR: ReadFromR(R, t);
+			|DatatypeUInt8: ReadFromUInt8(R, t);
 		END;
 	END ReadFromType;
 
-	PROCEDURE ReadDatatypeFromLR(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
+	PROCEDURE ReadFromLR(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
 	VAR i,j,k:SIZE; d: FLOAT64;
 	BEGIN
 		ASSERT(DIM(t)>0);
@@ -938,11 +997,11 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 				END;
 			END;
 		ELSE
-			FOR i:=0 TO LEN(t,0)-1 DO ReadDatatypeFromLR(R, t[i,?]) END;
+			FOR i:=0 TO LEN(t,0)-1 DO ReadFromLR(R, t[i,?]) END;
 		END;
-	END ReadDatatypeFromLR;
+	END ReadFromLR;
 
-	PROCEDURE ReadDatatypeFromR(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
+	PROCEDURE ReadFromR(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
 	VAR i,j,k:SIZE; d: FLOAT32;
 	BEGIN
 		ASSERT(DIM(t)>0);
@@ -960,11 +1019,11 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 				END;
 			END;
 		ELSE
-			FOR i:=0 TO LEN(t,0)-1 DO ReadDatatypeFromR(R, t[i,?]) END;
+			FOR i:=0 TO LEN(t,0)-1 DO ReadFromR(R, t[i,?]) END;
 		END;
-	END ReadDatatypeFromR;
+	END ReadFromR;
 
-	PROCEDURE ReadDatatypeFromUInt8(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
+	PROCEDURE ReadFromUInt8(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
 	VAR i,j,k:SIZE; d: CHAR;
 	BEGIN
 		ASSERT(DIM(t)>0);
@@ -982,9 +1041,9 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 				END;
 			END;
 		ELSE
-			FOR i:=0 TO LEN(t,0)-1 DO ReadDatatypeFromUInt8(R, t[i,?]) END;
+			FOR i:=0 TO LEN(t,0)-1 DO ReadFromUInt8(R, t[i,?]) END;
 		END;
-	END ReadDatatypeFromUInt8;
+	END ReadFromUInt8;
 
 	PROCEDURE ReadLR*(R:Streams.Reader; VAR t: ARRAY [?] OF FLOAT64);
 	VAR i,j,k:SIZE;
@@ -1169,17 +1228,35 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		pos:=R.Pos();
 		ParseHeader(R,version, datatype,len);
 		IF R.CanSetPos() THEN R.SetPos(pos) ELSE HALT(200) END;
-		IF datatype=DatatypeLR THEN RETURN LoadDatatypeFromLR(R);
-		ELSIF datatype=DatatypeR THEN RETURN LoadR(R)
+		IF datatype=DatatypeLR THEN RETURN LoadFromLR(R);
+		ELSIF datatype=DatatypeR THEN RETURN LoadFromR(R)
 		(*ELSIF datatype=DatatypeSR THEN RETURN LoadSR(R)*)
 		ELSIF datatype=DatatypeLInt THEN RETURN LoadLInt(R)
 		ELSIF datatype=DatatypeInt THEN RETURN LoadInt(R)
 		ELSIF datatype=DatatypeSize THEN RETURN LoadSize(R)
-		ELSIF datatype=DatatypeUInt8 THEN RETURN LoadUInt8(R)
+		ELSIF datatype=DatatypeUInt8 THEN RETURN LoadFromUInt8(R)
 		END;
 	END Load;
 
-	PROCEDURE LoadDatatypeFromLR(R:Streams.Reader): ARRAY [?] OF Datatype;
+	PROCEDURE LoadFromType*(R:Streams.Reader; fromDatatype:SIGNED32): ARRAY [?] OF Datatype;
+	VAR
+		len: ARRAY [*] OF SIZE;
+		version, datatype:SIGNED32;	
+	BEGIN
+		ParseHeader(R,version, datatype,len);
+		ASSERT(datatype=fromDatatype);
+		IF ~HasSize(RESULT,len) THEN NEW(RESULT,len) END;
+		IF DIM(RESULT)>0 THEN 
+			CASE fromDatatype OF
+			|DatatypeLR: ReadFromLR(R, RESULT);
+			|DatatypeR: ReadFromR(R, RESULT);
+			|DatatypeUInt8: ReadFromUInt8(R, RESULT);
+			END;
+		END;
+		RETURN RESULT
+	END LoadFromType;
+
+	PROCEDURE LoadFromLR(R:Streams.Reader): ARRAY [?] OF Datatype;
 	VAR  
 		len: ARRAY [*] OF SIZE;
 		version, datatype:SIGNED32;
@@ -1187,9 +1264,33 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 		ParseHeader(R,version, datatype,len);
 		ASSERT(datatype=DatatypeLR);
 		IF ~HasSize(RESULT,len) THEN NEW(RESULT,len) END;
-		IF DIM(RESULT)>0 THEN ReadDatatypeFromLR(R,RESULT) END;
+		IF DIM(RESULT)>0 THEN ReadFromLR(R,RESULT) END;
 		RETURN RESULT
-	END LoadDatatypeFromLR;
+	END LoadFromLR;
+
+	PROCEDURE LoadFromR(R:Streams.Reader): ARRAY [?] OF Datatype;
+	VAR  
+		len: ARRAY [*] OF SIZE;
+		version, datatype:SIGNED32;
+	BEGIN
+		ParseHeader(R,version, datatype,len);
+		ASSERT(datatype=DatatypeR);
+		IF ~HasSize(RESULT,len) THEN NEW(RESULT,len) END;
+		IF DIM(RESULT)>0 THEN ReadFromR(R,RESULT) END;
+		RETURN RESULT
+	END LoadFromR;
+
+	PROCEDURE LoadFromUInt8(R:Streams.Reader): ARRAY [?] OF Datatype;
+	VAR  
+		len: ARRAY [*] OF SIZE;
+		version, datatype:SIGNED32;
+	BEGIN
+		ParseHeader(R,version, datatype,len);
+		ASSERT(datatype=DatatypeUInt8);
+		IF ~HasSize(RESULT,len) THEN NEW(RESULT,len) END;
+		IF DIM(RESULT)>0 THEN ReadFromUInt8(R,RESULT) END;
+		RETURN RESULT
+	END LoadFromUInt8;
 
 	PROCEDURE LoadLR*(R:Streams.Reader): ARRAY [?] OF FLOAT64;
 	VAR  

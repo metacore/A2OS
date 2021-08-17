@@ -843,10 +843,9 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	
 	PROCEDURE Store*(W:Streams.Writer; CONST t: ARRAY [?] OF Datatype);
 	BEGIN
-		IF SIZEOF(Datatype) = SIZEOF(FLOAT32) THEN
-			WriteHeader(W, DatatypeR, LEN(t));
-		ELSE
-			WriteHeader(W, DatatypeLR, LEN(t));
+		CASE SIZEOF(Datatype) OF
+			|SIZEOF(FLOAT32): WriteHeader(W, DatatypeR, LEN(t));
+			|SIZEOF(FLOAT64): WriteHeader(W, DatatypeLR, LEN(t));
 		END;
 		IF DIM(t)>0 THEN Write(W,t) END;
 		W.Update;

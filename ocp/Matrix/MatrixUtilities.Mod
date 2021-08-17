@@ -714,12 +714,14 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 			FOR i:=0 TO LEN(t,0)-1 DO Write(W, t[i,?]) END;
 		END;
 	END Write;
-	
+
 	PROCEDURE WriteAsType*(W:Streams.Writer; asDatatype:SIGNED32; CONST t: ARRAY [?] OF Datatype);
 	BEGIN
 		CASE asDatatype OF
 			|DatatypeLR: WriteAsLR(W, t);
 			|DatatypeR: WriteAsR(W, t);
+			|DatatypeInt: WriteAsInt(W, t);
+			|DatatypeLInt: WriteAsLInt(W, t);
 		END;
 	END WriteAsType;
 
@@ -766,6 +768,50 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 			FOR i:=0 TO LEN(t,0)-1 DO WriteAsR(W, t[i,?]) END;
 		END;
 	END WriteAsR;
+
+	PROCEDURE WriteAsInt(W:Streams.Writer; CONST t: ARRAY [?] OF Datatype);
+	VAR i,j,k:SIZE;
+	BEGIN
+		ASSERT(DIM(t)>0);
+		ASSERT(DIM(t)>0);
+		IF  DIM(t)=1 THEN 
+			FOR i:=0 TO LEN(t,0)-1 DO W.RawInt(SIGNED16(t[i])); END;
+		ELSIF DIM(t)=2 THEN (*performance*)
+			FOR j:=0 TO LEN(t,0)-1 DO
+				FOR i:=0 TO LEN(t,1)-1 DO W.RawInt(SIGNED16(t[j,i])); END;
+			END;
+		ELSIF DIM(t)=3 THEN
+			FOR k:=0 TO LEN(t,0)-1 DO
+				FOR j:=0 TO LEN(t,1)-1 DO
+					FOR i:=0 TO LEN(t,2)-1 DO W.RawInt(SIGNED16(t[k,j,i])); END;
+				END;
+			END;
+		ELSE
+			FOR i:=0 TO LEN(t,0)-1 DO WriteAsInt(W, t[i,?]) END;
+		END;
+	END WriteAsInt;
+	
+	PROCEDURE WriteAsLInt(W:Streams.Writer; CONST t: ARRAY [?] OF Datatype);
+	VAR i,j,k:SIZE;
+	BEGIN
+		ASSERT(DIM(t)>0);
+		ASSERT(DIM(t)>0);
+		IF  DIM(t)=1 THEN 
+			FOR i:=0 TO LEN(t,0)-1 DO W.RawLInt(SIGNED32(t[i])); END;
+		ELSIF DIM(t)=2 THEN (*performance*)
+			FOR j:=0 TO LEN(t,0)-1 DO
+				FOR i:=0 TO LEN(t,1)-1 DO W.RawLInt(SIGNED32(t[j,i])); END;
+			END;
+		ELSIF DIM(t)=3 THEN
+			FOR k:=0 TO LEN(t,0)-1 DO
+				FOR j:=0 TO LEN(t,1)-1 DO
+					FOR i:=0 TO LEN(t,2)-1 DO W.RawLInt(SIGNED32(t[k,j,i])); END;
+				END;
+			END;
+		ELSE
+			FOR i:=0 TO LEN(t,0)-1 DO WriteAsLInt(W, t[i,?]) END;
+		END;
+	END WriteAsLInt;
 
 	PROCEDURE WriteLR*(W:Streams.Writer; CONST t: ARRAY [?] OF FLOAT64);
 	VAR i:SIZE;

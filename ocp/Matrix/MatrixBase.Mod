@@ -14,8 +14,13 @@ CONST
 	ERROR*=7; (** undefined error *)
 
 TYPE
+#IF FLOAT32 THEN
+	Datatype* = FLOAT32;
+	Complex*=COMPLEX32;
+#ELSE
 	Datatype* = FLOAT64;
 	Complex*=COMPLEX64;
+#END
 
 	Tensor* = ARRAY [?] OF Datatype;
 	Hypercube* = ARRAY [*,*,*,*] OF Datatype;

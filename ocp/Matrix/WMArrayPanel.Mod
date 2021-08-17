@@ -1,7 +1,7 @@
 MODULE WMArrayPanel; (** AUTHOR ""; PURPOSE "Display of 3D and 4D tensors as image"; *)
 
 IMPORT Inputs, XML, MatrixRaster, MatrixUtilities, Files, Streams, WMMessages, Modules,Kernel,
-	WM:=WMWindowManager, WMComponents, WMProperties, WMStandardComponents, WMRectangles, Strings, Models, WMGraphics, Commands;
+	WM:=WMWindowManager, WMComponents, WMProperties, WMStandardComponents, WMRectangles, Strings, Models, MatrixBase, WMGraphics, Commands;
 CONST
 	unsigned=0;
 	signed=1;
@@ -16,7 +16,8 @@ CONST
 (*! to do: improve current limitation to subtensor[0,?] display. Generalize to 1D, 2D and 5D+ data. implement lookup table display*)
 
 TYPE
-	Tensor= ARRAY [?] OF FLOAT64;
+	Datatype=MatrixBase.Datatype;
+	Tensor= ARRAY [?] OF Datatype;
 
 TYPE Data*= OBJECT (Models.Model)
 		VAR m*, r*,g*,b*: Tensor;
@@ -501,7 +502,7 @@ VAR d : Data;
 BEGIN NEW(d); RETURN d
 END GenData;
 
-PROCEDURE GetPanel*(CONST tensor: ARRAY [?] OF FLOAT64; deepCopy:=FALSE:BOOLEAN): Panel;
+PROCEDURE GetPanel*(CONST tensor: ARRAY [?] OF Datatype; deepCopy:=FALSE:BOOLEAN): Panel;
 VAR	panel:Panel; 
 BEGIN
 	NEW(panel);
@@ -555,7 +556,7 @@ BEGIN
 	RETURN window;
 END CreateWindow;
 
-PROCEDURE AddWindow*(CONST tensor: ARRAY [?] OF FLOAT64; CONST title: ARRAY OF CHAR; deepCopy:=FALSE:BOOLEAN);
+PROCEDURE AddWindow*(CONST tensor: ARRAY [?] OF Datatype; CONST title: ARRAY OF CHAR; deepCopy:=FALSE:BOOLEAN);
 VAR window:WMComponents.FormWindow;
 	w,h:SIZE;
 	panel:Panel;
@@ -598,7 +599,7 @@ END Cleanup;
 PROCEDURE  Test*(context:Commands.Context); (*deprecated -  will be eliminated from source*)
 VAR window:WMComponents.FormWindow;
 	panel:Panel;
-	tensor: ARRAY [?] OF FLOAT64; (* or FLOAT64 or other..*)
+	tensor: ARRAY [?] OF Datatype; (* or FLOAT64 or other..*)
 BEGIN
 	log:=context.out;
 	(*have some data in a 3D array ready*)

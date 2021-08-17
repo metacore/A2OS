@@ -911,7 +911,16 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 			FOR i:=0 TO LEN(t,0)-1 DO Read(R, t[i,?]) END;
 		END;
 	END Read;
-	
+
+	PROCEDURE ReadFromType*(R:Streams.Reader; fromDatatype: INTEGER; VAR t: ARRAY [?] OF Datatype);
+	BEGIN
+		CASE fromDatatype OF
+			|DatatypeLR: ReadDatatypeFromLR(R, t);
+			|DatatypeR: ReadDatatypeFromR(R, t);
+			|DatatypeUInt8: ReadDatatypeFromUInt8(R, t);
+		END;
+	END ReadFromType;
+
 	PROCEDURE ReadDatatypeFromLR(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
 	VAR i,j,k:SIZE; d: FLOAT64;
 	BEGIN
@@ -933,6 +942,50 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 			FOR i:=0 TO LEN(t,0)-1 DO ReadDatatypeFromLR(R, t[i,?]) END;
 		END;
 	END ReadDatatypeFromLR;
+
+	PROCEDURE ReadDatatypeFromR(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
+	VAR i,j,k:SIZE; d: FLOAT32;
+	BEGIN
+		ASSERT(DIM(t)>0);
+		ASSERT(DIM(t)>0);
+		IF  DIM(t)=1 THEN 
+			FOR i:=0 TO LEN(t,0)-1 DO R.RawReal(d); t[i] := Datatype(d); END;
+		ELSIF DIM(t)=2 THEN (*performance*)
+			FOR j:=0 TO LEN(t,0)-1 DO
+				FOR i:=0 TO LEN(t,1)-1 DO R.RawReal(d); t[j,i] := Datatype(d); END;
+			END;
+		ELSIF DIM(t)=3 THEN
+			FOR k:=0 TO LEN(t,0)-1 DO
+				FOR j:=0 TO LEN(t,1)-1 DO
+					FOR i:=0 TO LEN(t,2)-1 DO R.RawReal(d); t[k,j,i] := Datatype(d); END;
+				END;
+			END;
+		ELSE
+			FOR i:=0 TO LEN(t,0)-1 DO ReadDatatypeFromR(R, t[i,?]) END;
+		END;
+	END ReadDatatypeFromR;
+
+	PROCEDURE ReadDatatypeFromUInt8(R:Streams.Reader; VAR t: ARRAY [?] OF Datatype);
+	VAR i,j,k:SIZE; d: CHAR;
+	BEGIN
+		ASSERT(DIM(t)>0);
+		ASSERT(DIM(t)>0);
+		IF  DIM(t)=1 THEN 
+			FOR i:=0 TO LEN(t,0)-1 DO R.Char(d); t[i] := Datatype(ORD(d)); END;
+		ELSIF DIM(t)=2 THEN (*performance*)
+			FOR j:=0 TO LEN(t,0)-1 DO
+				FOR i:=0 TO LEN(t,1)-1 DO R.Char(d); t[j,i] := Datatype(ORD(d)); END;
+			END;
+		ELSIF DIM(t)=3 THEN
+			FOR k:=0 TO LEN(t,0)-1 DO
+				FOR j:=0 TO LEN(t,1)-1 DO
+					FOR i:=0 TO LEN(t,2)-1 DO R.Char(d); t[k,j,i] := Datatype(ORD(d)); END;
+				END;
+			END;
+		ELSE
+			FOR i:=0 TO LEN(t,0)-1 DO ReadDatatypeFromUInt8(R, t[i,?]) END;
+		END;
+	END ReadDatatypeFromUInt8;
 
 	PROCEDURE ReadLR*(R:Streams.Reader; VAR t: ARRAY [?] OF FLOAT64);
 	VAR i,j,k:SIZE;

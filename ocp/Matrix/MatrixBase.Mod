@@ -14,7 +14,7 @@ CONST
 	ERROR*=7; (** undefined error *)
 
 TYPE
-#IF FLOAT32 THEN
+#IF Float32 THEN
 	Datatype* = FLOAT32;
 	Complex*=COMPLEX32;
 #ELSE

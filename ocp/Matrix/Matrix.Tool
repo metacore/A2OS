@@ -5,7 +5,7 @@ Linear Algebra and Planar/Volumetric Signal Processing Modules. Copyright Patric
 
 ~
 
-(* Compile with option "--define=FLOAT32" for single precision support *)
+(* Compile with option "--define=Float32" for single precision support *)
 
 System.FreeDownTo MatrixBase ~
 Compiler.Compile -S="Matrix/" --test=Test

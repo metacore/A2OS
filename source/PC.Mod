@@ -313,10 +313,10 @@ END CompileInterface;
 PROCEDURE CompileFile*(CONST name, opt: ARRAY OF CHAR; pc: SIGNED32; log: Streams.Writer;
 	diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 VAR
-	atu: Texts.Text; format: SIGNED32; res: INTEGER;
+	atu: Texts.Text; format: TextUtilities.Format; res: INTEGER;
 BEGIN
 	NEW(atu);
-	TextUtilities.LoadAuto(atu, name, format, res);
+	TextUtilities.LoadTextAuto(atu, name, format, res);
 	IF res # 0 THEN
 		log.String (name); log.String (" not found"); log.Ln; log.Update;
 		error := TRUE; RETURN

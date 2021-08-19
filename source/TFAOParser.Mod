@@ -1103,12 +1103,12 @@ BEGIN {EXCLUSIVE}
 END DecWorker;
 
 PROCEDURE ScanModule*(CONST filename : ARRAY OF CHAR; dump : BOOLEAN; VAR m : TS.Module);
-VAR t : Texts.Text; res : INTEGER; format: SIGNED32;
+VAR t : Texts.Text; res : INTEGER; format: TextUtilities.Format;
 	s : S.Scanner;
 	p : Parser;
 BEGIN
 	NEW(t);
-	TextUtilities.LoadAuto(t, filename, format, res);
+	TextUtilities.LoadTextAuto(t, filename, format, res);
 	IF res # 0 THEN
 		KernelLog.String(filename);  KernelLog.String(" not found"); KernelLog.Ln;
 		RETURN

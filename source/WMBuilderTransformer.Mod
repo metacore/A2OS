@@ -538,11 +538,11 @@ TYPE
 		END Transform;
 
 		PROCEDURE GenerateCode(CONST targetName, templateName, skeletonName,  moduleName : ARRAY OF CHAR; VAR res : INTEGER);
-		VAR base, skeleton : Texts.Text; format : SIGNED32; fileName : Files.FileName;
+		VAR base, skeleton : Texts.Text; format, format2 : TextUtilities.Format; fileName : Files.FileName;
 		BEGIN
-			NEW(base); TextUtilities.LoadAuto(base, templateName, format, res);
+			NEW(base); TextUtilities.LoadTextAuto(base, templateName, format, res);
 			IF (res = 0) THEN
-				NEW(skeleton);  TextUtilities.LoadAuto(skeleton, skeletonName, format, res);
+				NEW(skeleton);  TextUtilities.LoadTextAuto(skeleton, skeletonName, format2, res);
 				IF (res = 0) THEN
 					Indent(createFormWriter, CreateFormIndent);
 					createFormWriter.String("RETURN "); createFormWriter.String(createFormReturnIdent); createFormWriter.String(";");
@@ -550,12 +550,12 @@ TYPE
 					ApplyBase(base, fileName, res);
 					IF (res = 0) THEN
 						COPY(targetName, fileName); Strings.Append(fileName, FileSuffixBase); Strings.Append(fileName, FileExtension);
-						TextUtilities.StoreOberonText(base, fileName, res);
+						TextUtilities.Store(base, fileName, format, res);
 						IF (res = 0) THEN
 							ApplySkeleton(skeleton, moduleName, res);
 							IF (res = 0) THEN
 								COPY(targetName, fileName); Strings.Append(fileName, FileExtension);
-								TextUtilities.StoreOberonText(skeleton, fileName, res);
+								TextUtilities.Store(skeleton, fileName, format2, res);
 							END;
 						END;
 					END;

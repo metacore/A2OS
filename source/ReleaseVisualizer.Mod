@@ -353,11 +353,11 @@ TYPE
 		END ParseModule;
 
 		PROCEDURE ScanModule(CONST filename : ARRAY OF CHAR);
-		VAR text : Texts.Text; format : SIGNED32; res: INTEGER; s : Scanner.Scanner;
+		VAR text : Texts.Text; format : TextUtilities.Format; res: INTEGER; s : Scanner.Scanner;
 		BEGIN
 			COPY(filename, currentFile);
 			NEW(text);
-			TextUtilities.LoadAuto(text, filename, format, res);
+			TextUtilities.LoadTextAuto(text, filename, format, res);
 			IF res # 0 THEN
 				KernelLog.String(filename); KernelLog.String(" not found"); KernelLog.Ln;
 				RETURN

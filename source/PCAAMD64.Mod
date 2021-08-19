@@ -1917,7 +1917,7 @@ END AssembleText;
 
 PROCEDURE AssembleFile* (CONST fileName: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; labels, listing: Streams.Writer);
 VAR
-	format: SIGNED32; res: INTEGER;
+	format: TextUtilities.Format; res: INTEGER;
 	text: Texts.Text;
 	assembly: Assembly;
 	destFile: ARRAY Files.NameLength OF CHAR;
@@ -1927,7 +1927,7 @@ BEGIN
 	PCM.Init (fileName, NIL, diagnostics);
 
 	NEW (text);
-	TextUtilities.LoadAuto (text, fileName, format, res);
+	TextUtilities.LoadTextAuto (text, fileName, format, res);
 
 	IF res # 0 THEN
 		diagnostics.Error (fileName, Streams.Invalid, "failed to open file"); RETURN;

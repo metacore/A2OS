@@ -96,7 +96,7 @@ TYPE
 	VAR
 		leftText, rightText: Texts.Text;
 		leftReader, rightReader: Texts.TextReader;
-		format, res: INTEGER;
+		format: TextUtilities.Format; res: INTEGER;
 		leftBuffer, rightBuffer, left, right: LineBuffer;
 		width, height : SIZE;
 		table: POINTER TO ARRAY OF ARRAY OF Element;
@@ -125,13 +125,13 @@ TYPE
 
 	BEGIN
 		NEW (leftText);
-		TextUtilities.LoadAuto(leftText, leftFile, format, res);
+		TextUtilities.LoadTextAuto(leftText, leftFile, format, res);
 		leftText.AcquireRead;
 		NEW (leftReader, leftText);
 		leftReader.SetPosition (0);
 
 		NEW (rightText);
-		TextUtilities.LoadAuto(rightText, rightFile, format, res);
+		TextUtilities.LoadTextAuto(rightText, rightFile, format, res);
 		rightText.AcquireRead;
 		NEW (rightReader, rightText);
 		rightReader.SetPosition (0);

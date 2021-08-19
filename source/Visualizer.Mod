@@ -1439,11 +1439,11 @@ VAR
 	reader : TextUtilities.TextReader;
 	diagnostics : Diagnostics.StreamDiagnostics;
 	writer : Streams.Writer;
-	format : SIGNED32; res: INTEGER;
+	format : TextUtilities.Format; res: INTEGER;
 BEGIN
 	module := NIL;
 	NEW(text);
-	TextUtilities.LoadAuto(text, filename, format, res);
+	TextUtilities.LoadTextAuto(text, filename, format, res);
 	IF (res = 0) THEN
 		NEW(writer, KernelLog.Send, 256);
 		NEW(diagnostics, writer);

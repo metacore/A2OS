@@ -5,11 +5,11 @@ IMPORT Commands, Streams, Diagnostics, Files, Texts, TextUtilities;
 TYPE Converter = PROCEDURE (text : Texts.Text; CONST filename : ARRAY OF CHAR; VAR res : INTEGER);
 
 PROCEDURE Convert (diagnostics: Diagnostics.Diagnostics; list: Streams.Reader; converter: Converter);
-VAR text: Texts.Text; filename: Files.FileName; format: SIGNED32; res: INTEGER;
+VAR text: Texts.Text; filename: Files.FileName; format: TextUtilities.Format; res: INTEGER;
 BEGIN
 	WHILE list.GetString (filename) DO
 		NEW (text);
-		TextUtilities.LoadAuto (text, filename, format, res);
+		TextUtilities.LoadTextAuto (text, filename, format, res);
 		IF res = 0 THEN
 			converter (text, filename, res);
 			IF res = 0 THEN

@@ -71,22 +71,16 @@ END CheckWhitespace;
 
 (** Removed all end-of-line whitespace from file named 'filename' *)
 PROCEDURE RemoveFromFile*(VAR filename : Files.FileName; VAR nofRemoved: SIZE; VAR res : INTEGER);
-VAR file : Files.File; text : Texts.Text; format : INTEGER;
+VAR file : Files.File; text : Texts.Text; format : TextUtilities.Format;
 BEGIN
 	file := Files.Old(filename);
 	IF (file # NIL) THEN
 		file.GetName(filename);
 		NEW(text);
-		TextUtilities.LoadAuto(text, filename, format, res);
+		TextUtilities.LoadTextAuto(text, filename, format, res);
 		IF (res = 0) THEN
 			RemoveFromText(text, nofRemoved);
-			CASE format OF
-				|0: TextUtilities.StoreOberonText(text, filename, res);
-				|1: TextUtilities.StoreText(text, filename, res);
-				|2: TextUtilities.ExportUTF8(text, filename, res);
-			ELSE
-				res := -99; (* file format not known *)
-			END;
+			TextUtilities.Store(text, filename, format, res);
 		END;
 	ELSE
 		res := Files.FileNotFound;

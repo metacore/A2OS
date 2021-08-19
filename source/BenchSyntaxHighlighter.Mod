@@ -136,7 +136,7 @@ VAR
 	filename : Files.FileName; highlighterName, benchmark : ARRAY 64 OF CHAR; nofIterations : SIGNED32;
 	options : Options.Options;
 	text : Texts.Text; reader : Texts.TextReader;
-	format : SIGNED32; res: INTEGER;
+	format : TextUtilities.Format; res: INTEGER;
 	highlighter : SyntaxHighlighter.Highlighter;
 BEGIN
 	NEW(options);
@@ -152,7 +152,7 @@ BEGIN
 			highlighter := SyntaxHighlighter.GetHighlighter(highlighterName);
 			IF (highlighter # NIL) THEN
 				NEW(text);
-				TextUtilities.LoadAuto(text, filename, format, res);
+				TextUtilities.LoadTextAuto(text, filename, format, res);
 				IF (res = 0) THEN
 					context.out.String(filename); context.out.String(": ");
 					NEW(reader, text);
@@ -199,7 +199,7 @@ VAR
 	highlighter : SyntaxHighlighter.Highlighter;
 	text : Texts.Text; reader : Texts.TextReader; char32 : Texts.Char32;
 	token : SyntaxHighlighter.Token;
-	position: SIZE; format, res: INTEGER;
+	position: SIZE; format: TextUtilities.Format; res: INTEGER;
 BEGIN
 	NEW(options);
 	options.Add("d", "details", Options.Flag);
@@ -214,7 +214,7 @@ BEGIN
 		highlighter := SyntaxHighlighter.GetHighlighter(highlighterName);
 		IF (highlighter # NIL) THEN
 			NEW(text);
-			TextUtilities.LoadAuto(text, filename, format, res);
+			TextUtilities.LoadTextAuto(text, filename, format, res);
 			IF (res = 0) THEN
 				context.out.String("Token chain for file "); context.out.String(filename); context.out.String(":"); context.out.Ln;
 				text.AcquireRead;

@@ -2889,7 +2889,7 @@ PROCEDURE StoreText(CONST filename : ARRAY OF CHAR; text : Texts.Text);
 VAR res : INTEGER;
 BEGIN
 	text.AcquireRead;
-	TextUtilities.StoreOberonText(text, filename, res);
+	TextUtilities.StoreText(text, filename, res);
 	text.ReleaseRead
 END StoreText;
 
@@ -2898,7 +2898,7 @@ VAR text : Texts.Text; res : INTEGER;
 BEGIN
 	NEW(text);
 	text.AcquireWrite;
-	TextUtilities.LoadOberonText(text, filename, res);
+	TextUtilities.LoadText(text, filename, res);
 	text.ReleaseWrite;
 	RETURN text;
 END LoadText;

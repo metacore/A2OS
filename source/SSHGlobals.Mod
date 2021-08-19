@@ -183,11 +183,11 @@ VAR
 	PROCEDURE GetConfigBuffer(): Buffer;
 	VAR
 		text: Texts.Text; r: Texts.TextReader;
-		ch, format: INTEGER; len, i, j, bytesPerChar: SIZE; res: INTEGER;
+		ch: SIGNED32; format: TextUtilities.Format; len, i, j, bytesPerChar: SIZE; res: INTEGER;
 		buffer: Buffer;
 	BEGIN
 		NEW( text );
-		TextUtilities.LoadAuto( text, ConfigFile, format, res );
+		TextUtilities.LoadTextAuto( text, ConfigFile, format, res );
 		IF res # 0 THEN
 			Log.String( "could not open file " ); Log.String( ConfigFile ); Log.Ln
 		ELSE

@@ -2752,7 +2752,7 @@ PROCEDURE GetReader(file : File; diagnostics : Diagnostics.Diagnostics) : Stream
 VAR
 	reader : Streams.Reader;
 	fileReader : Files.Reader; ch1, ch2 : CHAR; offset : SIGNED32;
-	text : Texts.Text; textReader : TextUtilities.TextReader; format, res: INTEGER;
+	text : Texts.Text; textReader : TextUtilities.TextReader; format: TextUtilities.Format; res: INTEGER;
 	message : ARRAY 256 OF CHAR;
 BEGIN
 	ASSERT((file # NIL) & (diagnostics # NIL));
@@ -2777,7 +2777,7 @@ BEGIN
 	END;
 	IF (reader = NIL) THEN
 		NEW(text);
-		TextUtilities.LoadAuto(text, file.name, format, res);
+		TextUtilities.LoadTextAuto(text, file.name, format, res);
 		IF (res = 0) THEN
 			NEW(textReader, text);
 			reader := textReader;
@@ -2843,12 +2843,12 @@ PROCEDURE ParseBuildFile*(
 	log: Streams.Writer;
 	diagnostics : Diagnostics.Diagnostics
 	) : BOOLEAN;
-VAR text : Texts.Text; format : SIGNED32; res: INTEGER; message : ARRAY 256 OF CHAR;
+VAR text : Texts.Text; format : TextUtilities.Format; res: INTEGER; message : ARRAY 256 OF CHAR;
 BEGIN
 	log.String("Loading package description file "); log.String(filename); log.String(" ... ");
 	log.Update;
 	NEW(text);
-	TextUtilities.LoadAuto(text, filename, format, res);
+	TextUtilities.LoadTextAuto(text, filename, format, res);
 	IF (res = 0) THEN
 		IF ParseBuildDescription(text, filename, builds, log, diagnostics) THEN
 			log.String("done."); log.Ln;

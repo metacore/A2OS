@@ -1887,10 +1887,10 @@ VAR
 	module : Module;
 	scanner : FoxScanner.Scanner;
 	text : Texts.Text; reader : TextUtilities.TextReader;
-	format, res : INTEGER;
+	format: TextUtilities.Format; res : INTEGER;
 BEGIN
 	NEW(text);
-	TextUtilities.LoadAuto(text, filename, format, res);
+	TextUtilities.LoadTextAuto(text, filename, format, res);
 	IF (res = 0) THEN
 		NEW(reader, text);
 		scanner := FoxScanner.NewScanner(filename, reader, 0, diagnostics);

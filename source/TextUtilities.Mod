@@ -1993,7 +1993,7 @@ BEGIN
 	RETURN RESULT;
 END LoadTextStream;
 
-PROCEDURE LoadTextAuto*(text : Text; CONST fileName: ARRAY OF CHAR; VAR format: Format; VAR res: INTEGER): Text;
+PROCEDURE LoadTextAuto*(text : Text; CONST fileName: ARRAY OF CHAR; VAR format: Format; VAR res: INTEGER);
 VAR in: Streams.Reader;  t : Text;
 BEGIN
 	ASSERT(text # NIL);
@@ -2871,7 +2871,7 @@ END SetClipboard;
 PROCEDURE GetTextReader* (CONST filename: ARRAY OF CHAR): Streams.Reader;
 VAR
 	file: Files.File; fileReader: Files.Reader; offset: SIGNED32;
-	text: Text; format: SIGNED32; res: INTEGER; textReader: TextReader;
+	text: Text; format: Format; res: INTEGER; textReader: TextReader;
 BEGIN
 	(* Optimisation: skip header of oberon files and return a file reader instead of default text reader*)
 	file := Files.Old (filename);
@@ -2884,7 +2884,7 @@ BEGIN
 		RETURN fileReader
 	ELSE
 		NEW (text);
-		LoadAuto (text, filename, format, res);
+		LoadTextAuto (text, filename, format, res);
 		NEW (textReader, text);
 		RETURN textReader
 	END

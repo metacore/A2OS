@@ -47,7 +47,7 @@ TYPE
 
 
 PROCEDURE FindString(CONST filename : Files.FileName; param : Parameters; stats : Statistics; context : Commands.Context);
-VAR text : Texts.Text; pos: SIZE; format, res : INTEGER; searchString : SearchStringUCS; idx, nbrOfHits : SIZE;
+VAR text : Texts.Text; pos: SIZE; format: TextUtilities.Format; res : INTEGER; searchString : SearchStringUCS; idx, nbrOfHits : SIZE;
 BEGIN
 	ASSERT(param IS PatternParameters);
 	nbrOfHits := 0;
@@ -56,7 +56,7 @@ BEGIN
 		UTF8Strings.UTF8toUnicode(param.searchString, searchString, idx);
 	END;
 	NEW(text);
-	TextUtilities.LoadAuto(text, filename, format, res);
+	TextUtilities.LoadTextAuto(text, filename, format, res);
 	IF (res = 0) THEN
 		text.AcquireRead;
 		pos := TextUtilities.Pos(searchString, 0, text);
@@ -81,7 +81,7 @@ END FindString;
 
 PROCEDURE ReplaceString(CONST filename : Files.FileName; param : Parameters; stats : Statistics; context : Commands.Context);
 VAR
-	text : Texts.Text; pos: SIZE; format, res: INTEGER;
+	text : Texts.Text; pos: SIZE; format: TextUtilities.Format; res: INTEGER;
 	searchString, replaceString : SearchStringUCS; idx : SIZE;
 	searchStringLen, replaceStringLen : SIZE;
 	replaceCount : SIZE;
@@ -105,7 +105,7 @@ BEGIN
 	searchStringLen := TextUtilities.UCS32StrLength(searchString);
 	replaceStringLen := TextUtilities.UCS32StrLength(replaceString);
 	NEW(text);
-	TextUtilities.LoadAuto(text, filename, format, res);
+	TextUtilities.LoadTextAuto(text, filename, format, res);
 	IF (res = 0) THEN
 		text.AcquireWrite;
 		pos := TextUtilities.Pos(replaceString, 0, text);
@@ -127,14 +127,8 @@ BEGIN
 			END;
 			context.out.Ln;
 			res := -1;
-			IF (format = 0) THEN TextUtilities.StoreOberonText(text, filename, res);
-			ELSIF (format = 1) THEN TextUtilities.StoreText(text, filename, res);
-			ELSIF (format = 2) THEN TextUtilities.ExportUTF8(text, filename, res);
-			ELSE
-				INC(stats.nofErrors);
-				context.error.String("Could not store text: "); context.error.String(filename);
-				context.error.String(" (Format unknown)"); context.error.Ln;
-			END;
+			TextUtilities.Store(text, filename, format, res);
+
 			IF (res # 0) THEN
 				INC(stats.nofErrors);
 				context.error.String("Could not store text: "); context.error.String(filename); context.error.Ln;

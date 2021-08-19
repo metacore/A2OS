@@ -223,7 +223,7 @@ VAR
 	size : Files.Size;
 BEGIN
 	ASSERT(proc # NIL);
-	IF path # "" THEN Files.JoinPath(path, pattern, filename) END;
+	Files.JoinPath(path, pattern, filename);
 	NEW(enum); enum.Open(filename, {});
 	WHILE enum.GetEntry(filename, fileflags, time, date, size) & ~stats.abort DO
 		IF ~(Files.Directory IN fileflags) THEN
@@ -366,6 +366,7 @@ System.Free SearchTools ~
 
 SearchTools.Find -s -r E:/Highdim/Hardware/*.xml "?{" ~
 
+SearchTools.Find -fs *.Ob07 FOR  ~
 SearchTools.Find E:/WinaosNewCommands/source/*.Mod Objects  ~
 SearchTools.Find E:/WinaosNewCommands/winaos/src/*.Mod Commands  ~
 

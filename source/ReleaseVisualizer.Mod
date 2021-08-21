@@ -303,6 +303,14 @@ TYPE
 					ELSE
 						Error("Expected module identifier");
 					END;
+					IF s.sym = Scanner.lparen THEN
+						(* Skip template module import *)
+						Next;
+						WHILE s.sym # Scanner.rparen DO
+							Next;
+						END;
+						Eat(Scanner.rparen);
+					END;
 				END;
 				IF (s.sym = Scanner.in) THEN
 					Next;
@@ -341,6 +349,18 @@ TYPE
 					END;
 					currentModule := GetModule(moduleName, context);
 				ELSE Error("Module identifier expected");
+				END;
+				IF s.sym = Scanner.lparen THEN
+					(* Skip template module declaration *)
+					Next;
+					WHILE (s.sym = Scanner.type) OR (s.sym = Scanner.const) DO
+						Next;
+						Eat(Scanner.ident);
+						IF s.sym = Scanner.comma THEN
+							Next;
+						END;
+					END;
+					Eat(Scanner.rparen);
 				END;
 				Eat(Scanner.semicolon);
 			ELSE Error("Module expected")
@@ -1230,9 +1250,9 @@ END ReleaseVisualizer.
 
 System.Free ReleaseVisualizer ~
 
-ReleaseVisualizerScan ~
-
 ReleaseVisualizer.Open ~
+
+ReleaseVisualizer.Open --trace ~
 
 ReleaseVisualizer.Open ../TestA2/*.Mod ~
 

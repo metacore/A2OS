@@ -11,7 +11,7 @@
 		<!ELEMENT Region EMPTY>
 		<!ATTLIST Style
 			name NMTOKEN #REQUIRED
-			fontname NMTOKEN "IBMPlexMono"
+			fontname NMTOKEN "LiberationMono"
 			fontsize NMTOKEN "*"
 			fontstyle CDATA "{}"
 			color NMTOKEN "FF"

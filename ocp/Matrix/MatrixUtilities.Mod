@@ -1529,7 +1529,7 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	PROCEDURE HasSize*(CONST a: FoxArrayBase.UnsafeArrayT; CONST size: ARRAY [*] OF SIZE):BOOLEAN;
 	VAR i:SIZE;
 	BEGIN
-		IF (a.dim#LEN(size,0)) THEN RETURN FALSE
+		IF (a = NIL) OR (a.dim#LEN(size,0)) THEN RETURN FALSE
 		ELSE
 			FOR i:=0 TO a.dim-1 DO
 				IF a.lens[i].len#size[i] THEN RETURN FALSE END;

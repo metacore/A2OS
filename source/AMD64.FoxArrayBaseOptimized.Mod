@@ -23,7 +23,9 @@ CONST
 
 	debug = FALSE;  parallel = TRUE;  SSE = TRUE;
 
-	MaxCachePoolSize = 0 (* disabled *)  (*  646*1024*1024  *)  (* enabled *) ;
+	(*MaxCachePoolSize = 0 *)(* disabled *)  (*  646*1024*1024  *)  (* enabled *) ;
+	(*MaxCachePoolSize =  646*1024*1024   (* enabled *) ;*)
+	
 	maxProcesses = 48;
 
 	cMatMulDynamic* = -1;  cMatMulScalarProduct* = 0;
@@ -31,6 +33,8 @@ CONST
 	cMatMulStride* = 3;  cMatMulBlocked* = 4;
 
 VAR
+	MaxCachePoolSize := 0: SIZE;(* e.g.,  646*1024*1024  *)  (* enabled *) 
+	
 	cBlockSize*: SIGNED32;  nrProcesses*: SIGNED32;
 	lastUsedBlockSize*: SIZE;
 
@@ -7161,6 +7165,24 @@ VAR
 		KernelLog.String( " done." );  KernelLog.Ln;
 	END Install;
 
+	PROCEDURE EnableCachePool*(context:Commands.Context);
+	VAR size:SIZE;
+	BEGIN
+		KernelLog.String( "ArrayBaseOptimized: enable cache pool:" );
+		IF (context=NIL) OR ~context.arg.GetSize(size,FALSE) THEN 
+			MaxCachePoolSize :=  256*1024*1024;
+		ELSE
+			MaxCachePoolSize :=  size;
+		END;
+	END EnableCachePool;
+
+	PROCEDURE DisableCachePool*;
+	BEGIN
+		KernelLog.String( "ArrayBaseOptimized: disable cache pool:" );
+		MaxCachePoolSize := 0;
+	END DisableCachePool;
+
+
 	PROCEDURE SetParameters*( context: Commands.Context );
 	BEGIN
 		context.arg.SkipWhitespace; context.arg.Int(cBlockSize,TRUE);
@@ -7182,7 +7204,7 @@ BEGIN
 
 END FoxArrayBaseOptimized.
 
-System.Free ArrayBaseOptimized ~
+System.FreeDownTo ArrayBaseOptimized ~
 
 FoxArrayBaseOptimized.Install ~
 FoxArrayBaseOptimized.InstallSSE2 ~

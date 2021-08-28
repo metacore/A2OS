@@ -73,8 +73,8 @@ http://www.fourcc.org/yuv.php
 		r:=clamp(R);
 		g:=clamp(G);
 	END YUVtoBGR;
-
-PROCEDURE BGRtoYUV(blue,green,red: CHAR; VAR y,u,v: CHAR);
+	
+	PROCEDURE BGRtoYUV*(blue,green,red: CHAR; VAR y,u,v: CHAR);
 	VAR Y,U,V: FLOAT32;
 	BEGIN
 		(* float version*)

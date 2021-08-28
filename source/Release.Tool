@@ -2070,6 +2070,10 @@ PACKAGE TrueTypeFonts ARCHIVE "TrueTypeFonts.zip" SOURCE "" DESCRIPTION "True-ty
 	IBMPlexMono_bd.ttf IBMPlexMono_bi.ttf
 	IBMPlexSansCondensed.ttf IBMPlexSansCondensed_i.ttf
 	IBMPlexSansCondensed_bd.ttf IBMPlexSansCondensed_bi.ttf
+	LiberationMono.ttf LiberationMono_bd.ttf LiberationMono_bi.ttf LiberationMono_i.ttf
+	LiberationSans.ttf LiberationSans_bd.ttf LiberationSans_bi.ttf LiberationSans_i.ttf
+	LiberationSerif.ttf LiberationSerif_bd.ttf LiberationSerif_bi.ttf LiberationSerif_i.ttf
+	LiberationFontsLicense.txt
 END
 
 PACKAGE CjkFonts ARCHIVE "CjkFonts.zip" SOURCE "" DESCRIPTION "Chinese, Japanese and Korean Fonts"

@@ -162,6 +162,7 @@ VAR
 	loopSubAXAX*, loopSubARAR*, loopSubAZAZ*, loopSubALZALZ*: BinaryAAALoop;
 	loopEMulAXAX*, loopEMulARAR*, loopEMulAZAZ*, loopEMulALZALZ*: BinaryAAALoop;
 	
+	loopEMulARAB*: BinaryAAALoop;
 	loopEMulAXAB*: BinaryAAALoop;
 	loopSumAXAB*: BinaryAASLoop;
 	
@@ -201,6 +202,7 @@ VAR
 		loopAddARAR := AddARARLoop; loopSubARAR := SubARARLoop; loopEMulARAR := EMulARARLoop; loopMatMulAXAX := MatMulAXAXLoop;
 		loopAddAZAZ := AddAZAZLoop; loopAddALZALZ := AddALZALZLoop; loopSubAZAZ := SubAZAZLoop; loopSubALZALZ := SubALZALZLoop;
 		loopEMulAZAZ := EMulAZAZLoop; loopEMulALZALZ := EMulALZALZLoop;
+		loopEMulARAB := EMulARABLoop;
 		loopEMulAXAB := EMulAXABLoop;
 		loopSumAXAB := SumAXABLoop;
 		loopMatMulIncAXAX := MatMulIncAXAXLoop;
@@ -3476,6 +3478,18 @@ Sufficient (but not necessary) conditions:
 										SIZEOF( COMPLEX64 ), loopEMulALZALZ );
 		RETURN RESULT
 	END ".*";
+	
+(** FLOAT32 handled by boolean map *)
+	PROCEDURE EMulARABLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	VAR lval: FLOAT32; rval: BOOLEAN; (*decode/convert boolean from 1 and 0*)
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );
+			IF ~rval THEN lval:=0.0 END;
+			SYSTEM.PUT( dadr, lval);
+			INC( ladr, linc );  INC( radr, rinc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END EMulARABLoop;
 
 (** FLOAT64 handled by boolean map *)
 	PROCEDURE EMulAXABLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
@@ -3488,6 +3502,13 @@ Sufficient (but not necessary) conditions:
 			INC( ladr, linc );  INC( radr, rinc );  INC( dadr, dinc );  DEC( len );
 		END;
 	END EMulAXABLoop;
+
+	OPERATOR ".*"*(CONST left: ARRAY [?] OF FLOAT32; CONST right: ARRAY [?] OF BOOLEAN): ARRAY {UNSAFE} [?] OF FLOAT32;
+	BEGIN
+		ApplyBinaryAAAOp( RESULT, left, right,
+										SIZEOF( FLOAT32 ), loopEMulARAB );
+		RETURN RESULT
+	END ".*";
 
 	OPERATOR ".*"*(CONST left: ARRAY [?] OF FLOAT64; CONST right: ARRAY [?] OF BOOLEAN): ARRAY {UNSAFE} [?] OF FLOAT64;
 	BEGIN

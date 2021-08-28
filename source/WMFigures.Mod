@@ -280,16 +280,27 @@ TYPE
 		END MoveDisplayPoints;
 
 		PROCEDURE Normalize;
-		VAR p:Point; oldrect, rect: WMRectangles.Rectangle; dx,dy:SIZE;
+		VAR p:Point; oldrect, rect: WMRectangles.Rectangle; l,t,r,b, dx,dy:SIZE;
 		BEGIN
 			Acquire;
-			rect.l := MAX(SIZE); rect.t := MAX(SIZE); rect.r := MIN(SIZE); rect.b := MIN(SIZE);
+			l := MAX(SIZE); t := MAX(SIZE); r := MIN(SIZE); b := MIN(SIZE);
+			p:=points;
+			WHILE p#NIL DO
+				l:=MIN(l,p.x); t:=MIN(t,p.y); r:=MAX(r,p.x); b:=MAX(b,p.y); p:=p.next;
+			END;
+			rect.l:=l-PointSize DIV 2-1;
+			rect.t:=t-PointSize DIV 2-1;
+			rect.r:=r+PointSize DIV 2+1;
+			rect.b:=b+PointSize DIV 2+1;
+			
+			(*rect.l := MAX(SIZE); rect.t := MAX(SIZE); rect.r := MIN(SIZE); rect.b := MIN(SIZE);
 			p:=points;
 			WHILE p#NIL DO (* adapt display point coordinates to new bounds *)
 				rect.l:=MIN(rect.l, p.x-PointSize DIV 2 -1); rect.r:=MAX(rect.r, p.x+PointSize DIV 2+1);  (*compute bounds*)
 				rect.t:=MIN(rect.t, p.y-PointSize DIV 2 -1); rect.b:=MAX(rect.b, p.y+PointSize DIV 2+1);
 				p:=p.next;
-			END;
+			END;*)
+			
 			p:=points;
 			WHILE p#NIL DO (* adapt display point coordinates to new bounds *)
 				p.x:=p.x-rect.l;
@@ -395,7 +406,6 @@ TYPE
 	END Figure;
 
 TYPE
-
 	PointArray = POINTER TO ARRAY OF WMGraphics.Point2d;
 
 	Line* = OBJECT(Figure)
@@ -768,7 +778,7 @@ TYPE
 		END Normalize;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR p,pa: Point; col: WMGraphics.Color; d:FLOAT32;
+		VAR p: Point; col: WMGraphics.Color; 
 		BEGIN
 			DrawBackground^(canvas);
 			IF mouseOver THEN col:=clHover.Get() ELSE col:=color.Get() END;
@@ -777,15 +787,7 @@ TYPE
 			ELSE
 				canvas.PolyLine(pointArray, nSegments, closed.Get(), col, WMGraphics.ModeSrcOverDst);
 			END;
-			IF arrow.Get() (*(Arrow IN state)*) & (p#NIL) THEN
-				(*
-				d:=Math.sqrt( (p.x-p.previous.x)*(p.x-p.previous.x) + (p.y-p.previous.y)*(p.y-p.previous.y));
-				d:=10/d;
-				NEW(pa);
-				pa.x:= p.x - ENTIER(d*(p.x-p.previous.x));
-				pa.y:= p.y - ENTIER(d*(p.y-p.previous.y));
-				DrawArrow(canvas, pa, p);
-				*)
+			IF arrow.Get() & (p#NIL) THEN
 				DrawArrow(canvas, p.previous, p)
 			END;
 		END DrawBackground;

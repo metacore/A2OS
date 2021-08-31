@@ -2,7 +2,7 @@ MODULE SyntaxHighlighter; (** AUTHOR "staubesv"; PURPOSE "Simple Syntax Highligh
 
 IMPORT
 	KernelLog,
-	Streams, Commands, Strings, Files, Diagnostics, Texts, TextUtilities, XML, XMLScanner, XMLParser, XMLObjects;
+	Streams, Commands, Strings, Files, Diagnostics, Texts, TextUtilities, XML, XMLScanner, XMLParser, XMLObjects, Options;
 
 CONST
 	DefineMask* = {0..5};
@@ -2019,49 +2019,49 @@ END HighlightText;
 PROCEDURE Highlight*(context : Commands.Context); (** filename highlighterName ~ *)
 VAR
 	file : Files.File; filename : Files.FileName; highlighterName : Identifier;
-	highlighter : Highlighter;
-	text : Texts.Text; format: SIGNED32; res: INTEGER;
+	highlighter : Highlighter; options: Options.Options;
+	text : Texts.Text; format, outFormat: TextUtilities.Format; res: INTEGER;
 BEGIN
-	context.arg.SkipWhitespace; context.arg.String(filename);
-	context.arg.SkipWhitespace; context.arg.String(highlighterName);
-	highlighter := GetHighlighter(highlighterName);
-	IF (highlighter # NIL) THEN
-		NEW(text);
-		TextUtilities.LoadAuto(text, filename, format, res);
-		IF (res = 0) THEN
-			IF (format = 0) OR (format = 1) THEN (* Oberon rsp. Bluebottle text format *)
+	NEW(options);
+	options.Add("f", "format", Options.String);
+	IF options.Parse(context.arg, context.error) & (context.arg.Available() # 0) & context.arg.GetString(filename) THEN
+		context.arg.SkipWhitespace; context.arg.String(highlighterName);
+		highlighter := GetHighlighter(highlighterName);
+		IF (highlighter # NIL) THEN
+			NEW(text);
+			TextUtilities.LoadTextAuto(text, filename, format, res);
+			IF (res = 0) THEN
 				HighlightText(text, highlighter);
 				file := Files.Old(filename);
 				IF (file # NIL) THEN
 					file.GetName(filename);
-					CASE format OF
-						|0: TextUtilities.StoreOberonText(text, filename, res);
-						|1: TextUtilities.StoreText(text, filename, res);
-						|2: TextUtilities.ExportUTF8(text, filename, res);
-					ELSE
-						res := -99; (* file format not known *)
-					END;
+					IF ~options.GetString("format", outFormat) THEN outFormat := format END;
+					TextUtilities.Store(text, filename, outFormat, res);
 					IF (res = 0) THEN
 						context.out.String("Highlighted file "); context.out.String(filename); context.out.Ln;
 					ELSE
+						context.result := Commands.CommandError;
 						context.error.String("Could not store file "); context.error.String(filename);
 						context.error.String(" , res = "); context.error.Int(res, 0); context.error.Ln;
 					END;
 				ELSE
+					context.result := Commands.CommandError;
 					context.error.String(filename); context.error.String(": Could not resolve full filename.");
 					context.error.Ln;
 				END;
 			ELSE
-				context.error.String(filename); context.error.String(": Unsupported text format.");
-				context.error.Ln;
+				context.result := Commands.CommandError;
+				context.error.String("Could not open file "); context.error.String(filename);
+				context.error.String(", res = "); context.error.Int(res, 0); context.error.Ln;
 			END;
 		ELSE
-			context.error.String("Could not open file "); context.error.String(filename);
-			context.error.String(", res = "); context.error.Int(res, 0); context.error.Ln;
+			context.result := Commands.CommandError;
+			context.error.String("Highligher "); context.error.String(highlighterName);
+			context.error.String(" not found."); context.error.Ln;
 		END;
 	ELSE
-		context.error.String("Highligher "); context.error.String(highlighterName);
-		context.error.String(" not found."); context.error.Ln;
+		context.result := Commands.CommandParseError;
+		context.out.String('Usage: SyntaxHighlighter.Highlight [--format=<Codec>] <filename> <highlighterName>'); context.out.Ln;
 	END;
 END Highlight;
 
@@ -2104,6 +2104,7 @@ BEGIN
 	traceLevel := Trace_None;
 END SyntaxHighlighter.
 
+SyntaxHighlighter.Highlight ~
 SyntaxHighlighter.Open SyntaxHighlighter.XML ~
 
 SyntaxHighlighter.Dump ~

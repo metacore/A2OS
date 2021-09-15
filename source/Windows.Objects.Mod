@@ -563,6 +563,13 @@ BEGIN{UNTRACKED}
 		Machine.Release(Machine.Heaps);
 		Heaps.StopMarking
 	END;
+	
+	IF ~Machine.ValidHeapAddress(exceptionPointers.exception.ExceptionAddress) THEN
+		Trace.String("foreign code EXCEPTION "); Trace.Address(exceptionPointers.exception.ExceptionCode);
+		Trace.String(" at "); Trace.Address(exceptionPointers.exception.ExceptionAddress); Trace.Ln;
+		Kernel32.LeaveCriticalSection( excplock );
+		RETURN Kernel32.ExceptionContinueSearch; (*! we assume the exception will be handled by the foreign thread code *)
+	END;
 
 	IF exceptionhandler = NIL THEN
 		Trace.StringLn ( "Objects: No exception handler installed" );

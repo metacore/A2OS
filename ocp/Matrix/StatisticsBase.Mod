@@ -29,7 +29,7 @@ TYPE ArrayFunctionsPool=OBJECT
 END ArrayFunctionsPool;
 
 TYPE ArrayFunction= OBJECT 
-	VAR min,max,sum,msq,scale,ssq:Datatype;
+	VAR min,max,sum,mean, msq,scale,ssq:REAL;
 		cnt:SIZE;
 		next:ArrayFunction;(*linked list*)
 	PROCEDURE &Init;
@@ -37,30 +37,37 @@ TYPE ArrayFunction= OBJECT
 		sum:=0;
 		min:=MAX(Datatype);
 		max:=MIN(Datatype);
+		mean:=0;
 		msq:=0; ssq:=0;
 		cnt:=0;
 		scale:=1;
 	END Init;
 	
-	PROCEDURE AddAbs(x:Datatype)(*:Datatype*);
+	PROCEDURE AddAbs(x:REAL)(*:REAL*);
 	BEGIN
 		sum:=sum+ABS(x);
 		(*RETURN x*)
 	END AddAbs;
 
-	PROCEDURE MaxAbs(x:Datatype)(*:Datatype*);
+	PROCEDURE MaxAbs(x:REAL)(*:REAL*);
 	BEGIN
 		max:=MAX(max,ABS(x));
 		(*RETURN x*)
 	END MaxAbs;
 
-	PROCEDURE MinAbs(x:Datatype)(*:Datatype*);
+	PROCEDURE MinAbs(x:REAL)(*:REAL*);
 	BEGIN
 		min:=MIN(min,ABS(x));
 		(*RETURN x*)
 	END MinAbs;
 	
-	PROCEDURE SumSquare(x:Datatype);
+	PROCEDURE Variance(x:REAL);(*!precondition: assign 'mean'*)
+	BEGIN
+		ssq:=ssq+(x-mean)*(x-mean);
+		INC(cnt)
+	END Variance;(*!postcondition: divide 'ssq' by 'cnt'*)
+
+	PROCEDURE SumSquare(x:REAL);
 	BEGIN
 		ssq:=ssq+ x*x;
 	END SumSquare;
@@ -200,14 +207,14 @@ END MeanSquare;
 
 PROCEDURE RMS*(CONST X: Array): Datatype; (*root mean square*)
 BEGIN
-	RETURN sqrt(MeanSquare(X));
+	RETURN MathL.sqrt(MeanSquare(X));
 END RMS;
 
 (*PROCEDURE RMS*(CONST X: Array): Datatype; (*root mean square*)
 BEGIN
 	IF DIM(X)=0 THEN RETURN 0 (*!TBD: apply to other structures ? or TRAP ?*)
-	ELSE RETURN sqrt(X+*X / Count(X))
-	(*ELSE RETURN sqrt(X+*X / ProdS(LEN(X)))*)
+	ELSE RETURN MathL.sqrt(X+*X / Count(X))
+	(*ELSE RETURN MathL.sqrt(X+*X / ProdS(LEN(X)))*)
 	END;
 END RMS;*)
 
@@ -216,7 +223,7 @@ PROCEDURE KSmallest*( VAR a: Vector; (* n,*) k: SIZE ): Datatype;
 VAR i, j, l, m, n: SIZE;  x: Datatype;
 
 	PROCEDURE swap( VAR x, y: Datatype );
-	VAR z: Datatype;
+	VAR z: FLOAT64;
 	BEGIN
 		z := x;  x := y;  y := z
 	END swap;
@@ -278,33 +285,51 @@ PROCEDURE QSort*(VAR X : Vector);
  END Median;
 
  (** variance of dataset *)
- PROCEDURE Variance*(CONST v:Array):Datatype;
+(* PROCEDURE Variance*(CONST v:Array):Datatype;
  VAR diff:Array;
  BEGIN
  	 diff:=v-Mean(v);
  	 RETURN MeanSquare(diff)
  	(* RETURN (diff+*diff) / Count(v) *)
+ END Variance;*)
+
+ (** variance of dataset *)
+ PROCEDURE Variance*(CONST a:ARRAY[?] OF Datatype):Datatype;
+ VAR f:ArrayFunction; res:Datatype;
+ BEGIN
+ 	f:=arrayFunctionsPool.Get();(*?what is the impact of locking on performance ?*)
+ 	f.Init; 
+ 	f.mean:=Mean(a);
+ 	f.Variance(a);
+ 	res:=f.ssq/f.cnt;
+ 	arrayFunctionsPool.Put(f);(*?what is the impact of locking on performance ?*)
+ 	RETURN res
  END Variance;
 
  (** of full data *)
  PROCEDURE StandardDeviation*(CONST v:Array): Datatype;
  BEGIN
- 	RETURN sqrt(Variance(v))
+ 	RETURN MathL.sqrt(Variance(v))
  END StandardDeviation;
 
 
 	(** variance estimated from subset of data, divisor is (N-1)*)
  PROCEDURE EstimatedVariance*(CONST v:Array):Datatype;
- VAR diff:Array;
+ VAR f:ArrayFunction; res:Datatype;
  BEGIN
- 	 diff:=v-Mean(v);
- 	 RETURN (diff+*diff) / (Count(v)-1)
+ 	f:=arrayFunctionsPool.Get();
+ 	f.Init; 
+ 	f.mean:=Mean(v);
+ 	f.Variance(v);
+ 	res:=f.ssq/(f.cnt-1);
+ 	arrayFunctionsPool.Put(f);
+ 	RETURN res
  END EstimatedVariance;
 
  (** subset of data , divisor is (N-1)*)
  PROCEDURE EstimatedStandardDeviation*(CONST v:Array): Datatype;
  BEGIN
- 	RETURN sqrt(EstimatedVariance(v))
+ 	RETURN MathL.sqrt(EstimatedVariance(v))
  END EstimatedStandardDeviation;
 
  PROCEDURE Skewness*(CONST X : Array) : Datatype;
@@ -335,13 +360,13 @@ MODULE Test;
 IMPORT Commands;
 
 TYPE Summer*= OBJECT
-	VAR sum:Datatype;
+	VAR sum:REAL;
 	PROCEDURE &Init*;
 	BEGIN
 		sum:=0;
 	END Init;
 	
-	PROCEDURE AddAbs(x:Datatype):Datatype;
+	PROCEDURE AddAbs(x:REAL):REAL;
 	BEGIN
 		sum:=sum+ABS(x);
 		RETURN x
@@ -350,7 +375,7 @@ TYPE Summer*= OBJECT
 	END Summer;
 	
 PROCEDURE Do*(c:Commands.Context);
-	VAR a: ARRAY [*] OF Datatype;
+	VAR a: ARRAY [*] OF REAL;
 		summer:Summer;
 	BEGIN
 		a:=[-1,-1,-1,1,1,1];
@@ -375,7 +400,7 @@ VAR N:SIZE; sd: Datatype;
 BEGIN
 	N:=Count(a);
 	RESULT:=a-SUM(a)/N;
-	sd:=sqrt( RESULT+*RESULT / N);
+	sd:=MathL.sqrt( RESULT+*RESULT / N);
 	IF sd=0 THEN RETURN RESULT (* avoid NaN result in this case*)
 	ELSE RETURN 1/sd * RESULT
 	END;
@@ -389,7 +414,7 @@ BEGIN
 	meanVector := (onesR * A)/LEN(A,0);
 	meanMatrix := onesR ** meanVector;
 	A:=A-meanMatrix;
-	sdVector := MatrixUtilities.ApplyUnaryVec(onesR * (A.*A), sqrt) / sqrt(LEN(A,0));
+	sdVector := MatrixUtilities.ApplyUnaryVec(onesR * (A.*A), MathL.sqrt) / MathL.sqrt(LEN(A,0));
 	sdMatrix:= onesR ** sdVector;
 	A:= A ./ sdMatrix;
 END NormalizeColumns;
@@ -409,7 +434,7 @@ END ZeroMeanColumns;
  y[i] = softmax(x[i]) = exp(x[i])/sum(exp(x)) *)
 PROCEDURE SoftMax*(VAR x: Array):Array;
 	BEGIN
-		RESULT :=ALL(x, exp);
+		RESULT :=ALL(x, MathL.exp);
 		RESULT:=1/SUM(RESULT) * RESULT;
 		RETURN RESULT
 END SoftMax;
@@ -418,7 +443,7 @@ PROCEDURE Logistic*(X : Datatype) : Datatype;  (* logistic function as nonlinear
 	BEGIN
 		IF X >= 18.3684002848 (*expNegligibleL*) THEN RETURN 1
 		ELSIF (-X) > 18.3684002848 (*expNegligibleL*) THEN RETURN 0
-		ELSE RETURN 1 / (1 + Datatype(MathL.exp( -X )));
+		ELSE RETURN 1 / (1 + MathL.exp( -X ));
 		END;
 	END Logistic;
 
@@ -431,18 +456,6 @@ PROCEDURE SoftMaxNormalize*(CONST x: Array):Array;
 		RESULT :=ALL(RESULT, Logistic);
 		RETURN RESULT
 END SoftMaxNormalize;
-
-PROCEDURE sqrt(x: Datatype): Datatype;
-BEGIN
-	RETURN Datatype(MathL.sqrt(x));
-END sqrt;
-
-PROCEDURE exp(x: Datatype): Datatype;
-BEGIN
-	RETURN Datatype(MathL.exp(x));
-END exp;
-
-
 (*
 PROCEDURE Test*;
 CONST a=[1,2,3,4]; b=[1,2,2,1]; c=[1,2,3,2]; d=[1,1,2,3,1]
@@ -514,10 +527,9 @@ BEGIN
 END TestSoftMax;
 
 PROCEDURE {TEST} Test*;(*! implement more tests ! *)
-(*CONST TestTolerance=0.000000001;*)
+CONST TestTolerance=0.000000001; 
 VAR v:Vector;x:Datatype;
 BEGIN
-	VAR TestTolerance := MatrixBase.EPS;
 	ASSERT(Count([[[1,2,3],[4,5,6]],[[1,2,3],[4,5,6]]])=12, 200);
 	ASSERT(Mean([1,2,3,4,5,6])=3.5, 201);
 	ASSERT(Median([4,3,2,1,5,6,7])=4, 202);

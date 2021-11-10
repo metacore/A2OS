@@ -8838,7 +8838,7 @@ TYPE
 					result := to.sizeInBits >= this.sizeInBits; (* weak compatibility: (unsigned) address may be assigned to signed integer of same (or greater) size *)
 				ELSIF (to IS SyntaxTree.IntegerType) & (this IS SyntaxTree.SizeType) THEN
 					result := to.sizeInBits >= this.sizeInBits; (* compatibility: (signed) size may be assigned to signed integer of greater or equal size *)
-				ELSIF (to IS SyntaxTree.FloatType) & (this IS SyntaxTree.AddressType) OR (this IS SyntaxTree.SizeType) THEN
+				ELSIF (to IS SyntaxTree.FloatType) & ((this IS SyntaxTree.AddressType) OR (this IS SyntaxTree.SizeType)) THEN
 					result := TRUE;
 				ELSIF to IS SyntaxTree.AnyType THEN
 					result :=  (this IS SyntaxTree.RecordType) & this(SyntaxTree.RecordType).isObject OR (this IS SyntaxTree.PointerType) OR (this IS SyntaxTree.ProcedureType) OR (this IS SyntaxTree.NilType) OR (this IS SyntaxTree.AnyType) OR (this IS SyntaxTree.ObjectType);

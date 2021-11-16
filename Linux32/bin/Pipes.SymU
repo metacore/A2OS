@@ -22,7 +22,7 @@ TYPE
 	VAR 
 		pipe: Pipe; 
 		inputReceiver: Receiver; 
-		smallbuf: ARRAY [128] OF CHAR; 
+		smallbuf: ARRAY 128 OF CHAR; 
 		len: SIZE; 
 		res: INTEGER; 
 

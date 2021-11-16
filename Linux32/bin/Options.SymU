@@ -21,7 +21,7 @@ TYPE
 		ch: CHAR; 
 		name: Name; 
 		type: SIGNED32; 
-		value: SIGNED32; 
+		value: SIGNED64; 
 		rvalue: FLOAT64; 
 		string: Parameter; 
 	END; 
@@ -41,6 +41,7 @@ TYPE
 		PROCEDURE ^ GetFlag*(CONST name: Name): BOOLEAN; 
 		PROCEDURE ^ SetFlag*(ch: CHAR; CONST name: Name): BOOLEAN; 
 		PROCEDURE ^ GetInteger*(CONST name: Name; VAR integer: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetInteger64*(CONST name: Name; VAR integer: SIGNED64): BOOLEAN; 
 		PROCEDURE ^ SetInteger*(ch: CHAR; CONST name: Name; CONST string: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ GetString*(CONST name: Name; VAR string: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ SetString*(ch: CHAR; CONST name: Name; CONST string: ARRAY OF CHAR): BOOLEAN; 
@@ -86,7 +87,7 @@ TYPE
 
 	PROCEDURE ^ Merge*(VAR this: Options; base: Options); 
 	PROCEDURE ^ IsValidChar(ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ StringToInteger*(CONST string: ARRAY OF CHAR; VAR x: SIGNED32; hex: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ StringToInteger*(CONST string: ARRAY OF CHAR; VAR x: SIGNED64; hex: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ Test*(context: Commands.Context); 
 BEGIN
 END Options.

@@ -249,6 +249,7 @@ TYPE
 	PROCEDURE ^ InCellNetScope(scope: SyntaxTree.Scope): BOOLEAN; 
 	PROCEDURE ^ ToMemoryUnits(system: Global.System; size: SIZE): SIZE; 
 	PROCEDURE ^ GetProcedureAllowed*(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ GetSelfParameter(scope: SyntaxTree.Scope): SyntaxTree.Parameter; 
 	PROCEDURE ^ RemoveModuleFromCache*(importCache: SyntaxTree.ModuleScope; x: SyntaxTree.Module); 
 	PROCEDURE ^ CompatibleTo(system: Global.System; this, to: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ StaticArrayCompatible(formal: SyntaxTree.Type; actual: SyntaxTree.Type): BOOLEAN; 

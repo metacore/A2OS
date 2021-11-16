@@ -12,7 +12,6 @@ CONST
 	debug = FALSE; 
 	parallel = TRUE; 
 	SSE = TRUE; 
-	MaxCachePoolSize = 0; 
 	maxProcesses = 48; 
 	cMatMulDynamic* =  -1; 
 	cMatMulScalarProduct* = 0; 
@@ -87,6 +86,7 @@ TYPE
 		PROCEDURE ^ Compute; 
 	END MultiplyObjectX; 
 VAR 
+	MaxCachePoolSize := 0: SIZE; 
 	cBlockSize*: SIGNED32; 
 	nrProcesses*: SIGNED32; 
 	lastUsedBlockSize*: SIZE; 
@@ -246,6 +246,8 @@ VAR
 	PROCEDURE ^ InstallSSE2*; 
 	PROCEDURE ^ InstallSSE3*; 
 	PROCEDURE ^ Install*; 
+	PROCEDURE ^ EnableCachePool*(context: Commands.Context); 
+	PROCEDURE ^ DisableCachePool*; 
 	PROCEDURE ^ SetParameters*(context: Commands.Context); 
 BEGIN
 END FoxArrayBaseOptimized.

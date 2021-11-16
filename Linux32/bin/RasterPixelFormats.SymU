@@ -14,7 +14,7 @@ VAR
 		RETURN CHR(MAX(0, MIN(255, ENTIER(c))))
 	END clamp; 
 	PROCEDURE ^ YUVtoBGR*(y, u, v: CHAR; VAR b, g, r: CHAR); 
-	PROCEDURE ^ BGRtoYUV(blue, green, red: CHAR; VAR y, u, v: CHAR); 
+	PROCEDURE ^ BGRtoYUV*(blue, green, red: CHAR; VAR y, u, v: CHAR); 
 	PROCEDURE ^ BGRtoYUVInt*(blue, green, red: CHAR; VAR y, u, v: CHAR); 
 	PROCEDURE ^ PackYUV422(VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel); 
 	PROCEDURE ^ UnpackYUV422(VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel); 

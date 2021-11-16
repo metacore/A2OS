@@ -1,5 +1,5 @@
 MODULE PrettyPrint;
-	IMPORT Commands, Files, Strings, Streams, Texts, TextUtilities, SyntaxHighlighter;
+	IMPORT Commands, Files, Strings, Streams, Texts, TextUtilities, SyntaxHighlighter, Options;
 CONST 
 	PPDir = \"PPr"\; 
 VAR 

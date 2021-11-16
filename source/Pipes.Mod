@@ -81,7 +81,7 @@ TYPE ReadDecoupler*= OBJECT
 	VAR
 		pipe: Pipe;
 		inputReceiver: Receiver;
-		smallbuf: ARRAY[128] OF CHAR;
+		smallbuf: ARRAY 128 OF CHAR;
 		len: SIZE;
 		res: INTEGER;
 
@@ -97,7 +97,6 @@ TYPE ReadDecoupler*= OBJECT
 	END Receive;
 
 BEGIN{ACTIVE}
-
 		LOOP
 			(*todo: check res, if inputReceiver throws anything but 'OK' exit the loop*)
 			inputReceiver(smallbuf, 0, 128, 1, len, res); (*read at least 1 byte into the small buffer*)

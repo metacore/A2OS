@@ -16,7 +16,7 @@ CONST
 TYPE 
 	Configuration* = OBJECT {EXCLUSIVE} 
 	VAR 
-		config := NIL: XML.Document; 
+		config- := NIL: XML.Document; 
 		origin, configName: Files.FileName; 
 		error := FALSE: BOOLEAN; 
 
@@ -28,10 +28,11 @@ TYPE
 		PROCEDURE ^ GetBoolean*(CONST key: ARRAY OF CHAR; VAR value: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ GetColor*(CONST key: ARRAY OF CHAR; VAR value: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ GetInteger*(CONST key: ARRAY OF CHAR; VAR value: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ GetInteger64*(CONST key: ARRAY OF CHAR; VAR value: SIGNED64; VAR res: INTEGER); 
 		PROCEDURE ^ Put*(CONST key, val: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ PutBoolean*(CONST key: ARRAY OF CHAR; value: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ PutColor*(CONST key: ARRAY OF CHAR; value: SIGNED32; VAR res: INTEGER); 
-		PROCEDURE ^ PutInteger*(CONST key: ARRAY OF CHAR; value: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ PutInteger*(CONST key: ARRAY OF CHAR; value: SIGNED64; VAR res: INTEGER); 
 		PROCEDURE ^ WriteConfig; 
 		PROCEDURE ^ TrapHandler(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 	END Configuration; 
@@ -46,10 +47,11 @@ VAR
 	PROCEDURE ^ GetBoolean*(CONST key: ARRAY OF CHAR; VAR value: BOOLEAN; VAR res: INTEGER); 
 	PROCEDURE ^ GetColor*(CONST key: ARRAY OF CHAR; VAR value: SIGNED32; VAR res: INTEGER); 
 	PROCEDURE ^ GetInteger*(CONST key: ARRAY OF CHAR; VAR value: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ GetInteger64*(CONST key: ARRAY OF CHAR; VAR value: SIGNED64; VAR res: INTEGER); 
 	PROCEDURE ^ Put*(CONST key, value: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ PutBoolean*(CONST key: ARRAY OF CHAR; value: BOOLEAN; VAR res: INTEGER); 
 	PROCEDURE ^ PutColor*(CONST key: ARRAY OF CHAR; value: SIGNED32; VAR res: INTEGER); 
-	PROCEDURE ^ PutInteger*(CONST key: ARRAY OF CHAR; value: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ PutInteger*(CONST key: ARRAY OF CHAR; value: SIGNED64; VAR res: INTEGER); 
 	PROCEDURE ^ Init*; 
 BEGIN
 END Configuration.

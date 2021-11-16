@@ -1,5 +1,5 @@
 MODULE SyntaxHighlighter;
-	IMPORT KernelLog, Streams, Commands, Strings, Files, Diagnostics, Texts, TextUtilities, XML, XMLScanner, XMLParser, XMLObjects;
+	IMPORT KernelLog, Streams, Commands, Strings, Files, Diagnostics, Texts, TextUtilities, XML, XMLScanner, XMLParser, XMLObjects, Options;
 CONST 
 	DefineMask* = {0 .. 5}; 
 	FontMask* = {0 .. 2}; 

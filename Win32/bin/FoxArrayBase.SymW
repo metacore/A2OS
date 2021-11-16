@@ -204,6 +204,7 @@ VAR
 	loopAddAXAX*, loopAddARAR*, loopAddAZAZ*, loopAddALZALZ*: BinaryAAALoop; 
 	loopSubAXAX*, loopSubARAR*, loopSubAZAZ*, loopSubALZALZ*: BinaryAAALoop; 
 	loopEMulAXAX*, loopEMulARAR*, loopEMulAZAZ*, loopEMulALZALZ*: BinaryAAALoop; 
+	loopEMulARAB*: BinaryAAALoop; 
 	loopEMulAXAB*: BinaryAAALoop; 
 	loopSumAXAB*: BinaryAASLoop; 
 	loopMatMulAXAX*, loopMatMulARAR*: BinaryAASLoop; 
@@ -470,7 +471,9 @@ VAR
 	OPERATOR ^ ".*"-(CONST left, right: ARRAY [?] OF COMPLEX32): ARRAY [?] OF COMPLEX32; 
 	PROCEDURE ^ EMulALZALZLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ ".*"-(CONST left, right: ARRAY [?] OF COMPLEX64): ARRAY [?] OF COMPLEX64; 
+	PROCEDURE ^ EMulARABLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	PROCEDURE ^ EMulAXABLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	OPERATOR ^ ".*"-(CONST left: ARRAY [?] OF FLOAT32; CONST right: ARRAY [?] OF BOOLEAN): ARRAY [?] OF FLOAT32; 
 	OPERATOR ^ ".*"-(CONST left: ARRAY [?] OF FLOAT64; CONST right: ARRAY [?] OF BOOLEAN): ARRAY [?] OF FLOAT64; 
 	PROCEDURE ^ SumAXABLoop(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
 	OPERATOR ^ "+*"-(CONST left: ARRAY [?] OF FLOAT64; CONST right: ARRAY [?] OF BOOLEAN): FLOAT64; 

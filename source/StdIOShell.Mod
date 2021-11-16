@@ -1,6 +1,6 @@
 MODULE StdIOShell; (** AUTHOR "Felix Friedrich"; PURPOSE "Command shell for standalone Oberon/A2 Applications"; *)
 
-IMPORT StdIO, Commands, Modules, Trace;
+IMPORT StdIO, Commands, Modules, Trace, Options, Streams;
 
 CONST Verbose = FALSE;
 
@@ -16,12 +16,24 @@ BEGIN
 END Activate;
 
 PROCEDURE Execute(context: Commands.Context): BOOLEAN;
-VAR str: ARRAY 256 OF CHAR;
+VAR str: ARRAY 1024 OF CHAR; options: Options.Options;
+VAR args: Streams.StringReader;
 BEGIN
 	IF ~context.arg.GetString(str) THEN
 		context.error.String("Critical error: no arg"); context.error.Update;
 		RETURN FALSE;
 	END;
+
+	NEW(options);
+	options.Add("c", "config", Options.String);
+
+	IF options.Parse(context.arg, context.error) & options.GetString("config", str) THEN
+		Streams.OpenStringReader(args, str);
+		IF ~Activate(NEW Commands.Context(context.in, args, context.out, context.error, NIL ), "System.DoFile") THEN
+			RETURN FALSE;
+		END;
+	END;
+
 	IF ~context.arg.GetString(str) THEN
 		IF StdIO.Echo THEN str := "Shell.StartEchoed" ELSE str := "Shell.Start" END;
 	ELSIF (str = "compile") THEN str := "Compiler.Compile";

@@ -398,6 +398,9 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	Dates.Mod Strings.Mod # low-level utility modules
 	UTF8Strings.Mod
 
+	# Command line option parser
+	Options.Mod
+
 	FileTrapWriter.Mod
 
 	Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod OberonFS.Mod	# file systems
@@ -425,9 +428,6 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	# input drivers
 	Inputs.Mod
-
-	# Command line option parser
-	Options.Mod
 
 	# system event logging
 	Events.Mod

@@ -40,7 +40,7 @@ MODULE Options; (** AUTHOR "staubesv"; PURPOSE "Command line options parsing"; *
  *)
 
 IMPORT
-	KernelLog, Streams, Strings, Commands;
+	KernelLog, Streams, RC := RealConversions, Strings (*, Commands*);
 
 CONST
 
@@ -556,9 +556,13 @@ TYPE
 							error.String(" expects decimal number as parameter"); error.Ln;
 						END;
 					| Real:
-						Strings.StrToFloat(string, options[index].rvalue);
-						options[index].isSet:=TRUE;
-						RETURN TRUE;
+						IF RC.StringToReal(string, options[index].rvalue) THEN
+							options[index].isSet:=TRUE;
+							RETURN TRUE;
+						ELSIF (error # NIL) THEN
+							error.String("Option "); ShowOption(ch, name);
+							error.String(" expects float number as parameter"); error.Ln;
+						END;
 					END;
 				ELSIF (error # NIL) THEN
 					error.String("Option "); ShowOption(ch, name);
@@ -786,6 +790,7 @@ BEGIN
 	RETURN ok & ((pos >= LEN(string)) OR (string[pos] <= " "));
 END StringToInteger;
 
+(*
 PROCEDURE Test*(context : Commands.Context);
 VAR options : Options; string : ARRAY 32 OF CHAR;
 BEGIN
@@ -817,7 +822,7 @@ BEGIN
 		context.result := Commands.CommandParseError;
 	END;
 END Test;
-
+*)
 END Options.
 
 Options.Test --string="Hello World"  -i=3432 --flag "This is the first argument" --string="Override string option" ~

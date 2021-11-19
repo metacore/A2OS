@@ -68,6 +68,14 @@ TYPE
 			RETURN w
 		END GetWriter;
 
+		(** returns an Streams.StringReader to the string *)
+		PROCEDURE GetReader*() : Streams.StringReader;
+		BEGIN
+			IF w # NIL THEN w.Update END;
+			Streams.OpenStringReader(RESULT, data^);
+			RETURN RESULT;
+		END GetReader;
+
 		(** returns the number of bytes written to the string. The Streams.Writer is updated *)
 		PROCEDURE GetLength*() : SIZE;
 		BEGIN

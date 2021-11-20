@@ -1,5 +1,5 @@
 MODULE TextUtilities;
-	IMPORT Configuration, Commands, Codecs, FP1616, KernelLog, Texts, Streams, Files, UTF8Strings, XML, XMLScanner, XMLParser, XMLObjects, Repositories, Strings, WMGraphics, UnicodeProperties;
+	IMPORT Configuration, Commands, Codecs, FP1616, KernelLog, Texts, Streams, Files, UTF8Strings, XML, XMLScanner, XMLParser, XMLObjects, Repositories, Strings, UnicodeProperties;
 CONST 
 	Ok* = 0; 
 	FileNotFound* = Files.FileNotFound; 
@@ -14,6 +14,7 @@ CONST
 	LoadFormated* = 2; 
 	StoreFormatted* = 3; 
 	BufferedAttributes = 256; 
+	pathToFonts = \"WindowManager.FontManager.SystemFonts"\; 
 TYPE 
 	Char32 = Texts.Char32; 
 
@@ -42,7 +43,7 @@ TYPE
 		fontName: ARRAY 32 OF CHAR; 
 		fontSize: SIZE; 
 		fontVOff: SIGNED32; 
-		fontColor, fontBgColor: WMGraphics.Color; 
+		fontColor, fontBgColor: SIGNED32; 
 		fontStyle: SET; 
 		currentAttributes-: Texts.Attributes; 
 		oldBytes: ARRAY 7 OF CHAR; 
@@ -57,7 +58,7 @@ TYPE
 		PROCEDURE ^ SetFontName*(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ SetFontSize*(size: SIGNED32); 
 		PROCEDURE ^ SetFontStyle*(style: SET); 
-		PROCEDURE ^ SetFontColor*(color: WMGraphics.Color); 
+		PROCEDURE ^ SetFontColor*(color: SIGNED32); 
 		PROCEDURE ^ SetBgColor*(bgColor: SIGNED32); 
 		PROCEDURE ^ SetVerticalOffset*(voff: SIGNED32); 
 		PROCEDURE ^ AddObject*(obj: ANY ); 
@@ -162,7 +163,6 @@ TYPE
 		fi: Texts.FontInfo; 
 		stylename, pstylename: ARRAY 64 OF CHAR; 
 		link: Texts.Link; 
-		defaultFont: WMGraphics.Font; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
 		PROCEDURE ^ InsertPiece(charContent: XML.CDataSect); 
@@ -387,5 +387,7 @@ VAR
 	PROCEDURE ^ SetClipboard*(context: Commands.Context); 
 	PROCEDURE ^ GetTextReader*(CONST filename: ARRAY OF CHAR): Streams.Reader; 
 	PROCEDURE ^ GetDefaultAttributes*(): Texts.Attributes; 
+	PROCEDURE ^ GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR family: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetSystemFontSize*(CONST systemName: ARRAY OF CHAR; VAR size: SIZE): BOOLEAN; 
 BEGIN
 END TextUtilities.

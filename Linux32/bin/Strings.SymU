@@ -18,6 +18,7 @@ TYPE
 		PROCEDURE ^ Shorten*(n: SIZE); 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ GetWriter*(): Streams.Writer; 
+		PROCEDURE ^ GetReader*(): Streams.StringReader; 
 		PROCEDURE ^ GetLength*(): SIZE; 
 		PROCEDURE ^ GetString*(): String; 
 		PROCEDURE ^ GetStringCopy*(): String; 

@@ -1,5 +1,5 @@
 MODULE Options;
-	IMPORT KernelLog, Streams, Strings, Commands;
+	IMPORT KernelLog, Streams, RC := RealConversions, Strings;
 CONST 
 	Flag* = 0; 
 	String* = 1; 
@@ -88,6 +88,5 @@ TYPE
 	PROCEDURE ^ Merge*(VAR this: Options; base: Options); 
 	PROCEDURE ^ IsValidChar(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ StringToInteger*(CONST string: ARRAY OF CHAR; VAR x: SIGNED64; hex: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ Test*(context: Commands.Context); 
 BEGIN
 END Options.

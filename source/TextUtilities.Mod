@@ -2,7 +2,7 @@ MODULE TextUtilities;	(** AUTHOR "TF"; PURPOSE "Utilities for the Unicode text s
 
 IMPORT
 	Configuration, Commands, Codecs, FP1616,
-	KernelLog, Texts, Streams, Files, UTF8Strings, XML, XMLScanner, XMLParser, XMLObjects, Repositories, Strings, WMGraphics,
+	KernelLog, Texts, Streams, Files, UTF8Strings, XML, XMLScanner, XMLParser, XMLObjects, Repositories, Strings,
 	UnicodeProperties;
 
 CONST
@@ -44,7 +44,7 @@ TYPE
 	VAR text : Texts.Text;
 		ucs32buf : POINTER TO ARRAY OF SIGNED32;
 		fontName : ARRAY 32 OF CHAR;
-		fontSize: SIZE; fontVOff : SIGNED32; fontColor, fontBgColor: WMGraphics.Color;
+		fontSize: SIZE; fontVOff : SIGNED32; fontColor, fontBgColor: SIGNED32 (*WMGraphics.Color*);
 		fontStyle : SET;
 		currentAttributes- : Texts.Attributes;
 		oldBytes : ARRAY 7 OF CHAR;
@@ -158,7 +158,7 @@ TYPE
 			SetAttributes(NewAttributes());
 		END SetFontStyle;
 
-		PROCEDURE SetFontColor* (color : WMGraphics.Color);
+		PROCEDURE SetFontColor* (color : SIGNED32 (*WMGraphics.Color*));
 		BEGIN
 			fontColor := color;
 			SetAttributes(NewAttributes());
@@ -763,7 +763,6 @@ TYPE
 		o : Texts.ObjectPiece; attr: Texts.Attributes; fi : Texts.FontInfo;
 		stylename, pstylename: ARRAY 64 OF CHAR;
 		link : Texts.Link;
-		defaultFont: WMGraphics.Font;
 
 		PROCEDURE Error(CONST x : ARRAY OF CHAR);
 		BEGIN
@@ -809,7 +808,9 @@ TYPE
 			IF (attr = NIL) THEN NEW(attr); END;
 			attr.voff := 0; attr.color := 0000000FFH; attr.bgcolor := 000000000H;
 			IF (attr.fontInfo = NIL) THEN NEW(fi); attr.fontInfo := fi; END;
-			COPY(defaultFont.name, attr.fontInfo.name); attr.fontInfo.size := defaultFont.size; attr.fontInfo.style := {};
+			ASSERT(GetSystemFontFamily("Default", attr.fontInfo.name));
+			ASSERT(GetSystemFontSize("Default", attr.fontInfo.size));
+			attr.fontInfo.style := {};
 			IF (stylename = "Bold") THEN attr.fontInfo.style := {0};
 			ELSIF (stylename = "Highlight") THEN attr.fontInfo.style := {1};
 			ELSIF (stylename = "Assertion") THEN attr.fontInfo.style := {0}; attr.color := 00000FFFFH;
@@ -926,7 +927,6 @@ TYPE
 		BEGIN
 			errors := FALSE;
 			doc := d;
-			defaultFont := WMGraphics.GetDefaultFont( );
 			NEW(text);
 			text.AcquireWrite;
 
@@ -1018,11 +1018,9 @@ TYPE
 
 		(* Set the default  attribute values *)
 		PROCEDURE Init;
-		VAR defaultFont: WMGraphics.Font;
 		BEGIN
-			defaultFont := WMGraphics.GetDefaultFont( );
-			COPY(defaultFont.name, dfFamily);
-			dfSize := defaultFont.size;
+			ASSERT(GetSystemFontFamily("Default", dfFamily));
+			ASSERT(GetSystemFontSize("Default", dfSize));
 			dfStyle := 0;
 			dfVoff := 0;
 			dfColor := 0000000FFH;
@@ -1301,7 +1299,7 @@ TYPE
 			out.String("</Text>"); out.Ln;
 			out.Update;
 			text.ReleaseRead;
-			res := 0
+			res := 0;
 		END WriteText;
 
 	END BluebottleEncoder;
@@ -2320,8 +2318,8 @@ BEGIN
 	Strings.StrToSize(sizeStr, size);
 	style := {};
 	CASE CAP(name[i]) OF
-		| "I" : INCL(style, WMGraphics.FontItalic);
-		| "B" : INCL(style, WMGraphics.FontBold);
+		| "I" : INCL(style, 1 (*WMGraphics.FontItalic*) );
+		| "B" : INCL(style, 0 (*WMGraphics.FontBold*));
 	ELSE
 	END
 END DecodeOberonFontName;
@@ -2331,8 +2329,8 @@ VAR str : ARRAY 32 OF CHAR; f: Files.File;
 BEGIN
 	COPY(name, oname);
 	Strings.IntToStr(size, str); Strings.Append(oname, str);
-	IF WMGraphics.FontBold IN style THEN Strings.Append(oname, "b") END;
-	IF WMGraphics.FontItalic IN style THEN Strings.Append(oname, "i") END;
+	IF (*WMGraphics.FontBold*) 0 IN style THEN Strings.Append(oname, "b") END;
+	IF (*WMGraphics.FontItalic*) 1 IN style THEN Strings.Append(oname, "i") END;
 	Strings.Append(oname, ".Scn.Fnt");
 	f := Files.Old(oname);
 	IF f # NIL THEN  RETURN TRUE
@@ -2894,6 +2892,37 @@ PROCEDURE GetDefaultAttributes* () : Texts.Attributes;
 BEGIN
 	RETURN Texts.defaultAttributes.Clone();
 END GetDefaultAttributes;
+
+
+CONST pathToFonts = "WindowManager.FontManager.SystemFonts";
+PROCEDURE GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR family: ARRAY OF CHAR): BOOLEAN;
+VAR key: ARRAY 256 OF CHAR; res: INTEGER;
+BEGIN
+	family := "";
+	COPY(pathToFonts, key);
+	Strings.Append(key, ".");
+	Strings.Append(key, systemName);
+	Strings.Append(key, ".Name");
+	Configuration.Get(key, family, res);
+	IF (res = Configuration.Ok) & (family # "") THEN RETURN TRUE;	END;
+	RETURN FALSE;
+END GetSystemFontFamily;
+
+PROCEDURE GetSystemFontSize*(CONST systemName: ARRAY OF CHAR; VAR size: SIZE) : BOOLEAN;
+VAR key: ARRAY 256 OF CHAR; int: SIGNED32; res: INTEGER;
+BEGIN
+	size := 0;
+	COPY(pathToFonts, key);
+	Strings.Append(key, ".");
+	Strings.Append(key, systemName);
+	Strings.Append(key, ".Size");
+	Configuration.GetInteger(key, int, res);
+	IF (res = Configuration.Ok) & (int # 0) THEN
+		size := int;
+		RETURN TRUE;
+	END;
+	RETURN FALSE;
+END GetSystemFontSize;
 
 BEGIN
 	oberonFontAllocatable := NIL;

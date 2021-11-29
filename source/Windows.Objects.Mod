@@ -334,6 +334,12 @@ TYPE
 		BEGIN
 			res := Kernel32.SetEvent(event);
 		END Activate;
+		
+		PROCEDURE Exit;
+		BEGIN
+			exiting := TRUE;
+			Activate;
+		END Exit;
 
 	BEGIN {ACTIVE, SAFE, PRIORITY(High)}
 		process := CurrentProcess();

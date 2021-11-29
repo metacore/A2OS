@@ -1204,9 +1204,9 @@ VAR hout: HANDLE;
 
 				MOV EDX, EntryPoint;
 				MOV EAX,[EDX+adrLoadLibrary]
-				MOV LoadLibrary, EAX
+				MOV [LoadLibrary], EAX
 				MOV EAX,[EDX+adrGetProcAddress]
-				MOV getProcAddress, EAX
+				MOV [getProcAddress], EAX
 				JMP exit
 
 			ProcessDetach:

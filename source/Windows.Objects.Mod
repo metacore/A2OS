@@ -1545,7 +1545,6 @@ VAR
 				Trace.String("Exiting: "); Trace.Int(cur.id,0); Trace.Ln;
 				Machine.Release(Machine.TraceOutput);
 			END;
-			cur.gcContext.nextPos := -1;
 		END;
 	END ExitA2;
 

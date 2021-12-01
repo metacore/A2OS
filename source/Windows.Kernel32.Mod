@@ -1213,7 +1213,8 @@ VAR hout: HANDLE;
 				PUSH EBX
 				PUSH ESI
 				PUSH EDI
-				CALL ObjectsDetachProcess
+				MOV EAX, ObjectsDetachProcess
+				CALL EAX
 				POP EDI
 				POP ESI
 				POP EBX
@@ -1224,7 +1225,8 @@ VAR hout: HANDLE;
 				PUSH EBX
 				PUSH ESI
 				PUSH EDI
-				CALL ObjectsAttachThread
+				MOV EAX, ObjectsAttachThread
+				CALL EAX
 				POP EDI
 				POP ESI
 				POP EBX
@@ -1235,7 +1237,8 @@ VAR hout: HANDLE;
 				PUSH EBX
 				PUSH ESI
 				PUSH EDI
-				CALL ObjectsDetachThread
+				MOV EAX, ObjectsDetachThread
+				CALL EAX
 				POP EDI
 				POP ESI
 				POP EBX
@@ -1245,9 +1248,6 @@ VAR hout: HANDLE;
 				RET 12
 
 			exit:
-			MOV EBP, ESP
-			PUSH 0
-
 		END EntryPoint;
 
 	#ELSE

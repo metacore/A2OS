@@ -1444,7 +1444,7 @@ VAR
 BEGIN
 	time := Dates.Now();
 	ucs2 := FALSE;
-	Strings.FormatDateTime("yyyymmddhhnnss00", time, dtBuf);
+	Dates.FormatDateTime("yyyymmddhhnnss00", time, dtBuf);
 
 	SetStringWithPadding(ISO9660Id, descr.StdIdent, ' ', FALSE);
 	descr.Version := 1X;

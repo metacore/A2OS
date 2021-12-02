@@ -1431,7 +1431,7 @@ VAR str,fn: Files.FileName;  w,h: SIGNED32; res: INTEGER; startTime: Dates.DateT
 BEGIN
 	GenerateName(window.GetTitle(),fn);
 	IF fn="" THEN COPY("WindowShot",fn) END;
-	Strings.FormatDateTime("_yyyymmdd__hhnnss",Dates.Now(),str);
+	Dates.FormatDateTime("_yyyymmdd__hhnnss",Dates.Now(),str);
 	Strings.Concat(fn,str,fn);
 	Strings.Append(fn,".bmp");
 

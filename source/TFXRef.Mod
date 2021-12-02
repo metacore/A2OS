@@ -910,7 +910,7 @@ END MakeXRef;
 PROCEDURE PageTime(out : Streams.Writer);
 VAR dateTimeStr : ARRAY 32 OF CHAR;
 BEGIN
-	Strings.FormatDateTime("yyyy.mm.dd hh:nn:ss", Dates.Now(), dateTimeStr);
+	Dates.FormatDateTime("yyyy.mm.dd hh:nn:ss", Dates.Now(), dateTimeStr);
 	out.String(dateTimeStr)
 END PageTime;
 

@@ -7,7 +7,7 @@ PROCEDURE GenerateName*(CONST prefix: ARRAY OF CHAR; index: SIGNED32; VAR str: A
 VAR startTime: Dates.DateTime; num: ARRAY 32 OF CHAR;
 BEGIN
 	startTime := Dates.Now();
-	Strings.FormatDateTime("_yyyymmdd__hhnnss",startTime,str);
+	Dates.FormatDateTime("_yyyymmdd__hhnnss",startTime,str);
 	Strings.Concat(prefix,str,str);
 	IF index # 0 THEN
 		Strings.IntToStr(index,num);

@@ -403,7 +403,7 @@ TYPE
 			dt.year := calendar.year.Get();
 			dt.month := calendar.month.Get();
 			dt.day := 1; dt.hour := 1; dt.minute := 1; dt.second := 1;
-			Strings.FormatDateTime("mmmm yyyy", dt, caption);
+			Dates.FormatDateTime("mmmm yyyy", dt, caption);
 			dateLabel.caption.SetAOC(caption);
 		END UpdateDateLabel;
 

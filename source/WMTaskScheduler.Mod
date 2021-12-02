@@ -86,8 +86,8 @@ TYPE
 				ELSE
 					image := DefaultImage;
 				END;
-				Strings.FormatDateTime("dd.mm.yyyy", taskInfo.trigger, dateString);
-				Strings.FormatDateTime("hh:nn", taskInfo.trigger, timeString);
+				Dates.FormatDateTime("dd.mm.yyyy", taskInfo.trigger, dateString);
+				Dates.FormatDateTime("hh:nn", taskInfo.trigger, timeString);
 				dateStringType := Date;
 			END;
 	 	END UpdateTaskInfo;
@@ -142,17 +142,17 @@ TYPE
 					IF (dateStringType # Tomorrow) THEN newDateString := "Tomorrow"; dateStringType := Tomorrow; END;
 					fillColor.Set(SIGNED32(0EEEEFFFFH));
 				ELSIF SameWeek(trigger, dt) THEN
-					IF (dateStringType # ThisWeek) THEN Strings.FormatDateTime("wwww", trigger, newDateString); dateStringType := ThisWeek; END;
+					IF (dateStringType # ThisWeek) THEN Dates.FormatDateTime("wwww", trigger, newDateString); dateStringType := ThisWeek; END;
 					fillColor.Set(SIGNED32(0EEEEFFFFH));
 				ELSIF (dateStringType # Date) THEN
-					Strings.FormatDateTime("dd.mm.yyyy", trigger, newDateString); dateStringType := Date;
+					Dates.FormatDateTime("dd.mm.yyyy", trigger, newDateString); dateStringType := Date;
 					fillColor.Set(WMGraphics.White);
 				END;
 			END;
 			IF (newDateString # dateString) THEN
 				Acquire;
 				COPY(newDateString, dateString);
-				Strings.FormatDateTime("hh:nn", trigger, timeString);
+				Dates.FormatDateTime("hh:nn", trigger, timeString);
 				Release;
 				Invalidate;
 			END;
@@ -344,7 +344,7 @@ TYPE
 			line.AddContent(CreateLabel("Time:", 40));
 			CreateEditor(timeEditor);
 			timeEditor.alignment.Set(WMComponents.AlignClient);
-			Strings.FormatDateTime("hh:nn", dt, string);
+			Dates.FormatDateTime("hh:nn", dt, string);
 			timeEditor.SetAsString(string);
 			line.AddContent(timeEditor);
 			leftPanel.AddContent(line);
@@ -355,7 +355,7 @@ TYPE
 			line.AddContent(CreateLabel("Date:", 40));
 			CreateEditor(dateEditor);
 			dateEditor.alignment.Set(WMComponents.AlignClient);
-			Strings.FormatDateTime("dd.mm.yyyy", dt, string);
+			Dates.FormatDateTime("dd.mm.yyyy", dt, string);
 			dateEditor.SetAsString(string);
 			line.AddContent(dateEditor);
 			leftPanel.AddContent(line);
@@ -591,12 +591,12 @@ TYPE
 			info := task.GetInfo();
 			ASSERT(Dates.ValidDateTime(info.trigger));
 			IF (info.trigger.second # 0) THEN
-				Strings.FormatDateTime("hh:nn:ss", info.trigger, string);
+				Dates.FormatDateTime("hh:nn:ss", info.trigger, string);
 			ELSE
-				Strings.FormatDateTime("hh:nn", info.trigger, string);
+				Dates.FormatDateTime("hh:nn", info.trigger, string);
 			END;
 			timeEditor.SetAsString(string);
-			Strings.FormatDateTime("dd.mm.yyyy", info.trigger, string);
+			Dates.FormatDateTime("dd.mm.yyyy", info.trigger, string);
 			dateEditor.SetAsString(string);
 			calendar.year.Set(info.trigger.year);
 			calendar.month.Set(info.trigger.month);
@@ -637,7 +637,7 @@ TYPE
 				date := data (WMCalendar.SelectionWrapper);
 				dt.year := date.year; dt.month := date.month; dt.day := date.day;
 				dt.hour := 0; dt.minute := 0; dt.second := 0;
-				Strings.FormatDateTime("dd.mm.yyyy", dt, dateString);
+				Dates.FormatDateTime("dd.mm.yyyy", dt, dateString);
 				dateEditor.SetAsString(dateString);
 			END;
 		END HandleDateSelected;

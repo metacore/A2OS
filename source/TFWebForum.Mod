@@ -374,7 +374,7 @@ TYPE
 					END;
 					Files.OpenWriter(w, f, f.Length());
 					w.Ln;
-					Strings.FormatDateTime("@ yyyy.mm.dd hh.nn.ss", Dates.Now(), s);
+					Dates.FormatDateTime("@ yyyy.mm.dd hh.nn.ss", Dates.Now(), s);
 					w.String("Was not stored in "); w.String(filename); w.String(s); w.Ln;
 					entry.Write(w, NIL, 0);
 					w.Update;
@@ -406,7 +406,7 @@ TYPE
 					END;
 					Files.OpenWriter(w, f, f.Length());
 					w.Ln;
-					Strings.FormatDateTime("@ yyyy.mm.dd hh.nn.ss", Dates.Now(), s);
+					Dates.FormatDateTime("@ yyyy.mm.dd hh.nn.ss", Dates.Now(), s);
 					w.String("Deleted from "); w.String(filename); w.String(s); w.Ln;
 					entry.Write(w, NIL, 0);
 					w.Update;
@@ -967,7 +967,7 @@ BEGIN
 	ip := Strings.NewString(s);
 
 
-	Strings.FormatDateTime("yyyy.mm.dd hh.nn.ss", Dates.Now(), s);
+	Dates.FormatDateTime("yyyy.mm.dd hh.nn.ss", Dates.Now(), s);
 	datetime := Strings.NewString(s);
 
 	IF ~replace THEN

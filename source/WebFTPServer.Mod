@@ -232,7 +232,7 @@ TYPE
 						w.String("rw-rw-rw-");
 						w.String("   1 Aos      Aos      ");
 						w.Int(size, 8);
-						Strings.FormatDateTime(" mmm dd hh:nn ", Dates.OberonToDateTime(date, time), str);
+						Dates.FormatDateTime(" mmm dd hh:nn ", Dates.OberonToDateTime(date, time), str);
 						w.String(str)
 					END;
 					w.String(name); w.Ln;
@@ -1201,9 +1201,9 @@ VAR s: ARRAY 36 OF CHAR;
 
 BEGIN {EXCLUSIVE}
 	IF (w3cf = NIL) THEN RETURN END;
-	Strings.FormatDateTime("yyyy-mm-dd", Dates.Now(), s);
+	Dates.FormatDateTime("yyyy-mm-dd", Dates.Now(), s);
 	w3cw.String(s); w3cw.Char(Tab);
-	Strings.FormatDateTime("hh:nn:ss", Dates.Now(), s);
+	Dates.FormatDateTime("hh:nn:ss", Dates.Now(), s);
 	w3cw.String(s); w3cw.Char(Tab);
 	w3cw.String(e.user); w3cw.Char(Tab);
 	IP.AdrToStr(e.ip, s);

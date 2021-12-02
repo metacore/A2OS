@@ -181,8 +181,8 @@ VAR date, time: SIGNED32; dateTime: Dates.DateTime; timeStr: ARRAY 16 OF CHAR;
 BEGIN
 	Clock.Get(time, date);
 	dateTime := Dates.OberonToDateTime(date, time);
-	Strings.DateToStr(dateTime, s); 			Strings.Append(s, " ");
-	Strings.TimeToStr(dateTime, timeStr);  Strings.Append(s, timeStr);
+	Dates.DateToStr(dateTime, s); 			Strings.Append(s, " ");
+	Dates.TimeToStr(dateTime, timeStr);  Strings.Append(s, timeStr);
 END DateTime;
 
 (** Hashing stuff *)

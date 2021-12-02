@@ -719,7 +719,7 @@ TYPE
 			IF data.Schedule = "" THEN
 				IF data.TextLastUpdated = "" THEN
 					(* TODO is this precise enough? maybe we need to get the time from the file directly *)
-					Strings.FormatDateTime ( SVNOutput.DateFormat, Dates.Now(), tmp );
+					Dates.FormatDateTime ( SVNOutput.DateFormat, Dates.Now(), tmp );
 					WriteString ( w, tmp ); (* 8 *)
 				ELSE
 					WriteString ( w, data.TextLastUpdated ); (* 8 *)

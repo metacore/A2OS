@@ -559,7 +559,7 @@ BEGIN
 		xmlComment.SetStr(comment);
 		doc.AddContent(xmlComment);
 		NEW(xmlComment);
-		Strings.DateToStr(Dates.Now(), comment);
+		Dates.DateToStr(Dates.Now(), comment);
 		Strings.Concat("This file was created on ", comment, comment);
 		xmlComment.SetStr(comment);
 		doc.AddContent(xmlComment);

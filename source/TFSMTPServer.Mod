@@ -19,7 +19,7 @@ TYPE
 		PROCEDURE &Init*;
 		BEGIN
 			NEW(data);
-			Strings.FormatDateTime("yyyy.mm.dd hh:nn:ss", Dates.Now(), timestamp);
+			Dates.FormatDateTime("yyyy.mm.dd hh:nn:ss", Dates.Now(), timestamp);
 		END Init;
 
 		PROCEDURE AddLine(CONST x : ARRAY OF CHAR);

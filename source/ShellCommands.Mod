@@ -184,7 +184,7 @@ BEGIN
 	WHILE enum.GetEntry(name, flags, time, date, size) DO
 		context.out.String(name); context.out.Char(09X); context.out.Int(size, 0); context.out.Char(09X);
 		tdrec := Dates.OberonToDateTime(date, time);
-		Strings.TimeToStr(tdrec, str);
+		Dates.TimeToStr(tdrec, str);
 		context.out.String(str); context.out.Ln()
 	END;
 	Close(context);

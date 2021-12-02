@@ -267,7 +267,7 @@ IMPORT
 							md5 := SVNUtil.GetChecksum ( tmp );
 							adminDir.ReadWriteString ( md5^ );
 							f.GetDate ( ft, fd );
-							Strings.FormatDateTime ( SVNOutput.DateFormat, Dates.OberonToDateTime ( fd, ft ), date );
+							Dates.FormatDateTime ( SVNOutput.DateFormat, Dates.OberonToDateTime ( fd, ft ), date );
 							adminDir.ReadWriteString ( date );
 							adminDir.ReadWriteString ( version );
 							adminDir.ReadWriteString ( creator );

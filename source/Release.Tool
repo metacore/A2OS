@@ -347,6 +347,9 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 END
 
 PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
+# low-level utility modules
+	RealConversions.Mod
+	Strings.Mod UTF8Strings.Mod
 
 # kernel extensions
 
@@ -354,7 +357,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	KernelLog.Mod
 
 	# Services and device drivers
-	Plugins.Mod RealConversions.Mod Streams.Mod Pipes.Mod Commands.Mod
+	Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod
 	In.Mod Out.Mod
 
 	I386 { I386.Reals.Mod }
@@ -395,8 +398,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	Files.Mod
 
-	Dates.Mod Strings.Mod # low-level utility modules
-	UTF8Strings.Mod
+	Dates.Mod  # low-level utility modules
 
 	# Command line option parser
 	Options.Mod

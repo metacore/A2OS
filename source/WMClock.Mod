@@ -351,7 +351,7 @@ TYPE
 				DrawHands(canvas, time);
 			ELSE
 				formatString := format.Get();
-				Strings.FormatDateTime(formatString^, time, str^);
+				Dates.FormatDateTime(formatString^, time, str^);
 				canvas.SetColor(color.Get());
 				IF (image = NIL) THEN
 					(*WMGraphicUtilities.DrawRect(canvas, GetClientRect(), color.Get(), WMGraphics.ModeCopy);*)

@@ -16,7 +16,7 @@ BEGIN {EXCLUSIVE}
 	IF f = NIL THEN f := Files.New(filename); Files.Register(f) END;
 	Files.OpenWriter(w, f, f.Length());
 	w.String("!BEGIN"); w.Ln;
-	Strings.FormatDateTime("yyyy.mm.dd hh:nn:ss", Dates.Now(), date);
+	Dates.FormatDateTime("yyyy.mm.dd hh:nn:ss", Dates.Now(), date);
 	w.String(date); w.Ln;
 	r.variables.Lock;
 	FOR i := 0 TO r.variables.GetCount() - 1 DO

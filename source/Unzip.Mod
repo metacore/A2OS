@@ -366,8 +366,8 @@ MODULE Unzip; (** AUTHOR "ejz"; PURPOSE "Aos unzip program"; *)
 				INC(i);
 				context.out.String(e.name^);
 				IF detail THEN
-					context.out.Char(09X); Strings.DateToStr(e.td, opt); context.out.String(opt);
-					context.out.String(" "); Strings.TimeToStr(e.td, opt); context.out.String(opt);
+					context.out.Char(09X); Dates.DateToStr(e.td, opt); context.out.String(opt);
+					context.out.String(" "); Dates.TimeToStr(e.td, opt); context.out.String(opt);
 					context.out.Char(09X); context.out.Int(e.size, 0);
 					context.out.Char(09X); context.out.Int(e.csize, 0);
 					context.out.Ln()

@@ -1,6 +1,6 @@
 MODULE Strings; (** AUTHOR "be,tf, staubesv"; PURPOSE "String functions" *)
 
-IMPORT Streams, Dates, RC := RealConversions;
+IMPORT RC := RealConversions;
 
 CONST
 	Ok* = 0;
@@ -9,9 +9,6 @@ TYPE
 	String* = POINTER TO ARRAY OF CHAR;
 
 	StringArray* = POINTER TO ARRAY OF String;
-
-VAR
-	DateFormat*, TimeFormat*: ARRAY 32 OF CHAR;	(** date and time format strings used by DateToStr/TimeToStr *)
 
 	OPERATOR "+"*( a: String; CONST b: ARRAY OF CHAR ): String;
 	VAR str: String;
@@ -773,116 +770,6 @@ BEGIN
 	END
 END StrToSet;
 
-(** converts a time to a string, using the 'TimeFormat' format. C.f. FormatDateTime *)
-PROCEDURE TimeToStr*(time: Dates.DateTime; VAR s: ARRAY OF CHAR);
-BEGIN FormatDateTime(TimeFormat, time, s)
-END TimeToStr;
-
-(** converts a string to a time *)
-PROCEDURE StrToTime*(CONST str: ARRAY OF CHAR; VAR dt: Dates.DateTime);
-VAR i: SIZE;
-BEGIN
-	i := 0;
-	WHILE (str[i] # 0X) & ((str[i] < "0") OR (str[i] > "9")) DO INC(i) END;
-	StrToIntPos(str, dt.hour, i);
-	WHILE (str[i] # 0X) & ((str[i] < "0") OR (str[i] > "9")) DO INC(i) END;
-	StrToIntPos(str, dt.minute, i);
-	WHILE (str[i] # 0X) & ((str[i] < "0") OR (str[i] > "9")) DO INC(i) END;
-	StrToIntPos(str, dt.second, i);
-	ASSERT(Dates.ValidDateTime(dt));
-END StrToTime;
-
-(** converts a date to a string, using the 'DateFormat' format. C.f. FormatDateTime *)
-PROCEDURE DateToStr*(date: Dates.DateTime; VAR s: ARRAY OF CHAR);
-BEGIN FormatDateTime(DateFormat, date, s)
-END DateToStr;
-
-(** Convert a string of the form 'day month year' into an date value. Leading whitespace is ignored. *)
-PROCEDURE StrToDate*(CONST str: ARRAY OF CHAR; VAR dt: Dates.DateTime);
-VAR i: SIZE;
-BEGIN
-	i := 0;
-	WHILE (str[i] # 0X) & ((str[i] < "0") OR (str[i] > "9")) DO INC(i) END;
-	StrToIntPos(str, dt.day, i);
-	WHILE (str[i] # 0X) & ((str[i] < "0") OR (str[i] > "9")) DO INC(i) END;
-	StrToIntPos(str, dt.month, i);
-	WHILE (str[i] # 0X) & ((str[i] < "0") OR (str[i] > "9")) DO INC(i) END;
-	StrToIntPos(str, dt.year, i);
-	ASSERT(Dates.ValidDateTime(dt));
-END StrToDate;
-
-(** converts a TDateTime into a string.
-	Format rules:
-	yyyy	->	four-digit year, e.g. 2001
-	yy		->	two-digit year, e.g. 01
-	mmmm ->	clear-text month, e.g. May
-	mmm  ->  clear-text month, abbreviated, e.g. Sep
-	mm	->	two-digit month, e.g. 05
-	m		->	month, e.g. 5
-	dd		->	two-digit day, e.g. 02
-	d		->	day, e.g. 2 or 15
-	wwww	-> clear-text week-day, e.g. Monday
-	www	->  clear-text week-day, e.g. Mon
-
-	hh		->	two-digit hour, e.g. 08
-	h		->	hour, e.g. 8
-	nn		-> two-digit minute, e.g. 03
-	n		-> minute, e.g. 3
-	ss		-> two-digit second, e.g. 00
-	s		-> second, e.g. 0
-	any other characters will be copied 1:1 to the result string
-
-	Examples:
-	"yyyy.mm.dd hh:nn:ss"	-> "2002.01.01 17:08:00"
-	"yyyyyy.m.ddd"				-> "002002.1.001"
-	"wwww, mmmm d, yyyy"			-> "Tuesday, September 11, 2001"
-*)
-PROCEDURE FormatDateTime*(CONST format: ARRAY OF CHAR; dt: Dates.DateTime; VAR result: ARRAY OF CHAR);
-VAR i,k,l,len,n: SIZE; m,y,w,dw: SIGNED32;
-
-	PROCEDURE IntToStr(v: SIGNED32; len: SIZE; VAR s: ARRAY OF CHAR; VAR pos: SIZE);
-	VAR i: SIZE;
-	BEGIN
-		FOR i := 1 TO len DO s[pos+len-i] := CHR(ORD("0") + v MOD 10); v := v DIV 10 END;
-		INC(pos, len)
-	END IntToStr;
-
-BEGIN
-	k := 0;
-	IF Dates.ValidDateTime(dt) THEN
-		i := 0;
-		WHILE (format[i] # 0X) DO
-			n := 1; WHILE (format[i+n] = format[i]) DO INC(n) END;
-			len := n;
-			CASE format[i] OF
-			|"w": Dates.WeekDate(dt, y, w, dw); DEC(dw);
-					IF (len >= 4) THEN len := 10 END;
-					l := 0; WHILE (l < len) & (Dates.Days[dw,l] # 0X) DO result[k] := Dates.Days[dw,l]; INC(k); INC(l) END;
-			|"y": IntToStr(dt.year, n, result, k);
-			|"m": IF (n >= 3) THEN
-						m := dt.month-1; ASSERT((m>=0) & (m<12));
-						IF (len > 3) THEN len := 12 END;
-						l := 0; WHILE (l < len) & (Dates.Months[m,l] # 0X) DO result[k] := Dates.Months[m, l]; INC(k); INC(l) END
-					ELSE
-						IF (len=1) & (dt.month > 9) THEN len := 2; END;
-						IntToStr(dt.month, len, result, k)
-					END;
-			|"d": IF (len=1) & (dt.day > 9) THEN len := 2 END;
-					IntToStr(dt.day, len, result, k);
-			|"h": IF (len=1) & (dt.hour > 9) THEN len := 2 END;
-					IntToStr(dt.hour, len, result, k);
-			|"n": IF (len=1) & (dt.minute > 9) THEN len := 2 END;
-					IntToStr(dt.minute, len, result, k);
-			|"s": IF (len=1) & (dt.second > 9) THEN len := 2 END;
-					IntToStr(dt.second, len, result, k);
-			ELSE result[k] := format[i]; INC(k); n := 1
-			END;
-			INC(i, n)
-		END
-	END;
-	result[k] := 0X
-END FormatDateTime;
-
 PROCEDURE NewString*(CONST str : ARRAY OF CHAR) : String;
 VAR l : SIZE; s : String;
 BEGIN
@@ -1083,9 +970,6 @@ BEGIN
 	RETURN n;
 END UpperCaseInNew;
 
-BEGIN
-	DateFormat := "dd.mmm.yyyy";
-	TimeFormat := "hh:nn:ss"
 END Strings.
 
 System.Free Strings ~

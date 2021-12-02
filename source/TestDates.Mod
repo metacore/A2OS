@@ -65,8 +65,8 @@ END ToSeconds;
 PROCEDURE Show(time : Dates.DateTime; out : Streams.Writer);
 VAR string : ARRAY 256 OF CHAR;
 BEGIN
-	Strings.DateToStr(time, string); out.String(string); out.String("  ");
-	Strings.TimeToStr(time, string); out.String(string);
+	Dates.DateToStr(time, string); out.String(string); out.String("  ");
+	Dates.TimeToStr(time, string); out.String(string);
 END Show;
 
 PROCEDURE TestTimeDifference*(context : Commands.Context);

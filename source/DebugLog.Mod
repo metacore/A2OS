@@ -233,7 +233,7 @@ BEGIN
 	logwindow.tw.SetFontColor(GetColor(process.id));
 
 	IF date THEN
-		Strings.FormatDateTime("yyyy.mm.dd hh.nn.ss ", Dates.Now(), now);
+		Dates.FormatDateTime("yyyy.mm.dd hh.nn.ss ", Dates.Now(), now);
 		out.String(now);
 		out.String(" ")
 	END;

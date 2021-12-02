@@ -704,7 +704,7 @@ PROCEDURE Time*(context : Commands.Context); (** ~ *)
 VAR datetime : Dates.DateTime; string : ARRAY 32 OF CHAR;
 BEGIN
 	datetime := Dates.Now();
-	Strings.FormatDateTime(DateTimeFormat, datetime, string);
+	Dates.FormatDateTime(DateTimeFormat, datetime, string);
 	context.out.String(string); context.out.Ln;
 END Time;
 

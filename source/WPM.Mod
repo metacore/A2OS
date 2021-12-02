@@ -68,7 +68,7 @@ BEGIN
 	context.arg.Token(dstdir); context.arg.SkipWhitespace;
 	NEW(templateT);
 	TextUtils.LoadUTF8(templateT, template, res); ASSERT(res = 0);
-	Strings.DateToStr(Dates.Now(), tdate); NEW(dateT); TextUtils.StrToText(dateT, 0, tdate);
+	Dates.DateToStr(Dates.Now(), tdate); NEW(dateT); TextUtils.StrToText(dateT, 0, tdate);
 	context.arg.Token(name); context.arg.SkipWhitespace;
 	WHILE context.arg.res = 0 DO
 		KernelLog.String("Processing "); KernelLog.String(name);

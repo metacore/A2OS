@@ -163,7 +163,7 @@ VAR dt : Dates.DateTime; str : ARRAY 64 OF CHAR;
 BEGIN
 	ASSERT(w # NIL);
 	dt := Dates.OberonToDateTime(event.date, event.time);
-	Strings.FormatDateTime(DateTimeFormat, dt, str);
+	Dates.FormatDateTime(DateTimeFormat, dt, str);
 	w.String(str); w.String(" ");
 	GetTypeString(event.type, str); w.String(str); w.String(" ");
 	w.String('"'); w.String(event.originator); w.String('"');

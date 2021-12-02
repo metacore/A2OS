@@ -78,7 +78,7 @@ TYPE
 		VAR string : ARRAY 128 OF CHAR;
 		BEGIN {EXCLUSIVE}
 			ASSERT(out # NIL);
-			Strings.FormatDateTime("dd.mm.yyyy hh:nn:ss", info.trigger, string);
+			Dates.FormatDateTime("dd.mm.yyyy hh:nn:ss", info.trigger, string);
 			out.String(string); out.String(" ");
 			TypeToStream(out, info.repeatType);
 			out.String(' "'); out.String(info.name); out.String('" "');
@@ -92,8 +92,8 @@ TYPE
 		VAR string : ARRAY 2048 OF CHAR;
 		BEGIN {EXCLUSIVE}
 			ASSERT(in # NIL);
-			in.SkipWhitespace; in.String(string); Strings.StrToDate(string, info.trigger);
-			in.SkipWhitespace; in.String(string); Strings.StrToTime(string, info.trigger);
+			in.SkipWhitespace; in.String(string); Dates.StrToDate(string, info.trigger);
+			in.SkipWhitespace; in.String(string); Dates.StrToTime(string, info.trigger);
 			info.repeatType := TypeFromStream(in);
 			in.SkipWhitespace; in.String(info.name);
 			in.SkipWhitespace; in.String(info.description);

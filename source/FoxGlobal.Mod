@@ -840,8 +840,8 @@ TYPE
 		NewBuiltin(systemBit,"BIT",system.systemScope,TRUE);
 
 		now := Dates.Now ();
-		Strings.FormatDateTime ("hh:nn:ss", now, time);
-		Strings.FormatDateTime ("mmm dd yyyy", now, date);
+		Dates.FormatDateTime ("hh:nn:ss", now, time);
+		Dates.FormatDateTime ("mmm dd yyyy", now, date);
 		NewStringConstantCamelCase("Time", Strings.NewString (time), system.characterType, system.systemScope);
 		NewStringConstantCamelCase("Date", Strings.NewString (date), system.characterType, system.systemScope);
 		NewBuiltinCamelCase(systemGetStackPointer,"GetStackPointer",system.systemScope,TRUE);

@@ -2174,7 +2174,7 @@ TYPE
 	PROCEDURE DateTimeToStr*(VAR dt: Dates.DateTime) : Strings.String;
 	VAR dateStr: ARRAY 40 OF CHAR;
 	BEGIN
-		Strings.FormatDateTime(DateTimeFormat, dt, dateStr);
+		Dates.FormatDateTime(DateTimeFormat, dt, dateStr);
 		RETURN GetString(dateStr)
 	END DateTimeToStr;
 
@@ -2182,7 +2182,7 @@ TYPE
 	PROCEDURE GetNowDateTimeAsStr*() : Strings.String;
 	VAR dateStr: ARRAY 40 OF CHAR;
 	BEGIN
-		Strings.FormatDateTime(DateTimeFormat, Dates.Now(), dateStr);
+		Dates.FormatDateTime(DateTimeFormat, Dates.Now(), dateStr);
 		RETURN GetString(dateStr)
 	END GetNowDateTimeAsStr;
 

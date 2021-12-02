@@ -1153,10 +1153,10 @@ TYPE
 				w.Ln;
 				(* Time information *)
 				w.SetFontStyle({WMGraphics.FontBold}); w.String("Started: "); w.SetFontStyle({});
-				Strings.FormatDateTime(DateTimeFormat, starttime, temp); w.String(temp);
+				Dates.FormatDateTime(DateTimeFormat, starttime, temp); w.String(temp);
 				IF StatusFinished IN state.status THEN
 					w.SetFontStyle({WMGraphics.FontBold}); w.String("    Ended: ");  w.SetFontStyle({});
-					Strings.FormatDateTime(DateTimeFormat, endtime, temp); w.String(temp);
+					Dates.FormatDateTime(DateTimeFormat, endtime, temp); w.String(temp);
 				END;
 				w.Ln;
 				(* Status information *)

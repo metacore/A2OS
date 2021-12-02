@@ -752,7 +752,7 @@ PROCEDURE SendResponseHeader*(VAR h: ResponseHeader; VAR dst: Streams.Writer);
 VAR s: ARRAY 32 OF CHAR; af: AdditionalField;
 BEGIN
 	WriteStatus(h, dst);
-	Strings.FormatDateTime("www, dd mmm yyyy, hh:nn:ss GMT", Dates.Now(), s);
+	Dates.FormatDateTime("www, dd mmm yyyy, hh:nn:ss GMT", Dates.Now(), s);
 	dst.String("Date: "); dst.String(s); dst.Ln();
 	IF (h.statuscode # NotModified) THEN
 		IF (h.location # "") THEN

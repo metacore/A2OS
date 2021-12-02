@@ -699,7 +699,7 @@ TYPE
 			tw.String("# "); tw.String(name); tw.Ln;
 
 			dateTime := Dates.Now();
-			Strings.FormatDateTime(DateTimeFormat, dateTime, temp);
+			Dates.FormatDateTime(DateTimeFormat, dateTime, temp);
 
 			tw.String("# "); tw.String(temp); tw.Ln;
 			tw.String("# This file has been automatically generated using Release.Mod."); tw.Ln;

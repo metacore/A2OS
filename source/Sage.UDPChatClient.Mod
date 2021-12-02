@@ -571,7 +571,7 @@ TYPE
 									Strings.Concat (CRLF, str1, str1);
 									chat.Append (Strings.NewString (str1), csa[1], psa[0]);
 
-									Strings.FormatDateTime ("yyyy.mm.dd hh:nn:ss", dt, str1);
+									Dates.FormatDateTime ("yyyy.mm.dd hh:nn:ss", dt, str1);
 									Strings.Concat (" (", str1, str1);
 									Strings.Concat (str1, ")", str1);
 									chat.Append (Strings.NewString (str1), csa[3], psa[0]);

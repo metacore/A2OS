@@ -84,7 +84,7 @@ TYPE
 			discard := FALSE;
 			timeEdit.GetAsString(string);
 			dt := Dates.OberonToDateTime(event.date, event.time);
-			Strings.FormatDateTime(DateTimeFormat, dt, timeString);
+			Dates.FormatDateTime(DateTimeFormat, dt, timeString);
 			IF (string # "") & ~Strings.Match(string, timeString) THEN
 				discard := TRUE;
 			END;
@@ -169,7 +169,7 @@ TYPE
 			FOR col := 0 TO 	NofColumns-1 DO
 				CASE col OF
 					|0:	dt := Dates.OberonToDateTime(event.date, event.time);
-						Strings.FormatDateTime(DateTimeFormat, dt, caption);
+						Dates.FormatDateTime(DateTimeFormat, dt, caption);
 						grid.model.SetTextAlign(col, row, WMGraphics.AlignCenter);
 					|1: 	EventsUtils.GetTypeString(event.type, caption);
 						IF event.type = Events.Unknown THEN grid.model.SetCellColors(col, row, ColorUnknown, WMGraphics.Black);

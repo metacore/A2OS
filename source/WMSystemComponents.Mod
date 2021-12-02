@@ -934,7 +934,7 @@ END Open;
 				IF fullView THEN
 					Strings.IntToStr(d.size, t);
 					grid.model.SetCellText(1, gridindex, Strings.NewString(t));
-					Strings.FormatDateTime(" yyyy mmm dd hh:nn ", Dates.OberonToDateTime(d.date, d.time), t);
+					Dates.FormatDateTime(" yyyy mmm dd hh:nn ", Dates.OberonToDateTime(d.date, d.time), t);
 					grid.model.SetCellText(2, gridindex, Strings.NewString(t));
 				END;
 				IF Files.Directory IN d.flags THEN
@@ -976,7 +976,7 @@ END Open;
 			IF fullView THEN
 				Strings.IntToStr(dir.size, t);
 				grid.model.SetCellText(1, rowNo, Strings.NewString(t));
-				Strings.FormatDateTime(" yyyy mmm dd hh:nn ", Dates.OberonToDateTime(dir.date, dir.time), t);
+				Dates.FormatDateTime(" yyyy mmm dd hh:nn ", Dates.OberonToDateTime(dir.date, dir.time), t);
 				grid.model.SetCellText(2, rowNo, Strings.NewString(t));
 			END;
 			IF Files.Directory IN dir.flags THEN

@@ -18,7 +18,7 @@ IMPORT Dates, Strings, Streams, Modules, Files, Basic := FoxBasic;
 	PROCEDURE WriteDate*(w: Streams.Writer);
 	VAR s: ARRAY 32 OF CHAR;
 	BEGIN
-		Strings.FormatDateTime("yyyy.mm.dd hh:nn:ss", Dates.Now(), s); w.String(s);
+		Dates.FormatDateTime("yyyy.mm.dd hh:nn:ss", Dates.Now(), s); w.String(s);
 	END WriteDate;
 
 	PROCEDURE WriteAuthor*(w: Streams.Writer);
@@ -29,7 +29,7 @@ IMPORT Dates, Strings, Streams, Modules, Files, Basic := FoxBasic;
 	VAR filename, extension: Files.FileName; s: ARRAY 32 OF CHAR;
 	BEGIN
 		Files.SplitExtension(fileName, result, extension);
-		Strings.FormatDateTime("_yyyymmdd_hhnnss",Dates.Now(), s);
+		Dates.FormatDateTime("_yyyymmdd_hhnnss",Dates.Now(), s);
 		Strings.Append(result,s);
 		Files.JoinExtension(result, extension, result);
 	END TagFileName;

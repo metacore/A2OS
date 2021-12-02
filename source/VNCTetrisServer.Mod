@@ -296,8 +296,8 @@ TYPE
 		AwaitRun;
 		IP.AdrToStr(vncInfo.connection.fip, adrStr);
 		KernelLog.Enter;
-		Strings.DateToStr(Dates.Now(), timeStr); KernelLog.String(timeStr); KernelLog.String(" ");
-		Strings.TimeToStr(Dates.Now(), timeStr); KernelLog.String(timeStr);
+		Dates.DateToStr(Dates.Now(), timeStr); KernelLog.String(timeStr); KernelLog.String(" ");
+		Dates.TimeToStr(Dates.Now(), timeStr); KernelLog.String(timeStr);
 		KernelLog.String(" IP: "); KernelLog.String(adrStr);
 		KernelLog.String(":"); KernelLog.Int(vncInfo.connection.fport, 5);
 		KernelLog.String(" started");
@@ -312,8 +312,8 @@ TYPE
 		END;
 
 		KernelLog.Enter;
-		Strings.DateToStr(Dates.Now(), timeStr); KernelLog.String(timeStr); KernelLog.String(" ");
-		Strings.TimeToStr(Dates.Now(), timeStr); KernelLog.String(timeStr);
+		Dates.DateToStr(Dates.Now(), timeStr); KernelLog.String(timeStr); KernelLog.String(" ");
+		Dates.TimeToStr(Dates.Now(), timeStr); KernelLog.String(timeStr);
 		KernelLog.String(" IP: "); KernelLog.String(adrStr);
 		KernelLog.String(":"); KernelLog.Int(vncInfo.connection.fport, 5);
 		KernelLog.String(" Score: "); KernelLog.Int(lines * 10 + blocks, 1);

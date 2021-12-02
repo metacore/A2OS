@@ -66,7 +66,7 @@ TYPE
 
 			IF ((f # NIL) & ((reply.statuscode = WebHTTP.OK) OR (reply.statuscode = WebHTTP.NotModified))) THEN
 				reply.statuscode := WebHTTP.OK;
-				Strings.FormatDateTime(WebHTTP.DateTimeFormat, Dates.Now(), reply.lastmodified); (* dynamic webpages have no last modified *)
+				Dates.FormatDateTime(WebHTTP.DateTimeFormat, Dates.Now(), reply.lastmodified); (* dynamic webpages have no last modified *)
 				WebHTTP.SetAdditionalFieldValue(reply.additionalFields, "Expires", reply.lastmodified);
 					(* deny web caching; Expires=0 is illegal but often used to deny web caching *)
 				WebHTTP.SetAdditionalFieldValue(reply.additionalFields, "Pragma", "no-cache");  (* deny web caching *)

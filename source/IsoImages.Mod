@@ -173,7 +173,7 @@ PROCEDURE WritePrimaryVolumeDescriptor(w: Streams.Writer; isoImageSectorCount: S
 VAR now: Dates.DateTime; dtBuf: ARRAY 20 OF CHAR;
 BEGIN
 	now := Dates.Now();
-	Strings.FormatDateTime("yyyymmddhhnnss00", now, dtBuf);
+	Dates.FormatDateTime("yyyymmddhhnnss00", now, dtBuf);
 
 	w.Char(1X); (* descriptor type *)
 	w.String(ISO9660Id); (* standard identifier *)

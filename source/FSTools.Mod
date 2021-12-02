@@ -326,7 +326,7 @@ BEGIN
 			IF Files.EnumTime IN flags THEN
 				IF Files.EnumSize IN flags THEN context.out.String("    "); ELSE Align(context.out, name); END;
 				dt := Dates.OberonToDateTime(date, time);
-				Strings.FormatDateTime(FormatDateTime, dt, string);
+				Dates.FormatDateTime(FormatDateTime, dt, string);
 				context.out.String(string);
 			END;
 			context.out.Ln;
@@ -596,7 +596,7 @@ PROCEDURE GenerateName(CONST prefix: ARRAY OF CHAR; index: SIGNED32; VAR str: AR
 VAR startTime: Dates.DateTime; num: ARRAY 32 OF CHAR;
 BEGIN
 	startTime := Dates.Now();
-	Strings.FormatDateTime("_yyyymmdd__hhnnss",startTime,str);
+	Dates.FormatDateTime("_yyyymmdd__hhnnss",startTime,str);
 	Strings.Concat(prefix,str,str);
 	IF index # 0 THEN
 		Strings.IntToStr(index,num);

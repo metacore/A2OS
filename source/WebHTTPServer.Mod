@@ -82,7 +82,7 @@ TYPE
 						f := Files.Old(name);
 						IF f # NIL THEN
 							f.GetDate(t, d);
-							Strings.FormatDateTime(WebHTTP.DateTimeFormat, Dates.OberonToDateTime(d, t), reply.lastmodified);
+							Dates.FormatDateTime(WebHTTP.DateTimeFormat, Dates.OberonToDateTime(d, t), reply.lastmodified);
 							IF WebHTTP.GetAdditionalFieldValue(header.additionalFields, "If-Modified-Since", modsince) &
 								(modsince = reply.lastmodified)
 							THEN
@@ -492,7 +492,7 @@ BEGIN
 	h.maj := r.maj; h.min := r.min;
 	COPY(ServerVersion, h.server);
 	h.statuscode := WebHTTP.OK;
-	Strings.FormatDateTime(WebHTTP.DateTimeFormat, Dates.Now(), h.date);
+	Dates.FormatDateTime(WebHTTP.DateTimeFormat, Dates.Now(), h.date);
 	h.location := ""; h.contenttype := ""; h.contentlocation := ""; h.transferencoding := "";
 	h.contentlength := -1; h.lastmodified := "";
 	h.additionalFields := NIL

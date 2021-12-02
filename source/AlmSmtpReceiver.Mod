@@ -460,7 +460,7 @@ TYPE
 			Files.OpenWriter ( msgWr, msg, 0);
 			ToLog0 (name);
 			KernelLog.Exit;
-			Strings.FormatDateTime("www, dd mmm yyyy hh:nn:ss -0600 (CST)", Dates.Now(), receiveTime);
+			Dates.FormatDateTime("www, dd mmm yyyy hh:nn:ss -0600 (CST)", Dates.Now(), receiveTime);
 			msgWr.String ("Received: ");
 			msgWr.Ln; msgWr.Char (Tab); msgWr.String ("from ");
 				msgWr.String (env.mta);
@@ -882,7 +882,7 @@ TYPE
 				KernelLog.Exit;
 			OpenLog;
 			log.String ("Log file opened on ");
-			Strings.FormatDateTime("www, dd mmm yyyy hh:nn:ss -0600 (CST)", Dates.Now(), auxString);
+			Dates.FormatDateTime("www, dd mmm yyyy hh:nn:ss -0600 (CST)", Dates.Now(), auxString);
 			log.String (auxString);
 			log.Ln;
 			log.String ("From IP ");

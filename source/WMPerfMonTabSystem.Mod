@@ -186,7 +186,7 @@ TYPE
 			line := Perf.NewPanel(WMComponents.AlignTop, 0, Perf.LineHeight); panel.AddContent(line);
 			label := Perf.NewLabel("Start Time: ", WMComponents.AlignLeft, 100, 0); line.AddContent(label);
 
-			Strings.FormatDateTime(format, UpTime.GetStartTime(), caption);
+			Dates.FormatDateTime(format, UpTime.GetStartTime(), caption);
 			label := Perf.NewLabel(caption, WMComponents.AlignLeft, 210, 0); line.AddContent(label);
 
 			uptimeLabel := Perf.NewIndicator("--", WMComponents.AlignClient, 0, 0); line.AddContent(uptimeLabel);
@@ -261,7 +261,7 @@ TYPE
 		VAR caption : ARRAY 64 OF CHAR;
 		BEGIN
 			(* System Time *)
-			Strings.FormatDateTime(format, Dates.Now(), caption);
+			Dates.FormatDateTime(format, Dates.Now(), caption);
 			timeLabel.SetCaption(caption);
 
 			(* System Uptime *)

@@ -597,7 +597,7 @@ TYPE
 			i : SIGNED32;
 		BEGIN
 			uid := "D";
-			Strings.FormatDateTime("yyyymmdd", Dates.Now(), t);
+			Dates.FormatDateTime("yyyymmdd", Dates.Now(), t);
 			Strings.Append(uid, t);
 			Strings.Append(uid, "A");
 			COPY(uid, t); i := 0;
@@ -792,7 +792,7 @@ BEGIN
 		h.EndOptionField;
 
 
-		Strings.FormatDateTime("yyyy.mm.dd @ hh.nn.ss", Dates.Now(), now);
+		Dates.FormatDateTime("yyyy.mm.dd @ hh.nn.ss", Dates.Now(), now);
 		w.String("Date : "); h.InputText("date", Strings.NewString(now)); h.Br; w.Ln;
 
 		IF (v # NIL) THEN tv := v.text END;

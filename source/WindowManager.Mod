@@ -1395,11 +1395,11 @@ TYPE
 	(*CONST
 		DoubleClick = 400 (* ms *);*)
 
-		PROCEDURE &Init*(t, s:SIGNED32);
+		PROCEDURE &Init*(t, s:SIGNED32; m: BOOLEAN);
 		BEGIN
 			Inputs.mouse.Register(SELF);
 			threshold := t; speedup := s;
-			enableMMEmulation := TRUE;
+			enableMMEmulation := m;
 			prevKeys := {};
 			lastTime := Kernel.GetTicks()-DoubleClick;
 			inDoubleClick := FALSE;
@@ -1592,7 +1592,7 @@ BEGIN
 	wm.lock.AcquireWrite; t := wm.ReplaceBackground(bg); wm.lock.ReleaseWrite;
 END FillSession;
 
-PROCEDURE Replace*(color: SIGNED32; noPointer: BOOLEAN);
+PROCEDURE Replace*(color: SIGNED32; noPointer, enableMMEmulation: BOOLEAN);
 VAR disp : Plugins.Plugin; view : ViewPort; r : Rectangle; res : INTEGER;
 BEGIN
 	disp := Displays.registry.Await("");
@@ -1619,7 +1619,7 @@ BEGIN
 	END;
 	session.AddDirty(r);
 	WM.registry.Add(session, res);
-	NEW(defaultMouse, 5, 15); defaultMouse.view := view;
+	NEW(defaultMouse, 5, 15, enableMMEmulation); defaultMouse.view := view;
 	NEW(defaultKeyboard); defaultKeyboard.view := view;
 END Replace;
 
@@ -1667,18 +1667,19 @@ BEGIN
 END CleanUp;
 
 PROCEDURE Install*(context: Commands.Context);
-VAR options: Options.Options; color: SIGNED32; noPointer: BOOLEAN;
+VAR options: Options.Options; color := DefaultColor: SIGNED32; noPointer := FALSE, enableMMEmulation := FALSE: BOOLEAN;
 CONST DefaultColor = SIGNED32(8080FFFFH);
 BEGIN
 	NEW(options);
 	options.Add("c","bgColor",Options.Integer);
 	options.Add("n","noMouseCursor",Options.Flag);
+	options.Add("m","enableMMEmulation",Options.Flag);
 	IF options.Parse(context.arg, context.error) THEN
 		IF ~options.GetInteger("bgColor", color) THEN color := DefaultColor END;
 		noPointer := options.GetFlag("noMouseCursor");
-	ELSE noPointer := FALSE; color := DefaultColor
+		enableMMEmulation := options.GetFlag("enableMMEmulation");
 	END;
-	Replace(color, noPointer);
+	Replace(color, noPointer, enableMMEmulation);
 
 END Install;
 

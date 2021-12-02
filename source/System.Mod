@@ -687,10 +687,10 @@ BEGIN {EXCLUSIVE}
 	IF (string = "start") THEN
 		timers[nbr1] := Dates.Now();
 	ELSIF (string = "elapsed") THEN
-		Strings.ShowTimeDifference(timers[nbr1], Dates.Now(), context.out);
+		ShowTimeDifference(timers[nbr1], Dates.Now(), context.out);
 	ELSIF Valid(nbr2) THEN
 		IF (string = "diff") THEN
-			Strings.ShowTimeDifference(timers[nbr1], timers[nbr2], context.out);
+			ShowTimeDifference(timers[nbr1], timers[nbr2], context.out);
 		ELSE
 			ShowUsage;
 		END;
@@ -775,6 +775,17 @@ PROCEDURE Version*(context : Commands.Context);
 BEGIN
 	context.out.String(Machine.version);context.out.String(" Kernel CRC="); context.out.Hex(SystemVersion.BootCRC, 8);  context.out.Ln;
 END Version;
+
+PROCEDURE ShowTimeDifference*(t1, t2 : Dates.DateTime; out : Streams.Writer);
+VAR days, hours, minutes, seconds : SIGNED32; show : BOOLEAN;
+BEGIN
+	Dates.TimeDifference(t1, t2, days, hours, minutes, seconds);
+	show := FALSE;
+	IF (days > 0) THEN out.Int(days, 0); out.String("d "); show := TRUE; END;
+	IF show OR (hours > 0) THEN out.Int(hours, 0); out.String("h "); show := TRUE;  END;
+	IF show OR (minutes > 0) THEN out.Int(minutes, 0); out.String("m "); show := TRUE; END;
+	out.Int(seconds, 0); out.String("s");
+END ShowTimeDifference;
 
 END System.
 

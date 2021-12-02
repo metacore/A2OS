@@ -1,7 +1,7 @@
 MODULE BenchXML; (** AUTHOR "staubesv"; PURPOSE "Simple XML parser benchmark"; *)
 
 IMPORT
-	KernelLog, Streams, Modules, Commands, Options, Dates, Strings, Files, XML, XMLScanner, XMLParser;
+	System, KernelLog, Streams, Modules, Commands, Options, Dates, Strings, Files, XML, XMLScanner, XMLParser;
 
 CONST
 	DefaultNofTimes = 1000;
@@ -126,7 +126,7 @@ BEGIN {EXCLUSIVE} (* protects global variable error *)
 					end := Dates.Now();
 					Dates.TimeDifference(start, end, nofDays, nofHours, nofMinutes, nofSeconds);
 					nofSeconds := ToSeconds(nofDays, nofHours, nofMinutes, nofSeconds);
-					context.out.String("done in "); Strings.ShowTimeDifference(start, end, context.out);
+					context.out.String("done in "); System.ShowTimeDifference(start, end, context.out);
 					context.out.String(" (");
 					context.out.FloatFix(nofSeconds / (nofTimes * nofWorkers), 8, 3, 0);
 					context.out.String(")"); context.out.Ln;

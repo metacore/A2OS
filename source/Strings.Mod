@@ -978,17 +978,6 @@ BEGIN
 	result[k] := 0X
 END FormatDateTime;
 
-PROCEDURE ShowTimeDifference*(t1, t2 : Dates.DateTime; out : Streams.Writer);
-VAR days, hours, minutes, seconds : SIGNED32; show : BOOLEAN;
-BEGIN
-	Dates.TimeDifference(t1, t2, days, hours, minutes, seconds);
-	show := FALSE;
-	IF (days > 0) THEN out.Int(days, 0); out.String("d "); show := TRUE; END;
-	IF show OR (hours > 0) THEN out.Int(hours, 0); out.String("h "); show := TRUE;  END;
-	IF show OR (minutes > 0) THEN out.Int(minutes, 0); out.String("m "); show := TRUE; END;
-	out.Int(seconds, 0); out.String("s");
-END ShowTimeDifference;
-
 PROCEDURE NewString*(CONST str : ARRAY OF CHAR) : String;
 VAR l : SIZE; s : String;
 BEGIN

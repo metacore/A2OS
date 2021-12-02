@@ -1,7 +1,7 @@
 MODULE TestDates; (** AUTHOR "staubesv"; PURPOSE "Test for function of Dates.Mod"; *)
 
 IMPORT
-	Modules, Streams, Commands, Dates, Strings, Random;
+	System, Modules, Streams, Commands, Dates, Strings, Random;
 
 VAR
 	stop : BOOLEAN;
@@ -79,7 +79,7 @@ BEGIN
 	FOR i := 0 TO MAX(SIGNED32)-1 DO
 		IF (i MOD 10000000 = 0) THEN
 			context.out.Int(ENTIER(100 *  (i / MAX(SIGNED32)) ), 0); context.out.String("%, delta = ");
-			Strings.ShowTimeDifference(t1, t2, context.out);
+			System.ShowTimeDifference(t1, t2, context.out);
 			context.out.String(" (T1="); Show(t1, context.out); context.out.String(", T2="); Show(t2, context.out); context.out.String(")");
 			context.out.Ln; context.out.Update;
 		END;

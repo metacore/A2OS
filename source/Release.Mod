@@ -66,7 +66,7 @@ MODULE Release; (** AUTHOR "staubesv"; PURPOSE "Release build tool"; *)
  *)
 
 IMPORT
-	Modules, Streams, Commands, Options, Files, Dates, Strings, Texts, TextUtilities, ReleaseThreadPool, Diagnostics, WMGraphics, Zip,
+	System, Modules, Streams, Commands, Options, Files, Dates, Strings, Texts, TextUtilities, ReleaseThreadPool, Diagnostics, WMGraphics, Zip,
 	CompilerInterface, Compiler, SyntaxTree := FoxSyntaxTree, UTF8Strings;
 
 CONST
@@ -1103,14 +1103,14 @@ TYPE
 			IF (out # NIL) THEN out.String(name); out.String(": Check if all files are present... "); out.Update; END;
 			start0 := Dates.Now();
 			CheckFiles(diagnostics);
-			Strings.ShowTimeDifference(start0, Dates.Now(), out);
+			System.ShowTimeDifference(start0, Dates.Now(), out);
 			IF (out # NIL) THEN out.String(" done."); out.Ln; out.Update; END;
 
 			IF (out # NIL) THEN out.String(name); out.String(": Check modules and imports... "); out.Update; END;
 			start := Dates.Now();
 			error := FALSE;
 			CheckModules(diagnostics, error);
-			Strings.ShowTimeDifference(start, Dates.Now(), out);
+			System.ShowTimeDifference(start, Dates.Now(), out);
 			IF (out # NIL) THEN out.String(" done."); out.Ln; out.Update; END;
 		END DoChecks;
 
@@ -1456,7 +1456,7 @@ TYPE
 			ELSIF (steps < 11) THEN
 				out.String("100% ");
 			END;
-			out.String(" done in "); Strings.ShowTimeDifference(startTime, Dates.Now(), out);
+			out.String(" done in "); System.ShowTimeDifference(startTime, Dates.Now(), out);
 			out.Ln; out.Update;
 			IF (nofWorkers > 0) THEN
 				threadpool.AwaitAllDone;
@@ -1465,7 +1465,7 @@ TYPE
 				IF (diagnostics.nofMessages > 0) THEN
 					diagnostics.ToStream(error, Diagnostics.All); error.Ln;
 				END;
-				out.String("Compilation time: "); Strings.ShowTimeDifference(startTime, Dates.Now(), out);
+				out.String("Compilation time: "); System.ShowTimeDifference(startTime, Dates.Now(), out);
 				out.Ln; out.Update;
 			END;
 		END Compile;

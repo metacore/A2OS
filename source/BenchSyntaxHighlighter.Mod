@@ -1,7 +1,7 @@
 MODULE BenchSyntaxHighlighter; (** AUTHOR "staubesv"; PURPOSE "Benchmarks for SyntaxHighlighter"; *)
 
 IMPORT
-	Streams, Commands, Options, Dates, Strings, Files, Random, Texts, TextUtilities, SyntaxHighlighter;
+	System, Streams, Commands, Options, Dates, Strings, Files, Random, Texts, TextUtilities, SyntaxHighlighter;
 
 CONST
 	DefaultHighlighterName = "Oberon";
@@ -20,7 +20,7 @@ BEGIN
 		UNTIL reader.eot;
 	END;
 	endTime := Dates.Now();
-	Strings.ShowTimeDifference(startTime, endTime, out); out.Ln;
+	System.ShowTimeDifference(startTime, endTime, out); out.Ln;
 END Reader;
 
 PROCEDURE Words(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : SIZE; out : Streams.Writer);
@@ -46,7 +46,7 @@ BEGIN
 		UNTIL reader.eot;
 	END;
 	endTime := Dates.Now();
-	Strings.ShowTimeDifference(startTime, endTime, out); out.Ln;
+	System.ShowTimeDifference(startTime, endTime, out); out.Ln;
 END Words;
 
 PROCEDURE RebuildRegions(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : SIZE; out : Streams.Writer);
@@ -63,7 +63,7 @@ BEGIN
 		highlighter.RebuildRegions(reader, state);
 	END;
 	endTime := Dates.Now();
-	Strings.ShowTimeDifference(startTime, endTime, out); out.Ln;
+	System.ShowTimeDifference(startTime, endTime, out); out.Ln;
 END RebuildRegions;
 
 PROCEDURE RegionLookup(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : SIZE; out : Streams.Writer);
@@ -86,7 +86,7 @@ BEGIN
 		style := highlighter.GetRegionStyle(position, state, start, end);
 	END;
 	endTime := Dates.Now();
-	Strings.ShowTimeDifference(startTime, endTime, out); out.Ln;
+	System.ShowTimeDifference(startTime, endTime, out); out.Ln;
 END RegionLookup;
 
 PROCEDURE Full(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : SIZE; out : Streams.Writer);
@@ -122,7 +122,7 @@ BEGIN
 		UNTIL reader.eot;
 	END;
 	endTime := Dates.Now();
-	Strings.ShowTimeDifference(startTime, endTime, out); out.Ln;
+	System.ShowTimeDifference(startTime, endTime, out); out.Ln;
 END Full;
 
 PROCEDURE Indent(writer : Streams.Writer; width : SIGNED32);

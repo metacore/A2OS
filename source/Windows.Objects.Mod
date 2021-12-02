@@ -129,15 +129,17 @@ TYPE
 	Win32Event = Kernel32.HANDLE;
 
 	GCContext = RECORD
-		nextPos: SIZE; (* 0 to start with *)
+		nextPos: SIZE; (* 0 to start with, if negative then the GC Context is invalid (e.g. thread closed) *)
 		last: ARRAY 32 OF RECORD bp, pc, sp: ADDRESS END;
 
 		PROCEDURE AddContext(bp, pc, sp: ADDRESS);
 		BEGIN
-			last[nextPos].bp := bp;
-			last[nextPos].pc := pc;
-			last[nextPos].sp := sp;
-			INC(nextPos);
+			IF nextPos >= 0 THEN
+				last[nextPos].bp := bp;
+				last[nextPos].pc := pc;
+				last[nextPos].sp := sp;
+				INC(nextPos);
+			END;
 		END AddContext;
 
 		PROCEDURE GetNextContext(VAR pos: SIZE; VAR bp, pc, sp: ADDRESS): BOOLEAN;
@@ -187,8 +189,9 @@ TYPE
 
 		PROCEDURE FindRoots;
 		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc {UNTRACED}, pdesc {UNTRACED}: Modules.ProcedureDescPointer; i: SIZE; p {UNTRACED}: ANY;
-			contextPos: SIZE; suspended: BOOLEAN;
+			contextPos: SIZE; suspended: BOOLEAN; handle: SIZE;
 		BEGIN{UNTRACKED}
+			handle := SELF.handle;
 			IF (mode < Running) OR (mode = Terminated) THEN RETURN END;
 			suspended := FALSE;
 			IF SELF = CurrentProcess() THEN
@@ -1323,6 +1326,7 @@ END GetCpuCycles;
 PROCEDURE Suspend(p: Process): BOOLEAN;
 VAR res: INTEGER; mode: INTEGER; error: INTEGER;
 BEGIN{UNTRACKED}
+	IF p.gcContext.nextPos < 0 THEN RETURN FALSE END;
 	res := Kernel32.SuspendThread(p.handle);
 	IF res < 0 THEN
 		mode := p.mode;
@@ -1526,6 +1530,7 @@ VAR
 					Machine.Release(Machine.TraceOutput);
 				END;
 			ELSE
+				ASSERT(cur.gcContext.nextPos >= 0);
 				cur.gcContext.AddContext(NIL, NIL, NIL);
 			END;
 		END;
@@ -1545,6 +1550,7 @@ VAR
 				Trace.String("Exiting: "); Trace.Int(cur.id,0); Trace.Ln;
 				Machine.Release(Machine.TraceOutput);
 			END;
+			cur.gcContext.nextPos := -1;
 		END;
 	END ExitA2;
 

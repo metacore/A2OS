@@ -1150,6 +1150,101 @@ TYPE
 	Bytes4 = ARRAY 4 OF CHAR;
 	Bytes8 = ARRAY 8 OF CHAR;
 
+	String = POINTER TO ARRAY OF CHAR;
+
+	(** The stringmaker creates an automatically growing character array from the input with an Streams writer *)
+	Buffer* = OBJECT
+	VAR
+		length : SIZE;
+		data : String;
+		w : Writer;
+
+		PROCEDURE &Init*(initialSize : SIZE);
+		BEGIN
+			IF initialSize < 16 THEN initialSize := 256 END;
+			NEW(data, initialSize); length := 0;
+		END Init;
+
+		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
+		VAR newSize, i : SIZE; n : String;
+		BEGIN
+			IF length + len + 1 >= LEN(data) THEN
+				newSize := MAX(LEN(data) * 2, length + len + 1);
+				NEW(n, newSize);
+				FOR i := 0 TO length - 1 DO n[i] := data[i] END;
+				data := n;
+			END;
+			WHILE len > 0 DO
+				data[length] := buf[ofs];
+				INC(ofs); INC(length); DEC(len);
+			END;
+			data[length] := 0X;
+			res := Ok;
+		END Add;
+
+		(* remove last n characters *)
+		PROCEDURE Shorten*(n : SIZE);
+		BEGIN
+			IF w # NIL THEN w.Update END;
+			DEC(length, n);
+			IF length < 0 THEN length := 0 END;
+			IF length > 0 THEN data[length - 1] := 0X ELSE data[0] := 0X END
+		END Shorten;
+
+		(** resets the length of the string to 0. The buffer is reused*)
+		PROCEDURE Clear*;
+		BEGIN
+			data[0] := 0X;
+			length := 0
+		END Clear;
+
+		(** returns an Streams.Writer to the string *)
+		PROCEDURE GetWriter*() : Writer;
+		BEGIN
+			IF w = NIL THEN NEW(w, SELF.Add, 256) END;
+			RETURN w
+		END GetWriter;
+
+		(** returns an Streams.StringReader to the string *)
+		PROCEDURE GetReader*() : StringReader;
+		BEGIN
+			IF w # NIL THEN w.Update END;
+			OpenStringReader(RESULT, data^);
+			RETURN RESULT;
+		END GetReader;
+
+		(** returns the number of bytes written to the string. The Streams.Writer is updated *)
+		PROCEDURE GetLength*() : SIZE;
+		BEGIN
+			IF w # NIL THEN w.Update END;
+			RETURN length
+		END GetLength;
+
+		(** returns the current string buffer. If the string maker is reused, the content of the string may or may not
+			vary. The application might need to copy the returned string. The Streams.Writer is updated *)
+		PROCEDURE GetString*() : String;
+		BEGIN
+			IF w # NIL THEN w.Update END;
+			RETURN data
+		END GetString;
+
+		PROCEDURE GetStringCopy*(): String;
+		VAR new: String;
+		BEGIN
+			IF w # NIL THEN w.Update END;
+			NEW(new, length + 1);
+			COPY(data^, new^);
+			RETURN new
+		END GetStringCopy;
+
+		PROCEDURE Write*(out : Writer);
+		BEGIN
+			IF w # NIL THEN w.Update END;
+			out.Bytes(data^, 0, length)
+		END Write;
+
+	END Buffer;
+
 VAR
 	months: ARRAY 12 * 4 + 1 OF CHAR;
 

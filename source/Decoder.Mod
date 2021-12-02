@@ -1077,7 +1077,7 @@ TYPE
 		PROCEDURE Outline (panel : WMStandardComponents.Panel);
 			VAR
 				moduleNode, fieldNode, typeNode : WMTrees.TreeNode;
-				stringWriter : Strings.Buffer;
+				stringWriter : Streams.Buffer;
 				w : Streams.Writer;
 				i, j : SIGNED32;
 

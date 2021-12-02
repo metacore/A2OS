@@ -450,7 +450,7 @@ TYPE
 		PROCEDURE Reply;
 		VAR
 			string: Strings.String;
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			r: SIGNED32;
 			header: IMAPClient.HeaderElement;
@@ -1059,7 +1059,7 @@ TYPE
 
 		PROCEDURE SearchHandler(sender, data: ANY);
 		VAR
-			buffer, dateBuffer: Strings.Buffer;
+			buffer, dateBuffer: Streams.Buffer;
 			string, dateString: String;
 			writer, dateWriter: Streams.Writer;
 			i, dateCount: SIGNED32;
@@ -1910,7 +1910,7 @@ TYPE
 		VAR
 			folder: IMAPClient.Folder;
 			r: SIGNED32;
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			string: String;
 		BEGIN
@@ -2446,7 +2446,7 @@ TYPE
 		VAR
 			status, currentWork: SIGNED32;
 			nofMessages: SIZE;
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			string: String;
 		BEGIN
@@ -2646,7 +2646,7 @@ TYPE
 			list: Classes.List;
 			address: IMAPUtilities.Address;
 			addressP: ANY;
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			string: String;
 			bResizeGrid: BOOLEAN;

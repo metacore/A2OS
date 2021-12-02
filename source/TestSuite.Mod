@@ -52,7 +52,7 @@ TYPE
 
 	PROCEDURE Process* (r: Streams.Reader): BOOLEAN;
 	VAR type: TestType; name: TestName; line: ARRAY 200 OF CHAR;
-		code: Strings.Buffer; writer : Streams.Writer;
+		code: Streams.Buffer; writer : Streams.Writer;
 		string : Strings.String; reader: Streams.StringReader;
 	BEGIN
 		NEW (code, 1000); writer := code.GetWriter ();

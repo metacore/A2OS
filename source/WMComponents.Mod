@@ -2972,7 +2972,7 @@ BEGIN
 END SubstituteMacro;
 
 PROCEDURE SubstituteMacros*(CONST command : Strings.String; VAR newCommand : Strings.String; originator : Component);
-VAR index, oldIndex, length : SIZE; w : Streams.Writer; buffer : Strings.Buffer;
+VAR index, oldIndex, length : SIZE; w : Streams.Writer; buffer : Streams.Buffer;
 BEGIN
 	ASSERT((command # NIL) & (originator # NIL));
 	IF ContainsMacros(command^) THEN
@@ -3171,7 +3171,7 @@ END SetAttribute;
 PROCEDURE Call*(cmds : ARRAY OF CHAR; caller : Component; flags : SET; VAR res : INTEGER; VAR msg : ARRAY OF CHAR);
 VAR
 	context : Commands.Context; arg : Streams.StringReader;
-	buffer : Strings.Buffer; w : Streams.Writer; par : Strings.String;
+	buffer : Streams.Buffer; w : Streams.Writer; par : Strings.String;
 	length, i, k : SIZE;
 
 	PROCEDURE Expand(CONST string : ARRAY OF CHAR; w : Streams.Writer; start : SIZE; VAR end : SIZE);

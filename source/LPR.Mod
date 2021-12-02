@@ -35,7 +35,7 @@ MODULE LPR; (* AUTHOR "ejz"; PURPOSE "RFC 1179" *)
 			dataFile, controlFile: ARRAY 64 OF CHAR;
 			nrStr: ARRAY 8 OF CHAR;
 			state: CHAR;
-			controlfile : Strings.Buffer;
+			controlfile : Streams.Buffer;
 			controlfileWriter : Streams.Writer;
 			reader: Streams.Reader;
 			writer: Streams.Writer;

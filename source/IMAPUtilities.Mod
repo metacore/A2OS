@@ -27,7 +27,7 @@ VAR
 	address: Address;
 	r: Streams.StringReader;
 	w: Streams.Writer;
-	buffer: Strings.Buffer;
+	buffer: Streams.Buffer;
 	s: String;
 	c: CHAR;
 	i, j: SIZE;
@@ -99,7 +99,7 @@ PROCEDURE AddressesToString*(list: Classes.List; VAR string: String);
 VAR
 	address: Address;
 	p: ANY;
-	buffer: Strings.Buffer;
+	buffer: Streams.Buffer;
 	w: Streams.Writer;
 	i: SIZE;
 	s: String;
@@ -122,7 +122,7 @@ END AddressesToString;
 
 PROCEDURE AddressToString*(address: Address; VAR string: String);
 VAR
-	buffer: Strings.Buffer;
+	buffer: Streams.Buffer;
 	w: Streams.Writer;
 BEGIN
 	NEW(buffer, 16);
@@ -238,7 +238,7 @@ VAR
 	r : Texts.TextReader;
 	ch : Texts.Char32;
 	ok : BOOLEAN;
-	buffer: Strings.Buffer;
+	buffer: Streams.Buffer;
 	w: Streams.Writer;
 	s: ARRAY 7 OF CHAR;
 BEGIN
@@ -321,7 +321,7 @@ END MakeQuotedString;
 (* transforms the string s which is in Base64 Transfer-Encoding to its normal representation *)
 PROCEDURE decodeBase64*(VAR s: ARRAY OF CHAR): String;
 VAR
-	buf: Strings.Buffer;
+	buf: Streams.Buffer;
 	string: String;
 	w: Streams.Writer;
 	i: SIZE;
@@ -381,7 +381,7 @@ END decodeBase64;
 (* transforms the string s which is in QuotedPrintable Transfer-Encoding to its normal representation *)
 PROCEDURE decodeQuotedPrintable*(VAR s: ARRAY OF CHAR): String;
 VAR
-	buf: Strings.Buffer;
+	buf: Streams.Buffer;
 	string: String;
 	w: Streams.Writer;
 	i: SIZE;
@@ -423,7 +423,7 @@ VAR
 	value: SIGNED32;
 	c: CHAR;
 	chars: ARRAY 17 OF CHAR;
-	buf: Strings.Buffer;
+	buf: Streams.Buffer;
 	w: Streams.Writer;
 BEGIN
 	Strings.Copy("0123456789ABCDEF", 0, 16, chars);
@@ -462,7 +462,7 @@ END encodeQuotedPrintable;
 PROCEDURE encodeXML*(VAR s: ARRAY OF CHAR): String;
 VAR
 	temp: String;
-	buffer: Strings.Buffer;
+	buffer: Streams.Buffer;
 	w: Streams.Writer;
 	i: SIZE;
 	c: CHAR;
@@ -494,7 +494,7 @@ END encodeXML;
 PROCEDURE replaceEncodedHeaderWord*(VAR buf: ARRAY OF CHAR);
 VAR
 	i, j, k: SIZE;
-	buffer, res: Strings.Buffer;
+	buffer, res: Streams.Buffer;
 	writer, resWriter: Streams.Writer;
 	charset, text, string: String;
 	encoding: CHAR;
@@ -579,7 +579,7 @@ END replaceEncodedHeaderWord;
 PROCEDURE replaceEncodedFolderName*(VAR name: String);
 VAR
 	i: SIZE;
-	buffer: Strings.Buffer;
+	buffer: Streams.Buffer;
 	w: Streams.Writer;
 	utf8: ARRAY 7 OF CHAR;
 	state, value: SIGNED32;
@@ -638,7 +638,7 @@ PROCEDURE getRFC822Date*():String;
 VAR
 	year, week : SIGNED32;
 	dayOfWeek: SIGNED32;
-	buffer: Strings.Buffer;
+	buffer: Streams.Buffer;
 	w: Streams.Writer;
 	answer: String;
 	dayTable: ARRAY 25 OF CHAR;

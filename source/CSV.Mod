@@ -41,7 +41,7 @@ TYPE
 	Scanner* = OBJECT
 	VAR
 		r: Streams.Reader;
-		buf: Strings.Buffer;
+		buf: Streams.Buffer;
 		bufw: Streams.Writer;
 		csvFile: CSV;
 

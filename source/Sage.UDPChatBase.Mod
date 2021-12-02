@@ -1,7 +1,7 @@
 MODULE UDPChatBase; (** AUTHOR "SAGE"; PURPOSE "UDP Chat base" *)
 
 IMPORT
-	Kernel, Strings, IO := Streams, IP, FS := Files;
+	Kernel, Strings, Streams, IP, FS := Files;
 
 CONST
 
@@ -135,14 +135,14 @@ TYPE
 			f := FS.Old (UserFile);
 			IF f # NIL THEN
 				FS.OpenReader (r, f, 0);
-				WHILE r.res = IO.Ok DO
+				WHILE r.res = Streams.Ok DO
 					NEW (u);
 					r.RawLInt (u.uin);
 					r.RawLInt (u.password);
 					r.RawString (u.shortName);
 					r.RawString (u.fullName);
 					r.RawString (u.eMail);
-					IF r.res = IO.Ok THEN
+					IF r.res = Streams.Ok THEN
 						IF u.uin > lastUIN THEN
 							lastUIN := u.uin
 						END;
@@ -164,7 +164,7 @@ TYPE
 				IF (f # NIL) THEN
 					FS.OpenWriter(w, f, 0);
 					i := 0;
-					WHILE (w.res = IO.Ok) & (i < list.GetCount ())  DO
+					WHILE (w.res = Streams.Ok) & (i < list.GetCount ())  DO
 						ptr := list.GetItem (i);
 						u := ptr (User);
 						w.RawLInt(u.uin);
@@ -174,7 +174,7 @@ TYPE
 						w.RawString(u.eMail);
 						INC (i);
 					END;
-					IF w.res = IO.Ok THEN
+					IF w.res = Streams.Ok THEN
 						w.Update;
 						FS.Register (f)
 					END
@@ -230,7 +230,7 @@ TYPE
 
 	END Users;
 
-	Buffer* = OBJECT (Strings.Buffer)
+	Buffer* = OBJECT (Streams.Buffer)
 		PROCEDURE AddInt* (n, len: SIZE);
 		VAR
 			i: SIZE;

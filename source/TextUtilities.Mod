@@ -365,7 +365,7 @@ TYPE
 	VAR errors : BOOLEAN;
 		in : Streams.Reader;
 		text : Texts.Text;
-		buffer : Strings.Buffer;
+		buffer : Streams.Buffer;
 		string: Strings.String;
 		reader, sreader : Streams.StringReader;
 
@@ -376,7 +376,7 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE LoadLibrary(buf: Strings.Buffer; pos: SIZE; VARflen:SIGNED32);
+		PROCEDURE LoadLibrary(buf: Streams.Buffer; pos: SIZE; VARflen:SIGNED32);
 		END LoadLibrary;
 
 		PROCEDURE IndexToColor(index: SIGNED32): SIGNED32;
@@ -578,7 +578,7 @@ TYPE
 	VAR out, w: Streams.Writer;
 		w2: Streams.StringWriter;
 		string: Strings.String;
-		buffer : Strings.Buffer;
+		buffer : Streams.Buffer;
 		oberonColors : ARRAY 16 OF SIGNED32;
 		fonts : ARRAY 256 OF Texts.FontInfo;
 		font : Texts.FontInfo;

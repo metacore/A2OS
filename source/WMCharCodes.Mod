@@ -9,7 +9,7 @@ VAR
 	gb2312Table : ARRAY 65536 OF SIGNED32;
 
 PROCEDURE GB2312ToUTF8*(from : Strings.String) : Strings.String;
-VAR buf : Strings.Buffer;
+VAR buf : Streams.Buffer;
 	w : Streams.Writer;
 	temp : ARRAY 8 OF CHAR;
 	i, len : SIZE; code: INTEGER;

@@ -408,7 +408,7 @@ TYPE
 		nofLoadedArticles : SIGNED32;
 		aList, path, title : ARRAY 256 OF CHAR;
 		id : ARRAY 32 OF CHAR;
-		frontPage : Strings.Buffer;
+		frontPage : Streams.Buffer;
 
 		first, last : ArticleList;
 		needUpdate : BOOLEAN;
@@ -516,7 +516,7 @@ TYPE
 			h : HTMLWriter;
 			al : ArticleList;
 			a : Article; count : SIGNED32;
-			b : Strings.Buffer;
+			b : Streams.Buffer;
 			l : ARRAY 128 OF CHAR;
 		BEGIN
 			NEW(b, 1024); w := b.GetWriter();
@@ -722,7 +722,7 @@ END FindVersion;
 
 PROCEDURE Frontpage*(archive : Archive; data : ANY) : ANY;
 VAR context : WebCGI.CGIContext;
-	b : Strings.Buffer;
+	b : Streams.Buffer;
 	s : String;
 BEGIN
 	IF (data # NIL) & (data IS WebCGI.CGIContext) THEN

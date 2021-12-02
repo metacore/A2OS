@@ -298,7 +298,7 @@ TYPE
 		END Add;
 
 		PROCEDURE Parse(reader : Streams.Reader;  VAR res : INTEGER);
-		VAR buffer : Strings.Buffer; entry : Entry; ch : CHAR;
+		VAR buffer : Streams.Buffer; entry : Entry; ch : CHAR;
 
 			PROCEDURE ReportError(CONST msg : ARRAY OF CHAR; position : Streams.Position);
 			BEGIN

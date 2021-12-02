@@ -292,15 +292,15 @@ TYPE
 		importList : ImportList;
 
 		(* sections to be inserted into template *)
-		variableDecl : Strings.Buffer;
+		variableDecl : Streams.Buffer;
 		variableDeclWriter : Streams.Writer;
-		createForm : Strings.Buffer;
+		createForm : Streams.Buffer;
 		createFormWriter : Streams.Writer;
-		handlersWiring : Strings.Buffer;
+		handlersWiring : Streams.Buffer;
 		handlersWiringWriter : Streams.Writer;
-		handlers : Strings.Buffer;
+		handlers : Streams.Buffer;
 		handlersWriter : Streams.Writer;
-		imports : Strings.Buffer;
+		imports : Streams.Buffer;
 		importsWriter : Streams.Writer;
 
 		createFormReturnIdent : Identifier;
@@ -599,7 +599,7 @@ BEGIN
 	RETURN ucsString;
 END GetUCS32String;
 
-PROCEDURE Replace(CONST pattern : ARRAY OF CHAR; by : Strings.Buffer; text : Texts.Text; VAR error : BOOLEAN);
+PROCEDURE Replace(CONST pattern : ARRAY OF CHAR; by : Streams.Buffer; text : Texts.Text; VAR error : BOOLEAN);
 VAR string : Strings.String; ucsPattern, ucsString : Texts.PUCS32String; nofReplacements, idx : SIZE;
 BEGIN
 	ASSERT(Strings.Length(pattern) > 2); (* [...] *)

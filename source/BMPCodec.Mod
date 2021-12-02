@@ -148,7 +148,7 @@ TYPE
 		VAR
 			col, redMask, greenMask, blueMask: SIGNED32;
 			palentries, dataSize: SIGNED32; bpp: SIGNED16;
-			sm: Strings.Buffer;
+			sm: Streams.Buffer;
 			buf : Streams.Writer;
 			data : Strings.String;
 		BEGIN

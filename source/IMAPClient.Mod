@@ -65,7 +65,7 @@ TYPE
 
 		PROCEDURE ToString*():String;
 		VAR
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			s: String;
 			result: String;
@@ -192,7 +192,7 @@ TYPE
 		PROCEDURE ConnectUnlocked(host, user, pass: ARRAY OF CHAR):SIGNED32;
 		VAR
 			r: SIGNED32;
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			errorString: String;
 			inbox: Folder;
@@ -1685,7 +1685,7 @@ TYPE
 			PROCEDURE GetString(VAR string: String);
 			VAR
 				s: String;
-				buffer: Strings.Buffer;
+				buffer: Streams.Buffer;
 				w: Streams.Writer;
 				c: CHAR;
 			BEGIN
@@ -1749,7 +1749,7 @@ TYPE
 		VAR
 			element, sub: XML.Element;
 
-			buf: Strings.Buffer;
+			buf: Streams.Buffer;
 			w: Streams.Writer;
 		BEGIN {EXCLUSIVE}
 			IF DEBUG THEN KernelLog.String("Starting Save"); KernelLog.Ln(); END;
@@ -1964,7 +1964,7 @@ TYPE
 
 		PROCEDURE Load*(document:XML.Document): SIGNED32;
 		VAR
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			writer: Streams.Writer;
 			string: String;
 			i: SIZE;

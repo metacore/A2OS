@@ -2288,7 +2288,7 @@ TYPE
 		PROCEDURE FromStream*(r : Streams.Reader);
 		VAR
 			fullname, repositoryName : ARRAY 256 OF CHAR; componentName : ARRAY 128 OF CHAR;
-			writer : Streams.Writer; buffer : Strings.Buffer; ch : CHAR;
+			writer : Streams.Writer; buffer : Streams.Buffer; ch : CHAR;
 		BEGIN
 			r.String(fullname);
 			IF Repositories.IsCommandString(fullname) THEN

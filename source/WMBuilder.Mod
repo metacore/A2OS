@@ -545,7 +545,7 @@ TYPE
 
 		PROCEDURE Refresh(sender, data : ANY);
 		VAR
-			buffer : Strings.Buffer;
+			buffer : Streams.Buffer;
 		BEGIN
 
 			NEW(buffer, 1024);
@@ -633,7 +633,7 @@ TYPE
 
 		PROCEDURE WriteWindowVariables(w: Streams.Writer);
 		VAR
-			bufferVariables : Strings.Buffer;
+			bufferVariables : Streams.Buffer;
 		BEGIN
 
 			NEW(bufferVariables, 1024);
@@ -652,7 +652,7 @@ TYPE
 
 		PROCEDURE WriteWindowProcs(writer: Streams.Writer);
 		VAR
-			bufferWires : Strings.Buffer;
+			bufferWires : Streams.Buffer;
 		BEGIN
 
 			NEW(bufferWires, 1024);
@@ -883,7 +883,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Put(components : ComponentArray);
-		VAR buf : Strings.Buffer; writer : Streams.Writer; i : SIGNED32;
+		VAR buf : Streams.Buffer; writer : Streams.Writer; i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			ASSERT(components # NIL);
 			Clear;

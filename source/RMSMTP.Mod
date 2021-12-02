@@ -158,7 +158,7 @@ END SendMessage;
 PROCEDURE parse*(context : Commands.Context; VAR message: IMAPClient.Message);
 VAR
 	token: ARRAY 128 OF CHAR;
-	buffer: Strings.Buffer;
+	buffer: Streams.Buffer;
 	string: String;
 	w: Streams.Writer;
 	c: CHAR;
@@ -238,7 +238,7 @@ END parse;
 PROCEDURE readRestOfLine*(context : Commands.Context): String;
 VAR
 	string: String;
-	buffer: Strings.Buffer;
+	buffer: Streams.Buffer;
 	w: Streams.Writer;
 	c: CHAR;
 BEGIN
@@ -260,7 +260,7 @@ BEGIN
 END readRestOfLine;
 
 PROCEDURE AddressToSMTPString(address: IMAPUtilities.Address; VAR string: String);
-VAR buffer: Strings.Buffer; w: Streams.Writer;
+VAR buffer: Streams.Buffer; w: Streams.Writer;
 BEGIN
 	NEW(buffer, 16);
 	w := buffer.GetWriter();

@@ -101,7 +101,7 @@ TYPE
 			doc : XML.Document;
 			tr : Texts.TextReader; ch : Texts.Char32; i, p : SIZE; resstr : ARRAY 7 OF CHAR;
 			s : Strings.String;
-			text : Texts.Text; out : Streams.Writer; ob : Strings.Buffer; hasErrors : BOOLEAN;
+			text : Texts.Text; out : Streams.Writer; ob : Streams.Buffer; hasErrors : BOOLEAN;
 		BEGIN
 			AddNodes^(parent, diagnostics, log);
 			hasErrors := FALSE;
@@ -177,7 +177,7 @@ VAR
 	doc : XML.Document;
 	tr : Texts.TextReader; ch : Texts.Char32; i, p : SIZE; resstr : ARRAY 7 OF CHAR;
 	s : Strings.String;
-	out : Streams.Writer; ob : Strings.Buffer;
+	out : Streams.Writer; ob : Streams.Buffer;
 	errors : ErrorReporter;
 BEGIN
 	ASSERT((text # NIL) & (diagnostics # NIL));

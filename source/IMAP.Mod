@@ -105,7 +105,7 @@ TYPE
 		(* build a command with one argument *)
 		PROCEDURE MakeOneArgumentCommand(command: ARRAY OF CHAR; VAR argument: ARRAY OF CHAR): String;
 		VAR
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			arg, string: Strings.String;
 		BEGIN
@@ -123,7 +123,7 @@ TYPE
 		(* build a command with two arguments *)
 		PROCEDURE MakeTwoArgumentCommand(command: ARRAY OF CHAR; VAR argument1, argument2: ARRAY OF CHAR): String;
 		VAR
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			arg, string: String;
 		BEGIN
@@ -263,7 +263,7 @@ TYPE
 		(** appends a message to a mailbox. Works in AUTH and SELECT state *)
 		PROCEDURE Append*(VAR mailbox, message: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32;
 		VAR
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			path, string: String;
 			i: SIZE;
@@ -286,7 +286,7 @@ TYPE
 		(** copy specified in "what" to mailbox "to", works in SELECT, state not changed *)
 		PROCEDURE UIDCopy*(what, to: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32;
 		VAR
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			path,string: Strings.String;
 		BEGIN {EXCLUSIVE}
@@ -321,7 +321,7 @@ TYPE
 		PROCEDURE Status*(VAR mailbox, items: ARRAY OF CHAR; VAR ret: Classes.List):SIGNED32;
 		VAR
 			string: Strings.String;
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 		BEGIN {EXCLUSIVE}
 			IF (state # AUTH) & (state # SELECT) THEN RETURN BAD END;
@@ -338,7 +338,7 @@ TYPE
 		(* Search after criteria, see RFC 2060 *)
 		PROCEDURE Search*(CONST criteria: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32;
 		VAR
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			string: String;
 		BEGIN {EXCLUSIVE}
@@ -354,7 +354,7 @@ TYPE
 		(* get information about a message from server. information is specified by "items". *)
 		PROCEDURE Fetch*(set: ARRAY OF CHAR; items: ARRAY OF CHAR;  VAR ret: Classes.List):SIGNED32;
 		VAR
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			string: String;
 		BEGIN {EXCLUSIVE}
@@ -371,7 +371,7 @@ TYPE
 
 		PROCEDURE UIDFetch*(set: ARRAY OF CHAR; items: ARRAY OF CHAR; VAR ret:Classes.List): SIGNED32;
 		VAR
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			string: String;
 		BEGIN {EXCLUSIVE}
@@ -389,7 +389,7 @@ TYPE
 		(* store a specified flag on the server *)
 		PROCEDURE UIDStore*(set: ARRAY OF CHAR; flags: ARRAY OF CHAR; plus: BOOLEAN; VAR ret: Classes.List):SIGNED32;
 		VAR
-			buffer: Strings.Buffer;
+			buffer: Streams.Buffer;
 			w: Streams.Writer;
 			string: String;
 		BEGIN {EXCLUSIVE}
@@ -805,7 +805,7 @@ TYPE
 		(* read text until end of line reached *)
 		PROCEDURE ReadText(VAR text: String):BOOLEAN;
 		VAR
-			b: Strings.Buffer;
+			b: Streams.Buffer;
 			w: Streams.Writer;
 			c: CHAR;
 		BEGIN
@@ -929,7 +929,7 @@ TYPE
 		PROCEDURE ReadQuotedString(VAR buffer:String): BOOLEAN;
 		(* Read Quoted String *)
 		VAR
-			b: Strings.Buffer;
+			b: Streams.Buffer;
 			w: Streams.Writer;
 			c: CHAR;
 		BEGIN
@@ -956,7 +956,7 @@ TYPE
 		(* read IMAP atom, zero or more nonspecial characters see RFC2060 *)
 		PROCEDURE ReadAtom(VAR buffer:String): BOOLEAN;
 		VAR
-			b: Strings.Buffer;
+			b: Streams.Buffer;
 			w: Streams.Writer;
 			end: BOOLEAN;
 		BEGIN
@@ -978,7 +978,7 @@ TYPE
 		PROCEDURE ReadFlag(VAR buffer:String): BOOLEAN;
 		(* same for flag *)
 		VAR
-			b: Strings.Buffer;
+			b: Streams.Buffer;
 			w: Streams.Writer;
 			i: SIGNED32;
 			end: BOOLEAN;
@@ -1004,7 +1004,7 @@ TYPE
 		(* read token, ended by space *)
 		PROCEDURE ReadToken(VAR token: String):BOOLEAN;
 		VAR
-			b: Strings.Buffer;
+			b: Streams.Buffer;
 			w: Streams.Writer;
 			c: CHAR;
 			i: SIGNED32;
@@ -1039,7 +1039,7 @@ TYPE
 		(* read token in [] *)
 		PROCEDURE ReadPToken(VAR buffer: String):BOOLEAN;
 		VAR
-			b: Strings.Buffer;
+			b: Streams.Buffer;
 			w: Streams.Writer;
 		BEGIN
 			NEW(b, 16);

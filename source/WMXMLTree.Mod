@@ -216,7 +216,7 @@ TYPE
 			doc : XML.Document;
 			tr : Texts.TextReader; ch : Texts.Char32; i, p : SIZE; resstr : ARRAY 7 OF CHAR;
 			out : Streams.Writer;
-			ob : Strings.Buffer;
+			ob : Streams.Buffer;
 			s : Strings.String;
 		BEGIN
 			IF ~IsCallFromSequencer() THEN sequencer.ScheduleEvent(SELF.Refresh, sender, data)

@@ -858,26 +858,27 @@ TYPE
 			identDef: IdentDef;
 			identList: IdentList;
 
-			PROCEDURE Initializer;
-			VAR expr: InfoItem;
-			BEGIN
-				Check (FoxScanner.Becomes); NEW (expr);
-				ConstExprP(FoxScanner.Colon, FoxScanner.Comma, expr);
-			END Initializer;
-
 		BEGIN
 			(*SysFlag;*)
 			NEW(var.identList, var);
 			NEW(var.identList.identDef);
 			IdentDefP(var.identList.identDef);
 			SysFlag;
-			IF token.symbol = FoxScanner.Becomes THEN Initializer END;
+			IF token.symbol = FoxScanner.Becomes THEN
+				NextToken;
+				NEW(var.identList.identDef.initializer);
+				ConstExprP(FoxScanner.Colon, FoxScanner.Comma, var.identList.identDef.initializer);
+			END;
 			WHILE token.symbol = FoxScanner.Comma DO
 				NextToken;	(* avoids endless loop *)
 				NEW(identDef);
 				IdentDefP(identDef);
 				SysFlag;
-				IF token.symbol = FoxScanner.Becomes THEN Initializer END;
+				IF token.symbol = FoxScanner.Becomes THEN
+					NextToken;
+					NEW(identDef.initializer);
+					ConstExprP(FoxScanner.Colon, FoxScanner.Comma, identList.identDef.initializer);
+				END;				
 				NEW(identList, var);
 				identList.identDef := identDef;
 				AppendLast(var.identList, identList);

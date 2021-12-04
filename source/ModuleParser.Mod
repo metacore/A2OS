@@ -1407,6 +1407,8 @@ TYPE
 				| FoxScanner.Arrow: Add("^");
 				| FoxScanner.Address: Add("ADDRESS");
 				| FoxScanner.Size: Add("SIZE");
+				| FoxScanner.If: Add(" IF ");
+				| FoxScanner.Else: Add(" ELSE ");
 				ELSE
 					(* error *)
 					hasError := TRUE;

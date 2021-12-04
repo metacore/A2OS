@@ -757,8 +757,9 @@ TYPE
 
 		PROCEDURE DoCompile(findPC : BOOLEAN; CONST pc :ARRAY OF CHAR; options : CompilerOptions);
 		VAR
-			compiler : CompilerInterface.Compiler; tw : TextUtilities.TextWriter; errors : BOOLEAN; type: SIGNED32;
+			compiler : CompilerInterface.Compiler; tw : TextUtilities.TextWriter; errors : BOOLEAN;
 			positions : ARRAY 2 OF SIZE;
+			type: SIGNED32;
 		BEGIN
 			ClearLog;
 			IF findPC THEN Strings.Append(options, " /f") END;
@@ -1141,15 +1142,13 @@ TYPE
 			SetIcon(iconIdle);
 
 			IF c # NIL THEN (* restore the desktop *)
-				(*WMRestorable.AddByContext(SELF, c);*)
 				IF c.appData # NIL THEN
 					DisableUpdate;
 					LoadPages(c.appData(XML.Element));
 					EnableUpdate;
 				END;
-				vc.Invalidate;
+				vc.Invalidate;				
 				WMRestorable.AddByContext(SELF, c); (* first load content, then display ...*)
-
 			ELSE WMWindowManager.DefaultAddWindow(SELF);
 				(* NewTab; *)
 				codecFormat := "AUTO";
@@ -1159,7 +1158,6 @@ TYPE
 			NEW(browseBase); (* sentinel *)
 			browseBase.prev := browseBase;
 			browseTOS := browseBase;
-
 		END New;
 
 		PROCEDURE CreateForm():WMComponents.VisualComponent;
@@ -1464,7 +1462,7 @@ TYPE
 		END InitCodecs;
 
 		PROCEDURE SelectNextTab;
-		VAR i : SIGNED32;
+		VAR i : SIZE;
 		BEGIN
 			IF currentPageNr < 0 THEN RETURN; END;
 			i := currentPageNr + 1;
@@ -1478,7 +1476,7 @@ TYPE
 		END SelectNextTab;
 
 		PROCEDURE SelectPreviousTab;
-		VAR i : SIGNED32;
+		VAR i : SIZE;
 		BEGIN
 			IF currentPageNr < 0 THEN RETURN; END;
 			i := currentPageNr - 1;

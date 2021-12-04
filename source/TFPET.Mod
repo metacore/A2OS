@@ -14,6 +14,8 @@ MODULE TFPET; (** AUTHOR "TF, PL"; PURPOSE "Programmer's Editing Tool"; *)
  *	CTRL-O:	Set focus to filename editor and clear its content
  *	CTRL-S:		Store current page
  *
+ *	CTRL-I:	Toggle interactive Interface Finder
+ *
  *	CTRL-M:	Toggle visibility of sidepanel
  *
  *	CTRL-H:		Compile file opened in current page
@@ -43,11 +45,11 @@ MODULE TFPET; (** AUTHOR "TF, PL"; PURPOSE "Programmer's Editing Tool"; *)
 
 IMPORT
 	KernelLog, Modules, Commands, Options, Streams, Inputs, Files, WMRestorable, XML, XMLScanner, XMLParser, XMLObjects,
-	WMStandardComponents, WMGraphics, CompilerInterface,
-	WMComponents, WMRectangles, WMMessages, WMDialogs,
+	WMStandardComponents, WMGraphics, CompilerInterface, WhitespaceRemover,
+	WMComponents, WMRectangles, WMMessages, WMDialogs, WMDiagnostics,
 	WMTextView, WMEditors, Strings, TextUtilities, Texts,
-	WMWindowManager, WMGrids, WMMacros, WMPopups, WMDropTarget, WMDiagnostics,
-	PETTrees, Configuration, Codecs, WMTabComponents, UndoManager, WMSearchComponents, WhitespaceRemover,
+	WMWindowManager, WMGrids, WMMacros, WMPopups, WMDropTarget,
+	PETTrees, Configuration, Codecs, WMTabComponents, UndoManager, WMSearchComponents, Kernel,
 	TFModuleTrees;
 
 CONST
@@ -69,6 +71,7 @@ CONST
 	DefaultShowLineNumbers = FALSE;
 	DefaultIndicateTabs = FALSE;
 	DefaultCurrentLineColor = 0;
+	DefaultBackgroundColor = WMGraphics.White;
 
 	(* Compiler *)
 	DefaultCompilerName = "Fox";
@@ -140,6 +143,7 @@ TYPE
 		showLineNumbers : BOOLEAN;
 		indicateTabs : BOOLEAN;
 		currentLineColor : SIGNED32;
+		backgroundColor : SIGNED32;
 
 		(* Compiler *)
 		defaultCompilerOptions : CompilerOptions;
@@ -165,6 +169,7 @@ TYPE
 			showLineNumbers := DefaultShowLineNumbers;
 			indicateTabs := DefaultIndicateTabs;
 			currentLineColor := DefaultCurrentLineColor;
+			backgroundColor := DefaultBackgroundColor;
 			(* Compiler *)
 			COPY(DefaultCompilerOptions, defaultCompilerOptions);
 			nofCompilers := 0;
@@ -314,6 +319,10 @@ TYPE
 			IF (res = Configuration.Ok) THEN
 				currentLineColor := temp
 			END;
+			Configuration.GetColor("Applications.PET.General.BackgroundColor", temp, res);
+			IF (res = Configuration.Ok) THEN
+				backgroundColor := temp
+			END;
 
 			(* Compiler *)
 			Configuration.Get("Applications.PET.Compilers.DefaultOptions", defaultCompilerOptions, res);
@@ -331,6 +340,7 @@ TYPE
 	END Settings;
 
 TYPE
+
 	CaptionObject = OBJECT
 	VAR caption : ARRAY 128 OF CHAR;
 
@@ -341,6 +351,7 @@ TYPE
 	END CaptionObject;
 
 TYPE
+
 	(* Association between a text position and a key combination *)
 	Position = OBJECT
 	VAR
@@ -434,12 +445,6 @@ TYPE
 			label.caption.SetAOC(" Project Text");
 		END SetText;
 
-		PROCEDURE Finalize*;
-		BEGIN
-			Finalize^;
-			StoreScratchText;
-		END Finalize;
-
 	END ScratchPanel;
 
 	URLDropTarget = OBJECT(WMDropTarget.DropTarget);
@@ -477,6 +482,16 @@ TYPE
 	END DropURL;
 
 TYPE
+	TextWriter= OBJECT (TextUtilities.TextWriter)
+	VAR update: PROCEDURE {DELEGATE};
+
+		PROCEDURE Update*;
+		BEGIN
+			IF update # NIL THEN update END;
+			Update^
+		END Update;
+
+	END TextWriter;
 
 	PETPanel = OBJECT(WMComponents.VisualComponent)
 	VAR
@@ -486,6 +501,7 @@ TYPE
 		scratch : ScratchPanel;
 		sidePanel : WMStandardComponents.Panel;
 		logPanel, editPanel: WMStandardComponents.Panel;
+		logWriter, errorWriter: TextWriter;
 		searchPanel: WMSearchComponents.SearchPanel;
 
 		errorGrid : WMDiagnostics.DiagnosticsView;
@@ -500,6 +516,7 @@ TYPE
 		autoCodecFormat: ARRAY 128 OF CHAR;
 
 		name : Filename; (* name of tab (filename without path *)
+
 		filename : Filename; (* Filename including path *)
 
 		options : CompilerOptions;
@@ -510,6 +527,7 @@ TYPE
 		positions : Positions;
 
 		owner : Window;
+		settings: Settings;
 
 		PROCEDURE &InitPanel *(window: Window);
 		VAR
@@ -518,6 +536,7 @@ TYPE
 			colWidths : WMGrids.Spacings;
 			textViews : ARRAY 2 OF WMTextView.TextView;
 		BEGIN
+			settings := GetSettings();
 			Init;
 			owner := window;
 			tree := NIL;
@@ -543,8 +562,19 @@ TYPE
 			resizerV.bounds.SetHeight(4);
 			scratchPanel.AddContent(resizerV);
 
+			NEW(logEdit); logEdit.bounds.SetHeight(100); logEdit.alignment.Set(WMComponents.AlignBottom);
+			logEdit.allowScrollbars.Set(TRUE);
+			logEdit.tv.showBorder.Set(TRUE); logEdit.visible.Set(FALSE);
+			NEW(logWriter, logEdit.text);
+			NEW(errorWriter, logEdit.text);
+			errorWriter.SetFontColor(SIGNED32(0FF0000FFH));
+			logWriter.update := OpenLogEditor;
+			errorWriter.update := OpenLogEditor;
+
 			NEW(scratch); scratch.alignment.Set(WMComponents.AlignClient);
 			scratch.editor.tv.commandCaller := window;
+			scratch.editor.tv.commandWriter := logWriter;
+			scratch.editor.tv.errorWriter := errorWriter;
 			scratchPanel.AddContent(scratch);
 
 			sidePanel.AddContent(scratchPanel);
@@ -561,9 +591,6 @@ TYPE
 			resizerH.bounds.SetHeight(4);
 			logPanel.AddContent(resizerH);
 
-			NEW(logEdit); logEdit.bounds.SetHeight(30); logEdit.alignment.Set(WMComponents.AlignBottom);
-			logEdit.allowScrollbars.Set(FALSE);
-			logEdit.tv.showBorder.Set(TRUE); logEdit.visible.Set(FALSE);
 
 			NEW(resizerV); resizerV.alignment.Set(WMComponents.AlignTop);
 			resizerV.bounds.SetHeight(4);
@@ -609,10 +636,13 @@ TYPE
 			editor.tv.wrapMode.Set(WMTextView.NoWrap);
 			editor.tv.onCursorChanged := CursorChanged;
 			editor.tv.commandCaller := window;
+			editor.tv.commandWriter := logWriter;
+			editor.tv.errorWriter := errorWriter;
 			editor.text.onTextChanged.Add(TextChanged);
 			editor.tv.showLineNumbers.Set(settings.showLineNumbers);
 			editor.tv.indicateTabs.Set(settings.indicateTabs);
 			editor.tv.clBgCurrentLine.Set(settings.currentLineColor);
+			editor.tv.defaultTextBgColor.Set(settings.backgroundColor);
 
 			NEW(positions, editor.tv);
 			searchPanel.SetText(editor.text);
@@ -629,10 +659,13 @@ TYPE
 			splitEditor.multiLine.Set(TRUE);
 			splitEditor.tv.wrapMode.Set(WMTextView.NoWrap);
 			splitEditor.tv.commandCaller := window;
+			splitEditor.tv.commandWriter := logWriter;
+			splitEditor.tv.errorWriter := errorWriter;
 			splitEditor.SetText(editor.text);
 			splitEditor.tv.showLineNumbers.Set(settings.showLineNumbers);
 			splitEditor.tv.indicateTabs.Set(settings.indicateTabs);
 			splitEditor.tv.clBgCurrentLine.Set(settings.currentLineColor);
+			editor.tv.defaultTextBgColor.Set(settings.backgroundColor);
 
 			textViews[0] := editor.tv;
 			textViews[1] := splitEditor.tv;
@@ -670,8 +703,8 @@ TYPE
 						IF (factory # NIL) THEN
 							tree := factory();
 						END;
-					END
-				END
+					END;
+				END;
 			END;
 			IF (tree # NIL) THEN
 				tree.alignment.Set(WMComponents.AlignClient);
@@ -747,7 +780,7 @@ TYPE
 				compiler := CompilerInterface.GetCompilerByName(compilerSettings.name);
 			END;
 			IF (compiler # NIL) THEN
-				compiler.CompileText(editor.text, "", 0, pc, options, tw, diagnostics, errors);
+				compiler.CompileText(editor.text, "" (* filename*) , 0, pc, options, tw, diagnostics, errors);
 				IF ~errors THEN
 					IF tree IS TFModuleTrees.ModuleTree THEN
 (*						tree(TFModuleTrees.ModuleTree).StoreSymbols(NIL, NIL);*)
@@ -764,14 +797,16 @@ TYPE
 			diagnostics.EnableNotification;
 			IF (diagnostics.nofEntries > 0) THEN
 				errorGrid.GetFirstPosition(positions, type);
-				IF (focus = EditorFocus) & (positions[0] # Streams.Invalid) THEN
-					editor.tv.cursor.SetPosition(positions[0]);
-					editor.SetFocus;
-				ELSIF (focus = SplitEditorFocus) THEN
-					splitEditor.tv.cursor.SetPosition(positions[0]);
-					splitEditor.SetFocus;
+				IF (type = WMDiagnostics.TypeError) OR findPC & (type=WMDiagnostics.TypeInformation) THEN
+					IF (focus = EditorFocus) & (positions[0] # Streams.Invalid) THEN
+						editor.tv.cursor.SetPosition(positions[0]);
+						editor.SetFocus;
+					ELSIF (focus = SplitEditorFocus) THEN
+						splitEditor.tv.cursor.SetPosition(positions[0]);
+						splitEditor.SetFocus;
+					END;
+					CursorChanged;
 				END;
-				CursorChanged;
 				errorGrid.visible.Set(TRUE);
 				logPanel.visible.Set(TRUE); logEdit.visible.Set(TRUE);
 			ELSE
@@ -856,6 +891,18 @@ TYPE
 			wrap := ~wrap;
 		END ToggleWrap;
 
+		PROCEDURE ToggleExtInterface;
+		VAR ctx:Commands.Context; res:INTEGER; msg:ARRAY 32 OF CHAR;
+		BEGIN
+			IF editor.extInterface#NIL THEN
+				Configuration.Get("Applications.PET.ExtInterface.UnInstall", name, res);
+			ELSE
+				Configuration.Get("Applications.PET.ExtInterface.Install", name, res);
+			END;
+			NEW(ctx, NIL, NIL, logWriter, errorWriter, SELF);
+			IF res = Configuration.Ok THEN Commands.Activate(name, ctx,{}, res, msg) END;
+		END ToggleExtInterface;
+
 		PROCEDURE TextChanged(sender, data : ANY);
 		BEGIN
 			IF logPanel.visible.Get() THEN
@@ -876,6 +923,12 @@ TYPE
 			owner.positionEdit.SetAsString(pos);
 			IF (tree # NIL) THEN tree.SelectNodeByPos (position) END
 		END CursorChanged;
+
+		PROCEDURE OpenLogEditor;
+		BEGIN
+			IF ~logEdit.visible.Get() THEN logEdit.visible.Set(TRUE) END;
+		END OpenLogEditor;
+
 
 		PROCEDURE HandleShortcut(ucs : SIZE; flags : SET; keysym : SIZE) : BOOLEAN;
 		VAR pos : SIZE;
@@ -956,6 +1009,12 @@ TYPE
 		BEGIN
 			IF (keysym = 06H) & ControlKeyDown(flags)THEN (* CTRL-F *)
 				searchPanel.ToggleVisibility;
+			ELSIF (keysym = 05H) & ControlKeyDown(flags) THEN (* CTRL-E *)
+				logPanel.visible.Set(~logPanel.visible.Get());
+			ELSIF (keysym = 09H) & ControlKeyDown(flags) THEN (* CTRL-I *)
+				ToggleExtInterface;
+			ELSIF (keysym= 0CH) & ControlKeyDown(flags) THEN (* CTRL-L *)
+				logEdit.visible.Set(~logEdit.visible.Get());
 			ELSIF (keysym= 0EH) & ControlKeyDown(flags) THEN (* CTRL-N *)
 				HandlePreviousNext(TRUE);
 			ELSIF (keysym = 10H) & ControlKeyDown(flags) THEN (* CTRL-P *)
@@ -1025,7 +1084,7 @@ TYPE
 	VAR
 		filenameEdit, optionsEdit, positionEdit: WMEditors.Editor;
 		loadBtn, storeBtn, closeBtn, compileBtn, findPCBtn, undoBtn, redoBtn: WMStandardComponents.Button;
-		splitBtn, formatBtn, searchBtn, labelsBtn, wrapBtn, forwardBtn, backBtn : WMStandardComponents.Button;
+		splitBtn, formatBtn, searchBtn, labelsBtn, wrapBtn, errListBtn, findBtn, logBtn, forwardBtn, backBtn : WMStandardComponents.Button;
 		popup: WMPopups.Popup;
 
 		tabs : WMTabComponents.Tabs;
@@ -1055,10 +1114,13 @@ TYPE
 		modifierFlags : SET;
 
 		browseBase, browseTOS : BrowseEntry;
+		settings: Settings;
 
 		PROCEDURE &New*(c : WMRestorable.Context);
 		VAR vc : WMComponents.VisualComponent;
 		BEGIN
+
+			settings := GetSettings();
 			IncCount;
 			InitCodecs;
 			vc := CreateForm();
@@ -1093,23 +1155,22 @@ TYPE
 			SetIcon(iconIdle);
 
 			IF c # NIL THEN (* restore the desktop *)
-				WMRestorable.AddByContext(SELF, c);
 				IF c.appData # NIL THEN
 					DisableUpdate;
 					LoadPages(c.appData(XML.Element));
 					EnableUpdate;
 				END;
 				vc.Invalidate;
+				WMRestorable.AddByContext(SELF, c); (* first load content, then display ...*)
 			ELSE WMWindowManager.DefaultAddWindow(SELF);
 				(* NewTab; *)
 				codecFormat := "AUTO";
 				autoCodecFormat := DefaultTextFormat;
 				SetFormatCaption("AUTO");
 			END;
-
 			NEW(browseBase); (* sentinel *)
 			browseBase.prev := browseBase;
-			browseTOS := browseBase
+			browseTOS := browseBase;
 		END New;
 
 		PROCEDURE CreateForm():WMComponents.VisualComponent;
@@ -1139,10 +1200,10 @@ TYPE
 				NEW(filenameEdit); filenameEdit.alignment.Set(WMComponents.AlignClient);
 				filenameEdit.multiLine.Set(FALSE); filenameEdit.bounds.SetWidth(200);
 				filenameEdit.fillColor.Set(0FFFFFFFFH);
-				filenameEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
 				filenameEdit.tv.showBorder.Set(TRUE);
 				filenameEdit.tv.borders.Set(WMRectangles.MakeRect(3,3,1,1));
 				filenameEdit.tv.commandCaller := SELF;
+				filenameEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
 				filenameEdit.onEnter.Add(LoadHandler);
 				filenameEdit.onEscape.Add(FilenameEditEscapeHandler);
 				resizerPanel.AddContent(filenameEdit);
@@ -1193,8 +1254,8 @@ TYPE
 				toolbar.AddContent(redoBtn);
 
 				NEW(optionsEdit); optionsEdit.tv.showBorder.Set(TRUE); optionsEdit.tv.borders.Set(WMRectangles.MakeRect(3,3,1,1));
-				optionsEdit.alignment.Set(WMComponents.AlignClient); optionsEdit.multiLine.Set(FALSE);
 				optionsEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
+				optionsEdit.alignment.Set(WMComponents.AlignClient); optionsEdit.multiLine.Set(FALSE);
 				optionsEdit.bounds.SetWidth(80); optionsEdit.fillColor.Set(0FFFFFFFFH);
 				optionsEdit.SetAsString(settings.defaultCompilerOptions);
 				toolbar.AddContent(optionsEdit);
@@ -1213,8 +1274,8 @@ TYPE
 				NEW(positionEdit); positionEdit.tv.showBorder.Set(TRUE); positionEdit.tv.borders.Set(WMRectangles.MakeRect(3,3,1,1));
 
 				positionEdit.alignment.Set(WMComponents.AlignLeft); positionEdit.multiLine.Set(FALSE);
-				positionEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
 				positionEdit.bounds.SetWidth(80); positionEdit.fillColor.Set(0FFFFFFFFH); positionEdit.onEnter.Add(PositionHandler);
+				positionEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
 				statusbar.AddContent(positionEdit);
 
 				NEW(splitBtn); splitBtn.caption.SetAOC("Split"); splitBtn.alignment.Set(WMComponents.AlignRight);
@@ -1232,6 +1293,21 @@ TYPE
 				wrapBtn.onClick.Add(ButtonHandler);
 				statusbar.AddContent(wrapBtn);
 
+				NEW(errListBtn); errListBtn.caption.SetAOC("Errors"); errListBtn.alignment.Set(WMComponents.AlignRight);
+				errListBtn.isToggle.Set(FALSE); errListBtn.SetPressed(FALSE);
+				errListBtn.onClick.Add(ButtonHandler);
+				statusbar.AddContent(errListBtn);
+
+				NEW(findBtn); findBtn.caption.SetAOC("Find"); findBtn.alignment.Set(WMComponents.AlignRight);
+				findBtn.isToggle.Set(FALSE); findBtn.SetPressed(FALSE);
+				findBtn.onClick.Add(ButtonHandler);
+				statusbar.AddContent(findBtn);
+
+				NEW(logBtn); logBtn.caption.SetAOC("Log"); logBtn.alignment.Set(WMComponents.AlignRight);
+				logBtn.isToggle.Set(FALSE); logBtn.SetPressed(FALSE);
+				logBtn.onClick.Add(ButtonHandler);
+				statusbar.AddContent(logBtn);
+
 				NEW(forwardBtn); forwardBtn.caption.SetAOC("-->"); forwardBtn.alignment.Set(WMComponents.AlignRight);
 				forwardBtn.onClick.Add(ButtonHandler);
 				statusbar.AddContent(forwardBtn);
@@ -1245,10 +1321,13 @@ TYPE
 
 		BEGIN
 			(* -- Main Panel holding the tabs, toolbar and tabcontents (instance of PETPanel) *)
-			NEW(panel); panel.alignment.Set(WMComponents.AlignClient); panel.fillColor.Set(0FFFFFFFFH); panel.takesFocus.Set(TRUE);
+			NEW(panel); panel.alignment.Set(WMComponents.AlignClient);
+			panel.fillColor.Set(0FFFFFFFFH);
+			panel.takesFocus.Set(TRUE);
 
 			(* -- Tabs for the PETPanels *)
 			NEW(tabs); tabs.fillColor.Set(00000CCCCH); tabs.bounds.SetHeight(20); tabs.alignment.Set(WMComponents.AlignTop);
+			tabs.lineHeight.Set(20);
 			panel.AddContent(tabs); tabs.SetExtDragDroppedHandler(DragDroppedHandler);
 
 			panel.AddContent(CreateToolbar());
@@ -1298,6 +1377,12 @@ TYPE
 				IF (currentPage # NIL) THEN
 					currentPage.ToggleWrap;
 				END;
+			ELSIF sender = logBtn THEN
+				IF currentPage # NIL THEN currentPage.logEdit.visible.Set(~currentPage.logEdit.visible.Get()) END;
+			ELSIF sender = findBtn THEN
+				IF currentPage # NIL THEN currentPage.searchPanel.visible.Set(~currentPage.searchPanel.visible.Get()) END;
+			ELSIF sender = errListBtn THEN
+				IF currentPage # NIL THEN currentPage.logPanel.visible.Set(~currentPage.logPanel.visible.Get()) END;
 			ELSIF sender = backBtn THEN
 				BrowseBack
 			ELSIF sender = forwardBtn THEN
@@ -1833,10 +1918,10 @@ TYPE
 						filenameEdit.SetAsString("");
 					END;
 				ELSE
-					Load(filename, codecFormat);
 					IF (currentPage # NIL) THEN
 						optionsEdit.GetAsString(currentPage.options);
 					END;
+					Load(filename, codecFormat);
 				END;
 			END;
 		END LoadHandler;
@@ -1851,6 +1936,7 @@ TYPE
 			syntaxHighlighterName : ARRAY 32 OF CHAR;
 			file : Files.File;
 			in: Streams.Reader;
+
 		BEGIN
 			DisableUpdate;
 			res := -1;
@@ -1910,6 +1996,12 @@ TYPE
 			currentPage.editor.tv.onLinkClicked.Add(LinkClickedHandler);
 			text.ReleaseWrite;
 
+			GetSyntaxHighlighterName(filename, syntaxHighlighterName);
+			IF (syntaxHighlighterName # "") THEN
+				currentPage.editor.highlighting.SetAOC(syntaxHighlighterName);
+				currentPage.splitEditor.highlighting.SetAOC(syntaxHighlighterName);
+			END;
+
 			IF (file # NIL) THEN
 				IF (format = "AUTO") THEN
 					decoder := TextUtilities.DecodeAuto(fullname, autoCodecFormat);
@@ -1925,9 +2017,9 @@ TYPE
 						decoder.Open(in, res);
 						IF res = 0 THEN
 							currentPage.editor.text.onTextChanged.Remove(currentPage.TextChanged);
-							currentPage.editor.SetText(decoder.GetText());
+							text := decoder.GetText();
+							currentPage.editor.SetText(text);
 							currentPage.searchPanel.SetText(decoder.GetText());
-							currentPage.splitEditor.SetText(currentPage.editor.text);
 							currentPage.editor.text.onTextChanged.Add(currentPage.TextChanged);
 							currentPage.editor.text.SetUndoManager(currentPage.editor.undoMgr)
 						END;
@@ -1953,11 +2045,6 @@ TYPE
 			currentPage.compilerSettings := settings.GetCompilerSettings(filename);
 			currentPage.options := currentPage.compilerSettings.options;
 
-			GetSyntaxHighlighterName(filename, syntaxHighlighterName);
-			IF (syntaxHighlighterName # "") THEN
-				currentPage.editor.highlighting.SetAOC(syntaxHighlighterName);
-				currentPage.splitEditor.highlighting.SetAOC(syntaxHighlighterName);
-			END;
 
 			currentPage.CreateSidePanel(currentPage.compilerSettings);
 
@@ -2154,7 +2241,7 @@ TYPE
 			found : BOOLEAN;
 		BEGIN
 			found := FALSE;
-			NEW(pet, SELF); pet.alignment.Set(WMComponents.AlignClient); pet.fillColor.Set(0FFFFFFFFH); pet.takesFocus.Set(TRUE);
+			NEW(pet, SELF); pet.alignment.Set(WMComponents.AlignClient); pet.fillColor.Set(settings.backgroundColor); pet.takesFocus.Set(TRUE);
 			IF pet.editor.undoMgr # NIL THEN
 				pet.editor.undoMgr.nrUpdatesListener := NrUpdatesChanged;
 				NrUpdatesChanged(0, 0);
@@ -2238,9 +2325,11 @@ TYPE
 			IF (currentPage # NIL) THEN
 				IF currentPage.splitted THEN
 					currentPage.splitPanel.visible.Set(FALSE);
+					currentPage.splitEditor.SetText(NIL);
 					currentPage.editor.SetFocus;
 				ELSE
 					currentPage.splitPanel.visible.Set(TRUE);
+					currentPage.splitEditor.SetText(currentPage.editor.text);
 				END;
 				currentPage.splitted := ~currentPage.splitted
 			END
@@ -2595,7 +2684,6 @@ TYPE
 				DisableUpdate; SelectPreviousTab; EnableUpdate;
 			ELSIF (keysym = 015H) & ControlKeyDown(flags) THEN (* CTRL-U *)
 				IF (currentPage # NIL) THEN UnloadModule; END;
-
 			(* relay hot key to current page *)
 			ELSIF (currentPage = NIL) OR ((currentPage # NIL) & (~currentPage.HandleShortcut(ucs, flags, keysym))) THEN
 				RETURN FALSE; (* Key not handled *)
@@ -2627,9 +2715,10 @@ VAR
 	nofWindows : SIGNED32;
 	scratchText : Texts.Text;
 	scratchModified : BOOLEAN;
-	settings : Settings;
+	gsettings : Settings;
 
 	StrScratchPanel, StrPETPanel : Strings.String;
+	timeout: BOOLEAN;
 
 (** Open document *)
 PROCEDURE Open*(context : Commands.Context); (** [Options] {filename['@'position]} ~ *)
@@ -2762,17 +2851,22 @@ BEGIN
 END Uncomment;
 
 PROCEDURE GetSyntaxHighlighterName*(fullname : ARRAY OF CHAR; VAR name : ARRAY OF CHAR);
-VAR filename, extension, config : Files.FileName; res : INTEGER;
+VAR filename, extension, config : Files.FileName; res : INTEGER; tries: SIGNED32;
 BEGIN
 	name := "";
-	Strings.UpperCase(fullname);
-	Strings.GetExtension(fullname, filename, extension);
-	IF (extension # "") THEN
-		config := "Applications.PET.SyntaxHighlighter.";
-		Strings.AppendX(config, extension);
-		Configuration.Get(config, name, res);
-		IF (res # Configuration.Ok) THEN name := ""; END;
-	END;
+	tries := 0;
+	REPEAT (* try with case as is first *)
+		Strings.GetExtension(fullname, filename, extension);
+		IF (extension # "") THEN
+			config := "Applications.PET.SyntaxHighlighter.";
+			Strings.AppendX(config, extension);
+			Configuration.Get(config, name, res);
+			IF (res # Configuration.Ok) THEN name := ""; END;
+		END;
+		Strings.UpperCase(fullname);
+		INC(tries);
+	UNTIL (res = Configuration.Ok) OR (tries >1);
+
 END GetSyntaxHighlighterName;
 
 PROCEDURE ControlKeyDown(flags : SET) : BOOLEAN;
@@ -2829,11 +2923,21 @@ BEGIN
 	RETURN text;
 END LoadText;
 
+PROCEDURE GetSettings(): Settings;
+VAR s: Settings;
+BEGIN
+	s := gsettings;
+	IF s = NIL THEN (* fallback in case of a race of IncCount and DecCount *)
+		NEW(s); s.Load;
+	END;
+	RETURN s
+END GetSettings;
+
 PROCEDURE IncCount;
 BEGIN {EXCLUSIVE}
 	INC(nofWindows);
 	IF (nofWindows = 1) THEN
-		NEW(settings); settings.Load;
+		NEW(gsettings); gsettings.Load;
 		LoadScratchText;
 	END;
 END IncCount;
@@ -2844,19 +2948,30 @@ BEGIN {EXCLUSIVE}
 	IF (nofWindows = 0) THEN
 		StoreScratchText;
 		scratchText := NIL;
-		settings := NIL;
+		gsettings := NIL;
 	END;
 END DecCount;
+
+PROCEDURE Timeout;
+BEGIN{EXCLUSIVE}
+	timeout := TRUE
+END Timeout;
 
 PROCEDURE Cleanup;
 VAR die : KillerMsg;
 	 msg : WMMessages.Message;
 	 m : WMWindowManager.WindowManager;
+	 timer: OBJECT VAR timer: Kernel.Timer; BEGIN{ACTIVE} NEW(timer); timer.Sleep(100); Timeout END;
 BEGIN {EXCLUSIVE}
-	NEW(die); msg.ext := die; msg.msgType := WMMessages.MsgExt;
+	NEW(die);
+	msg.ext := die;
+	msg.msgType := WMMessages.MsgExt;
 	m := WMWindowManager.GetDefaultManager();
-	m.Broadcast(msg);
-	AWAIT(nofWindows = 0);
+	WHILE nofWindows >0 DO
+		m.Broadcast(msg);
+		timeout := FALSE; NEW(timer);
+		AWAIT (nofWindows = 0) OR timeout;
+	END;
 END Cleanup;
 
 PROCEDURE LoadModule(CONST moduleName : ARRAY OF CHAR);

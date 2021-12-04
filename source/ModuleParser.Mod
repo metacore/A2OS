@@ -1403,7 +1403,10 @@ TYPE
 				| FoxScanner.And: Add(" & ");
 				| FoxScanner.Or: Add(" OR ");
 				| FoxScanner.String: name[0] := '"'; name[1] := 0X; Add(name); Add(token.string^); Add(name);
+				| FoxScanner.Character: Add(token.identifierString);
 				| FoxScanner.Arrow: Add("^");
+				| FoxScanner.Address: Add("ADDRESS");
+				| FoxScanner.Size: Add("SIZE");
 				ELSE
 					(* error *)
 					hasError := TRUE;

@@ -1,4 +1,5 @@
 MODULE WMFigures; (** AUTHOR "Patrick Hunziker, with inspirations from staubesv, gadgets source"; PURPOSE "Geometric shapes"; *)
+(*TBD: closed figures with first[x,y]=last[x,y] are displayed inconsistently *)
 
 IMPORT
 	KernelLog, Streams, Math, Strings, XML, WMRectangles, WMGraphics, WMGraphicUtilities, WMProperties, WMComponents;
@@ -334,17 +335,21 @@ TYPE
 
 		PROCEDURE RecacheProperties*;
 		BEGIN (* called by sequencer -> hierarchy is locked, see WMVisualComponentSkeleton.Mod *)
+			RecacheProperties^;
+			RecachePoints;
 			IF closed.Get() THEN INCL(state,Closed) ELSE EXCL(state,Closed) END;
 			IF filled.Get() THEN INCL(state,Filled); ELSE EXCL(state, Filled) END;
 			IF reshape.Get() THEN INCL(state,Reshape) ELSE EXCL(state, Reshape) END;
 			IF arrow.Get() THEN INCL(state,Arrow) ELSE EXCL(state, Arrow) END;
-			RecacheProperties^;
-			RecachePoints;
-			Normalize;
-			Resized;(* implied Invalidate - that is redundant*)
+			(*RecacheProperties^;
+			RecachePoints;*)
+			IF ~(SELF IS Spline) THEN
+				Normalize;
+				Resized;(* implied Invalidate - that is redundant*)
+			END;
 		END RecacheProperties;
 
-		PROCEDURE RecachePoints; (*build point list in parent coordinates*)
+		PROCEDURE RecachePoints*; (*build point list in parent coordinates*)
 		VAR p:Point;	i:SIZE; x,y:SIZE;
 		BEGIN
 			Acquire;
@@ -396,7 +401,7 @@ TYPE
 			 head: FLOAT64;
 			col: WMGraphics.Color;
 		BEGIN
-				alpha:=arctan2(p1.x-p0.x, p1.y-p0.y);
+				alpha:=arctan2(p1.y-p0.y, p1.x-p0.x);
 				head:=MAX( 4,  0.05 * MAX(ABS(p1.x-p0.x), ABS(p1.y-p0.y))); (*avoid sqrt for performance reasons*)
 				col:=color.Get();
 				canvas.Line(p1.x,p1.y, p1.x - ENTIER(0.5+head * Math.cos(alpha + pi/8)), p1.y - ENTIER(0.5+head * Math.sin(alpha + pi/8)), col, WMGraphics.ModeSrcOverDst);
@@ -670,6 +675,8 @@ TYPE
 		PROCEDURE Initialize*;
 		VAR pp:WMProperties.PointProperty;
 		BEGIN
+			Initialize^;
+			RecachePoints;
 			IF nofPoints=0 THEN (* default *)
 				Acquire;
 				NEW(pp,NIL,Strings.NewString("Point0"),NIL); pp.SetCoordinate(5,20); properties.Add(pp); INC(nofPoints);
@@ -677,11 +684,12 @@ TYPE
 				NEW(pp,NIL,Strings.NewString("Point2"),NIL); pp.SetCoordinate(20,20); properties.Add(pp); INC(nofPoints);
 				NEW(pp,NIL,Strings.NewString("Point3"),NIL); pp.SetCoordinate(30,30); properties.Add(pp); INC(nofPoints);
 				Release;
+				RecachePoints;
 			END;
-			RecachePoints;
+			(*RecachePoints;*)
 			SplineToPoly(points, Closed IN state, pointArray, nSegments);
 			Normalize;
-			Initialize^;
+			(*Initialize^;*)
 		END Initialize;
 
 			(* Is X, Y somewhere inside the polygon defined by p ? *) (*! to be implemented for pointarray*)
@@ -747,18 +755,30 @@ TYPE
 
 		PROCEDURE PropertyChanged*(sender, property : ANY);
 			BEGIN
-				RecacheProperties;
-				SplineToPoly(points, Closed IN state, pointArray, nSegments);
-				Normalize;
-				Resized;(* implied Invalidate - that is redundant*)
-				IF ~(property IS WMProperties.PointProperty) & ~(property=closed) THEN
+				IF (property IS WMProperties.PointProperty) OR (property=closed) OR (property=properties) THEN
+					RecacheProperties;
+					(*RecachePoints;*)(*implicit above*)
+					(*SplineToPoly(points, Closed IN state, pointArray, nSegments);
+					Normalize;
+					Resized;*)(* implied Invalidate - that is redundant*)
+				ELSE (*IF ~(property IS WMProperties.PointProperty) (* & ~(property=closed)*) THEN*)
 					PropertyChanged^(sender,property);
 				END;
 			END PropertyChanged;
 
+		PROCEDURE RecacheProperties*;
+		BEGIN (* called by sequencer -> hierarchy is locked, see WMVisualComponentSkeleton.Mod *)
+			RecacheProperties^;
+			SplineToPoly(points, Closed IN state, pointArray, nSegments);
+			Normalize;
+			Resized;(* implied Invalidate - that is redundant*)
+		END RecacheProperties;
+
+
 		PROCEDURE Normalize*;
 		VAR i:SIGNED32; oldrect, rect:WMRectangles.Rectangle; p:Point;
 		BEGIN
+			Acquire;
 			oldrect:=bounds.Get();
 			rect.l := MAX(SIZE); rect.t := MAX(SIZE); rect.r := MIN(SIZE); rect.b := MIN(SIZE);
 			FOR i:=0 TO nSegments-1 DO
@@ -775,7 +795,9 @@ TYPE
 				p:=p.next;
 			END;
 			bounds.Set(rect);
+			Release;
 		END Normalize;
+
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR p: Point; col: WMGraphics.Color; 
@@ -808,7 +830,7 @@ VAR
 
 	StrFigure, StrLine, StrCircle, StrRectangle, StrSpline : Strings.String;
 
-PROCEDURE arctan2(x,y: FLOAT32): FLOAT32; (*arctan in range 0..2pi*)
+PROCEDURE arctan2(y,x: FLOAT32): FLOAT32; (*arctan in range 0..2pi*)
 	BEGIN
 		IF (x>0) & (y>=0) THEN RETURN Math.arctan(y/x)
 		ELSIF (x>0) & (y<0) THEN RETURN Math.arctan(y/x)+2*Math.pi
@@ -821,7 +843,7 @@ PROCEDURE arctan2(x,y: FLOAT32): FLOAT32; (*arctan in range 0..2pi*)
 
 (* start of Rege code *)
 
-PROCEDURE MakePoly(CONST RX, RY, RXstrich, RYstrich, RS: ARRAY OF FLOAT32; n: SIGNED32; VAR points : ARRAY OF WMGraphics.Point2d; VAR k: SIGNED32);
+PROCEDURE MakePoly*(CONST RX, RY, RXstrich, RYstrich, RS: ARRAY OF FLOAT32; n: SIGNED32; VAR points : ARRAY OF WMGraphics.Point2d; VAR k: SIGNED32);
  TYPE
 	Polynom = RECORD A, B, C, D: FLOAT32 END;
  VAR
@@ -877,7 +899,7 @@ BEGIN
 	points[k].x := SHORT(ENTIER(RX[n])); points[k].y := SHORT(ENTIER(RY[n])); INC(k);
 END MakePoly;
 
-PROCEDURE SplineToPoly(c: Point; closed: BOOLEAN; VAR points : ARRAY OF WMGraphics.Point2d; VAR k: SIGNED32);
+PROCEDURE SplineToPoly*(c: Point; closed: BOOLEAN; VAR points : ARRAY OF WMGraphics.Point2d; VAR k: SIGNED32);
 TYPE
 	RealVect = ARRAY 256 OF FLOAT32;
 VAR
@@ -914,7 +936,7 @@ VAR
 			SolveTriDiag(a, b, c, n, d)
 		END NatSplineDerivates;
 
-	PROCEDURE ClSplineDerivates(VAR x, y, d: ARRAY OF FLOAT32; n: SIGNED32);
+	PROCEDURE ClSplineDerivates(VAR x, y, d: ARRAY OF FLOAT32; n: SIGNED32);(*! if closed & first[x,y]=last[x,y], the result is inconsistent*)
 		VAR i: SIGNED32; hn1, dn1, d1, d2: FLOAT32; a, b, c, u: RealVect;
 
 		PROCEDURE SolveTriDiag2(VAR a, b, c: ARRAY OF FLOAT32; n:SIGNED32; VAR y1, y2: ARRAY OF FLOAT32);
@@ -942,7 +964,11 @@ VAR
 		END SolveTriDiag2;
 
 	BEGIN  (* ClSplineDerivates *)
-		hn1 := 1.0/(x[n] - x[n-1]);
+		IF x[n]#x[n-1] THEN
+			hn1 := 1.0/(x[n] - x[n-1]);
+		ELSE (*PH - avoid division by zero*)
+			hn1:=1
+		END;
 		dn1 := (y[n] - y[n-1])*3.0*hn1*hn1;
 		IF x[2] # x[1] THEN
 			b[1] := 1.0/(x[2] - x[1]);
@@ -1004,12 +1030,12 @@ END SplineToPoly;
 
 
 (** Returns TRUE if mx, my is within gravity pixels from X, Y. *)
-PROCEDURE Invicinity(mx, my, X, Y: SIZE): BOOLEAN;
+PROCEDURE Invicinity*(mx, my, X, Y: SIZE): BOOLEAN;
 BEGIN RETURN (mx - X) * (mx - X) + (my - Y) * (my - Y) < gravity * gravity
 END Invicinity;
 
 (** Returns TRUE if mx, my is within gravity pixels of the line from X, Y to X1, Y1. *)
-PROCEDURE InLineVicinity(mx, my, X, Y, X1, Y1: SIZE): BOOLEAN;
+PROCEDURE InLineVicinity*(mx, my, X, Y, X1, Y1: SIZE): BOOLEAN;
 VAR  w, h, pw, ph, det,len : SIZE;
 
 	PROCEDURE Between(x, a, b: SIZE): BOOLEAN;
@@ -1034,7 +1060,7 @@ BEGIN
 	END
 END InLineVicinity;
 
-PROCEDURE Intersect(X, Y, x0,y0,x1,y1 : SIZE) : BOOLEAN;
+PROCEDURE Intersect*(X, Y, x0,y0,x1,y1 : SIZE) : BOOLEAN;
 BEGIN
 	IF ((Y >= y0) & (Y < y1)) OR ((Y >= y1) & (Y < y0)) THEN
 		IF y1 > y0 THEN RETURN x0 + (Y - y0) * (x1 -x0) DIV (y1 - y0) - X >= 0
@@ -1045,7 +1071,7 @@ BEGIN
 	END
 END Intersect;
 
-PROCEDURE Distance(x, y, x0, y0: SIZE): SIZE;
+PROCEDURE Distance*(x, y, x0, y0: SIZE): SIZE;
 VAR dx, dy: SIZE;
 BEGIN dx := x - x0; dy := y - y0;
 	RETURN ENTIER(Math.sqrt(dx * dx + dy * dy))

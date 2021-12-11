@@ -1504,7 +1504,7 @@ TYPE
 			VAR pc: SIZE;
 			BEGIN
 				IF size <= 0 THEN Error("invalid alignment size"); RETURN END;
-				pc := emitter.code.pc DIV 8; (* bytes *)
+				pc := emitter.code.pc;(* bytes *)
 				WHILE pc MOD size # 0 DO
 					emitter.code.PutByte(0);
 					INC(pc);

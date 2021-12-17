@@ -2438,6 +2438,9 @@ TYPE
 					binaryExpression.SetLeft(left);
 					binaryExpression.SetRight(right);
 					type := system.addressType;
+					IF IsPointerType(leftType) & IsPointerType(rightType) THEN
+						Error(binaryExpression.position,"incompatible operands");
+					END;
 				ELSIF (operator = Scanner.Equal) OR (operator = Scanner.Unequal) THEN
 					ConvertOperands(left, right);
 					binaryExpression.SetLeft(left);

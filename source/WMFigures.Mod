@@ -41,6 +41,7 @@ TYPE
 
 		oldx,oldy:SIZE;
 		PArray: WMProperties.PropertyArray; (* PArray#NIL !*)
+		lineCB*: PROCEDURE{DELEGATE} (canvas : WMGraphics.Canvas; y, x0, x1 : SIZE);
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -84,9 +85,12 @@ TYPE
 		END AddPoint;
 
 		(* x,y in Figure coordinates, which may change when adding new points etc. Remember that PointProperty is in (stable) parent coordinates*)
-		PROCEDURE MovePoint*(point: WMProperties.Property; fx, fy: SIZE);
+		PROCEDURE MovePoint*(point: WMProperties.Property; fx, fy: SIZE);(*move to new coordinate in Figure coordinates *)(*????*)
 		BEGIN
 			point(WMProperties.PointProperty).SetCoordinate(fx+bounds.GetLeft(), fy+bounds.GetTop());
+			
+			onChanged.Call(SELF);(*? informs clients. Might be placed at a different code location*)
+			
 		END MovePoint;
 
 		(* remove point coordinates are currently in figure coordinates, in contrast to AddPoint() *)
@@ -238,17 +242,22 @@ TYPE
 		(** Return if the line is hit at (x, y) in parent coordinates *)
 		PROCEDURE IsHit*(x, y: SIZE): BOOLEAN; (*Prototype*)
 		END IsHit;
+		
+		PROCEDURE Length*():REAL;
+		END Length;
+		
 
 		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
+			IF closed.Get() THEN INCL(state,Closed) ELSE EXCL(state,Closed) END;
+			
 			IF (property = color) THEN Invalidate;
 			ELSIF (property = width) THEN Invalidate;
 			ELSIF (property = clHover) THEN Invalidate;
-			ELSIF (property = closed) THEN IF closed.Get() THEN INCL(state,Closed) ELSE EXCL(state,Closed);  END; Invalidate;
 			ELSIF (property = filled) THEN IF filled.Get() THEN INCL(state,Filled) ELSE EXCL(state,Filled); END; Invalidate;
 			ELSIF (property = reshape) THEN IF reshape.Get() THEN INCL(state,Reshape) ELSE EXCL(state,Reshape); END; Invalidate;
 			ELSIF (property = arrow) THEN IF arrow.Get() THEN INCL(state,Arrow) ELSE EXCL(state,Arrow); END; Invalidate;
-			ELSIF (property IS WMProperties.PointProperty) OR (property=properties) THEN
+			ELSIF (property IS WMProperties.PointProperty) OR (property=properties) OR (property=closed) THEN
 				RecachePoints;
 				Normalize;
 				Resized;(*implied Invalidate*)
@@ -280,7 +289,7 @@ TYPE
 			Release;
 		END MoveDisplayPoints;
 
-		PROCEDURE Normalize;
+		PROCEDURE Normalize*;
 		VAR p:Point; oldrect, rect: WMRectangles.Rectangle; l,t,r,b, dx,dy:SIZE;
 		BEGIN
 			Acquire;
@@ -336,17 +345,13 @@ TYPE
 		PROCEDURE RecacheProperties*;
 		BEGIN (* called by sequencer -> hierarchy is locked, see WMVisualComponentSkeleton.Mod *)
 			RecacheProperties^;
-			RecachePoints;
 			IF closed.Get() THEN INCL(state,Closed) ELSE EXCL(state,Closed) END;
 			IF filled.Get() THEN INCL(state,Filled); ELSE EXCL(state, Filled) END;
 			IF reshape.Get() THEN INCL(state,Reshape) ELSE EXCL(state, Reshape) END;
 			IF arrow.Get() THEN INCL(state,Arrow) ELSE EXCL(state, Arrow) END;
-			(*RecacheProperties^;
-			RecachePoints;*)
-			IF ~(SELF IS Spline) THEN
-				Normalize;
-				Resized;(* implied Invalidate - that is redundant*)
-			END;
+			RecachePoints;
+			Normalize;
+			Resized;(* implied Invalidate - that is redundant*)
 		END RecacheProperties;
 
 		PROCEDURE RecachePoints*; (*build point list in parent coordinates*)
@@ -676,24 +681,19 @@ TYPE
 		VAR pp:WMProperties.PointProperty;
 		BEGIN
 			Initialize^;
+			Acquire;
 			RecachePoints;
-			IF nofPoints=0 THEN (* default *)
-				Acquire;
-				NEW(pp,NIL,Strings.NewString("Point0"),NIL); pp.SetCoordinate(5,20); properties.Add(pp); INC(nofPoints);
-				NEW(pp,NIL,Strings.NewString("Point1"),NIL); pp.SetCoordinate(20,0); properties.Add(pp); INC(nofPoints);
-				NEW(pp,NIL,Strings.NewString("Point2"),NIL); pp.SetCoordinate(20,20); properties.Add(pp); INC(nofPoints);
-				NEW(pp,NIL,Strings.NewString("Point3"),NIL); pp.SetCoordinate(30,30); properties.Add(pp); INC(nofPoints);
-				Release;
-				RecachePoints;
+			IF nofPoints=0 THEN (*if no points, then create some examples*)
+					AddPoint(0, 20); AddPoint(20, 0); AddPoint(20, 20); AddPoint(30, 30); 
+					RecachePoints;
 			END;
-			(*RecachePoints;*)
-			SplineToPoly(points, Closed IN state, pointArray, nSegments);
+			ASSERT(nofPoints#0, 200);
 			Normalize;
-			(*Initialize^;*)
+			Release;
 		END Initialize;
 
-			(* Is X, Y somewhere inside the polygon defined by p ? *) (*! to be implemented for pointarray*)
-		PROCEDURE Inside*(X, Y: SIZE): BOOLEAN;
+		(*	(* Is X, Y somewhere inside the polygon defined by p ? *) (*! to be implemented for pointarray*)
+		PROCEDURE Inside0*(X, Y: SIZE): BOOLEAN;
 		VAR c: SIGNED32; p,q: Point;
 		BEGIN
 			c := 0;
@@ -704,6 +704,24 @@ TYPE
 					p:=q; q:=q.next;
 				END;
 				IF (nofPoints > 1) & Intersect(X, Y, p.x, p.y, points.x, points.y) THEN INC(c) END;
+			END;
+			RETURN ODD(c);
+		END Inside0;*)
+
+		(* Is X, Y somewhere inside the polygon defined by p ? *)
+		PROCEDURE Inside*(X, Y: SIZE): BOOLEAN;
+		VAR c: SIGNED32; p,q: WMGraphics.Point2d;
+			i:SIZE;
+		BEGIN
+			c := 0;
+			IF nSegments>0 THEN
+				p:=pointArray[0];
+				FOR i:=1 TO nSegments-1 DO
+					q:=pointArray[i];
+					IF Intersect(X, Y, p.x, p.y, q.x, q.y) THEN INC(c) END;
+					p:=q; 
+				END;
+				IF (nSegments > 1) & Intersect(X, Y, p.x, p.y, points.x, points.y) THEN INC(c) END;
 			END;
 			RETURN ODD(c);
 		END Inside;
@@ -730,56 +748,19 @@ TYPE
 			RETURN FALSE
 		END IsHit;
 
-		(*PROCEDURE PropertyChanged*(sender, property : ANY);
-			BEGIN
-				IF (property=closed) THEN
-					IF closed.Get() THEN INCL(state,Closed) ELSE EXCL(state,Closed);  END;
-					RecachePoints;
-					SplineToPoly(points, Closed IN state, pointArray, nSegments);
-					Normalize;
-					Resized; (*implied Invalidate; *)
-				ELSIF (property=properties) OR (property IS WMProperties.PointProperty) THEN
-					RecachePoints;
-					SplineToPoly(points, Closed IN state, pointArray, nSegments);
-					Normalize;
-					Resized;
-					(*should call PropertyChanged^ in some cases here ?*)
-				ELSE
-					RecachePoints;
-					SplineToPoly(points, Closed IN state, pointArray, nSegments);
-					Normalize;
-					Resized;
-					PropertyChanged^(sender,property);
-				END;
-			END PropertyChanged;*)
-
-		PROCEDURE PropertyChanged*(sender, property : ANY);
-			BEGIN
-				IF (property IS WMProperties.PointProperty) OR (property=closed) OR (property=properties) THEN
-					RecacheProperties;
-					(*RecachePoints;*)(*implicit above*)
-					(*SplineToPoly(points, Closed IN state, pointArray, nSegments);
-					Normalize;
-					Resized;*)(* implied Invalidate - that is redundant*)
-				ELSE (*IF ~(property IS WMProperties.PointProperty) (* & ~(property=closed)*) THEN*)
-					PropertyChanged^(sender,property);
-				END;
-			END PropertyChanged;
-
-		PROCEDURE RecacheProperties*;
-		BEGIN (* called by sequencer -> hierarchy is locked, see WMVisualComponentSkeleton.Mod *)
-			RecacheProperties^;
-			SplineToPoly(points, Closed IN state, pointArray, nSegments);
-			Normalize;
-			Resized;(* implied Invalidate - that is redundant*)
-		END RecacheProperties;
-
-
-		PROCEDURE Normalize*;
-		VAR i:SIGNED32; oldrect, rect:WMRectangles.Rectangle; p:Point;
+		PROCEDURE RecachePoints*; (*build point list in parent coordinates*)
 		BEGIN
 			Acquire;
-			oldrect:=bounds.Get();
+			RecachePoints^;(*no normalization at this location => the following procedure yields results in parent coordinates, stored in PointProperties; see AddPoint()*)
+			SplineToPoly(points, Closed IN state, pointArray, nSegments);
+			Release;
+		END RecachePoints;
+
+		PROCEDURE Normalize*;
+		VAR i:SIGNED32; rect:WMRectangles.Rectangle; p:Point;
+		BEGIN (*if called after RecachePoints, point coordinates are in stable parent coordinates*)(*oldrect:=bounds.Get();*)
+			Acquire;
+			
 			rect.l := MAX(SIZE); rect.t := MAX(SIZE); rect.r := MIN(SIZE); rect.b := MIN(SIZE);
 			FOR i:=0 TO nSegments-1 DO
 				rect.l:=MIN(rect.l, pointArray[i].x-PointSize DIV 2 -1); rect.r:=MAX(rect.r, pointArray[i].x+PointSize DIV 2+1);  (*compute bounds*)
@@ -789,15 +770,16 @@ TYPE
 				pointArray[i].x:=pointArray[i].x-rect.l;
 				pointArray[i].y:=pointArray[i].y-rect.t;
 			END;
+			
 			p:=points;
 			WHILE p#NIL DO (* adapt display point coordinates to new bounds *)
 				p.x:=p.x-rect.l; p.y:=p.y-rect.t;
 				p:=p.next;
 			END;
+			
 			bounds.Set(rect);
 			Release;
 		END Normalize;
-
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR p: Point; col: WMGraphics.Color; 
@@ -805,7 +787,12 @@ TYPE
 			DrawBackground^(canvas);
 			IF mouseOver THEN col:=clHover.Get() ELSE col:=color.Get() END;
 			IF Filled IN state THEN
-				canvas.FillPolygonFlat(pointArray, nSegments, col, WMGraphics.ModeSrcOverDst);
+				IF lineCB=NIL THEN	
+					canvas.FillPolygonFlat(pointArray, nSegments, col, WMGraphics.ModeSrcOverDst);
+				ELSE 
+					canvas.FillPolygonCB(pointArray, nSegments, lineCB);
+					canvas.PolyLine(pointArray, nSegments, closed.Get(), col, WMGraphics.ModeSrcOverDst);
+				END;
 			ELSE
 				canvas.PolyLine(pointArray, nSegments, closed.Get(), col, WMGraphics.ModeSrcOverDst);
 			END;
@@ -813,6 +800,78 @@ TYPE
 				DrawArrow(canvas, p.previous, p)
 			END;
 		END DrawBackground;
+		
+		PROCEDURE Length*(): REAL;
+		VAR i,x,y,x0,y0:SIZE; 
+			l,length: REAL;
+			nSegments:SIZE;
+			isClosed:BOOLEAN;
+		BEGIN
+			Acquire;
+			RecachePoints;(*precondition*)
+			length:=0;
+			x0:=pointArray[nSegments-1].x;
+			y0:=pointArray[nSegments-1].y;
+			isClosed:=closed.Get();
+			FOR i:=0 TO nSegments-1 DO
+				x:=pointArray[i].x;
+				y:=pointArray[i].y;
+				IF isClosed OR (i>0) THEN
+					l:=Distance(x,y,x0,y0);
+					length:=length+l; 
+				END;
+				x0:=x; y0:=y;
+			END;
+			Release;
+			RETURN length
+		END Length;
+
+		
+		(*compute line statistics and integral. getter() yields intensity value at some location*)
+		PROCEDURE LineIntegral*(VAR length,sum:REAL; VAR count:SIZE; getter:PROCEDURE{DELEGATE}(x,y:SIZE):REAL): REAL;
+		VAR i,x,y,x0,y0,left,top:SIZE; 
+			intensity,integral,l: REAL;
+			(*nSegments:SIZE;*)
+			isClosed:BOOLEAN;
+		BEGIN
+			Acquire;
+			RecachePoints;(*precondition*)
+			SplineToPoly(points, Closed IN state, pointArray, nSegments);(*will be in parent coordinates*)
+			Normalize;(*will produce bounds and transform coordinates to relative to Figure *)
+			length:=0;
+			sum:=0;
+			count:=nSegments;
+			left:=bounds.GetLeft();
+			top:=bounds.GetTop();
+			x0:=left+pointArray[nSegments-1].x;
+			y0:=top+pointArray[nSegments-1].y;
+			isClosed:=closed.Get();
+			FOR i:=0 TO nSegments-1 DO
+				x:=left+pointArray[i].x;
+				y:=top+pointArray[i].y;
+				IF getter#NIL THEN 
+					intensity:=getter(x,y);
+					sum:=sum+intensity;
+				END;
+				IF isClosed OR (i>0) THEN
+					l:=Distance(x,y,x0,y0);
+					length:=length+l; 
+					integral:=integral+l*intensity;
+				END;
+				x0:=x; y0:=y;
+			END;
+			Release;
+			RETURN integral
+		END LineIntegral;
+		
+		
+		
+		(*PROCEDURE Dotted*(canvas : WMGraphics.Canvas);
+		BEGIN
+			canvas.FillPolygonCB(pointArray, nSegments, FillDotted);
+		END Dotted;
+		*)
+
 	END Spline;
 
 VAR
@@ -840,6 +899,14 @@ PROCEDURE arctan2(y,x: FLOAT32): FLOAT32; (*arctan in range 0..2pi*)
 		ELSE (*( x=0) & (y=0) *) RETURN 0 (*or RETURN NaN ?*)
 		END
 	END arctan2;
+	
+	PROCEDURE FillDotted* (canvas : WMGraphics.Canvas; y, x0, x1 : SIZE);
+	BEGIN
+		WHILE x0<=x1 DO
+			IF ODD(x0+y) THEN canvas.SetPixel(x0, y, WMGraphics.Red, WMGraphics.ModeSrcOverDst) END;
+			INC(x0);
+		END;
+	END FillDotted;
 
 (* start of Rege code *)
 
@@ -1127,7 +1194,7 @@ BEGIN
 	InitPrototypes;
 	Streams.OpenWriter(log, KernelLog.Send);
 END WMFigures.
-
+(*
 System.FreeDownTo WMFigures ~
 ----------------
 Example commands for interactive figures (left click for editing and moving; middle clicking for adding points, right-left interclick for deleting points).
@@ -1138,7 +1205,7 @@ ComponentViewer.Open WMStandardComponents.GenPanel ~
 
 ------------------------
 Example application for programmable figures:
-
+*)
 MODULE TestFigures;
 
 IMPORT WMFigures, WMWindowManager, WMGraphics, WMComponents, WMStandardComponents;
@@ -1162,7 +1229,7 @@ BEGIN
 	background.AddContent(l);
 
 	NEW(r); r.AddPoint(30,40); r.AddPoint(120,200);
-	background.AddContent(r)
+	background.AddContent(r);
 
 	NEW(c); c.AddPoint(100,100); c.AddPoint(150,150);
 	background.AddContent(c);
@@ -1170,6 +1237,7 @@ BEGIN
 	NEW(s); (*spline with default points*)
 	background.AddContent(s);
 	s.color.Set(WMGraphics.Blue);
+	s.lineCB:= WMFigures.FillDotted;
 
 	NEW(r); r.AddPoint(70,80); r.AddPoint(110,110);
 	r.reshape.Set(FALSE); (* non-reshapable *)

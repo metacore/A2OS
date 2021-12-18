@@ -978,7 +978,11 @@ END NewRect3D;
 			END SolveTriDiag2;
 
 		BEGIN  (* ClSplineDerivates *)
-			hn1 := 1.0/(x[n] - x[n-1]);
+			IF x[n]#x[n-1] THEN
+				hn1 := 1.0/(x[n] - x[n-1]);
+			ELSE
+				hn1:=1
+			END;
 			dn1 := (y[n] - y[n-1])*3.0*hn1*hn1;
 			IF x[2] # x[1] THEN
 				b[1] := 1.0/(x[2] - x[1]);

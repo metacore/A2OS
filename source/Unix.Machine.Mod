@@ -11,6 +11,9 @@ CONST
 	#ELSIF AMD64 THEN
 		Version = "A2 Gen. 64-bit, ";
 		DefaultObjectFileExtension* = ".GofUu";
+	#ELSIF ARM THEN
+		Version = "A2 Gen. 64-bit, ARM";
+		DefaultObjectFileExtension* = ".GofA";	
 	#END
 
 	Second* = 1000; (* frequency of ticks increments in Hz *)
@@ -293,8 +296,32 @@ VAR
 		SHR RCX, 2
 		CLD
 		REP STOSD
+	#ELSIF ARM THEN
+		LDR	R0, [FP, #filler]
+		LDR	R1, [FP, #size]
+		LDR	R3, [FP, #destAdr]
+		ADD	R4, R1, R3				; R4 = size + destAdr
+
+		AND	R5, R3, #3				; R5 := R3 MOD 4
+		CMP	R5, #0					; ASSERT(R5 = 0)
+		BEQ	CheckSize
+		SWI	#8
+
+	CheckSize:
+		AND	R5, R1, #3				; R5 := R1 MOD 4
+		CMP	R5, #0					; ASSERT(R5 = 0)
+		BEQ	Loop
+		SWI	#8
+
+	Loop:
+		CMP	R4, R3
+		BLS		Exit
+		STR	R0, [R3, #0]			; put(destAdr + counter, filler)
+		ADD	R3, R3, #4				; R3 := R3 + 4
+		B		Loop
+	Exit:	
 	#ELSE
-		unimpemented
+		unimplemented
 	#END
 	END Fill32;
 
@@ -330,6 +357,14 @@ CODE
 	POP RAX
 	LOCK
 	INC DWORD [RAX]
+#ELSIF ARM THEN
+		LDR	R0, [SP], #4
+	loop:
+		LDREX	R1, R0
+		ADD	R1, R1, #1
+		STREX	R2, R1, R0
+		CMP	R2, #0
+		BNE	loop
 #ELSE
 	unimplemented
 #END
@@ -346,6 +381,14 @@ CODE
 	POP RAX
 	LOCK
 	DEC DWORD [RAX]
+#ELSIF ARM THEN 
+	LDR	R0, [SP], #4
+loop:
+	LDREX	R1, R0
+	SUB	R1, R1, #1
+	STREX	R2, R1, R0
+	CMP	R2, #0
+	BNE	loop
 #ELSE
 	unimplemented
 #END
@@ -364,12 +407,23 @@ CODE
 	POP RAX
 	LOCK
 	ADD DWORD [RAX], EBX
+#ELSIF ARM THEN
+	LDR R3, [SP, #y]	; R3 := y
+	LDR R0, [SP, #x]	; R0 := ADR(x)
+loop:
+	LDREX R1, R0		; R1 := x
+	ADD R1, R1, R3	; increment x
+	STREX R2, R1, R0
+	CMP R2, #0
+	BNE loop			; if store failed, try again, else exit
+	ADD SP, SP, #8
 #ELSE
 	unimplemented
 #END
 END AtomicAdd;
 
 
+#IF I386 OR AM64 THEN
 (** Atomic EXCL. *)
 PROCEDURE AtomicExcl* (VAR s: SET; bit: SIGNED32);
 CODE
@@ -387,7 +441,7 @@ CODE
 	unimplemented
 #END
 END AtomicExcl;
-
+#END
 
 (** Atomic test-and-set. Set x = TRUE and return old value of x. *)
 PROCEDURE -AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
@@ -400,6 +454,21 @@ CODE
 	POP RBX
 	MOV AL, 1
 	XCHG [RBX], AL
+#ELSIF ARM THEN
+	LDR	R3, [SP, #x]			; R3 := ADDRESSOF(x)
+	MOV	R1, #0				; R1 := FALSE
+	MOV	R2, #1				; R2 := TRUE
+	ADD	SP, SP, #4				; pop variable from stack
+
+loop:
+	LDREXB	R0, R3					; load excl x
+	CMP	R0, R1
+	BNE	exit						; x # old -> exit
+	STREXB	R4, R2, R3				; x = old -> store excl new -> x
+	CMP	R4, #0
+	BNE	loop					; store exclusive failed: retry
+
+exit:
 #ELSE
 	unimplemented
 #END
@@ -418,6 +487,21 @@ CODE
 	POP RAX		; old
 	POP RCX		; address of x
 	LOCK CMPXCHG [RCX], EBX	; atomicly compare x with old and set it to new if equal
+#ELSIF ARM THEN 
+	LDR	R3, [SP, #x]			; R3 := ADDRESSOF(x)
+	LDR	R1, [SP, #old]			; R1 := old
+	LDR	R2, [SP, #new]			; R2 := new
+	ADD	SP, SP, #12				; pop variable from stack
+
+loop:
+	LDREX	R0, R3					; load excl x
+	CMP	R0, R1
+	BNE	exit						; x # old -> exit
+	STREX	R4, R2, R3				; x = old -> store excl new -> x
+	CMP	R4, #0
+	BNE	loop					; store exclusive failed: retry
+
+exit:
 #ELSE
 	unimplemented
 #END
@@ -430,6 +514,8 @@ CODE
 	PAUSE
 #ELSIF AMD64 THEN
 	PAUSE
+#ELSIF ARM THEN
+	MOV R0, R0
 #ELSE
 	unimplemented
 #END
@@ -442,6 +528,8 @@ CODE
 	MOV EAX, [EBP+4]
 #ELSIF AMD64 THEN
 	MOV RAX, [RBP + 8]
+#ELSIF ARM THEN 
+	MOV R0, PC
 #ELSE
 	unimplemented
 #END
@@ -456,6 +544,8 @@ CODE
 	RDTSC	; set EDX:EAX
 	SHL RDX, 32
 	OR RAX, RDX
+#ELSIF ARM THEN
+	MOV R0, #0
 #ELSE
 	unimplemented
 #END
@@ -547,6 +637,12 @@ END GetTimer;
 	#ELSIF AMD64 THEN
 		MOV EAX, [RBP+n]				; load n in eax
 		BSWAP EAX						; swap byte order
+	#ELSIF ARM THEN
+		LDR R0, [SP, #n] ; R0 := n
+		EOR R3, R0, R0, ROR #16
+		LSR R3, R3, #8
+		BIC R3, R3, #65280
+		EOR R0, R3, R0, ROR #8 ; result is returned in R0
 	#ELSE
 		unimplemented
 	#END
@@ -560,6 +656,7 @@ END GetTimer;
 	END TraceChar;
 
 
+	#IF I386 OR AMD64 THEN
 	(** CPU identification *)
 
 	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: SIGNED32;  VAR features1,features2: SET );
@@ -694,6 +791,7 @@ END GetTimer;
 	END SetupSSE2Ext;
 
 
+
 	(** -- Processor initialization -- *)
 	PROCEDURE -SetFCR( s: SET );
 	CODE
@@ -731,16 +829,31 @@ END GetTimer;
 		FNINIT
 	#ELSIF AMD64 THEN
 		FNINIT
+	#ELSIF ARM THEN
+		MRC p15, 0, R0, C1, C0, 2;
+		ORR R0, R0, #0x00f00000;
+		MCR p15, 0, R0, C1, C0, 2;
+		ISB
+		MOV R0, #0x40000000;
+		VMSR FPEXC, R0;
+
+		VMRS R0, FPSCR
+		BIC R0, R0, #0x0c00000 ; round to nearest as the default
+		; remark: if we put round to minus infinity as the default, we can spare quite some instructions in emission of ENTIER
+		VMSR FPSCR, R0;	
 	#ELSE
 		unimplemented
 	#END
 	END InitFPU;
 
+	
 	(** Setup FPU control word of current processor. *)
 	PROCEDURE SetupFPU*;
 	BEGIN
-		InitFPU;  SetFCR( fcr )
+		InitFPU;  
+		SetFCR( fcr )
 	END SetupFPU;
+	#END
 
 
 	(* Initialize locks. *)
@@ -912,10 +1025,13 @@ END GetTimer;
 		traceHeap := 1 IN Glue.debug;
 		InitConfig;
 		CPUSpeed;
+		#IF I386 OR AMD64 THEN
 		IF CpuIdSupported() THEN
 			CPUID( vendor, ver, features, features2 );	 SetupSSE2Ext
 		END;
 		fcr := (FCR() - {0,2,3,10,11}) + {0..5,8,9};	(* default FCR RC=00B *)
+		#END
+		TRACE("Init Machine Done");
 	END Init;
 
 	PROCEDURE {OPENING} Init0*;

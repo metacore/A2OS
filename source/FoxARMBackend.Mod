@@ -90,6 +90,7 @@ CONST
 	opSWI = InstructionSet.opSWI; opSWP = InstructionSet.opSWP;
 	opTEQ = InstructionSet.opTEQ; opTST = InstructionSet.opTST;
 	opUMLAL = InstructionSet.opUMLAL; opUMULL = InstructionSet.opUMULL;
+	opUDF = InstructionSet.opUDF;
 
 	(* builtin backend specific system instructions *)
 	GetSP = 0; SetSP = 1;
@@ -3346,8 +3347,10 @@ TYPE
 		PROCEDURE EmitTrap(CONST irInstruction: IntermediateCode.Instruction);
 		BEGIN
 			ASSERT(irInstruction.op1.mode = IntermediateCode.ModeNumber);
-
+			Emit1(opUDF, InstructionSet.NewImmediate(SIGNED32(irInstruction.op1.intValue))) (* software interrupt *)
+			(*
 			Emit1(opSWI, InstructionSet.NewImmediate(SIGNED32(irInstruction.op1.intValue))) (* software interrupt *)
+			*)
 		END EmitTrap;
 
 		PROCEDURE EmitCas(VAR irInstruction: IntermediateCode.Instruction);

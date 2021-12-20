@@ -159,7 +159,7 @@ VAR
 
 	PROCEDURE Trap( sig: SIGNED32;  mc: Unix.Mcontext);
 	VAR
-		pc, sp, bp: ADDRESS;
+		pc, sp, bp, instruction: ADDRESS;
 		trapno: SIGNED32;
 		process: Objects.Process;
 		handler: ExceptionHandler;
@@ -187,13 +187,27 @@ VAR
 		ELSE
 			w.String( "[Recursive Trap] " );
 		END;
+		#IF ARM THEN
+			IF sig = 4 THEN
+				instruction := S.GET32(mc.r_pc);
+				IF instruction DIV 0x10000 = 0xF000 THEN
+					trapno := instruction MOD 0x10 + instruction DIV 0x100 MOD 0x10000 * 0x10;
+					sig := 5;
+				END; 
+			END;
+		#ELSE
+			IF sig = 5 THEN 
+				S.GET( mc.r_sp, trapno );  
+			END;
+		#END; 
+		
 		CASE sig OF
 		| 1:		w.String( "1 (Hangup signal)" );
 		| 2:  	w.String( "2 (User interrupt)" );
 		| 3:		w.String( "3 (Quit signal)" );
 		| 4:  	w.String( "4 (Illegal instruction)" );
 		| 5:   	w.String( "5." );
-				S.GET( mc.r_sp, trapno );  w.Int( trapno, 0 );
+				w.Int( trapno, 0 );
 				CASE trapno OF
 				| 1:		w.String( "  (WITH guard failed)" )
 				| 2:		w.String( "  (CASE invalid)" )

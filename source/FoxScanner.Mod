@@ -1106,8 +1106,10 @@ TYPE
 						s := String; GetString(token, TRUE, FALSE, TRUE);
 				| SingleQuote:
 						s := Character; GetString(token, FALSE, FALSE, FALSE); token.character := token.string[0];
-						IF token.stringLength #2 THEN  (* stringlength = 1 for empty string '' *)
+						IF token.stringLength <2 THEN  (* stringlength = 1 for empty string '' *)
 							Error(Basic.IllegalCharacterValue)
+						ELSIF token.stringLength >2 THEN
+							s := String;
 						END;
 				| '\':     s := Backslash;  GetNextCharacter;
 						IF ch = DoubleQuote THEN s := String; GetString(token, FALSE, FALSE, TRUE) END;

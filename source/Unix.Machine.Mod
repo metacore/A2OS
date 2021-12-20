@@ -546,6 +546,7 @@ CODE
 	OR RAX, RDX
 #ELSIF ARM THEN
 	MOV R0, #0
+	MOV R1, #0
 #ELSE
 	unimplemented
 #END
@@ -935,7 +936,9 @@ END GetTimer;
 
 	PROCEDURE UpdateTicks*;
 	BEGIN
-		ticks := SHORT( (GetTimer() - timer0) DIV (mhz * 1000) );
+		IF mhz # 0 THEN
+			ticks := SHORT( (GetTimer() - timer0) DIV (mhz * 1000) );
+		END;
 	END UpdateTicks;
 
 

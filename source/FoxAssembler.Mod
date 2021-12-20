@@ -506,6 +506,7 @@ TYPE
 					(*! deal with fixups ? / enter fixup ? *)
 					RETURN TRUE;
 				ELSIF GetConstant(errorPosition, identifier,x) THEN RETURN TRUE
+				ELSIF GetNonConstant(errorPosition, identifier, x) THEN RETURN TRUE
 				ELSIF ~critical & (pass # MaxPasses) THEN
 					x.value := 0; x.type := ConstantInteger; RETURN TRUE
 				ELSE Error(pos,"undefined symbol"); RETURN FALSE
@@ -586,6 +587,8 @@ TYPE
 							x.value := x.value+y.value; x.valueR := x.value;
 						ELSIF (x.type = ConstantFloat) & (y.type = ConstantFloat) THEN
 							x.valueR := x.valueR + y.valueR;
+						ELSIF (x.type = Fixup) & (y.type IN ConstantIntegerOrOffset) THEN
+							x.value := x.value+y.value; x.valueR := x.value;
 						ELSE RETURN FALSE
 						END;
 					ELSE
@@ -593,6 +596,8 @@ TYPE
 							x.value := x.value-y.value; x.valueR := x.value;
 						ELSIF (x.type = ConstantFloat) & (y.type = ConstantFloat) THEN
 							x.valueR := x.valueR - y.valueR;
+						ELSIF (x.type = Fixup) & (y.type IN ConstantIntegerOrOffset) THEN
+							x.value := x.value-y.value; x.valueR := x.value;
 						ELSE RETURN FALSE
 						END;
 					END;
@@ -621,6 +626,7 @@ TYPE
 			ELSIF (ident="DW") OR (ident = "dw") THEN size := 16
 			ELSIF (ident="DD") OR (ident = "dd") THEN size := 32
 			ELSIF (ident="DQ") OR (ident = "dq") THEN size := 64
+			ELSIF (ident="ALIGN") OR (ident="align") THEN size := 0;
 			ELSIF (CAP(ident[0]) ="D") THEN
 				size := 0;i := 1;
 				WHILE Number(ident[i],nr) DO
@@ -647,47 +653,38 @@ TYPE
 							INC(i);
 						END;
 						NextToken;
-
-					ELSIF (token.symbol = Scanner.Identifier) & GetNonConstant(errorPosition,token.identifierString,result) THEN
-						IF (pass = MaxPasses) & (code.comments # NIL) THEN
-							code.comments.String(ident);
-							code.comments.String(" ");
-							code.comments.String(token.identifierString);
-							code.comments.Ln;
-							code.comments.Update
-						END;
-
-						(* if this is the last pass then enter the fixup to the generated code section *)
-						IF pass = MaxPasses THEN
-							result.fixup.SetFixupOffset(code.pc);
-							code.fixupList.AddFixup(result.fixup);
-							(* set fixup width *)
-							NEW(patterns, 1);
-							patterns[0].offset := 0; patterns[0].bits := size;
-							result.fixup.InitFixup(result.fixup.mode, result.fixup.offset, result.fixup.symbol, result.fixup.symbolOffset, result.fixup.displacement, 0, patterns);
-						END;
-
-						PutBitsIfLastPass(0,size);
-						NextToken;
-
 					ELSIF Expression(x,FALSE) THEN
-						IF x.type # ConstantInteger THEN Error(pos,"forbidden non-constant value") END;
-						IF (pass = MaxPasses) & (code.comments # NIL) THEN
-							code.comments.String(ident);
-							code.comments.String(" ");
-							(* code.comments.Int(x.value,1); *)
+						
+						IF ~(x.type IN ConstantIntegerOrOffset) & ~(x.type = Fixup) THEN Error(pos,"forbidden non-constant value") END;
+						IF (pass = MaxPasses) THEN
+							IF x.fixup # NIL THEN
+								x.fixup.SetFixupOffset(code.pc);
+								code.fixupList.AddFixup(x.fixup);
+								(* set fixup width *)
+								NEW(patterns, 1);
+								patterns[0].offset := 0; patterns[0].bits := size;
+								x.fixup.InitFixup(x.fixup.mode, x.fixup.offset, x.fixup.symbol, x.fixup.symbolOffset, x.fixup.displacement+x.value, 0, patterns);
+							END;	
+							IF (code.comments # NIL) THEN
+								code.comments.String(ident);
+								code.comments.String(" ");
+								(* code.comments.Int(x.value,1); *)
 
-							(* print number in hexadecimal form *)
-							code.comments.String("0");
-							code.comments.Hex(x.value, -(size DIV 4));
-							code.comments.String("H");
+								(* print number in hexadecimal form *)
+								code.comments.String("0");
+								code.comments.Hex(x.value, -(size DIV 4));
+								code.comments.String("H");
 
-							code.comments.Ln;
-							code.comments.Update
+								code.comments.Ln;
+								code.comments.Update
+							END;
 						END;
-
-						PutBitsIfLastPass(x.value,size);
-
+						
+						IF size = 0 THEN (* align *)
+							PutBitsIfLastPass(0,((-code.pc) MOD x.value) * 8);
+						ELSE
+							PutBitsIfLastPass(x.value,size);
+						END; 
 					ELSE Error(pos,"expected string or expression");
 					END;
 				UNTIL error OR ~ThisSymbol(Scanner.Comma);
@@ -723,11 +720,7 @@ TYPE
 			BEGIN
 				first := TRUE;
 				WHILE ~error & (token.symbol # Scanner.Ln) & (token.symbol # Scanner.Comma) DO
-					IF (token.symbol = Scanner.Identifier) & GetNonConstant(errorPosition,token.identifierString,result) THEN
-							D.String("(* non constant ");
-							D.String(token.identifierString); D.String("="); DumpResult(D.Log,result);
-							D.String("*)");
-					ELSIF (token.symbol = Scanner.Identifier) & GetConstant(errorPosition,token.identifierString,result) THEN
+					IF (token.symbol = Scanner.Identifier) & GetConstant(errorPosition,token.identifierString,result) THEN
 							D.String("(* constant ");
 							DumpResult(D.Log,result);
 							D.String("*)");
@@ -916,7 +909,7 @@ TYPE
 
 END FoxAssembler.
 
-System.Free FoxAssembler ~
+System.FreeDownTo FoxAssembler ~
 
 FoxAssembler.Test
 ;---------------- intermediate code -----------------

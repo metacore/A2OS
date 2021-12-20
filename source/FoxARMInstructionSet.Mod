@@ -282,7 +282,7 @@ CONST
 	FPSID* = 114; FPSCR* = 115; FPEXC* = 116;
 
 	(* register aliases *)
-	PC*= R15; LR*= R14; SP*= R13; FP*= R12; RESHI*= R1; RES*= R0; RESFS*= SR0; RESFD*= DR0;
+	PC*= R15; LR*= R14; SP*= R13; FP*= R11; AP*=R12; RESHI*= R1; RES*= R0; RESFS*= SR0; RESFD*= DR0;
 
 	NumberRegisters*= 117; (* the number of physical registers *)
 	NumberRegisterEntries*= 123; (* the number of register names *)
@@ -2065,10 +2065,10 @@ CONST
 		EnterRegister(R9, "R9");
 		EnterRegister(R10, "R10");
 		EnterRegister(R11, "R11");
-		EnterRegister(R12, "R12"); EnterRegister(R12, "FP");
-		EnterRegister(R13, "R13"); EnterRegister(R13, "SP");
-		EnterRegister(R14, "R14"); EnterRegister(R14, "LR");
-		EnterRegister(R15, "R15"); EnterRegister(R15, "PC");
+		EnterRegister(R12, "R12"); EnterRegister(FP, "FP");
+		EnterRegister(R13, "R13"); EnterRegister(SP, "SP");
+		EnterRegister(R14, "R14"); EnterRegister(LR, "LR");
+		EnterRegister(R15, "R15"); EnterRegister(PC, "PC");
 
 		EnterRegister(CR0, "C0");
 		EnterRegister(CR1, "C1");

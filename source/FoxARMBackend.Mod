@@ -369,10 +369,6 @@ TYPE
 			NEW(blocked);
 
 			(* reserve special purpose registers *)
-			toVirtual[InstructionSet.RES] := unusable; (* low part result register *)
-			toVirtual[InstructionSet.RESHI] := unusable; (* high part result register *)
-			toVirtual[InstructionSet.RESFS] := unusable; (* single precision floatin point result register *)
-			toVirtual[InstructionSet.RESFD] := unusable; (* single precision floatin point result register *)
 			toVirtual[InstructionSet.SP] := unusable; (* stack pointer *)
 			toVirtual[InstructionSet.FP] := unusable; (* frame pointer *)
 			toVirtual[InstructionSet.PC] := unusable; (* program counter *)
@@ -381,7 +377,7 @@ TYPE
 			toVirtual[InstructionSet.SPSR] := unusable; (* saved program state register *)
 
 			IF cooperative THEN
-				toVirtual[InstructionSet.R11] := unusable; (* current activity register *)
+				toVirtual[InstructionSet.AP] := unusable; (* current activity register *)
 			END;
 
 			(* disable coprocessor registers *)
@@ -472,23 +468,23 @@ TYPE
 				ASSERT(type.sizeInBits <= 32); (* integers of larger size have already been split *)
 
 				(* allocate a regular general purpose ARM register *)
-				FOR i := InstructionSet.R0 TO InstructionSet.R15 DO
+				FOR i := InstructionSet.R2 TO InstructionSet.R15 DO
 					IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END
 				END
 
 			ELSIF type.form = IntermediateCode.Float THEN
 				IF (type.sizeInBits = 32) & useFPU32 THEN
 					(* allocate a single precision VFP register *)
-					FOR i := InstructionSet.SR0 TO InstructionSet.SR31 DO
+					FOR i := InstructionSet.SR2 TO InstructionSet.SR31 DO
 						IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i; END;
 					END;
 				ELSIF (type.sizeInBits = 64) & (useFPU64)  THEN
-					FOR i := InstructionSet.DR0 TO InstructionSet.DR31 DO
+					FOR i := InstructionSet.DR2 TO InstructionSet.DR31 DO
 						IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END;
 					END;
 				ELSE
 						(* allocate a regular general purpose ARM register *)
-						FOR i := InstructionSet.R0 TO InstructionSet.R15 DO
+						FOR i := InstructionSet.R2 TO InstructionSet.R15 DO
 							IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END
 						END
 				END
@@ -1020,7 +1016,7 @@ TYPE
 			ELSIF virtualRegisterNumber = IntermediateCode.LR THEN
 				result := InstructionSet.LR
 			ELSIF virtualRegisterNumber = IntermediateCode.AP THEN
-				result := InstructionSet.R11
+				result := InstructionSet.AP
 			ELSE
 				ticket := virtualRegisters.Mapped(virtualRegisterNumber, part);
 				IF ticket = NIL THEN
@@ -1141,6 +1137,8 @@ TYPE
 			result: Operand;
 		BEGIN
 			ASSERT(irRegisterOperand.mode = IntermediateCode.ModeRegister);
+			
+			IF virtualRegisters.Mapped(irRegisterOperand.register, part) = NIL THEN TryAllocate(irRegisterOperand, part) END; (* create the mapping if not yet done *)
 
 			result := InstructionSet.NewRegister(PhysicalRegisterNumber(irRegisterOperand.register, part), None, None, 0);
 			result := RegisterAfterAppliedOffset(result, irRegisterOperand.offset, registerHint);
@@ -3497,6 +3495,8 @@ TYPE
 		useFPU32: BOOLEAN;
 		useFPU64: BOOLEAN;
 		initLocals: BOOLEAN;
+		cRegisters: ARRAY 4 OF SIGNED32;
+		intParameterIndex, floatParameterIndex: SIZE;
 
 		PROCEDURE & InitBackendARM;
 		BEGIN
@@ -3507,6 +3507,10 @@ TYPE
 			initLocals := TRUE;
 			SetHasLinkRegister;
 			SetName("ARM");
+			cRegisters[0] := InstructionSet.R0;
+			cRegisters[1] := InstructionSet.R1;
+			cRegisters[2] := InstructionSet.R2;
+			cRegisters[3] := InstructionSet.R3;
 		END InitBackendARM;
 
 		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
@@ -3675,6 +3679,39 @@ TYPE
 			END;
 			RETURN result
 		END SupportedImmediate;
+
+		PROCEDURE ResetParameterRegisters*;
+		BEGIN
+			intParameterIndex := 0;
+			floatParameterIndex := 0;
+		END ResetParameterRegisters;
+		
+		PROCEDURE GetParameterRegister*(callingConvention: SyntaxTree.CallingConvention;  type: IntermediateCode.Type; VAR register: INTEGER): BOOLEAN;
+		VAR index: INTEGER;
+		BEGIN
+			IF type.form IN IntermediateCode.Integer THEN
+				CASE callingConvention OF
+				SyntaxTree.CCallingConvention:
+					IF intParameterIndex >= 4 THEN register := -1; RETURN FALSE END;
+					index := cRegisters[intParameterIndex];
+				ELSE
+					register := -1; RETURN FALSE;
+				END;
+				INC (intParameterIndex);
+				register :=  index;
+				RETURN TRUE;
+			ELSIF type.form = IntermediateCode.Float THEN
+				CASE callingConvention OF
+					|SyntaxTree.CCallingConvention:
+						HALT(200);
+				ELSE
+					register := -1; RETURN FALSE;
+				END;
+				RETURN TRUE;
+			ELSE
+				HALT(100);
+			END;
+		END GetParameterRegister;
 
 		PROCEDURE GenerateBinary(module: Sections.Module; dump: Streams.Writer);
 		VAR

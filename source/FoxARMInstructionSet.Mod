@@ -152,8 +152,9 @@ CONST
 	opWFI* = 179;
 
 	opMOVW* = 180;
+	opUDF* = 181;
 
-	NumberMnemonics*= 181;
+	NumberMnemonics*= 182;
 
 	MaxOperands* = 6;
 
@@ -1162,7 +1163,7 @@ CONST
 					IF operand.mode # modeImmediate THEN
 						error := TRUE
 					END;
-					Unsigned(operand.immediate MOD 16,0,3); Unsigned(operand.immediate DIV 16,9,19);
+					Unsigned(operand.immediate MOD 16,0,3); Unsigned(operand.immediate DIV 16,8,19);
 				|encodingRotImm8:
 					IF operand.mode # modeImmediate THEN
 						error := TRUE
@@ -2373,6 +2374,7 @@ CONST
 		EnterMnemonic(opTST, "TST");
 		EnterMnemonic(opUMLAL, "UMLAL");
 		EnterMnemonic(opUMULL, "UMULL");
+		EnterMnemonic(opUDF, "UDF");
 
 		EnterMnemonic(opISB, "ISB");
 		EnterMnemonic(opLSL, "LSL");
@@ -2569,6 +2571,7 @@ CONST
 		EnterInstruction(opTST, {20, 24}, {20..24, 26, 27}, {flagCondition}, encodingR16, encodingAddressingMode1, None, None, None, None);
 		EnterInstruction(opUMLAL, {4, 7, 21, 23}, {4..7, 21..27}, {flagCondition, flagS}, encodingR12, encodingR16, encodingR0, encodingR8, None, None);
 		EnterInstruction(opUMULL, {4, 7, 23}, {4..7, 21..27}, {flagCondition, flagS}, encodingR12, encodingR16, encodingR0, encodingR8, None, None);
+		EnterInstruction(opUDF, {28..31}, {}, {}, encodingImm16, None, None, None, None, None);
 
 		EnterNEONInstruction(opMOVW, "XXXX 0011 0000 XXXX XXXX XXXX XXXX XXXX",{flagCondition}, encodingR12, encodingImm12a0imm4a16, None, None, None, None);
 		EnterNEONInstruction(opLDM, "XXXX 100X X101 XXXX 0XXX XXXX XXXX XXXX", {flagCondition, flagIA, flagDA, flagIB, flagDB, flagUserMode}, encodingR16, encodingRegisterList, None, None, None, None);

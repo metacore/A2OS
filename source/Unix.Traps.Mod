@@ -127,6 +127,30 @@ VAR
 			Register(w,"R14",mc.r_14);
 			Register(w,"R15",mc.r_15);
 			w.Ln;
+		#ELSIF ARM THEN
+			Register(w,"R0",mc.r_0);
+			Register(w,"R1",mc.r_1);
+			Register(w,"R2",mc.r_2);
+			Register(w,"R3",mc.r_3);
+			w.Ln;
+			Register(w,"R4",mc.r_4);
+			Register(w,"R5",mc.r_5);
+			Register(w,"R6",mc.r_6);
+			Register(w,"R7",mc.r_7);
+			w.Ln;
+			Register(w,"R8",mc.r_8);
+			Register(w,"R9",mc.r_9);
+			Register(w,"R10",mc.r_10);
+			Register(w,"FP",mc.r_bp);
+			w.Ln;
+			Register(w,"R12",mc.r_ip);
+			Register(w,"SP",mc.r_sp);
+			Register(w,"LR",mc.r_lr);
+			Register(w,"PC",mc.r_pc);
+			w.Ln;
+			Register(w,"cpsr",mc.cpsr);
+			Register(w,"fault",mc.fault_address);
+		
 		#ELSE
 			unimplemented
 		#END

@@ -288,7 +288,7 @@ TYPE
 	pid_t*		= SIGNED32;
 
 	Status* = RECORD
-			#IF I386 THEN
+			#IF I386 OR ARM THEN
 				dev-		: dev_t;
 				pad1		: INTEGER;
 				ino-		: ino_t;
@@ -431,6 +431,13 @@ TYPE
   				trapno-	: SIGNED64;
   				oldmask	: SIGNED64;
   				cr2			: SIGNED64;
+  			#ELSIF ARM THEN
+  				trapno-: ADDRESS;
+  				err-: ADDRESS;
+  				oldmask-: ADDRESS;
+  				r_0-, r_1-, r_2-, r_3-, r_4-, r_5-, r_6-, r_7-, r_8-, r_9-, r_10-, r_bp-, r_ip-, r_sp-, r_lr-, r_pc-: ADDRESS;
+  				cpsr-: ADDRESS;
+  				fault_address-: ADDRESS
   			#ELSE
   				unimplemented
   			#END
@@ -755,7 +762,7 @@ VAR
 		size: SIZE;
 		state: ARRAY 2048 OF CHAR;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		me := pthread_self();
+		me := pthread_self();		
 
 		pthread_getattr_np(me, ADDRESS OF attr);
 		pthread_attr_getstacksize (ADDRESS OF attr, ADDRESS OF size);
@@ -1149,6 +1156,11 @@ VAR
 		libraryPaths[4] := "/usr/lib64";
 		libraryPaths[5] := "/usr/lib";
 		noPaths := 6;
+#ELSIF ARM THEN
+		libraryPaths[0] := "/lib/arm-linux-gnueabihf/";
+		libraryPaths[1] := "/lib";
+		libraryPaths[2] := "/usr/lib";
+		noPaths := 3;
 #ELSE
 	=== error
 #END

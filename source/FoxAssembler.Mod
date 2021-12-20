@@ -663,7 +663,7 @@ TYPE
 								(* set fixup width *)
 								NEW(patterns, 1);
 								patterns[0].offset := 0; patterns[0].bits := size;
-								x.fixup.InitFixup(x.fixup.mode, x.fixup.offset, x.fixup.symbol, x.fixup.symbolOffset, x.fixup.displacement+x.value, 0, patterns);
+								x.fixup.InitFixup(x.fixup.mode, x.fixup.offset, x.fixup.symbol, x.fixup.symbolOffset, x.fixup.displacement+SIZE(x.value), 0, patterns);
 							END;	
 							IF (code.comments # NIL) THEN
 								code.comments.String(ident);
@@ -681,7 +681,7 @@ TYPE
 						END;
 						
 						IF size = 0 THEN (* align *)
-							PutBitsIfLastPass(0,((-code.pc) MOD x.value) * 8);
+							PutBitsIfLastPass(0,((-code.pc) MOD SIZE(x.value)) * 8);
 						ELSE
 							PutBitsIfLastPass(x.value,size);
 						END; 

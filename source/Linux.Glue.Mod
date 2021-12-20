@@ -6,7 +6,11 @@ MODULE Glue;
 IMPORT SYSTEM, Trace;
 
 CONST
-	base* = 08048000H;
+	#IF ARM THEN
+		base* = 10000H;
+	#ELSE
+		base* = 08048000H;
+	#END
 	debug* = {};
 VAR
 	last-: RECORD END; (* empty variable linked to end of kernel *)
@@ -28,11 +32,16 @@ VAR
 
 	PROCEDURE {OPENING} EntryPoint;
 	CODE
-	#IF I386 THEN
+	#IF I386 OR ARM THEN
 		; ELF header
 		DB 07FH, 'ELF', 1, 1, 1, 0
 		DD 0, 0
-		DW 02, 03
+		DW 02
+		#IF ARM THEN
+			DW 40
+		#ELSE
+			DW 03
+		#END
 		DD 01
 		DD entry + base; program entry point
 		DD elfheadersize
@@ -50,10 +59,15 @@ VAR
 		; program header
 		DD 1
 		DD 0
-		DD base;
-		DD base;
+		DD base
+		DD base
+		#IF ARM THEN
+		DD last - base; segment size (file)
+		DD last - base; segment size (memory)
+		#ELSE
 		DD @last - base; segment size (file)
 		DD @last - base; segment size (memory)
+		#END
 		DD 07
 		DD 1000H; alignment
 
@@ -91,8 +105,13 @@ VAR
 		dynamicsection_end:
 
 	 	dlsymrelocation:
+		#IF ARM THEN
+		DD dlsym
+		DB 02H ; relocation type 
+		#ELSE
 		DD @dlsym
-		DB 01H
+		DB 01H ; relocation type 
+		#END
 		DB 01H, 00H, 00H; index of the symbol
 		DD 0H
 		dlsymrelocation_end:
@@ -111,7 +130,7 @@ VAR
 
 		ALIGN 4
 		symboltablebegin:
-		DD	0;
+		DD	0
 		DD	0
 		DD	0
 		DB	0
@@ -127,7 +146,11 @@ VAR
 		DW	0
 
 		interpretername:
+		#IF ARM THEN
+		DB '/lib/ld-linux-armhf.so.3', 0
+		#ELSE
 		DB '/lib/ld-linux.so.2', 0
+		#END
 		interpretername_end:
 
 		ALIGN 4
@@ -238,7 +261,7 @@ VAR
 		ALIGN 8
 
 		entry:
-	#ELSE
+	#ELSE 
 		unimplemented
 	#END
 	END EntryPoint;
@@ -265,6 +288,12 @@ VAR
 		LEA RSI, [RBP + c]
 		MOV RDX, 1
 		SYSCALL
+	#ELSIF ARM THEN
+		ldr	r0, [fp, #+file]
+		add r1, fp, #c
+		mov	r2, #1
+		mov	r7, #4
+		swi	#0	; sys_write	
 	#ELSE
 		unimplemented
 	#END
@@ -292,6 +321,12 @@ VAR
 		Trace.Char := Char;
 
 		stackBottom := ADDRESSOF( i ) + 2*SIZEOF(ADDRESS);
+		
+		
+		TRACE(baseAdr, endAdr, stackBottom);
+		TRACE(argc, argv, environ);
+
+
 		ASSERT(dlsym # NIL);
 		Dlsym(0,"dlopen", ADDRESS OF dlopen);
 		ASSERT(dlopen # NIL);
@@ -332,7 +367,24 @@ VAR
 			SHL RAX, 3
 			ADD RAX, RSP
 			MOV [environ], RAX
-		#ELSE
+		#ELSIF ARM THEN
+			ldr r0, [sp, #0]
+			ldr r7, [pc, #Aargc-$-8]
+			str r0, [r7, #0]
+			add r1, sp, #4
+			ldr r7, [pc, #Aargv-$-8]
+			str r1, [r7, #0]
+			add r2, sp, #8
+;			lsl r0, r0, #2
+			add r2, r2, r0, LSL #2
+			ldr r7, [pc, #Aenv-$-8]
+			str r2, [r7, #0]
+			b cont
+			Aargc: 		DD argc
+			Aargv: 		DD argv
+			Aenv: 		DD environ ;
+			cont:
+	 #ELSE
 			unimplemented
 		#END
 		END;

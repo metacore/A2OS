@@ -1,5 +1,5 @@
 MODULE Dates;
-	IMPORT Clock;
+	IMPORT Clock, Strings;
 CONST 
 TYPE 
 	DateTime* = RECORD 
@@ -10,6 +10,7 @@ VAR
 	Days-: ARRAY 7 OF ARRAY 10 OF CHAR; 
 	NoDays: ARRAY 12 OF SIGNED16; 
 	ZeroDateUnix-, ZeroDateRFC868-, ZeroDateNTP-: DateTime; 
+	DateFormat*, TimeFormat*: ARRAY 32 OF CHAR; 
 
 	PROCEDURE ^ LeapYear*(year: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ NofDays*(year, month: SIGNED32): SIGNED32; 
@@ -27,5 +28,10 @@ VAR
 	PROCEDURE ^ AddHours*(VAR dt: DateTime; hours: SIGNED32); 
 	PROCEDURE ^ AddMinutes*(VAR dt: DateTime; minutes: SIGNED32); 
 	PROCEDURE ^ AddSeconds*(VAR dt: DateTime; seconds: SIGNED32); 
+	PROCEDURE ^ TimeToStr*(time: DateTime; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ StrToTime*(CONST str: ARRAY OF CHAR; VAR dt: DateTime); 
+	PROCEDURE ^ DateToStr*(date: DateTime; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ StrToDate*(CONST str: ARRAY OF CHAR; VAR dt: DateTime); 
+	PROCEDURE ^ FormatDateTime*(CONST format: ARRAY OF CHAR; dt: DateTime; VAR result: ARRAY OF CHAR); 
 BEGIN
 END Dates.

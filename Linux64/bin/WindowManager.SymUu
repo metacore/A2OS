@@ -127,7 +127,7 @@ TYPE
 		prevKeys: SET; 
 		inDoubleClick: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(t, s: SIGNED32); 
+		PROCEDURE ^  & Init*(t, s: SIGNED32; m: BOOLEAN); 
 		PROCEDURE ^ Handle*(VAR msg: Inputs.Message); 
 	END MouseObj; 
 
@@ -173,7 +173,7 @@ VAR
 	PROCEDURE ^ Bound(VAR x: SIZE; min, max: SIZE); 
 	PROCEDURE ^ ClipAtImage(VAR x: Rectangle; img: Raster.Image); 
 	PROCEDURE ^ FillSession(wm: WindowManager; bgColor: SIGNED32; noPointer: BOOLEAN); 
-	PROCEDURE ^ Replace*(color: SIGNED32; noPointer: BOOLEAN); 
+	PROCEDURE ^ Replace*(color: SIGNED32; noPointer, enableMMEmulation: BOOLEAN); 
 	PROCEDURE ^ InitCharMaps; 
 	PROCEDURE ^ CleanUp; 
 	PROCEDURE ^ Install*(context: Commands.Context); 

@@ -151,6 +151,7 @@ CONST
 	opTST = InstructionSet.opTST; 
 	opUMLAL = InstructionSet.opUMLAL; 
 	opUMULL = InstructionSet.opUMULL; 
+	opUDF = InstructionSet.opUDF; 
 	GetSP = 0; 
 	SetSP = 1; 
 	GetFP = 2; 
@@ -380,6 +381,8 @@ TYPE
 		useFPU32: BOOLEAN; 
 		useFPU64: BOOLEAN; 
 		initLocals: BOOLEAN; 
+		cRegisters: ARRAY 4 OF SIGNED32; 
+		intParameterIndex, floatParameterIndex: SIZE; 
 
 		PROCEDURE ^  & InitBackendARM; 
 		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System); 
@@ -387,6 +390,8 @@ TYPE
 		PROCEDURE ^ GetSystem*(): Global.System; 
 		PROCEDURE ^ SupportedInstruction*(CONST irInstruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ SupportedImmediate*(CONST irImmediateOperand: IntermediateCode.Operand): BOOLEAN; 
+		PROCEDURE ^ ResetParameterRegisters*; 
+		PROCEDURE ^ GetParameterRegister*(callingConvention: SyntaxTree.CallingConvention; type: IntermediateCode.Type; VAR register: INTEGER): BOOLEAN; 
 		PROCEDURE ^ GenerateBinary(module: Sections.Module; dump: Streams.Writer); 
 		PROCEDURE ^ ProcessIntermediateCodeModule*(intermediateCodeModule: Formats.GeneratedModule): Formats.GeneratedModule; 
 		PROCEDURE ^ DefineOptions*(options: Options.Options); 

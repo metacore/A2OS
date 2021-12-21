@@ -57,5 +57,6 @@ VAR
 	PROCEDURE ^ PowerDown*; 
 	PROCEDURE ^ CollectGarbage*(context: Commands.Context); 
 	PROCEDURE ^ Version*(context: Commands.Context); 
+	PROCEDURE ^ ShowTimeDifference*(t1, t2: Dates.DateTime; out: Streams.Writer); 
 BEGIN
 END System.

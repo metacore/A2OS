@@ -1,5 +1,5 @@
 MODULE BenchSyntaxHighlighter;
-	IMPORT Streams, Commands, Options, Dates, Strings, Files, Random, Texts, TextUtilities, SyntaxHighlighter;
+	IMPORT System, Streams, Commands, Options, Dates, Strings, Files, Random, Texts, TextUtilities, SyntaxHighlighter;
 CONST 
 	DefaultHighlighterName = \"Oberon"\; 
 	DefaultNofIterations = 1000; 

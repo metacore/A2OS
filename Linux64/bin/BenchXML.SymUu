@@ -1,5 +1,5 @@
 MODULE BenchXML;
-	IMPORT KernelLog, Streams, Modules, Commands, Options, Dates, Strings, Files, XML, XMLScanner, XMLParser;
+	IMPORT System, KernelLog, Streams, Modules, Commands, Options, Dates, Strings, Files, XML, XMLScanner, XMLParser;
 CONST 
 	DefaultNofTimes = 1000; 
 	DefaultNofWorkers = 1; 

@@ -110,7 +110,6 @@ VAR
 
 
 	END AtomicAdd; 
-	PROCEDURE ^ AtomicExcl*(VAR s: SET; bit: SIGNED32); 
 	PROCEDURE {Fingerprint(7521546277042004411)}  - AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
 	CODE
 

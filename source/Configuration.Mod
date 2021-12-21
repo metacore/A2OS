@@ -83,9 +83,6 @@ TYPE
 					END
 				END
 			END;
-			IF f = NIL THEN
-				KernelLog.String("Configuration file not found");
-			END;
 		END Open;
 
 		PROCEDURE GetSection*(CONST key : ARRAY OF CHAR) : XML.Element;

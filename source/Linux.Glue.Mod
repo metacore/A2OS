@@ -321,11 +321,6 @@ VAR
 		Trace.Char := Char;
 
 		stackBottom := ADDRESSOF( i ) + 2*SIZEOF(ADDRESS);
-		
-		
-		TRACE(baseAdr, endAdr, stackBottom);
-		TRACE(argc, argv, environ);
-
 
 		ASSERT(dlsym # NIL);
 		Dlsym(0,"dlopen", ADDRESS OF dlopen);

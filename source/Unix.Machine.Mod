@@ -1034,7 +1034,6 @@ END GetTimer;
 		END;
 		fcr := (FCR() - {0,2,3,10,11}) + {0..5,8,9};	(* default FCR RC=00B *)
 		#END
-		TRACE("Init Machine Done");
 	END Init;
 
 	PROCEDURE {OPENING} Init0*;

@@ -4701,7 +4701,7 @@ TYPE
 					END;
 				(* ---- HALT, SYSTEM.HALT ----- *)
 				ELSIF ((id = Global.Halt) OR (id = Global.systemHalt)) & CheckArity(1,1) THEN
-					IF CheckPositiveIntegerValue(parameter[0],i0,FALSE) THEN
+					IF CheckPositiveIntegerValue(parameter[0],i0,TRUE) THEN
 						(* modified: any integer parameter value is allowed, it is in the responsibility of the programmer to adhere to
 							rules imposed by the architecture / current runtime
 						*)

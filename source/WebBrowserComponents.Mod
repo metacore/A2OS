@@ -521,7 +521,7 @@ VAR i: SIZE;
 BEGIN
 	i := 0;
 	LOOP
-		IF name[i] < '.' THEN  name[i] := 0X  END;
+		IF name[i] < ' ' THEN  name[i] := 0X  END;
 		IF name[i] = 0X THEN  EXIT  END;
 		INC( i );
 		IF i >= LEN( name ) THEN  EXIT  END

@@ -99,12 +99,27 @@ VAR
 		RETURN 0
 	END ID;
 
+	#IF ARM THEN
+	PROCEDURE Syscall(nr: ADDRESS; p1, p2, p3: ADDRESS);
+	CODE
+		ldr r7, [fp, #nr]
+		ldr r0, [fp, #p1]
+		ldr r1, [fp, #p2]
+		ldr r2, [fp, #p3]
+		swi #0
+	END Syscall;
+	#END
+
 	(**
 	 * Flush Data Cache for the specified virtual address range. If len is negative, flushes the whole cache.
 	 * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
 	 * left empty on Intel architecture.
 	 *)
 	PROCEDURE FlushDCacheRange * (adr: ADDRESS; len: SIZE);
+	#IF ARM THEN
+	BEGIN
+		Syscall(0xF0002, adr, adr+len, 0 (*7*) ); (* 983042 = ARM cacheflush syscall *)
+	#END
 	END FlushDCacheRange;
 
 	(**

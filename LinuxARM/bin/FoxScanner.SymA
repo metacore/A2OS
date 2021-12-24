@@ -1,0 +1,261 @@
+MODULE FoxScanner;
+	IMPORT Streams, Strings, Diagnostics, Basic := FoxBasic, D := Debugging, Commands, StringPool;
+CONST 
+	Trace = FALSE; 
+	MaxIdentifierLength* = 128; 
+	MaxHexDigits* = 8; 
+	MaxHugeHexDigits* = 16; 
+	MaxRealExponent* = 38; 
+	MaxLongrealExponent* = 308; 
+	EOT* = 0X; 
+	LF* = 0AX; 
+	CR* = 0DX; 
+	TAB* = 9X; 
+	ESC* = 1BX; 
+	None* = 0; 
+	Equal* = 1; 
+	DotEqual* = 2; 
+	Unequal* = 3; 
+	DotUnequal* = 4; 
+	Less* = 5; 
+	DotLess* = 6; 
+	LessEqual* = 7; 
+	DotLessEqual* = 8; 
+	Greater* = 9; 
+	DotGreater* = 10; 
+	GreaterEqual* = 11; 
+	DotGreaterEqual* = 12; 
+	LessLessQ* = 13; 
+	GreaterGreaterQ* = 14; 
+	Questionmarks* = 15; 
+	ExclamationMarks* = 16; 
+	In* = 17; 
+	Is* = 18; 
+	Times* = 19; 
+	TimesTimes* = 20; 
+	DotTimes* = 21; 
+	PlusTimes* = 22; 
+	Slash* = 23; 
+	Backslash* = 24; 
+	DotSlash* = 25; 
+	Div* = 26; 
+	Mod* = 27; 
+	And* = 28; 
+	Or* = 29; 
+	Plus* = 30; 
+	Minus* = 31; 
+	Not* = 32; 
+	LeftParenthesis* = 33; 
+	LeftBracket* = 34; 
+	LeftBrace* = 35; 
+	Number* = 36; 
+	Character* = 37; 
+	String* = 38; 
+	Nil* = 39; 
+	Imag* = 40; 
+	True* = 41; 
+	False* = 42; 
+	Self* = 43; 
+	Result* = 44; 
+	New* = 45; 
+	Identifier* = 46; 
+	If* = 47; 
+	Case* = 48; 
+	While* = 49; 
+	Repeat* = 50; 
+	For* = 51; 
+	Loop* = 52; 
+	With* = 53; 
+	Exit* = 54; 
+	Await* = 55; 
+	Return* = 56; 
+	Ignore* = 57; 
+	Begin* = 58; 
+	Semicolon* = 59; 
+	Transpose* = 60; 
+	RightBrace* = 61; 
+	RightBracket* = 62; 
+	RightParenthesis* = 63; 
+	Questionmark* = 64; 
+	ExclamationMark* = 65; 
+	LessLess* = 66; 
+	GreaterGreater* = 67; 
+	Upto* = 68; 
+	Arrow* = 69; 
+	Period* = 70; 
+	Comma* = 71; 
+	Colon* = 72; 
+	Of* = 73; 
+	Then* = 74; 
+	Do* = 75; 
+	To* = 76; 
+	By* = 77; 
+	Becomes* = 78; 
+	Bar* = 79; 
+	End* = 80; 
+	Else* = 81; 
+	Elsif* = 82; 
+	Until* = 83; 
+	Finally* = 84; 
+	Code* = 85; 
+	Const* = 86; 
+	Type* = 87; 
+	Var* = 88; 
+	Out* = 89; 
+	Procedure* = 90; 
+	Operator* = 91; 
+	Import* = 92; 
+	Definition* = 93; 
+	Module* = 94; 
+	Cell* = 95; 
+	CellNet* = 96; 
+	Extern* = 97; 
+	Any* = 98; 
+	Array* = 99; 
+	Object* = 100; 
+	Record* = 101; 
+	Pointer* = 102; 
+	Enum* = 103; 
+	Port* = 104; 
+	Address* = 105; 
+	Size* = 106; 
+	Alias* = 107; 
+	Ln* = 108; 
+	PC* = 109; 
+	PCOffset* = 110; 
+	Shortint* = 111; 
+	Integer* = 112; 
+	Longint* = 113; 
+	Hugeint* = 114; 
+	Real* = 115; 
+	Longreal* = 116; 
+	Comment* = 117; 
+	EndOfText* = 118; 
+	Escape* = 119; 
+	SingleQuote = 27X; 
+	DoubleQuote* = 22X; 
+	Ellipsis = 7FX; 
+	Uppercase* = 0; 
+	Lowercase* = 1; 
+	Unknown* = 2; 
+TYPE 
+	StringType* = Strings.String; 
+
+	IdentifierType* = StringPool.Index; 
+
+	IdentifierString* = ARRAY (MaxIdentifierLength + 1) OF CHAR; 
+
+	SubType* = SIGNED8; 
+
+	Keyword* = ARRAY 32 OF CHAR; 
+
+	KeywordTable* = OBJECT (Basic.HashTableInt)
+	VAR 
+		table: POINTER TO ARRAY OF IdentifierType; 
+
+		PROCEDURE ^  & InitTable*(size: SIZE); 
+		PROCEDURE ^ SymbolByIdentifier*(identifier: IdentifierType): Symbol; 
+		PROCEDURE ^ SymbolByString*(CONST name: ARRAY OF CHAR): Symbol; 
+		PROCEDURE ^ IdentifierBySymbol*(symbol: Symbol; VAR identifier: IdentifierType); 
+		PROCEDURE ^ StringBySymbol*(symbol: Symbol; VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ PutString*(CONST name: ARRAY OF CHAR; symbol: Symbol); 
+	END KeywordTable; 
+
+	Symbol* = SIGNED32; 
+
+	Position* = Basic.Position; 
+
+	Token* = RECORD 
+		position*: Position; 
+		symbol*: Symbol; 
+		identifier*: IdentifierType; 
+		identifierString*: IdentifierString; 
+		string*: StringType; 
+		stringLength*: SIZE; 
+		numberType*: SubType; 
+		integer*: SIGNED64; 
+		character*: CHAR; 
+		real*: FLOAT64; 
+	END; 
+
+	StringMaker* = OBJECT 
+	VAR 
+		length-: SIZE; 
+		data: StringType; 
+
+		PROCEDURE ^  & Init*(initialSize: SIZE); 
+		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Shorten*(n: SIZE); 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ GetWriter*(): Streams.Writer; 
+		PROCEDURE ^ GetReader*(): Streams.Reader; 
+		PROCEDURE ^ GetString*(VAR len: SIZE): StringType; 
+		PROCEDURE ^ GetStringCopy*(VAR len: SIZE): StringType; 
+	END StringMaker; 
+
+	Scanner* = OBJECT 
+	VAR 
+		source-: StringType; 
+		reader-: Streams.Reader; 
+		diagnostics: Diagnostics.Diagnostics; 
+		ch-: CHAR; 
+		position-: Position; 
+		error-: BOOLEAN; 
+		firstIdentifier: BOOLEAN; 
+		case-: SIGNED32; 
+		stringWriter: Streams.Writer; 
+		stringMaker: StringMaker; 
+		useLineNumbers*: BOOLEAN; 
+
+		PROCEDURE ^  & InitializeScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; pos: Position; diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^ ResetCase*; 
+		PROCEDURE ^ SetCase*(c: SIGNED32); 
+		PROCEDURE ^ ErrorS(CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(code: SIGNED16); 
+		PROCEDURE ^ GetNextCharacter*; 
+		PROCEDURE ^ ConsumeStringUntil(CONST endString: ARRAY OF CHAR; useControl: BOOLEAN); 
+		PROCEDURE ^ GetEscapedString(VAR token: Token); 
+		PROCEDURE ^ GetString(VAR token: Token; multiLine, multiString, useControl: BOOLEAN); 
+		PROCEDURE ^ GetIdentifier(VAR token: Token); 
+		PROCEDURE ^ GetNumber(VAR token: Token): Symbol; 
+		PROCEDURE ^ ReadComment(VAR token: Token); 
+		PROCEDURE ^ SkipToEndOfCode*(VAR startPos, endPos: Streams.Position; VAR token: Token): Symbol; 
+		PROCEDURE ^ SkipBlanks; 
+		PROCEDURE ^ GetNextToken*(VAR token: Token): BOOLEAN; 
+		PROCEDURE ^ ResetError*; 
+		PROCEDURE ^ ResetErrorDiagnostics*(VAR diagnostics: Diagnostics.Diagnostics); 
+	END Scanner; 
+
+	Context* = RECORD 
+		position: Position; 
+		readerPosition: Streams.Position; 
+		ch: CHAR; 
+	END; 
+
+	AssemblerScanner* = OBJECT (Scanner)
+	VAR 
+		startContext-: Context; 
+
+		PROCEDURE ^  & InitAssemblerScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: Position; diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^ GetContext*(VAR context: Context); 
+		PROCEDURE ^ SetContext*(CONST context: Context); 
+		PROCEDURE ^ SkipToEndOfLine*; 
+		PROCEDURE ^ GetIdentifier(VAR token: Token); 
+		PROCEDURE ^ GetNextToken*(VAR token: Token): BOOLEAN; 
+	END AssemblerScanner; 
+VAR 
+	reservedCharacter: ARRAY 256 OF BOOLEAN; 
+	symbols-: ARRAY (EndOfText + 1) OF Keyword; 
+	keywordsLower, keywordsUpper: KeywordTable; 
+
+	PROCEDURE ^ NewScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: Streams.Position; diagnostics: Diagnostics.Diagnostics): Scanner; 
+	PROCEDURE ^ NewAssemblerScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: Streams.Position; diagnostics: Diagnostics.Diagnostics): AssemblerScanner; 
+	PROCEDURE ^ TokenToString*(CONST token: Token; case: SIGNED32; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ PrintToken*(w: Streams.Writer; CONST token: Token); 
+	PROCEDURE ^ InitReservedCharacters; 
+	PROCEDURE ^ GetKeyword*(case: INTEGER; symbol: Symbol; VAR identifier: IdentifierType); 
+	PROCEDURE ^ InitSymbols; 
+	PROCEDURE ^ InitKeywords; 
+	PROCEDURE ^ ReportKeywords*(context: Commands.Context); 
+BEGIN
+END FoxScanner.

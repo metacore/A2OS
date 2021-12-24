@@ -1,0 +1,243 @@
+MODULE PDF;
+	IMPORT Streams, Strings, Files, WMRectangles, WMGraphics, DynamicStrings, UTF8Strings;
+CONST 
+	FontTimes = 0; 
+	FontHelvetica = 1; 
+	FontCourier = 2; 
+	FontArial = 3; 
+	PageA0* = 1; 
+	PageA1* = 2; 
+	PageA2* = 3; 
+	PageA3* = 4; 
+	PageA4* = 5; 
+	PageA5* = 6; 
+	PageA6* = 7; 
+	PageA7* = 8; 
+	Unitmm* = 1; 
+	Unitmm10* = 2; 
+	Unitmm100* = 3; 
+TYPE 
+	PDFObject = OBJECT 
+	VAR 
+		context: Document; 
+
+		PROCEDURE ^  & Init*(context: Document); 
+		PROCEDURE ^ Write(w: Streams.Writer); 
+	END PDFObject; 
+
+	PDFObjArray = POINTER TO ARRAY OF PDFObject; 
+
+	PDFObjList = OBJECT 
+	VAR 
+		nof: SIGNED32; 
+		data: PDFObjArray; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Add(o: PDFObject); 
+	END PDFObjList; 
+
+	Int = OBJECT (PDFObject)
+	VAR 
+		val: SIGNED32; 
+
+		PROCEDURE ^ Write(w: Streams.Writer); 
+	END Int; 
+
+	Real = OBJECT (PDFObject)
+	VAR 
+		val: FLOAT32; 
+
+		PROCEDURE ^ Write(w: Streams.Writer); 
+	END Real; 
+
+	String = OBJECT (PDFObject)
+	VAR 
+		data: Strings.String; 
+
+		PROCEDURE ^ Write(w: Streams.Writer); 
+	END String; 
+
+	Stream = OBJECT (PDFObject)
+	VAR 
+		length: SIGNED32; 
+		data: Strings.String; 
+
+		PROCEDURE ^  & Init*(context: Document); 
+		PROCEDURE ^ Add(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ GetWriter(): Streams.Writer; 
+		PROCEDURE ^ Write(w: Streams.Writer); 
+	END Stream; 
+
+	Name = OBJECT (PDFObject)
+	VAR 
+		s: Strings.String; 
+
+		PROCEDURE ^ Write(w: Streams.Writer); 
+	END Name; 
+
+	DictionaryEntry = RECORD 
+		key: Name; 
+		data: PDFObject; 
+	END; 
+
+	DictionaryList = POINTER TO ARRAY OF DictionaryEntry; 
+
+	Dictionary = OBJECT (PDFObject)
+	VAR 
+		data: DictionaryList; 
+		nofData: SIGNED32; 
+
+		PROCEDURE ^  & Init*(context: Document); 
+		PROCEDURE ^ Add(key: Name; obj: PDFObject); 
+		PROCEDURE ^ GetObject(key: Name): PDFObject; 
+		PROCEDURE ^ Write(w: Streams.Writer); 
+	END Dictionary; 
+
+	Array = OBJECT (PDFObject)
+	VAR 
+		content: PDFObjList; 
+
+		PROCEDURE ^  & Init*(context: Document); 
+		PROCEDURE ^ Add(content: PDFObject); 
+		PROCEDURE ^ Write(w: Streams.Writer); 
+		PROCEDURE ^ Get(i: SIGNED32): PDFObject; 
+	END Array; 
+
+	Object = OBJECT (PDFObject)
+	VAR 
+		id, generation: SIGNED32; 
+		filepos: SIGNED32; 
+		content: PDFObjList; 
+		next: Object; 
+
+		PROCEDURE ^  & Init*(context: Document); 
+		PROCEDURE ^ AddContent(content: PDFObject); 
+		PROCEDURE ^ WriteContent(w: Streams.Writer); 
+		PROCEDURE ^ Write(w: Streams.Writer); 
+	END Object; 
+
+	PageNode = OBJECT (Object)
+	VAR 
+		dict: Dictionary; 
+		kids: Array; 
+		count: Int; 
+
+		PROCEDURE ^  & Init*(context: Document); 
+		PROCEDURE ^ AddPage(page: Page); 
+	END PageNode; 
+
+	Font = OBJECT (Object)
+	VAR 
+		dict: Dictionary; 
+		name: Name; 
+		type: SIGNED32; 
+		style: SET; 
+		next: Font; 
+
+		PROCEDURE ^  & New*(context: Document; type: SIGNED32; style: SET); 
+		PROCEDURE ^ SetName(n: ARRAY OF CHAR); 
+		PROCEDURE ^ SetStandard(type: SIGNED32; style: SET); 
+	END Font; 
+
+	Page = OBJECT (Object)
+	VAR 
+		dict: Dictionary; 
+		mediaBox: Array; 
+		procSet: Array; 
+		resources, fonts: Dictionary; 
+
+		PROCEDURE ^  & Init*(context: Document); 
+		PROCEDURE ^ SetPaper(paper: SIGNED32; landscape: BOOLEAN); 
+		PROCEDURE ^ SetExtents(x, y, w, h: FLOAT32); 
+		PROCEDURE ^ GetExtents(VAR x, y, w, h: FLOAT32); 
+		PROCEDURE ^ GetFont(type: SIGNED32; style: SET): Font; 
+		PROCEDURE ^ SetContent(content: Object); 
+	END Page; 
+
+	NameList = POINTER TO ARRAY OF Name; 
+
+	Document = OBJECT 
+	VAR 
+		version: ARRAY 64 OF CHAR; 
+		nofObjects: SIGNED32; 
+		firstObj, lastObj: Object; 
+		catalog, infoObj: Object; 
+		infoDict: Dictionary; 
+		rootPages: PageNode; 
+		pageDict: Dictionary; 
+		defaultProcSet: Object; 
+		names: NameList; 
+		nofNames: SIGNED32; 
+		fonts: Font; 
+		nofFonts: SIGNED32; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetDefaultProcSet(): Object; 
+		PROCEDURE ^ RegisterObj(obj: Object); 
+		PROCEDURE ^ NewObject(): Object; 
+		PROCEDURE ^ NewPageNode(root: BOOLEAN): PageNode; 
+		PROCEDURE ^ NewArray(): Array; 
+		PROCEDURE ^ NewDictionary(): Dictionary; 
+		PROCEDURE ^ NewInt(val: SIGNED32): Int; 
+		PROCEDURE ^ NewReal(val: FLOAT32): Real; 
+		PROCEDURE ^ NewString(str: ARRAY OF CHAR): String; 
+		PROCEDURE ^ NewPage(): Page; 
+		PROCEDURE ^ GetFont(type: SIGNED32; style: SET): Font; 
+		PROCEDURE ^ NewName(name: ARRAY OF CHAR): Name; 
+		PROCEDURE ^ WriteLZInt(w: Streams.Writer; val, digits: SIGNED32); 
+		PROCEDURE ^ Write(w: Streams.Writer); 
+	END Document; 
+
+	PDFCanvas* = OBJECT (WMGraphics.Canvas)
+	VAR 
+		d: Document; 
+		pc: PDFCreator; 
+		p: Page; 
+		s: Stream; 
+		c: Object; 
+		w: Streams.Writer; 
+		font: Font; 
+		next: PDFCanvas; 
+		prl, prt, prr, prb, scale: FLOAT32; 
+		colrg, colRG: WMGraphics.Color; 
+		fSize: FLOAT32; 
+		xfont: Font; 
+
+		PROCEDURE ^  & Init*(pc: PDFCreator; pageFormat: SIGNED32; landscape: BOOLEAN; unit: SIGNED32); 
+		PROCEDURE ^ Transform(x, y: SIZE; VAR rx, ry: FLOAT32); 
+		PROCEDURE ^ WriteTrafoCoord(x, y: SIZE); 
+		PROCEDURE ^ SetColor*(col: WMGraphics.Color); 
+		PROCEDURE ^ SetColrg(col: WMGraphics.Color); 
+		PROCEDURE ^ SetColRG(col: WMGraphics.Color); 
+		PROCEDURE ^ Fill*(r: WMRectangles.Rectangle; col: WMGraphics.Color; mode: SIGNED32); 
+		PROCEDURE ^ GetPDFFont(f: WMGraphics.Font): Font; 
+		PROCEDURE ^ PDFSetFont*(name: ARRAY OF CHAR; size: SIGNED32; style: SET); 
+		PROCEDURE ^ DrawString*(x, y: SIZE; CONST text: ARRAY OF CHAR); 
+		PROCEDURE ^ DrawStringMultiLine*(x, y, width, height: SIGNED32; resizeHeight: BOOLEAN; CONST stext: ARRAY OF CHAR; VAR actualHeight: SIZE); 
+		PROCEDURE ^ DrawStringSingleLine*(x, y, width, align: SIGNED32; stext: ARRAY OF CHAR); 
+		PROCEDURE ^ PDFSetLineWidth*(width: FLOAT32); 
+		PROCEDURE ^ PDFSetLineJoin*(param: SIGNED16); 
+		PROCEDURE ^ PolyLine*(CONST points: ARRAY OF WMGraphics.Point2d; nofPoints: SIZE; closed: BOOLEAN; color: WMGraphics.Color; mode: INTEGER); 
+		PROCEDURE ^ FillPoly*(CONST points: ARRAY OF WMGraphics.Point2d; nofPoints: SIGNED32; color: WMGraphics.Color; mode: SIGNED32); 
+		PROCEDURE ^ Line*(x0, y0, x1, y1: SIZE; color: WMGraphics.Color; mode: SIGNED32); 
+		PROCEDURE ^ Close; 
+	END PDFCanvas; 
+
+	PDFCreator* = OBJECT 
+	VAR 
+		d: Document; 
+		closed: BOOLEAN; 
+		pages: PDFCanvas; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ NewPage*(pageFormat: SIGNED32; landscape: BOOLEAN; unit: SIGNED32): PDFCanvas; 
+		PROCEDURE ^ Write*(w: Streams.Writer); 
+		PROCEDURE ^ Store*(filename: ARRAY OF CHAR); 
+	END PDFCreator; 
+
+	PROCEDURE ^ WriteReal(w: Streams.Writer; val: FLOAT32); 
+	PROCEDURE ^ WritePDFString(w: Streams.Writer; CONST data: ARRAY OF CHAR); 
+	PROCEDURE ^ WritePDFStringPos(w: Streams.Writer; CONST data: ARRAY OF CHAR; from, to: SIZE); 
+	PROCEDURE ^ GetCharSpacings(f: WMGraphics.Font; VAR text: ARRAY OF CHAR; i: SIZE; VAR g: WMGraphics.GlyphSpacings): BOOLEAN; 
+BEGIN
+END PDF.

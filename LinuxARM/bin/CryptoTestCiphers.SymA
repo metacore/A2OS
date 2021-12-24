@@ -1,0 +1,25 @@
+MODULE CryptoTestCiphers;
+	IMPORT U := CryptoUtils, Ciphers := CryptoCiphers, Kernel, Commands, Log := KernelLog;
+CONST 
+
+	PROCEDURE ^ Ecb1*(c: Commands.Context); 
+	PROCEDURE ^ Cbc1*(c: Commands.Context); 
+	PROCEDURE ^ Ctr1*(c: Commands.Context); 
+	PROCEDURE ^ Ecb2(c: Commands.Context; CONST modname, input, output, key: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
+	PROCEDURE ^ Cbc2(c: Commands.Context; CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
+	PROCEDURE ^ DecryptCbc2(c: Commands.Context; CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
+	PROCEDURE ^ Ctr2(c: Commands.Context; CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32); 
+	PROCEDURE ^ MeasureTime*(c: Commands.Context); 
+	PROCEDURE ^ DesEcb2*(c: Commands.Context); 
+	PROCEDURE ^ Des3Ecb2*(c: Commands.Context); 
+	PROCEDURE ^ IdeaEcb2*(c: Commands.Context); 
+	PROCEDURE ^ AesEcb2*(c: Commands.Context); 
+	PROCEDURE ^ Arc4Ecb2*(c: Commands.Context); 
+	PROCEDURE ^ CastEcb2*(c: Commands.Context); 
+	PROCEDURE ^ DesCbc2*(c: Commands.Context); 
+	PROCEDURE ^ IdeaCbc2*(c: Commands.Context); 
+	PROCEDURE ^ AesCbc2*(c: Commands.Context); 
+	PROCEDURE ^ AesCtr2*(c: Commands.Context); 
+	PROCEDURE ^ CbcRandom*(c: Commands.Context); 
+BEGIN
+END CryptoTestCiphers.

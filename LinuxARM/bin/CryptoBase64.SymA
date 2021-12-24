@@ -1,0 +1,13 @@
+MODULE CryptoBase64;
+	IMPORT Streams;
+VAR 
+	etab: ARRAY 64 OF CHAR; 
+	dtab: ARRAY 128 OF SIGNED16; 
+
+	PROCEDURE ^ Encode*(CONST image: ARRAY OF CHAR; len: SIZE; VAR b64: ARRAY OF CHAR); 
+	PROCEDURE ^ Decode*(CONST b64: ARRAY OF CHAR; VAR image: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ EncodeStream*(CONST image: ARRAY OF CHAR; len: SIGNED32; w: Streams.Writer); 
+	PROCEDURE ^ DecodeStream*(r: Streams.Reader; VAR image: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ InitTables; 
+BEGIN
+END CryptoBase64.

@@ -1,0 +1,61 @@
+MODULE Inflate;
+	IMPORT SYSTEM, Streams;
+CONST 
+	Error = 9999; 
+	DefaultReaderSize = 4096; 
+	WindowSize = (32 * 1024); 
+TYPE 
+	Tree = RECORD 
+		maxbits, len: SIGNED32; 
+		code: POINTER TO ARRAY OF RECORD 
+			code, len: SIGNED32; 
+		END; 
+		blcount, nextcode: POINTER TO ARRAY OF SIGNED32; 
+	END; 
+
+	Window = RECORD 
+		data: ARRAY WindowSize OF CHAR; 
+		in, out, size: SIZE; 
+	END; 
+
+	Reader* = OBJECT {EXCLUSIVE} (Streams.Reader)
+	TYPE 
+		; 
+	VAR 
+		input: Streams.Reader; 
+		bits, nbits: SIGNED32; 
+		buffer: RECORD 
+			data: ARRAY DefaultReaderSize OF CHAR; 
+			size: SIZE; 
+		END; 
+		eof: BOOLEAN; 
+
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^  & Init*(input: Streams.Reader); 
+		PROCEDURE ^ ReadBits(nbits: SIGNED32; VAR bits: SIGNED32); 
+		PROCEDURE ^ SwapBits(VAR bits: SIGNED32; n: SIGNED32); 
+		PROCEDURE ^ BuildTree(VAR T: Tree; VAR ncode: ARRAY OF SIGNED32; ncodes, maxbits: SIGNED32); 
+		PROCEDURE ^ ReadCode(VAR T: Tree; VAR code: SIGNED32); 
+		PROCEDURE ^ DynamicHuffman(VAR Temp, litT, distT: Tree); 
+		PROCEDURE ^ FixedHuffman(VAR litT, distT: Tree); 
+		PROCEDURE ^ CopyData(VAR win: Window); 
+		PROCEDURE ^ Inflate; 
+	BEGIN{ACTIVE} 
+	END Reader; 
+
+	; 
+
+	; 
+VAR 
+	clenTab: ARRAY 19 OF SIGNED32; 
+	lenTab: ARRAY ((285 - 257) + 1) OF RECORD 
+		base, extra: SIGNED32; 
+	END; 
+	distTab: ARRAY ((29 - 0) + 1) OF RECORD 
+		base, extra: SIGNED32; 
+	END; 
+
+	PROCEDURE ^ OpenReader*(VAR R: Reader; input: Streams.Reader); 
+	PROCEDURE ^ Init; 
+BEGIN
+END Inflate.

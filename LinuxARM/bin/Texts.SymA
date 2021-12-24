@@ -1,0 +1,298 @@
+MODULE Texts;
+	IMPORT KernelLog, Streams, Kernel, WMEvents, Locks, Strings, FP1616, UTF8Strings, XML, XMLParser, XMLScanner, XMLObjects, Files, Configuration;
+CONST 
+	OpInsert* = 0; 
+	OpDelete* = 1; 
+	OpAttributes* = 2; 
+	OpMulti* = 3; 
+	NewLineChar* = 10; 
+	TabChar* = 9; 
+	SpaceChar* = 32; 
+	ObjectChar* =  -1; 
+	LabelChar* =  -2; 
+	UsePieceTable = TRUE; 
+	TraceHard = FALSE; 
+	HLOver* = 0; 
+	HLUnder* = 1; 
+	HLWave* = 2; 
+TYPE 
+	UCS32String* = ARRAY OF SIGNED32; 
+
+	PUCS32String* = POINTER TO UCS32String; 
+
+	Char32* = SIGNED32; 
+
+	FontInfo* = OBJECT 
+	VAR 
+		fontcache*: ANY ; 
+		name*: ARRAY 32 OF CHAR; 
+		size*: SIZE; 
+		style*: SET; 
+
+		PROCEDURE ^ IsEqual*(f: FontInfo): BOOLEAN; 
+		PROCEDURE ^ Clone*(): FontInfo; 
+	END FontInfo; 
+
+	Attributes* = OBJECT 
+	VAR 
+		color*, bgcolor*: SIGNED32; 
+		voff*: SIGNED32; 
+		fontInfo*: FontInfo; 
+
+		PROCEDURE ^ Set*(color, bgcolor, voff: SIGNED32; CONST name: ARRAY OF CHAR; size: SIZE; style: SET); 
+		PROCEDURE ^ IsEqual*(attr: Attributes): BOOLEAN; 
+		PROCEDURE ^ Clone*(): Attributes; 
+	END Attributes; 
+
+	AttributeChangerProc* = PROCEDURE {DELEGATE}(VAR attributes: Attributes; userData: ANY ); 
+
+	StyleChangedMsg* = OBJECT 
+	END StyleChangedMsg; 
+
+	ParagraphStyle* = OBJECT 
+	VAR 
+		name*: ARRAY 128 OF CHAR; 
+		alignment*: SIGNED32; 
+		spaceBefore*: SIGNED32; 
+		spaceAfter*: SIGNED32; 
+		leftIndent*: SIGNED32; 
+		rightIndent*: SIGNED32; 
+		firstIndent*: SIGNED32; 
+		charStyle*: CharacterStyle; 
+		tabStops*: ARRAY 256 OF CHAR; 
+
+		PROCEDURE ^ IsEqual*(style: ParagraphStyle): BOOLEAN; 
+		PROCEDURE ^ Clone*(): ParagraphStyle; 
+	END ParagraphStyle; 
+
+	ParagraphStyleArray* = POINTER TO ARRAY OF ParagraphStyle; 
+
+	CharacterStyle* = OBJECT 
+	VAR 
+		fontcache*: ANY ; 
+		name*: ARRAY 128 OF CHAR; 
+		family*: ARRAY 32 OF CHAR; 
+		style*: SET; 
+		size*: SIZE; 
+		leading*: SIGNED32; 
+		baselineShift*: SIGNED32; 
+		tracking*: SIGNED32; 
+		scaleHorizontal*: SIGNED32; 
+		scaleVertical*: SIGNED32; 
+		color*: SIGNED32; 
+		bgColor*: SIGNED32; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ IsEqual*(cstyle: CharacterStyle): BOOLEAN; 
+		PROCEDURE ^ Clone*(): CharacterStyle; 
+	END CharacterStyle; 
+
+	CharacterStyleArray* = POINTER TO ARRAY OF CharacterStyle; 
+
+	HighlightStyle* = OBJECT 
+	VAR 
+		kind*: INTEGER; 
+
+		PROCEDURE ^ IsEqual*(hstyle: HighlightStyle): BOOLEAN; 
+	END HighlightStyle; 
+
+	Link* = Strings.String; 
+
+	Piece* = OBJECT 
+	VAR 
+		next*, prev*: Piece; 
+		len*, startpos*: SIZE; 
+		attributes*: Attributes; 
+		pstyle*: ParagraphStyle; 
+		cstyle*: CharacterStyle; 
+		link*: Link; 
+
+		PROCEDURE ^ Clone*(): Piece; 
+		PROCEDURE ^ Split*(pos: SIZE; VAR right: Piece); 
+		PROCEDURE ^ Merge*(right: Piece): BOOLEAN; 
+	END Piece; 
+
+	UnicodePiece* = OBJECT (Piece)
+
+		PROCEDURE ^ GetUCS32Buf*(index: SIZE; length: SIZE; VAR ucs: UCS32String; VAR res: INTEGER); 
+		PROCEDURE ^ GetUCS32*(index: SIZE; VAR ucs: Char32); 
+	END UnicodePiece; 
+
+	MemUnicodePiece* = OBJECT (UnicodePiece)
+	VAR 
+		buffer: PUCS32String; 
+
+		PROCEDURE ^ SetBuf(CONST buffer: UCS32String); 
+		PROCEDURE ^ SetBufAsUTF8(CONST buffer: ARRAY OF CHAR); 
+		PROCEDURE ^ Clone*(): Piece; 
+		PROCEDURE ^ GetUCS32Buf*(index: SIZE; length: SIZE; VAR ucs: UCS32String; VAR res: INTEGER); 
+		PROCEDURE ^ GetUCS32*(index: SIZE; VAR ucs: Char32); 
+		PROCEDURE ^ Split*(pos: SIZE; VAR right: Piece); 
+		PROCEDURE ^ Merge*(right: Piece): BOOLEAN; 
+	END MemUnicodePiece; 
+
+	ObjectPiece* = OBJECT (Piece)
+	VAR 
+		object*: ANY ; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Clone*(): Piece; 
+		PROCEDURE ^ Split*(pos: SIZE; VAR right: Piece); 
+		PROCEDURE ^ Merge*(right: Piece): BOOLEAN; 
+	END ObjectPiece; 
+
+	LabelPiece* = OBJECT (Piece)
+	VAR 
+		label*: Strings.String; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Clone*(): Piece; 
+		PROCEDURE ^ Split*(pos: SIZE; VAR right: Piece); 
+		PROCEDURE ^ Merge*(right: Piece): BOOLEAN; 
+	END LabelPiece; 
+
+	PositionTranslator* = PROCEDURE {DELEGATE}(pos: SIZE):SIZE; 
+
+	TextPosition* = OBJECT 
+	VAR 
+		position: SIZE; 
+		data*: ANY ; 
+		text-: UnicodeText; 
+		GetInternalPos, GetDisplayPos: PositionTranslator; 
+		nextInternalPos*: SIZE; 
+
+		PROCEDURE ^  & New*(t: UnicodeText); 
+		PROCEDURE ^ Changed*(op: INTEGER; pos, len: SIZE); 
+		PROCEDURE ^ SetPosition*(pos: SIZE); 
+		PROCEDURE ^ GetPosition*(): SIZE; 
+		PROCEDURE ^ SetInternalPositionTranslator*(getInternalPos: PositionTranslator); 
+		PROCEDURE ^ SetDisplayPositionTranslator*(getDisplayPos: PositionTranslator); 
+	END TextPosition; 
+
+	TextReader* = OBJECT (TextPosition)
+	VAR 
+		piece: Piece; 
+		backwards: BOOLEAN; 
+		eot-: BOOLEAN; 
+		voff-, color-, bgcolor-: SIGNED32; 
+		font-: FontInfo; 
+		attributes-: Attributes; 
+		cstyle-: CharacterStyle; 
+		pstyle-: ParagraphStyle; 
+		link-: Link; 
+		object-: ANY ; 
+
+		PROCEDURE ^  & New*(t: UnicodeText); 
+		PROCEDURE ^ CloneProperties*(CONST otherReader: TextReader); 
+		PROCEDURE ^ Changed*(op: INTEGER; pos, len: SIZE); 
+		PROCEDURE ^ ReadCh*(VAR ucs32: SIGNED32); 
+		PROCEDURE ^ SetPosition*(pos: SIZE); 
+		PROCEDURE ^ SetDirection*(dir: INTEGER); 
+	END TextReader; 
+
+	TextChangeInfo* = OBJECT 
+	VAR 
+		timestamp*: SIGNED32; 
+		op*: INTEGER; 
+		pos*, len*: SIZE; 
+	END TextChangeInfo; 
+
+	UndoManager* = OBJECT 
+
+		PROCEDURE ^ InsertText*(pos: SIZE; text: Text); 
+		PROCEDURE ^ DeleteText*(pos: SIZE; text: Text); 
+		PROCEDURE ^ BeginObjectChange*(pos: SIZE); 
+		PROCEDURE ^ ObjectChanged*(pos, len: SIZE; type: INTEGER; obj: ANY ); 
+		PROCEDURE ^ EndObjectChange*(len: SIZE; type: INTEGER; to: ANY ); 
+		PROCEDURE ^ SetText*(text: Text); 
+		PROCEDURE ^ Undo*; 
+		PROCEDURE ^ Redo*; 
+		PROCEDURE ^ InformListeners*; 
+	END UndoManager; 
+
+	UnicodeText* = OBJECT 
+	VAR 
+		first: Piece; 
+		length: SIZE; 
+		nofPieces: SIZE; 
+		posObjects: Kernel.FinalizedCollection; 
+		pop: INTEGER; 
+		ppos, plen: SIZE; 
+		timestamp: SIGNED32; 
+		upOp: INTEGER; 
+		upPos, upLen: SIZE; 
+		onTextChanged*: WMEvents.EventSource; 
+		lock: Locks.RWLock; 
+		pieceTableOk: BOOLEAN; 
+		pieceTable: POINTER TO ARRAY OF Piece; 
+		isUTF-: BOOLEAN; 
+		um: UndoManager; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ SetUTF*(utf: BOOLEAN); 
+		PROCEDURE ^ SetUndoManager*(u: UndoManager); 
+		PROCEDURE ^ AcquireWrite*; 
+		PROCEDURE ^ ReleaseWrite*; 
+		PROCEDURE ^ HasWriteLock*(): BOOLEAN; 
+		PROCEDURE ^ AcquireRead*; 
+		PROCEDURE ^ ReleaseRead*; 
+		PROCEDURE ^ HasReadLock*(): BOOLEAN; 
+		PROCEDURE ^ InformListeners(timestamp: SIGNED32; op: INTEGER; pos, len: SIZE); 
+		PROCEDURE ^ UpdatePieceTable; 
+		PROCEDURE ^ FindPiece(pos: SIZE; VAR piece: Piece); 
+		PROCEDURE ^ SendPositionUpdate(obj: ANY ; VAR cont: BOOLEAN); 
+		PROCEDURE ^ UpdatePositionObjects(op: INTEGER; pos, len: SIZE); 
+		PROCEDURE ^ AccumulateChanges(op: INTEGER; pos, len: SIZE); 
+		PROCEDURE ^ RegisterPositionObject*(po: TextPosition); 
+		PROCEDURE ^ GetSplittedPos(pos: SIZE; VAR left, right: Piece); 
+		PROCEDURE ^ InsertPiece*(pos: SIZE; n: Piece); 
+		PROCEDURE ^ InsertObject*(obj: XML.Element); 
+		PROCEDURE ^ InsertUCS32*(pos: SIZE; CONST buf: UCS32String); 
+		PROCEDURE ^ InsertUTF8*(pos: SIZE; CONST buf: ARRAY OF CHAR); 
+		PROCEDURE ^ Delete*(pos, len: SIZE); 
+		PROCEDURE ^ CopyFromText*(fromText: UnicodeText; fromPos, len, destPos: SIZE); 
+		PROCEDURE ^ AttributeChanger(VAR attr: Attributes; userData: ANY ); 
+		PROCEDURE ^ SetAttributes*(pos, len: SIZE; attr: Attributes); 
+		PROCEDURE ^ UpdateAttributes*(pos, len: SIZE; attributeChanger: AttributeChangerProc; userData: ANY ); 
+		PROCEDURE ^ SetCharacterStyle*(pos, len: SIZE; cstyle: CharacterStyle); 
+		PROCEDURE ^ SetParagraphStyle*(pos, len: SIZE; pstyle: ParagraphStyle); 
+		PROCEDURE ^ SetLink*(pos, len: SIZE; link: Link); 
+		PROCEDURE ^ GetLength*(): SIZE; 
+		PROCEDURE ^ GetTimestamp*(): SIGNED32; 
+		PROCEDURE ^ CheckHealth*; 
+		PROCEDURE ^ DumpPieces*; 
+	END UnicodeText; 
+
+	Text* = UnicodeText; 
+VAR 
+	clipboard*: UnicodeText; 
+	onTextChangedStr: Strings.String; 
+	lastSelText: Text; 
+	lastSelFrom, lastSelTo: TextPosition; 
+	lastText: Text; 
+	onLastSelectionChanged-, onLastTextChanged-: WMEvents.EventSource; 
+	pStyles: ParagraphStyleArray; 
+	nofPStyles: SIZE; 
+	cStyles: CharacterStyleArray; 
+	nofCStyles: SIZE; 
+	forceUTF*, unforceUTF*: BOOLEAN; 
+	defaultAttributes-: Attributes; 
+
+	PROCEDURE ^ AddParagraphStyle*(style: ParagraphStyle); 
+	PROCEDURE ^ RemoveParagraphStyle*(style: ParagraphStyle); 
+	PROCEDURE ^ GetParagraphStyleByName*(CONST name: ARRAY OF CHAR): ParagraphStyle; 
+	PROCEDURE ^ AddCharacterStyle*(style: CharacterStyle); 
+	PROCEDURE ^ RemoveCharacterStyle*(style: CharacterStyle); 
+	PROCEDURE ^ GetCharacterStyleByName*(CONST name: ARRAY OF CHAR): CharacterStyle; 
+	PROCEDURE ^ GetCharacterStyleArray*(): CharacterStyleArray; 
+	PROCEDURE ^ GetParagraphStyleArray*(): ParagraphStyleArray; 
+	PROCEDURE ^ InitDefaultStyles; 
+	PROCEDURE ^ LoadStyles*(r: Streams.Reader; verbose: BOOLEAN); 
+	PROCEDURE ^ SetLastSelection*(text: Text; from, to: TextPosition); 
+	PROCEDURE ^ ClearLastSelection*; 
+	PROCEDURE ^ GetLastSelection*(VAR text: Text; VAR from, to: TextPosition): BOOLEAN; 
+	PROCEDURE ^ SetLastText*(text: Text); 
+	PROCEDURE ^ GetLastText*(): Text; 
+	PROCEDURE ^ InitDefaultAttributes; 
+BEGIN
+END Texts.

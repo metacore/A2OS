@@ -1,0 +1,285 @@
+MODULE FoxActiveCells;
+	IMPORT SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Global := FoxGlobal, Files, Streams, D := Debugging, Diagnostics, Strings, Commands, GenericLinker, Linker, SYSTEM, Modules;
+CONST 
+	In* = SyntaxTree.InPort; 
+	Out* = SyntaxTree.OutPort; 
+	defaultInstructionMemorySize* = 0; 
+	defaultDataMemorySize* = 2048; 
+	defaultPortWidth* = 32; 
+	defaultFifoSize* = 32; 
+	defaultChannelWidth* = 32; 
+	CodeFileExtension* = \"code"\; 
+	DataFileExtension* = \"data"\; 
+	SpecificationFileExtension* = \"spec"\; 
+	ObjectFileExtension* = \"Gof"\; 
+	VectorCapability* = Global.VectorCapability; 
+	FloatingPointCapability* = Global.FloatingPointCapability; 
+	TRMSCapability* = Global.TRMSCapability; 
+	TraceError = FALSE; 
+	BasePortAddress = SIGNED32(4294967264); 
+	TraceSame = FALSE; 
+	CheckModules = 0; 
+	CheckParameters = 1; 
+	CheckCapabilityParameters = 2; 
+TYPE 
+	Name* = ARRAY 256 OF CHAR; 
+
+	PortInstance* = RECORD 
+		instance-: Instance; 
+		port-: Port; 
+	END; 
+
+	Symbol* = OBJECT 
+	VAR 
+		name-: Name; 
+		scope-: Scope; 
+
+		PROCEDURE ^ GetFullName*(VAR name: ARRAY OF CHAR; in: Scope); 
+		PROCEDURE ^ InitSymbol(CONST name: ARRAY OF CHAR; scope: Scope); 
+		PROCEDURE ^ AppendToMsg*(VAR msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
+	END Symbol; 
+
+	SymbolList* = OBJECT (Basic.List)
+
+		PROCEDURE ^ GetSymbol*(i: SIZE): Symbol; 
+		PROCEDURE ^ AddSymbol(a: Symbol); 
+		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Symbol; 
+		PROCEDURE ^ Same(as: SymbolList; flags: SET): BOOLEAN; 
+	END SymbolList; 
+
+	Port* = OBJECT (Symbol)
+	VAR 
+		direction-: SIGNED32; 
+		adr-: SIGNED32; 
+		width-: SIGNED32; 
+		delegate-: PortInstance; 
+		index-: SIZE; 
+
+		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
+		PROCEDURE ^  & InitPort*(CONST name: ARRAY OF CHAR; scope: Scope; direction: SIGNED32; adr: SIGNED32); 
+		PROCEDURE ^ SetWidth*(widthInBits: SIGNED32); 
+		PROCEDURE ^ Delegate*(instance: Instance; port: Port); 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
+		PROCEDURE ^ Read*(r: Streams.Reader): BOOLEAN; 
+	END Port; 
+
+	PortList* = OBJECT (Basic.List)
+
+		PROCEDURE ^ GetPort*(i: SIZE): Port; 
+		PROCEDURE ^ AddPort(a: Port); 
+		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Port; 
+		PROCEDURE ^ Same(as: PortList; flags: SET): BOOLEAN; 
+	END PortList; 
+
+	Device* = OBJECT (Symbol)
+	VAR 
+		adr-: SIGNED32; 
+		index-: SIZE; 
+
+		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
+		PROCEDURE ^  & InitDevice*(CONST name: ARRAY OF CHAR; scope: Scope; adr: SIGNED32); 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
+		PROCEDURE ^ Read*(r: Streams.Reader): BOOLEAN; 
+	END Device; 
+
+	DeviceList* = OBJECT (Basic.List)
+
+		PROCEDURE ^ GetDevice*(i: SIZE): Device; 
+		PROCEDURE ^ AddDevice(p: Device); 
+		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Device; 
+		PROCEDURE ^ Same(as: DeviceList; flags: SET): BOOLEAN; 
+	END DeviceList; 
+
+	Module* = OBJECT (Symbol)
+	VAR 
+		fileName*: Files.FileName; 
+		index-: SIZE; 
+
+		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
+		PROCEDURE ^  & InitModule(CONST name: ARRAY OF CHAR; scope: Scope; CONST fileName: ARRAY OF CHAR); 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
+		PROCEDURE ^ Read*(r: Streams.Reader): BOOLEAN; 
+	END Module; 
+
+	ModuleList* = OBJECT (Basic.List)
+
+		PROCEDURE ^ GetModule*(i: SIZE): Module; 
+		PROCEDURE ^ AddModule(a: Module); 
+		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Module; 
+		PROCEDURE ^ Same(as: ModuleList; flags: SET): BOOLEAN; 
+	END ModuleList; 
+
+	Parameter* = OBJECT (Symbol)
+	CONST 
+		Boolean = 0; 
+		Integer = 1; 
+		String = 2; 
+	VAR 
+		index-: SIZE; 
+		parameterType-: SIGNED8; 
+		integer-: SIGNED32; 
+		boolean-: BOOLEAN; 
+		string-: Strings.String; 
+
+		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
+		PROCEDURE ^  & Init(CONST name: ARRAY OF CHAR; scope: Scope); 
+		PROCEDURE ^ SetBoolean*(b: BOOLEAN); 
+		PROCEDURE ^ SetInteger*(i: SIGNED32); 
+		PROCEDURE ^ SetString*(CONST s: ARRAY OF CHAR); 
+		PROCEDURE ^ Write(w: Streams.Writer; indent: SIGNED32); 
+		PROCEDURE ^ Read(r: Streams.Reader): BOOLEAN; 
+	END Parameter; 
+
+	ParameterList* = OBJECT (Basic.List)
+
+		PROCEDURE ^ GetParameter*(i: SIZE): Parameter; 
+		PROCEDURE ^ AddParameter(a: Parameter); 
+		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Parameter; 
+		PROCEDURE ^ Same(as: ParameterList; flags: SET): BOOLEAN; 
+	END ParameterList; 
+
+	Instance* = OBJECT (Symbol)
+	VAR 
+		instanceType-: Type; 
+		parameters-: ParameterList; 
+		capabilityParameters-: ParameterList; 
+		index-: SIZE; 
+		instructionMemorySize-, dataMemorySize-: SIGNED32; 
+		capabilities-: SET; 
+
+		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
+		PROCEDURE ^ IsEngine*(): BOOLEAN; 
+		PROCEDURE ^  & Init(CONST name: ARRAY OF CHAR; scope: Scope; c: Type); 
+		PROCEDURE ^ SetType(type: Type); 
+		PROCEDURE ^ SetInstructionMemorySize*(value: SIGNED32); 
+		PROCEDURE ^ SetDataMemorySize*(value: SIGNED32); 
+		PROCEDURE ^ AddParameter*(CONST name: ARRAY OF CHAR): Parameter; 
+		PROCEDURE ^ AddCapabilityParameter*(CONST name: ARRAY OF CHAR): Parameter; 
+		PROCEDURE ^ Write(w: Streams.Writer; indent: SIGNED32); 
+		PROCEDURE ^ Read(r: Streams.Reader): BOOLEAN; 
+		PROCEDURE ^ AppendToMsg*(VAR msg: ARRAY OF CHAR); 
+	END Instance; 
+
+	InstanceList* = OBJECT (Basic.List)
+
+		PROCEDURE ^ GetInstance*(i: SIZE): Instance; 
+		PROCEDURE ^ AddInstance(a: Instance); 
+		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Instance; 
+		PROCEDURE ^ Same(as: InstanceList; flags: SET): BOOLEAN; 
+	END InstanceList; 
+
+	InstanceMethod* = PROCEDURE {DELEGATE}(instance: Instance):BOOLEAN; 
+
+	TypeMethod* = PROCEDURE {DELEGATE}(type: Type):BOOLEAN; 
+
+	Scope* = OBJECT (Symbol)
+	VAR 
+		symbols-: SymbolList; 
+		instances-: InstanceList; 
+		channels-: ChannelList; 
+		types-: TypeList; 
+		ports-: PortList; 
+		index-: SIZE; 
+		specification-: Specification; 
+
+		PROCEDURE ^  & InitScope(CONST name: ARRAY OF CHAR; scope: Scope; specification: Specification); 
+		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
+		PROCEDURE ^ FindSymbol(CONST name: ARRAY OF CHAR; traverse: BOOLEAN): Symbol; 
+		PROCEDURE ^ NewInstance*(CONST name: ARRAY OF CHAR; type: Type): Instance; 
+		PROCEDURE ^ NewChannel*(): Channel; 
+		PROCEDURE ^ NewPort*(CONST name: ARRAY OF CHAR; direction: SIGNED32; adr: SIGNED32): Port; 
+		PROCEDURE ^ NewType*(CONST name: ARRAY OF CHAR): Type; 
+		PROCEDURE ^ ForEachInstanceDo*(method: InstanceMethod): BOOLEAN; 
+		PROCEDURE ^ ForEachTypeDo*(method: TypeMethod): BOOLEAN; 
+	END Scope; 
+
+	Type* = OBJECT (Scope)
+	VAR 
+		devices-: DeviceList; 
+		modules-: ModuleList; 
+		instructionMemorySize-, dataMemorySize-: SIGNED32; 
+		capabilities-: SET; 
+
+		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
+		PROCEDURE ^  & InitType*(CONST name: ARRAY OF CHAR; scope: Scope); 
+		PROCEDURE ^ AddCapability*(capability: SIGNED32); 
+		PROCEDURE ^ SetInstructionMemorySize*(value: SIGNED32); 
+		PROCEDURE ^ SetDataMemorySize*(value: SIGNED32); 
+		PROCEDURE ^ NewDevice*(CONST name: ARRAY OF CHAR; adr: SIGNED32): Device; 
+		PROCEDURE ^ NewModule*(CONST moduleName, fileName: ARRAY OF CHAR): Module; 
+		PROCEDURE ^ Read(r: Streams.Reader): BOOLEAN; 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
+	END Type; 
+
+	TypeList* = OBJECT (Basic.List)
+
+		PROCEDURE ^ GetType*(i: SIZE): Type; 
+		PROCEDURE ^ AddType(a: Type); 
+		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Type; 
+		PROCEDURE ^ Same(as: TypeList; flags: SET): BOOLEAN; 
+	END TypeList; 
+
+	Channel* = OBJECT (Symbol)
+	VAR 
+		in-, out-: PortInstance; 
+		fifoSize-: SIGNED32; 
+		widthInBits-: SIGNED32; 
+		index-: SIZE; 
+
+		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
+		PROCEDURE ^  & InitChannel(CONST name: ARRAY OF CHAR; scope: Scope); 
+		PROCEDURE ^ ConnectIn*(instance: Instance; port: Port); 
+		PROCEDURE ^ ConnectOut*(instance: Instance; port: Port); 
+		PROCEDURE ^ SetFifoSize*(size: SIGNED32); 
+		PROCEDURE ^ SetWidth*(width: SIGNED32); 
+		PROCEDURE ^ Read(r: Streams.Reader): BOOLEAN; 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
+	END Channel; 
+
+	ChannelList* = OBJECT (Basic.List)
+
+		PROCEDURE ^ GetChannel*(i: SIZE): Channel; 
+		PROCEDURE ^ AddChannel*(a: Channel); 
+		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Channel; 
+		PROCEDURE ^ ByPort*(port: Port): Channel; 
+		PROCEDURE ^ Same(as: ChannelList; flags: SET): BOOLEAN; 
+	END ChannelList; 
+
+	Specification* = OBJECT (Scope)
+	VAR 
+		instructionSet-: Name; 
+		diagnostics-: Diagnostics.Diagnostics; 
+		log-: Streams.Writer; 
+		supportedDevices-: DeviceList; 
+		imports-: SymbolList; 
+		frequencyDivider-: SIGNED32; 
+
+		PROCEDURE ^ AddDevice*(CONST name: ARRAY OF CHAR; adr: SIGNED64); 
+		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
+		PROCEDURE ^ DefineDevices*(system: Global.System); 
+		PROCEDURE ^  & Init*(CONST name: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer); 
+		PROCEDURE ^ SetFrequencyDivider*(divider: SIGNED32); 
+		PROCEDURE ^ AddImport*(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ SetInstructionSet*(CONST instructionSet: ARRAY OF CHAR); 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
+		PROCEDURE ^ Read*(r: Streams.Reader): BOOLEAN; 
+		PROCEDURE ^ GetPortAddress*(number: SIGNED32): SIGNED32; 
+		PROCEDURE ^ Emit*(): BOOLEAN; 
+	END Specification; 
+
+	PROCEDURE ^ Indent(w: Streams.Writer; indent: SIGNED32); 
+	PROCEDURE ^ CheckItem(VAR r: Streams.Reader; CONST name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetString(VAR r: Streams.Reader; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetSet(VAR r: Streams.Reader; VAR set: SET): BOOLEAN; 
+	PROCEDURE ^ WriteSet(VAR r: Streams.Writer; set: SET); 
+	PROCEDURE ^ LoadSpecification*(CONST name: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer): Specification; 
+	PROCEDURE ^ ReadSpecification*(context: Commands.Context); 
+	PROCEDURE ^ CompareSpecification*(context: Commands.Context); 
+	PROCEDURE ^ GetSymbol*(scope: Scope; CONST name: ARRAY OF CHAR): Symbol; 
+	PROCEDURE ^ Clone*(symbol: Symbol): Symbol; 
+	PROCEDURE ^ FlattenNetwork*(scope: Scope); 
+	PROCEDURE ^ NormalizeName*(CONST src: ARRAY OF CHAR; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteName*(w: Streams.Writer; scope: Scope; CONST name, suffix: ARRAY OF CHAR); 
+BEGIN
+END FoxActiveCells.

@@ -1,0 +1,31 @@
+MODULE StringPool;
+	IMPORT SYSTEM, KernelLog;
+CONST 
+	StringPoolSize0 = (1024 * 256); 
+	HashTableSize0 = 1024; 
+TYPE 
+	Index* = SIZE; 
+
+	StringPool = POINTER TO ARRAY OF CHAR; 
+VAR 
+	pool: StringPool; 
+	poolLen: SIZE; 
+	poolIndex: POINTER TO ARRAY OF Index; 
+	poolIndexSize: SIZE; 
+	ALastGet, AStrings, AGetString, ACompareString, ACompareString0, AStringCmpHit, ASearchHits, ASearchMisses: SIZE; 
+	AInsertHashRetries: ARRAY 10 OF SIZE; 
+	ASearchHashRetries: ARRAY 10 OF SIZE; 
+
+	PROCEDURE ^ Hash(CONST str: ARRAY OF CHAR): SIZE; 
+	PROCEDURE ^ GrowPool; 
+	PROCEDURE ^ GrowHashTable; 
+	PROCEDURE ^ GetString*(index: Index; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ AddToPool(VAR index: Index; CONST str: ARRAY OF CHAR); 
+	PROCEDURE ^ GetIndex*(CONST str: ARRAY OF CHAR; VAR index: Index); 
+	PROCEDURE ^ GetIndex1*(CONST str: ARRAY OF CHAR): Index; 
+	PROCEDURE ^ CompareString*(index1, index2: Index): INTEGER; 
+	PROCEDURE ^ CompareString0*(index: Index; CONST str: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ DumpPool*; 
+	PROCEDURE ^ Init; 
+BEGIN
+END StringPool.

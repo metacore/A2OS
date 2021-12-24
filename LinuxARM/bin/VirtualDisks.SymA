@@ -1,0 +1,46 @@
+MODULE VirtualDisks;
+	IMPORT SYSTEM, Commands, Options, Plugins, Modules, Streams, Disks, Files, Strings;
+CONST 
+	BlockNumberInvalid* = 101; 
+	ShortTransfer* = 102; 
+	DefaultBlocksize = 512; 
+TYPE 
+	VirtualDisk = OBJECT {EXCLUSIVE} (Disks.Device)
+	VAR 
+		size: SIGNED32; 
+		cyls, hds, spt: SIGNED32; 
+
+		PROCEDURE ^ Transfer*(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ TransferOperation(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ GetSize*(VAR size: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: INTEGER); 
+		PROCEDURE ^  & Init(CONST name: ARRAY OF CHAR; blockSize, cyls, hds, spt: SIGNED32); 
+	END VirtualDisk; 
+
+	FileDisk = OBJECT {EXCLUSIVE} (VirtualDisk)
+	VAR 
+		file: Files.File; 
+		rider: Files.Rider; 
+
+		PROCEDURE ^ TransferOperation(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^  & New*(file: Files.File; CONST name, filename: ARRAY OF CHAR; blockSize, cyls, hds, spt: SIGNED32); 
+	END FileDisk; 
+
+	MemoryBlock = POINTER TO ARRAY OF CHAR; 
+
+	RamDisk = OBJECT {EXCLUSIVE} (VirtualDisk)
+	VAR 
+		memory: MemoryBlock; 
+
+		PROCEDURE ^ TransferOperation(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^  & New*(memory: MemoryBlock; CONST name: ARRAY OF CHAR; blockSize, cyls, hds, spt: SIGNED32); 
+	END RamDisk; 
+
+	PROCEDURE ^ Create*(context: Commands.Context); 
+	PROCEDURE ^ GetOptions(context: Commands.Context; VAR blocksize, cylinders, heads, sectors: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Install*(context: Commands.Context); 
+	PROCEDURE ^ InstallRamdisk*(context: Commands.Context); 
+	PROCEDURE ^ Uninstall*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END VirtualDisks.

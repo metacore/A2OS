@@ -236,8 +236,7 @@ WIN64 -- 64-bit windows a2
 		Linker.Link -p=LinuxARM --path=NewAos/
 			Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel Strings KernelLog Streams Commands Pipes StdIO
 			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Diagnostics BitSets StringPool ObjectFile GenericLinker Loader System StdIOShell
-			Shell ~
-			
+			Shell ~			
 		FSTools.CopyFiles -oq NewAos/*.* => ../../LinuxARM/bin/*.* ~
 		FSTools.CopyFiles -o oberon => ../../LinuxARM/oberon ~
 	~ 

@@ -1,0 +1,20 @@
+MODULE WMScribble;
+	IMPORT WMWindowManager, Strings, WMGraphics, WMRectangles, Modules, WMDialogs;
+CONST 
+TYPE 
+	ScribbleWindow = OBJECT {EXCLUSIVE} (WMWindowManager.BufferWindow)
+	VAR 
+		lx, ly: SIZE; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keySym: SIZE); 
+	END ScribbleWindow; 
+VAR 
+	s: ScribbleWindow; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMScribble.

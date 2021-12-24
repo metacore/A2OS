@@ -1,0 +1,7 @@
+MODULE Performance;
+VAR 
+	load*: ARRAY 3 OF FLOAT32; 
+	idle*: ARRAY 1 OF SIGNED32; 
+
+BEGIN
+END Performance.

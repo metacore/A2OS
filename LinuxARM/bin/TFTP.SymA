@@ -1,0 +1,51 @@
+MODULE TFTP;
+	IMPORT IP, UDP, Files, Random, KernelLog;
+CONST 
+	Ok = UDP.Ok; 
+	TFTPPort = 69; 
+	MaxSocketRetries = 64; 
+	MaxRetries = 5; 
+	MaxWait = 3; 
+	BlockSize = 512; 
+	DataTimeout = 3000; 
+	AckTimeout = 3000; 
+	RRQ = 1; 
+	WRQ = 2; 
+	DATA = 3; 
+	ACK = 4; 
+	ERROR = 5; 
+	TFTPId = \"TFTP Client: "\; 
+TYPE 
+	ErrorMsg = ARRAY 32 OF CHAR; 
+
+	TFTPClient* = OBJECT 
+
+		PROCEDURE ^ LogEnter(level: SIGNED32); 
+		PROCEDURE ^ LogExit(level: SIGNED32); 
+		PROCEDURE ^ Log(level: SIGNED32; s: ARRAY OF CHAR); 
+		PROCEDURE ^ LogInt(level, i: SIZE); 
+		PROCEDURE ^ Get2(VAR buf: ARRAY OF CHAR; ofs: SIGNED32): SIGNED32; 
+		PROCEDURE ^ Put2(VAR buf: ARRAY OF CHAR; ofs, value: SIGNED32); 
+		PROCEDURE ^ PacketType(VAR buf: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ ExtractString(VAR buf: ARRAY OF CHAR; VAR ofs: SIGNED32; VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ PutString(VAR buf: ARRAY OF CHAR; VAR ofs: SIGNED32; s: ARRAY OF CHAR); 
+		PROCEDURE ^ ReceiveAck(socket: UDP.Socket; VAR fip: IP.Adr; VAR fport: SIGNED32; blockNr: SIGNED32; VAR ack: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ SendAck(socket: UDP.Socket; fip: IP.Adr; fport: SIGNED32; blockNr: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ SendError(socket: UDP.Socket; fip: IP.Adr; fport: SIGNED32; errNo: SIGNED16; s: ErrorMsg; VAR res: INTEGER); 
+		PROCEDURE ^ GetSocket*(VAR socket: UDP.Socket): BOOLEAN; 
+		PROCEDURE ^ Send*(localFN, remoteFN: ARRAY OF CHAR; fip: IP.Adr; fport: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ Receive*(remoteFN, localFN: ARRAY OF CHAR; fip: IP.Adr; fport: SIGNED32): BOOLEAN; 
+	END TFTPClient; 
+VAR 
+	TraceLevel: SIGNED32; 
+	errorMsg: ARRAY 8 OF ErrorMsg; 
+	generator: Random.Generator; 
+
+	PROCEDURE ^ Send*(localFN, remoteFN: ARRAY OF CHAR; ip: IP.Adr): BOOLEAN; 
+	PROCEDURE ^ Receive*(removeFN, localFN: ARRAY OF CHAR; ip: IP.Adr): BOOLEAN; 
+	PROCEDURE ^ TraceLevel0*; 
+	PROCEDURE ^ TraceLevel1*; 
+	PROCEDURE ^ TraceLevel2*; 
+	PROCEDURE ^ TraceLevel3*; 
+BEGIN
+END TFTP.

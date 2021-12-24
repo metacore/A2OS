@@ -1,0 +1,9 @@
+MODULE ProcessInfo0;
+	IMPORT Objects;
+TYPE 
+	ProcessArray* = ARRAY OF Objects.Process; 
+
+	PROCEDURE ^ GetProcesses*(VAR array: ProcessArray; VAR nofProcesses: SIZE); 
+	PROCEDURE ^ GetProcess*(id: INTEGER): Objects.Process; 
+BEGIN
+END ProcessInfo0.

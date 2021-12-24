@@ -1,0 +1,66 @@
+MODULE WMFontManager;
+	IMPORT KernelLog, Kernel, Modules, Commands, WMGraphics, WMDefaultFont, Strings, Configuration, XML, XMLObjects;
+CONST 
+TYPE 
+	String = XML.String; 
+
+	FontInfo* = OBJECT 
+	VAR 
+		name*: String; 
+		size*: SIZE; 
+		style*: SET; 
+
+		PROCEDURE ^  & Init*; 
+	END FontInfo; 
+
+	FontAlias = ARRAY 32 OF CHAR; 
+
+	FontInfoArray = POINTER TO ARRAY OF FontInfo; 
+
+	FontAliasArray = POINTER TO ARRAY OF FontAlias; 
+
+	FontFactory = PROCEDURE (info: FontInfo):WMGraphics.Font; 
+
+	LoaderInfo = POINTER TO RECORD 
+		loader: String; 
+		next: LoaderInfo; 
+	END; 
+
+	FontManager = OBJECT {EXCLUSIVE} (WMGraphics.FontManager)
+	VAR 
+		fontCache: Kernel.FinalizedCollection; 
+		lru: ARRAY 64 OF WMGraphics.Font; 
+		lruPosition: SIGNED32; 
+		defaultFont: WMGraphics.Font; 
+		font: WMGraphics.Font; 
+		searchName: ARRAY 256 OF CHAR; 
+		searchSize: SIZE; 
+		searchStyle: SET; 
+		found: BOOLEAN; 
+		exactLoaders, approximateLoaders: LoaderInfo; 
+		defaultFontName: ARRAY 256 OF CHAR; 
+		defaultFontSize: SIGNED32; 
+		defaultFontStyle: SET; 
+		systemFontInfo: FontInfoArray; 
+		systemFontAlias: FontAliasArray; 
+		nofSystemFonts: SIZE; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ MatchExact(obj: ANY ; VAR cont: BOOLEAN); 
+		PROCEDURE ^ MatchSimiliar(obj: ANY ; VAR cont: BOOLEAN); 
+		PROCEDURE ^ AddExact(str: String); 
+		PROCEDURE ^ AddApproximate(str: String); 
+		PROCEDURE ^ GetConfig; 
+		PROCEDURE ^ Load(ln: String; fi: FontInfo): WMGraphics.Font; 
+		PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): WMGraphics.Font; 
+		PROCEDURE ^ GetSystemFont*(CONST alias: ARRAY OF CHAR): WMGraphics.Font; 
+	END FontManager; 
+VAR 
+	fm: FontManager; 
+
+	PROCEDURE ^ AddSystemFont(manager: FontManager; section: XML.Element); 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Load; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMFontManager.

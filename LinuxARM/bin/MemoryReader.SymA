@@ -1,0 +1,15 @@
+MODULE MemoryReader;
+	IMPORT SYSTEM, Streams;
+CONST 
+	DefaultReaderSize = 64; 
+TYPE 
+	Reader* = OBJECT (Streams.Reader)
+	VAR 
+		memoryAdr: ADDRESS; 
+		available: SIZE; 
+
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^  & InitMemoryReader*(memoryAdr: ADDRESS; length: SIZE); 
+	END Reader; 
+BEGIN
+END MemoryReader.

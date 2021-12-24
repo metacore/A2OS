@@ -1,0 +1,21 @@
+MODULE CLUTs;
+	IMPORT Streams;
+CONST 
+	colors* = 256; 
+TYPE 
+	CLUT* = RECORD 
+		col*: ARRAY colors OF SIGNED32; 
+		size*: SIGNED16; 
+		bits: SIGNED16; 
+		cube: POINTER TO ARRAY OF CHAR; 
+	END; 
+
+	PROCEDURE ^ Set*(VAR clut: CLUT; n: SIZE; col: SIGNED32); 
+	PROCEDURE ^ Get*(VAR clut: CLUT; n: SIZE; VAR col: SIGNED32); 
+	PROCEDURE ^ Init*(VAR clut: CLUT; size, bits: SIGNED32); 
+	PROCEDURE ^ Match*(VAR clut: CLUT; col: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Copy*(from, to: CLUT); 
+	PROCEDURE ^ Write*(VAR w: Streams.Writer; VAR clut: CLUT); 
+	PROCEDURE ^ Read*(r: Streams.Reader; VAR clut: CLUT; size: SIGNED32); 
+BEGIN
+END CLUTs.

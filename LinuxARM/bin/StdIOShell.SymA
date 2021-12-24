@@ -1,0 +1,20 @@
+MODULE StdIOShell;
+	IMPORT StdIO, Commands, Modules, Trace, Options, Streams;
+CONST 
+	Verbose = FALSE; 
+TYPE 
+	Executor = OBJECT {EXCLUSIVE} 
+	VAR 
+		done := FALSE: BOOLEAN; 
+		code := Modules.PowerDown: SIGNED32; 
+
+		PROCEDURE ^ Wait; 
+	BEGIN{ACTIVE, EXCLUSIVE} 
+	END Executor; 
+VAR 
+	execute: Executor; 
+
+	PROCEDURE ^ Activate(context: Commands.Context; CONST cmd: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Execute(context: Commands.Context): BOOLEAN; 
+BEGIN
+END StdIOShell.

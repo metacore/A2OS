@@ -1,0 +1,159 @@
+MODULE FoxTRMInstructionSet;
+	IMPORT Commands, Options, Streams, Sections := FoxSections, BinaryCode := FoxBinaryCode, Global := FoxGlobal, Basic := FoxBasic, D := Debugging, ObjectFile, Disassembler := FoxDisassembler, Files, BitSets;
+CONST 
+	checkMnemonic = TRUE; 
+	maxMnemonicNameLength = 8; 
+	maxNumberInstructions = 100; 
+	regselW = 3; 
+	opcodeW = 4; 
+	conditionW = 4; 
+	opMOV* = 0; 
+	opNOT* = 1; 
+	opADD* = 2; 
+	opFADD* = 3; 
+	opSUB* = 4; 
+	opFSUB* = 5; 
+	opAND* = 6; 
+	opBIC* = 7; 
+	opOR* = 8; 
+	opXOR* = 9; 
+	opMUL* = 10; 
+	opFMUL* = 11; 
+	opLDH* = 12; 
+	opROR* = 13; 
+	opBLR* = 14; 
+	opBR* = 15; 
+	opSPSR* = 16; 
+	opIRET* = 17; 
+	opLD* = 18; 
+	opST* = 19; 
+	opBL* = 20; 
+	opBEQ* = 21; 
+	opBNE* = 22; 
+	opBAE* = 23; 
+	opBB* = 24; 
+	opBN* = 25; 
+	opBNN* = 26; 
+	opBO* = 27; 
+	opBNO* = 28; 
+	opBA* = 29; 
+	opBBE* = 30; 
+	opBGE* = 31; 
+	opBLT* = 32; 
+	opBGT* = 33; 
+	opBLE* = 34; 
+	opBT* = 35; 
+	opBF* = 36; 
+	opBZS* = 37; 
+	opBZC* = 38; 
+	opBCS* = 39; 
+	opBCC* = 40; 
+	opBNS* = 41; 
+	opBNC* = 42; 
+	opBVS* = 43; 
+	opBVC* = 44; 
+	opHADD* = 45; 
+	opFHADD* = 46; 
+	numberMnemonics* = 47; 
+	None* =  -1; 
+	Rd = 0; 
+	Rs = 1; 
+	VRd = 2; 
+	VRs = 3; 
+	Imm10 = 4; 
+	SignedImm10 = 5; 
+	Imm14 = 6; 
+	MemRegImm7 = 7; 
+	VRd0 = 8; 
+	ZeroRegister* = 7; 
+	Register* = 1; 
+	Immediate* = 2; 
+	Memory* = 3; 
+	LR* = 7; 
+	SP* = 6; 
+	globalP* = 5; 
+	FP* = 4; 
+TYPE 
+	OperandType = SIGNED16; 
+
+	OperandFormatType = SIGNED16; 
+
+	RegisterIndex = SIGNED32; 
+
+	InstructionFormat* = RECORD 
+		mnemonic-: SIGNED32; 
+		code, mask: SET; 
+		capabilities-: SET; 
+		op1, op2: OperandFormatType; 
+	END; 
+
+	Mnemonic* = RECORD 
+		name-: ARRAY maxMnemonicNameLength OF CHAR; 
+		number-: SIGNED32; 
+		firstInstructionFormat, lastInstructionFormat: SIGNED32; 
+	END; 
+
+	NumberedName = RECORD 
+		name: ARRAY maxMnemonicNameLength OF CHAR; 
+		number: SIGNED32; 
+	END; 
+
+	Operand* = RECORD 
+		type-: OperandType; 
+		size: SIGNED32; 
+		register-: RegisterIndex; 
+		imm-: SIGNED32; 
+		fixup-: BinaryCode.Fixup; 
+	END; 
+
+	Instruction* = RECORD 
+		format-: SIGNED32; 
+		op1-, op2-: Operand; 
+	END; 
+
+	InstructionSet* = OBJECT 
+	VAR 
+		mnemonics-: ARRAY numberMnemonics OF Mnemonic; 
+		mnemonicsSorted-: ARRAY numberMnemonics OF NumberedName; 
+		instructionFormats-: ARRAY maxNumberInstructions OF InstructionFormat; 
+		numberInstructionFormats-: SIGNED32; 
+		inverseCondition-: ARRAY numberMnemonics OF SIGNED32; 
+		instructionW-: SIGNED32; 
+		RelativeBranchFixupBits-: SIGNED32; 
+		BranchAndLinkFixupBits-: SIGNED32; 
+		ImmediateFixupBits-: SIGNED32; 
+		MemoryOffsetFixupBits-: SIGNED32; 
+
+		PROCEDURE ^  & InitInstructionSet*(instructionWidth: SIGNED32); 
+		PROCEDURE ^ FindInstructionFormat(mnem: SIGNED32; op1, op2: Operand): SIGNED32; 
+		PROCEDURE ^ MakeInstruction*(VAR instruction: Instruction; mnemonic: SIGNED32; op1, op2: Operand); 
+		PROCEDURE ^ IsValidInstruction*(CONST instruction: Instruction): BOOLEAN; 
+		PROCEDURE ^ Encode*(CONST instruction: Instruction): SIGNED32; 
+		PROCEDURE ^ Decode*(code: SIGNED32; VAR instruction: Instruction); 
+		PROCEDURE ^ EmitInstruction*(CONST instruction: Instruction; mnem: SIGNED32; code: BinaryCode.Section); 
+		PROCEDURE ^ Emit*(mnem: SIGNED32; CONST op1, op2: Operand; code: BinaryCode.Section); 
+		PROCEDURE ^ FindMnemonic*(CONST mnem: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ FindRegister*(CONST name: ARRAY OF CHAR): SIGNED8; 
+		PROCEDURE ^ NumberToSet(code: SIGNED32): SET; 
+		PROCEDURE ^ SetToNumber(set: SET): SIGNED32; 
+		PROCEDURE ^ InitInstructions; 
+		PROCEDURE ^ InitRegister*(VAR operand: Operand; reg: SIGNED32); 
+		PROCEDURE ^ InitImmediate*(VAR operand: Operand; bits: SIGNED32; imm: SIGNED32); 
+		PROCEDURE ^ InitMemory*(VAR operand: Operand; reg1: RegisterIndex; imm: SIGNED32); 
+		PROCEDURE ^ InitFixup*(VAR operand: Operand; bits: SIGNED8; fixup: BinaryCode.Fixup); 
+		PROCEDURE ^ AddFixup*(VAR operand: Operand; fixup: BinaryCode.Fixup); 
+		PROCEDURE ^ InitOperand*(VAR operand: Operand); 
+		PROCEDURE ^ DumpOperand*(w: Streams.Writer; CONST operand: Operand); 
+		PROCEDURE ^ DumpInstruction*(w: Streams.Writer; CONST instruction: Instruction); 
+		PROCEDURE ^ DumpBits*(w: Streams.Writer; set: SET; numberBits: SIGNED32); 
+		PROCEDURE ^ DumpInstructionFormats*(context: Commands.Context); 
+	END InstructionSet; 
+VAR 
+	decodeInstance: InstructionSet; 
+
+	PROCEDURE ^ Hex(ch: CHAR): SIGNED32; 
+	PROCEDURE ^ ReadCode(file: Files.File): BitSets.BitSet; 
+	PROCEDURE ^ ReadData(file: Files.File): BitSets.BitSet; 
+	PROCEDURE ^ Disassemble*(context: Commands.Context); 
+BEGIN
+END FoxTRMInstructionSet.

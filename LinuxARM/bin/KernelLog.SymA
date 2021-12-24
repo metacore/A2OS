@@ -1,0 +1,33 @@
+MODULE KernelLog;
+	IMPORT SYSTEM, Trace, Machine, Objects;
+CONST 
+	BufSize = 8000; 
+VAR 
+	traceBufDef: ARRAY BufSize OF CHAR; 
+	traceBufAdr: ADDRESS; 
+	traceBufSize: SIZE; 
+	traceHead, traceTail: ADDRESS; 
+
+	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ String*(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ Ln*; 
+	PROCEDURE ^ Char*(c: CHAR); 
+	PROCEDURE ^ Int*(x: SIGNED64; w: INTEGER); 
+	PROCEDURE ^ Boolean*(x: BOOLEAN); 
+	PROCEDURE ^ IntSuffix*(x: SIGNED64; w: INTEGER; CONST suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ Hex*(x: SIGNED64; w: INTEGER); 
+	PROCEDURE ^ Address*(x: ADDRESS); 
+	PROCEDURE ^ Size*(x: SIZE); 
+	PROCEDURE ^ HIntHex*(x: SIGNED64; w: INTEGER); 
+	PROCEDURE ^ Memory*(adr: ADDRESS; size: SIZE); 
+	PROCEDURE ^ Buffer*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE); 
+	PROCEDURE ^ Bits*(x: SET; ofs, n: INTEGER); 
+	PROCEDURE ^ Set*(x: SET); 
+	PROCEDURE ^ Enter*; 
+	PROCEDURE ^ Exit*; 
+	PROCEDURE ^ SwitchToBuffer(adr: ADDRESS; size: SIZE); 
+	PROCEDURE ^ OpenBuffer*(adr: ADDRESS; size: SIZE): BOOLEAN; 
+	PROCEDURE ^ GetBuffer*(VAR val: ARRAY OF CHAR); 
+	PROCEDURE ^ CloseBuffer*; 
+BEGIN
+END KernelLog.

@@ -1,0 +1,43 @@
+MODULE GfxImages;
+	IMPORT SYSTEM, Raster, GfxMatrix;
+TYPE 
+	Image* = Raster.Image; 
+
+	ShiftProc* = PROCEDURE (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; t: FLOAT32); 
+
+	ScaleProc* = PROCEDURE (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; xy, dxy: FLOAT32); 
+
+	Filter* = RECORD (Raster.Mode)
+		hshift*, vshift*: ShiftProc; 
+		hscale*, vscale*: ScaleProc; 
+	END; 
+VAR 
+	PreCache, Cache: Image; 
+	hshift*, vshift*: ShiftProc; 
+
+	PROCEDURE ^ HShift*(VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; tx: FLOAT32); 
+	PROCEDURE ^ VShift*(VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; ty: FLOAT32); 
+	PROCEDURE ^ HScale*(VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; x, dx: FLOAT32); 
+	PROCEDURE ^ VScale*(VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; y, dy: FLOAT32); 
+	PROCEDURE ^ LinearHShift*(VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; tx: FLOAT32); 
+	PROCEDURE ^ LinearVShift*(VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; ty: FLOAT32); 
+	PROCEDURE ^ LinearHScale*(VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; x, dx: FLOAT32); 
+	PROCEDURE ^ LinearVScale*(VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; y, dy: FLOAT32); 
+	PROCEDURE ^ InitFilter*(VAR filter: Filter; op: SIGNED8; hshift, vshift: ShiftProc; hscale, vscale: ScaleProc); 
+	PROCEDURE ^ GetTempImage(VAR img, cache: Raster.Image; w, h: SIZE); 
+	PROCEDURE ^ FreeTempImage(VAR img, cache: Raster.Image); 
+	PROCEDURE ^ Preprocess(VAR src: Raster.Image; VAR m: GfxMatrix.Matrix; VAR filter: Filter); 
+	PROCEDURE ^ SkewRow(src, dst: Image; si, sj, w, di, dj: SIZE; tx: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ SkewRows(src, dst: Image; si, sj, w, h, dj: SIZE; x, dx: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ SkewCol(src, dst: Image; si, sj, h, di, dj: SIZE; ty: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ SkewCols(src, dst: Image; si, sj, w, h, di: SIZE; y, dy: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ Translate*(src, dst: Image; tx, ty: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ Scale*(src, dst: Image; sx, sy, tx, ty: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ Rotate*(src, dst: Image; sin, cos, tx, ty: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ ShearRows*(src, dst: Image; sx, tx: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ ShearCols*(src, dst: Image; sy, ty: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ Transform*(src, dst: Image; m: GfxMatrix.Matrix; VAR filter: Filter); 
+	PROCEDURE ^ InitNoFilter*(VAR filter: Filter); 
+	PROCEDURE ^ InitLinearFilter*(VAR filter: Filter); 
+BEGIN
+END GfxImages.

@@ -1,0 +1,370 @@
+MODULE WMProperties;
+	IMPORT WMRectangles, WMGraphics, Strings, Localization, Repositories, WMEvents, Locks, XML, XMLObjects, Streams, Commands, Modules, KernelLog, Models, Types;
+CONST 
+TYPE 
+	String = Strings.String; 
+
+	Property* = OBJECT 
+	VAR 
+		name, info: String; 
+		prototype: Property; 
+		nonDefault: BOOLEAN; 
+		list: PropertyList; 
+		timestamp: SIGNED32; 
+		repository: Repositories.Repository; 
+		object: Repositories.Component; 
+		repositoryName: Strings.String; 
+		componentName: Strings.String; 
+		generator: Strings.String; 
+		componentID: SIZE; 
+		inLinkUpdate: BOOLEAN; 
+
+		PROCEDURE ^  & New*(prototype: Property; name, info: String); 
+		PROCEDURE ^ ReplaceLink*(object: Repositories.Component); 
+		PROCEDURE ^ LinkChanged(sender, object: ANY ); 
+		PROCEDURE ^ SetLinkAsString*(CONST string: ARRAY OF CHAR); 
+		PROCEDURE ^ GetLinkAsString*(VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^ IsLink(p: ANY ): BOOLEAN; 
+		PROCEDURE ^ WriteLink*(w: Streams.Writer; context: ANY ; indent: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ SetLink*(object: Repositories.Component); 
+		PROCEDURE ^ GetLink*(): Repositories.Component; 
+		PROCEDURE ^ SetPrototype*(prototype: Property); 
+		PROCEDURE ^ HasPrototype*(): BOOLEAN; 
+		PROCEDURE ^ GetInfo*(): String; 
+		PROCEDURE ^ GetName*(): String; 
+		PROCEDURE ^ Stamp*; 
+		PROCEDURE ^ GetTimestamp*(): SIGNED32; 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ Changed*; 
+		PROCEDURE ^ AcquireWrite*; 
+		PROCEDURE ^ ReleaseWrite*; 
+		PROCEDURE ^ AcquireRead*; 
+		PROCEDURE ^ ReleaseRead*; 
+		PROCEDURE ^ NotDefault*; 
+		PROCEDURE ^ GetIsDefault*(): BOOLEAN; 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+		PROCEDURE ^ Finalize*; 
+	END Property; 
+
+	BooleanProperty* = OBJECT (Property)
+	VAR 
+		value: BOOLEAN; 
+
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ Get*(): BOOLEAN; 
+		PROCEDURE ^ Set*(value: BOOLEAN); 
+		PROCEDURE ^ SetPassive*(value: BOOLEAN); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+	END BooleanProperty; 
+
+	SetProperty* = OBJECT (Property)
+	VAR 
+		value: SET; 
+
+		PROCEDURE ^ IntToSet(h: SIGNED32): SET; 
+		PROCEDURE ^ SetToInt(set: SET): SIGNED64; 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ Get*(): SET; 
+		PROCEDURE ^ Set*(value: SET); 
+		PROCEDURE ^ SetPassive*(value: SET); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+	END SetProperty; 
+
+	Int32Property* = OBJECT (Property)
+	VAR 
+		value: SIGNED32; 
+		min, max: SIGNED32; 
+		bounded: BOOLEAN; 
+
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ SetBounds*(min, max: SIGNED32); 
+		PROCEDURE ^ GetBounds*(VAR min, max: SIGNED32); 
+		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
+		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
+		PROCEDURE ^ Validate(v: SIGNED32): SIGNED32; 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ Get*(): SIGNED32; 
+		PROCEDURE ^ Set*(value: SIGNED32); 
+		PROCEDURE ^ SetPassive*(value: SIGNED32); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+	END Int32Property; 
+
+	IntegerProperty* = OBJECT (Property)
+	VAR 
+		value: SIGNED64; 
+		min, max: SIGNED64; 
+		bounded: BOOLEAN; 
+
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ SetBounds*(min, max: SIGNED64); 
+		PROCEDURE ^ GetBounds*(VAR min, max: SIGNED64); 
+		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
+		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
+		PROCEDURE ^ Validate(v: SIGNED64): SIGNED64; 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ Get*(): SIGNED64; 
+		PROCEDURE ^ Set*(value: SIGNED64); 
+		PROCEDURE ^ SetPassive*(value: SIGNED64); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+	END IntegerProperty; 
+
+	SizeProperty* = OBJECT (Property)
+	VAR 
+		value: SIZE; 
+		min, max: SIZE; 
+		bounded: BOOLEAN; 
+
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ SetBounds*(min, max: SIZE); 
+		PROCEDURE ^ GetBounds*(VAR min, max: SIZE); 
+		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
+		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
+		PROCEDURE ^ Validate(v: SIZE): SIZE; 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ Get*(): SIZE; 
+		PROCEDURE ^ Set*(value: SIZE); 
+		PROCEDURE ^ SetPassive*(value: SIZE); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+	END SizeProperty; 
+
+	RealProperty* = OBJECT (Property)
+	VAR 
+		value: FLOAT64; 
+		min, max: FLOAT64; 
+		bounded: BOOLEAN; 
+
+		PROCEDURE ^ SetBounds*(min, max: FLOAT64); 
+		PROCEDURE ^ GetBounds*(VAR min, max: FLOAT64); 
+		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
+		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
+		PROCEDURE ^ Validate(v: FLOAT64): FLOAT64; 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ Get*(): FLOAT64; 
+		PROCEDURE ^ Set*(value: FLOAT64); 
+		PROCEDURE ^ SetPassive*(value: FLOAT64); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+	END RealProperty; 
+
+	StringProperty* = OBJECT (Property)
+	VAR 
+		value, word: String; 
+		dictionary: Repositories.Dictionary; 
+		languages: Localization.Languages; 
+		translate: BOOLEAN; 
+
+		PROCEDURE ^  & New*(prototype: Property; name, info: String); 
+		PROCEDURE ^ SetTranslate*(translate: BOOLEAN); 
+		PROCEDURE ^ Translate; 
+		PROCEDURE ^ SetLanguage*(languages: Localization.Languages); 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ Get*(): String; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ Set*(value: String); 
+		PROCEDURE ^ SetPassive*(value: String); 
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ GetAOC*(VAR value: ARRAY OF CHAR); 
+		PROCEDURE ^ SetAOC*(CONST value: ARRAY OF CHAR); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+	END StringProperty; 
+
+	ColorProperty* = OBJECT (Property)
+	VAR 
+		value: WMGraphics.Color; 
+
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ Get*(): WMGraphics.Color; 
+		PROCEDURE ^ Set*(value: SIGNED64); 
+		PROCEDURE ^ SetPassive*(value: SIGNED64); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+	END ColorProperty; 
+
+	FontProperty* = OBJECT (Property)
+	VAR 
+		font: WMGraphics.Font; 
+
+		PROCEDURE ^  & New*(prototype: Property; name, info: String); 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ Get*(): WMGraphics.Font; 
+		PROCEDURE ^ Set*(font: WMGraphics.Font); 
+		PROCEDURE ^ SetPassive*(font: WMGraphics.Font); 
+		PROCEDURE ^ GetFont*(VAR name: ARRAY OF CHAR; VAR size: SIZE; VAR style: SET); 
+		PROCEDURE ^ SetFont*(CONST name: ARRAY OF CHAR; size: SIGNED32; style: SET); 
+		PROCEDURE ^ SetFontName*(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ GetFontName*(VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ SetSize*(size: SIZE); 
+		PROCEDURE ^ GetSize*(): SIZE; 
+		PROCEDURE ^ SetStyle*(style: SET); 
+		PROCEDURE ^ GetSyle*(): SET; 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+	END FontProperty; 
+
+	PointProperty* = OBJECT (Property)
+	VAR 
+		value: WMGraphics.Point2d; 
+
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ Get*(): WMGraphics.Point2d; 
+		PROCEDURE ^ Set*(value: WMGraphics.Point2d); 
+		PROCEDURE ^ SetPassive*(value: WMGraphics.Point2d); 
+		PROCEDURE ^ SetCoordinate*(x, y: SIZE); 
+		PROCEDURE ^ GetCoordinate*(VAR x, y: SIZE); 
+		PROCEDURE ^ SetX*(x: SIZE); 
+		PROCEDURE ^ SetY*(y: SIZE); 
+		PROCEDURE ^ GetX*(): SIZE; 
+		PROCEDURE ^ GetY*(): SIZE; 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+	END PointProperty; 
+
+	RectangleProperty* = OBJECT (Property)
+	VAR 
+		value: WMRectangles.Rectangle; 
+
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ Get*(): WMRectangles.Rectangle; 
+		PROCEDURE ^ Set*(value: WMRectangles.Rectangle); 
+		PROCEDURE ^ SetPassive*(value: WMRectangles.Rectangle); 
+		PROCEDURE ^ SetWidth*(w: SIZE); 
+		PROCEDURE ^ SetHeight*(h: SIZE); 
+		PROCEDURE ^ SetLeft*(l: SIZE); 
+		PROCEDURE ^ SetTop*(t: SIZE); 
+		PROCEDURE ^ SetRight*(r: SIZE); 
+		PROCEDURE ^ SetBottom*(b: SIZE); 
+		PROCEDURE ^ SetExtents*(w, h: SIZE); 
+		PROCEDURE ^ GetWidth*(): SIZE; 
+		PROCEDURE ^ GetHeight*(): SIZE; 
+		PROCEDURE ^ GetLeft*(): SIZE; 
+		PROCEDURE ^ GetTop*(): SIZE; 
+		PROCEDURE ^ GetRight*(): SIZE; 
+		PROCEDURE ^ GetBottom*(): SIZE; 
+		PROCEDURE ^ GetExtents*(VAR width, height: SIZE); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+	END RectangleProperty; 
+
+	ReferenceProperty* = OBJECT (Property)
+	VAR 
+		level: SIGNED32; 
+
+		PROCEDURE ^  & NewRef*(prototype: Property; name, info: String); 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ Get*(): Repositories.Component; 
+		PROCEDURE ^ Set*(object: Repositories.Component); 
+		PROCEDURE ^ SetPassive*(object: Repositories.Component); 
+		PROCEDURE ^ LinkChanged(sender, object: ANY ); 
+		PROCEDURE ^ SetAsString*(CONST string: ARRAY OF CHAR); 
+		PROCEDURE ^ GetAsString*(VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+		PROCEDURE ^ Finalize*; 
+	END ReferenceProperty; 
+
+	PropertyArray* = POINTER TO ARRAY OF Property; 
+
+	PropertyList* = OBJECT 
+	VAR 
+		properties: PropertyArray; 
+		nofProperties-: SIGNED32; 
+		onPropertyChanged-: WMEvents.EventSource; 
+		onLinkChanged-: WMEvents.EventSource; 
+		lock: Locks.RWLock; 
+		upNofChanges: SIGNED32; 
+		upChanged: Property; 
+		propertyChanged, linkChanged: WMEvents.EventListener; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ AcquireWrite*; 
+		PROCEDURE ^ ReleaseWrite*; 
+		PROCEDURE ^ AcquireRead; 
+		PROCEDURE ^ ReleaseRead; 
+		PROCEDURE ^ Add*(x: Property); 
+		PROCEDURE ^ Remove*(x: Property); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR): Property; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ Enumerate*(): PropertyArray; 
+		PROCEDURE ^ HasProperty*(CONST name: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetPropertyValue*(CONST name: ARRAY OF CHAR; VAR value: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ SetPropertyValue*(CONST name, value: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ SetXML*(xml: XML.Element); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY ; indent: SIGNED32); 
+		PROCEDURE ^ Changed(p: Property); 
+		PROCEDURE ^ Finalize*; 
+	END PropertyList; 
+
+	Properties* = Repositories.Properties; 
+VAR 
+	StringProperties, StringLinks: String; 
+	StringPropertiesInfo, StringLinksInfo: String; 
+	anonymous: String; 
+
+	PROCEDURE ^ Indent(w: Streams.Writer; indent: SIGNED32); 
+	PROCEDURE ^ ReadCharDataInt(xml: XML.Element): SIGNED32; 
+	PROCEDURE ^ NewIntChars(i: SIGNED64): XML.Chars; 
+	PROCEDURE ^ NewBoolean*(): Property; 
+	PROCEDURE ^ NewSet*(): Property; 
+	PROCEDURE ^ NewInt32*(): Property; 
+	PROCEDURE ^ NewInteger*(): Property; 
+	PROCEDURE ^ NewSize*(): Property; 
+	PROCEDURE ^ NewReal*(): Property; 
+	PROCEDURE ^ NewString*(): Property; 
+	PROCEDURE ^ NewColor*(): Property; 
+	PROCEDURE ^ NewFont*(): Property; 
+	PROCEDURE ^ NewPoint*(): Property; 
+	PROCEDURE ^ NewRectangle*(): Property; 
+	PROCEDURE ^ NewReference*(): Property; 
+	PROCEDURE ^ GetModel*(ref: ANY ; VAR m: Models.Model): BOOLEAN; 
+BEGIN
+END WMProperties.

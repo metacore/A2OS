@@ -1,0 +1,426 @@
+MODULE WMBuilder;
+	IMPORT Modules, Kernel, KernelLog, Streams, Commands, Inputs, Strings, UTF8Strings, Files, XML, XMLObjects, XMLScanner, XMLParser, Math, Repositories, WMRepositories, WMUtilities, WMRectangles, WMGraphics, WMMessages, WMWindowManager, WMRestorable, WMProperties, WMComponents, WMStandardComponents, WMEditors, WMTrees, WMInspectionComponents, WMDialogs, Models, StringCollections := GenericCollections(Strings.String,LessString);
+CONST 
+	WindowWidth = 130; 
+	WindowHeight = 320; 
+	EditWindowWidth = 400; 
+	EditWindowHeight = 320; 
+	Invalid = MIN(SIGNED32); 
+	UseMode = 0; 
+	EditMode = 1; 
+	No =  -1; 
+	Left = 0; 
+	TopLeft = 1; 
+	Top = 2; 
+	TopRight = 3; 
+	Right = 4; 
+	BottomRight = 5; 
+	Bottom = 6; 
+	BottomLeft = 7; 
+	Inside = 8; 
+	Paint = 999; 
+	None = 0; 
+	SelectComponent = 1; 
+	ResizeMove = 2; 
+	Spawn = 3; 
+	PaintComponent = 5; 
+	State_Running = 0; 
+	State_Terminating = 99; 
+	State_Terminated = 100; 
+	Frame_Selection = 0; 
+	Frame_Selection_InsertAt = 1; 
+	DistanceLimit = 4; 
+	DarkYellow = 1347420415; 
+	ColorLocked = DarkYellow; 
+	ColorSelected = WMGraphics.Red; 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	HelperWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+
+		PROCEDURE ^  & New(CONST windowTitle: ARRAY OF CHAR; component: WMComponents.VisualComponent; x, y, width, height: SIGNED32; alpha: BOOLEAN); 
+	END HelperWindow; 
+
+	ComponentWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		repositories: WMRepositories.RepositoriesView; 
+		repository: WMRepositories.RepositoryView; 
+		loadBtn, storeBtn, unloadBtn: WMStandardComponents.Button; 
+		filenameEditor: WMEditors.Editor; 
+		statusLabel: WMStandardComponents.Label; 
+		selection: WMRepositories.EntryWrapper; 
+		opNum: SIGNED32; 
+
+		PROCEDURE ^  & Init*(width, height: SIZE; alpha: BOOLEAN); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ SetStatusLabel(CONST m1, m2, m3: ARRAY OF CHAR); 
+		PROCEDURE ^ LoadRepository(CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ HandleButtons(sender, data: ANY ); 
+		PROCEDURE ^ OnEnter(sender, data: ANY ); 
+		PROCEDURE ^ GetSelectedComponent(): Repositories.Component; 
+		PROCEDURE ^ OnRepositoriesClicked(sender, data: ANY ); 
+		PROCEDURE ^ OnComponentClicked(sender, data: ANY ); 
+		PROCEDURE ^ OnClickedSelected(sender, data: ANY ); 
+	END ComponentWindow; 
+
+	TreeNode = OBJECT (WMTrees.TreeNode)
+	VAR 
+		color, bgColor: SIGNED32; 
+
+		PROCEDURE ^  & Init*; 
+	END TreeNode; 
+
+	ComponentTree = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		refreshBtn: WMStandardComponents.Button; 
+		treeView: WMTrees.TreeView; 
+		tree: WMTrees.Tree; 
+		rootComponent: Repositories.Component; 
+		selection: Selection; 
+		insertAtObj: ANY ; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AddComponents(component: Repositories.Component; parent: WMTrees.TreeNode); 
+		PROCEDURE ^ Refresh(sender, data: ANY ); 
+		PROCEDURE ^ UpdateNodeColor(node: WMTrees.TreeNode); 
+		PROCEDURE ^ TraverseNodes(parent: WMTrees.TreeNode); 
+		PROCEDURE ^ UpdateColors; 
+		PROCEDURE ^ DrawNode(canvas: WMGraphics.Canvas; w, h: SIZE; node: WMTrees.TreeNode; state: SET); 
+		PROCEDURE ^ SetComponent(rootComponent: Repositories.Component; selection: Selection); 
+		PROCEDURE ^ SetInsertAtObj(insertAtObj: ANY ); 
+	END ComponentTree; 
+
+	CodeMode = ENUM cmImport = 0, cmVar = 1, cmWire = 2 END; 
+
+	ComponentCode = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		rootComponent: Repositories.Component; 
+		moduleName: Strings.String; 
+		editor: WMEditors.Editor; 
+		importList: StringCollections.Vector; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetComponent(rootComponent: Repositories.Component); 
+		PROCEDURE ^ SetModuleName(moduleName: Strings.String); 
+		PROCEDURE ^ Refresh(sender, data: ANY ); 
+		PROCEDURE ^ WriteModule(w: Streams.Writer); 
+		PROCEDURE ^ WriteModuleImports(w: Streams.Writer); 
+		PROCEDURE ^ WriteModuleTypes(w: Streams.Writer); 
+		PROCEDURE ^ WriteWindow(w: Streams.Writer); 
+		PROCEDURE ^ WriteWindowVariables(w: Streams.Writer); 
+		PROCEDURE ^ WriteWindowProcs(writer: Streams.Writer); 
+		PROCEDURE ^ WriteModuleProcs(writer: Streams.Writer); 
+		PROCEDURE ^ PostprocessGenerator(CONST generator: ARRAY OF CHAR): Strings.String; 
+		PROCEDURE ^ TraverseComponent(component: Repositories.Component; mode: CodeMode; writer: Streams.Writer); 
+	END ComponentCode; 
+
+	Indicator = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		value: ARRAY 128 OF CHAR; 
+		textColor: SIGNED32; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetCaption(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END Indicator; 
+
+	PropertyWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		propertyPanel: WMInspectionComponents.PropertyPanel; 
+
+		PROCEDURE ^  & Init*(width, height: SIZE; alpha: BOOLEAN); 
+		PROCEDURE ^ SetComponent(sender, component: ANY ); 
+	END PropertyWindow; 
+
+	ComponentArray = POINTER TO ARRAY OF Repositories.Component; 
+
+	BufferArray = POINTER TO ARRAY OF Strings.String; 
+
+	Clipboard = OBJECT {EXCLUSIVE} 
+	VAR 
+		nofComponents: SIGNED32; 
+		buffers: BufferArray; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Put(components: ComponentArray); 
+		PROCEDURE ^ Get(): ComponentArray; 
+		PROCEDURE ^ LoadContent(buffer: Strings.String): XML.Content; 
+		PROCEDURE ^ Clear; 
+		PROCEDURE ^ Resize; 
+	END Clipboard; 
+
+	Parser = OBJECT 
+	VAR 
+		hasError: BOOLEAN; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ ReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Parse(reader: Streams.Reader; VAR document: XML.Document): BOOLEAN; 
+	END Parser; 
+
+	ComponentInfo = RECORD 
+		originX, originY: SIZE; 
+	END; 
+
+	SnapGrid = OBJECT 
+	VAR 
+		offsetX, offsetY: SIZE; 
+		deltaX, deltaY: SIZE; 
+		nX, nY: SIZE; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Snap(x, y: SIZE; VAR snapX, snapY: SIZE); 
+	END SnapGrid; 
+
+	Frame = OBJECT 
+	VAR 
+		bounds: WMRectangles.Rectangle; 
+		activeHandles: SET; 
+		clLine0, clLine1, clActiveHandles, clInactiveHandles: SIGNED32; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ GetWidth(): SIZE; 
+		PROCEDURE ^ GetHeight(): SIZE; 
+		PROCEDURE ^ IsValid(): BOOLEAN; 
+		PROCEDURE ^ SetFrameType(type: SIGNED32); 
+		PROCEDURE ^ Clear; 
+		PROCEDURE ^ SetActiveHandlesFor(alignment: SIGNED32); 
+		PROCEDURE ^ SetActiveHandles(activeHandles: SET); 
+		PROCEDURE ^ FixBounds; 
+		PROCEDURE ^ IsInActiveFrameHandle(x, y: SIZE): INTEGER; 
+		PROCEDURE ^ IsInFrameHandle(x, y: SIZE): INTEGER; 
+		PROCEDURE ^ DrawFrameHandles(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; activeColor, inactiveColor: SIGNED32; active: SET); 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas); 
+	END Frame; 
+
+	RectangleReal = RECORD 
+		l, t, b, r: FLOAT32; 
+	END; 
+
+	BoundsArray = POINTER TO ARRAY OF RectangleReal; 
+
+	Selection = OBJECT 
+	VAR 
+		frame: WMRectangles.Rectangle; 
+		activeFrameHandles: SET; 
+		root: WMComponents.VisualComponent; 
+		parent: XML.Element; 
+		nofComponents: SIGNED32; 
+		components: ComponentArray; 
+		bounds: BoundsArray; 
+
+		PROCEDURE ^  & Init(root: WMComponents.VisualComponent); 
+		PROCEDURE ^ NofComponents(): SIGNED32; 
+		PROCEDURE ^ NofVisualComponents(): SIGNED32; 
+		PROCEDURE ^ NofLockedComponents(): SIGNED32; 
+		PROCEDURE ^ GetParent(): XML.Element; 
+		PROCEDURE ^ Contains(component: Repositories.Component): BOOLEAN; 
+		PROCEDURE ^ GetFirst(): Repositories.Component; 
+		PROCEDURE ^ ModificationsAllowed(): BOOLEAN; 
+		PROCEDURE ^ Delete; 
+		PROCEDURE ^ ToFront; 
+		PROCEDURE ^ SetExtents(width, height: SIZE); 
+		PROCEDURE ^ SetLimit(rect: WMRectangles.Rectangle; mode: INTEGER); 
+		PROCEDURE ^ MoveRelative(dx, dy: SIZE); 
+		PROCEDURE ^ InitResize(x0, y0, width0, height0: SIZE); 
+		PROCEDURE ^ ResizeProportional(x, y, width, height: SIZE; snapX, snapY: SIZE); 
+		PROCEDURE ^ Resize(mode: SIGNED32; dx, dy: SIGNED32); 
+		PROCEDURE ^ Get(): ComponentArray; 
+		PROCEDURE ^ Set(component: Repositories.Component); 
+		PROCEDURE ^ Determine(rect: WMRectangles.Rectangle); 
+		PROCEDURE ^ FindVisualComponentInRectangle(parent: XML.Element; rect: WMRectangles.Rectangle): WMComponents.VisualComponent; 
+		PROCEDURE ^ GetBoundingBox(VAR rect: WMRectangles.Rectangle; VAR active: SET); 
+		PROCEDURE ^ ToEditorCoordinates(component: WMComponents.Component; VAR rect: WMRectangles.Rectangle); 
+		PROCEDURE ^ ToComponentCoordinates(component: WMComponents.Component; VAR rect: WMRectangles.Rectangle); 
+		PROCEDURE ^ CanAdd(component: Repositories.Component): BOOLEAN; 
+		PROCEDURE ^ Add(component: Repositories.Component); 
+		PROCEDURE ^ Remove(component: Repositories.Component); 
+		PROCEDURE ^ Clear; 
+		PROCEDURE ^ Reset; 
+		PROCEDURE ^ ResizeComponentsArray; 
+	END Selection; 
+
+	ComponentEditor = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		panel: WMComponents.VisualComponent; 
+		mode: SIGNED32; 
+		selection: Selection; 
+		selectionFrame: Frame; 
+		frame, dragFrame: Frame; 
+		limitMode: SIGNED32; 
+		insertObjAt: WMComponents.VisualComponent; 
+		downX, downY, lastX, lastY, dragX, dragY: SIZE; 
+		oldPointerInfo: INTEGER; 
+		selectInsertObjAt: BOOLEAN; 
+		showSnapGrid: WMProperties.BooleanProperty; 
+		showSnapGridI: BOOLEAN; 
+		enableSnap: WMProperties.BooleanProperty; 
+		enableSnapI: BOOLEAN; 
+		showHelperLines: WMProperties.BooleanProperty; 
+		showHelperLinesI: BOOLEAN; 
+		showFrames: WMProperties.BooleanProperty; 
+		showFramesI: BOOLEAN; 
+		snapgrid: SnapGrid; 
+		owner: MainWindow; 
+		manager: WMWindowManager.WindowManager; 
+		pointerMode: SIGNED32; 
+		frameResizeOrigin: WMRectangles.Rectangle; 
+		frameResizeMode: SIGNED32; 
+		modifierFlags, mouseKeys: SET; 
+		clipboard: Clipboard; 
+		paint: BOOLEAN; 
+		state: SIGNED32; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetPanel(panel: WMComponents.VisualComponent); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ SetPaint(paint: BOOLEAN); 
+		PROCEDURE ^ SetMode(mode: SIGNED32); 
+		PROCEDURE ^ GetMode(): SIGNED32; 
+		PROCEDURE ^ ExtGetPositionOwnerHandler(x, y: SIZE; VAR pointerOwner: WMComponents.VisualComponent; VAR handled: BOOLEAN); 
+		PROCEDURE ^ Delete; 
+		PROCEDURE ^ ToFront; 
+		PROCEDURE ^ AddComponent(c: Repositories.Component; x, y: SIZE); 
+		PROCEDURE ^ Select(c: Repositories.Component); 
+		PROCEDURE ^ SelectInsertAtObj(vc: WMComponents.VisualComponent); 
+		PROCEDURE ^ InvalidateRegion(frame, oldFrame: WMRectangles.Rectangle); 
+		PROCEDURE ^ InvalidateFrame(frame: Frame); 
+		PROCEDURE ^ GetLimitMode(x, y: SIZE; VAR bounds: WMRectangles.Rectangle): INTEGER; 
+		PROCEDURE ^ MoveFrame(direction: SIGNED32); 
+		PROCEDURE ^ CheckSelectionFrame; 
+		PROCEDURE ^ CheckCursor(x, y: SIZE; keys, modifierFlags: SET); 
+		PROCEDURE ^ CheckSelection; 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerLeave*; 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ TakeOverSize(x, y: SIZE); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keySym: SIZE); 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ DragAddComponent(component: Repositories.Component; VAR res: INTEGER); 
+		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ UpdateFramePosition; 
+		PROCEDURE ^ FindPositionOwner(x, y: SIZE): WMComponents.VisualComponent; 
+		PROCEDURE ^ GetComponentInfo(component: WMComponents.VisualComponent): ComponentInfo; 
+		PROCEDURE ^ ToMyCoordinates(component: WMComponents.VisualComponent; x, y: SIZE; VAR myX, myY: SIZE); 
+		PROCEDURE ^ ToComponentCoordinates(component: WMComponents.VisualComponent; x, y: SIZE; VAR cx, cy: SIZE); 
+		PROCEDURE ^ DrawHorizontalLine(canvas: WMGraphics.Canvas; y: SIZE; color: SIGNED32); 
+		PROCEDURE ^ DrawVerticalLine(canvas: WMGraphics.Canvas; x: SIZE; color: SIGNED32); 
+		PROCEDURE ^ DrawFrames(canvas: WMGraphics.Canvas; parent: WMComponents.VisualComponent; ofsX, ofsY: SIZE); 
+		PROCEDURE ^ DrawHelperLines(canvas: WMGraphics.Canvas; parent: WMComponents.VisualComponent; level: SIGNED32; ofsX, ofsY: SIZE); 
+		PROCEDURE ^ DrawForeground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ DrawSnapGrid(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ UpdateState; 
+	BEGIN{ACTIVE} 
+	END ComponentEditor; 
+
+	EditWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		editor: ComponentEditor; 
+		filename: Files.FileName; 
+		owner: MainWindow; 
+		modified: BOOLEAN; 
+		id: SIGNED32; 
+		next: EditWindow; 
+
+		PROCEDURE ^ FocusGot*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^  & New(owner: MainWindow; width, height: SIZE; alpha: BOOLEAN); 
+	END EditWindow; 
+
+	WindowArray = POINTER TO ARRAY OF EditWindow; 
+
+	WindowList = OBJECT {EXCLUSIVE} 
+	VAR 
+		windows: EditWindow; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ IsContained(window: EditWindow): BOOLEAN; 
+		PROCEDURE ^ Add(window: EditWindow); 
+		PROCEDURE ^ Remove(window: EditWindow); 
+		PROCEDURE ^ Get(id: SIGNED32): EditWindow; 
+		PROCEDURE ^ GetAll(): WindowArray; 
+		PROCEDURE ^ SetActive(window: EditWindow); 
+		PROCEDURE ^ GetActive(): EditWindow; 
+	END WindowList; 
+
+	MainWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		openBtn, saveBtn, addBtn, paintBtn, loadBtn, deleteBtn, toFrontBtn, getXmlBtn, storeBtn: WMStandardComponents.Button; 
+		positionXLbl, positionYLbl: Indicator; 
+		frameTopLeft, frameBottomRight, frameSize: Indicator; 
+		lastFrame: WMRectangles.Rectangle; 
+		lastValid: BOOLEAN; 
+		toggleEditModeBtn: WMStandardComponents.Button; 
+		toggleSnapGridBtn, toggleHelperLinesBtn, toggleFramesBtn: WMStandardComponents.Button; 
+		toggleEditBtn, toggleComponentsBtn, toggleStructureBtn, togglePropertiesBtn: WMStandardComponents.Button; 
+		componentTree: ComponentTree; 
+		componentCode: ComponentCode; 
+		windowList: WindowList; 
+		componentWindow: ComponentWindow; 
+		componentTreeWindow: HelperWindow; 
+		componentCodeWindow: HelperWindow; 
+		propertyWindow: PropertyWindow; 
+		windowInfo: WMWindowManager.WindowInfo; 
+
+		PROCEDURE ^  & New(c: WMRestorable.Context); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ UpdateInfo; 
+		PROCEDURE ^ HandleDocumentInfo(CONST info: WMWindowManager.DocumentInfo; new: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SetActiveEditor(window: EditWindow); 
+		PROCEDURE ^ RemoveEditor(window: EditWindow); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY ); 
+		PROCEDURE ^ HandleOpenBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleSaveBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleAddBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandlePaintBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleLoadBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleDeleteBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleToFrontBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleGetXmlBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleStoreBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleToggleEditModeBtn(sender, data: ANY ); 
+		PROCEDURE ^ HandleNodeClicked(sender, data: ANY ); 
+		PROCEDURE ^ HandleNodeContextMenu(sender: ANY ; x, y: SIZE); 
+		PROCEDURE ^ UpdateCursorPosition(x, y: SIZE); 
+		PROCEDURE ^ UpdateFramePosition(valid: BOOLEAN; frame: WMRectangles.Rectangle); 
+		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR; window: EditWindow; VAR res: INTEGER); 
+		PROCEDURE ^ LoadWindows(data: XML.Element); 
+		PROCEDURE ^ StoreWindows(): XML.Element; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ Close*; 
+	END MainWindow; 
+VAR 
+	nofWindows, nextId: SIGNED32; 
+	StrComponentEditor: Strings.String; 
+	leftLimit, topLeftLimit, topLimit, topRightLimit, rightLimit, bottomRightLimit, bottomLimit, bottomLeftLimit, sizeLimit, crosshair: WMWindowManager.PointerInfo; 
+
+	PROCEDURE ^ CreateIndicator(CONST content: ARRAY OF CHAR; width, alignment: SIGNED32): Indicator; 
+	PROCEDURE ^ Distance(x0, y0, x1, y1: SIZE): FLOAT32; 
+	PROCEDURE ^ DrawDashedLine(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color0, color1, width0, width1: SIGNED32); 
+	PROCEDURE ^ DrawRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color: SIGNED32); 
+	PROCEDURE ^ DrawDashedRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color0, color1, width0, width1: SIGNED32); 
+	PROCEDURE ^ DrawIndication(canvas: WMGraphics.Canvas; xs, ys, xe, ye, width: SIZE; color: SIGNED32); 
+	PROCEDURE ^ FillWithRectangles(canvas: WMGraphics.Canvas; rectangle: WMRectangles.Rectangle; width: SIGNED32; color1, color2: SIGNED32); 
+	PROCEDURE ^ ShowComponent*(component: WMComponents.Component); 
+	PROCEDURE ^ ShowRect*(CONST name: ARRAY OF CHAR; rect: WMRectangles.Rectangle); 
+	PROCEDURE ^ LabelComponent(vc: WMComponents.VisualComponent); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ GenComponentEditor*(): XML.Element; 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ LoadCursors; 
+	PROCEDURE ^ LoadRepositories; 
+	PROCEDURE ^ LessString(l, r: Strings.String): BOOLEAN; 
+	PROCEDURE ^ GetId(): SIGNED32; 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMBuilder.

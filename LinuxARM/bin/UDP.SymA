@@ -1,0 +1,32 @@
+MODULE UDP;
+	IMPORT IP, Sockets, Unix;
+CONST 
+	Ok* = 0; 
+	PortInUse* = 3501; 
+	Timeout* = 3502; 
+	BufferOverflow* = 3503; 
+	NoInterface* = 3504; 
+	Closed* = 3505; 
+	Error* = 9999; 
+	NilPort* = 0; 
+	anyport = 0; 
+	UDPHdrLen = 8; 
+	MaxUDPDataLen = (65536 - UDPHdrLen); 
+TYPE 
+	Socket* = OBJECT {EXCLUSIVE} 
+	VAR 
+		socket: SIGNED32; 
+		lport: SIGNED32; 
+		open: BOOLEAN; 
+
+		PROCEDURE ^  & Open*(lport: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Send*(fip: IP.Adr; fport: SIGNED32; CONST data: ARRAY OF CHAR; ofs, len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ SendBroadcast*(int: IP.Interface; fport: SIGNED32; CONST data: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size: SIZE; ms: SIGNED32; VAR fip: IP.Adr; VAR fport: SIGNED32; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ Close*; 
+	END Socket; 
+VAR 
+	anyIP: IP.Adr; 
+
+BEGIN
+END UDP.

@@ -1,0 +1,101 @@
+MODULE WMDefaultWindows;
+	IMPORT Strings, WM := WMWindowManager, WMRectangles, Raster, Graphics := WMGraphics, Messages := WMMessages, Inputs, KernelLog, WMGraphicUtilities;
+CONST 
+	DraggingSnapRangeBase = 40; 
+	NoCorner = 0; 
+	UpperLeft = 1; 
+	UpperRight = 2; 
+	BottomLeft = 3; 
+	BottomRight = 4; 
+	NoButton = 0; 
+	CloseButton = 1; 
+	MinimizeButton = 2; 
+TYPE 
+	Window = WM.Window; 
+
+	Message = Messages.Message; 
+
+	String = Strings.String; 
+
+	DecorWindow* = OBJECT (Window)
+	VAR 
+		lastX, lastY: SIZE; 
+		useBitmaps*, dragging: BOOLEAN; 
+		resized: BOOLEAN; 
+		mode*: SIGNED32; 
+		corner: SIGNED32; 
+		mode0Move: BOOLEAN; 
+		hasFocus: BOOLEAN; 
+		picAa*, picBa*, picCa*, picAb*, picBb*, picCb*: Graphics.Image; 
+		distXY*: SIGNED32; 
+		vertical*: BOOLEAN; 
+		focusthreshold*, threshold*: SIGNED32; 
+		draggingWidth, draggingHeight: SIZE; 
+		draggingSnapRange: SIGNED32; 
+		sac, sic, basw, bisw: SIGNED32; 
+		modKeys: SET; 
+
+		PROCEDURE ^ SetMasterFocus*(hasFocus: BOOLEAN); 
+		PROCEDURE ^ GetActivePics*(VAR a, b, c: Graphics.Image); 
+		PROCEDURE ^ CheckHorizontal*(x, y: SIZE): BOOLEAN; 
+		PROCEDURE ^ CheckVertical*(x, y: SIZE): BOOLEAN; 
+		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ SnapDraggingSize(VAR width, height: SIZE); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ Handle*(VAR m: Messages.Message); 
+	END DecorWindow; 
+
+	TopWindow* = OBJECT (DecorWindow)
+	VAR 
+		closeInactive*, closeActive*, closeSelected*, closeHover*, minimizeInactive*, minimizeActive*, minimizeHover*, titleImg: Graphics.Image; 
+		minimizeOffset: SIGNED32; 
+		titleCanvas: Graphics.BufferCanvas; 
+		down, hover: SIGNED32; 
+		tac, tic, tax, tix, tay, tiy: SIGNED32; 
+
+		PROCEDURE ^ CheckButtons(x, y: SIZE; VAR button: SIGNED32); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerLeave*; 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: SIGNED32); 
+		PROCEDURE ^ CloseDispatch*(sender, data: ANY ); 
+		PROCEDURE ^ StyleChanged*; 
+	END TopWindow; 
+
+	LeftWindow* = OBJECT (DecorWindow)
+
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: SIGNED32); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ StyleChanged*; 
+	END LeftWindow; 
+
+	RightWindow* = OBJECT (DecorWindow)
+
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: SIGNED32); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ StyleChanged*; 
+	END RightWindow; 
+
+	BottomWindow* = OBJECT (DecorWindow)
+
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: SIGNED32); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ StyleChanged*; 
+	END BottomWindow; 
+
+	BackWindow* = OBJECT (WM.Window)
+	VAR 
+		color: Graphics.Color; 
+
+		PROCEDURE ^  & New*(bgColor: SIGNED32); 
+		PROCEDURE ^ StyleChanged*; 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: SIGNED32); 
+	END BackWindow; 
+
+	PROCEDURE ^ RepeatMiddleVertical*(canvas: Graphics.Canvas; csw, csh, w, h: SIZE; q: INTEGER; top, middle, bottom: Graphics.Image); 
+	PROCEDURE ^ RepeatMiddleHorizontal*(canvas: Graphics.Canvas; csw, csh, w, h: SIZE; q: INTEGER; left, middle, right: Graphics.Image); 
+BEGIN
+END WMDefaultWindows.

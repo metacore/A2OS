@@ -1,0 +1,85 @@
+MODULE WMTetris;
+	IMPORT Modules, Kernel, Random, Strings, Raster, WMRasterScale, WMRectangles, WMGraphics, WMGraphicUtilities, WMMessages, WM := WMWindowManager, WMDialogs;
+CONST 
+	Border = 10; 
+	BoxSize = 16; 
+	Width = 10; 
+	Height = 30; 
+	FieldOffsetX = 120; 
+	FieldOffsetY = Border; 
+	InfoOffsetX = Border; 
+	InfoOffsetY = 100; 
+	InfoWidth = (FieldOffsetX - (2 * Border)); 
+	InfoHeight = (110 + (2 * Border)); 
+	InfoLineHeight = 20; 
+	WindowWidth = (((1 * Border) + FieldOffsetX) + (Width * BoxSize)); 
+	WindowHeight = ((2 * Border) + (Height * BoxSize)); 
+	BevelBorder = 3; 
+	BlockSize = 5; 
+	NofBlocks = 7; 
+	RandomDrop = FALSE; 
+	LinesToLevelRatio = 10; 
+	TwoLinesBonus = 6; 
+	ThreeLinesBonus = 13; 
+	FourLinesBonus = 46; 
+	SameColorBonus = 50; 
+	LevelUpBonus = 20; 
+	Initialized = 0; 
+	Running = 5; 
+	Paused = 6; 
+	Restarting = 7; 
+	Finished = 8; 
+	Terminating = 9; 
+	Terminated = 10; 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	Block = ARRAY BlockSize OF ARRAY BlockSize OF CHAR; 
+
+	Window = OBJECT {EXCLUSIVE} (WM.BufferWindow)
+	VAR 
+		dropped: BOOLEAN; 
+		field: ARRAY Width OF ARRAY Height OF CHAR; 
+		rotBlock, block, nextBlock: Block; 
+		posX, posY: SIGNED32; 
+		mode: Raster.Mode; 
+		random: Random.Generator; 
+		lines, blocks, delay, delayDec, level, points: SIGNED32; 
+		generateNewBlock: BOOLEAN; 
+		timer: Kernel.Timer; 
+		state: SIGNED32; 
+		backgroundImage: WMGraphics.Image; 
+
+		PROCEDURE ^  & New*(alpha: BOOLEAN); 
+		PROCEDURE ^ SetState(state: SIGNED32); 
+		PROCEDURE ^ AwaitState(state: SIGNED32); 
+		PROCEDURE ^ DrawInfo; 
+		PROCEDURE ^ StyleChanged*; 
+		PROCEDURE ^ RotateBlock(CONST block: Block): Block; 
+		PROCEDURE ^ DrawBox(x, y: SIGNED32; color: CHAR); 
+		PROCEDURE ^ DrawPreview(CONST block: Block); 
+		PROCEDURE ^ SetBlock(x, y: SIGNED32; clear: BOOLEAN); 
+		PROCEDURE ^ HasDownCollision(x, y: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ HasCollision(CONST bl: Block; x, y: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ Move(dir: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
+		PROCEDURE ^ NewBlock(): Block; 
+		PROCEDURE ^ RemoveLine(y: SIGNED32); 
+		PROCEDURE ^ ClearLines; 
+		PROCEDURE ^ DropStep; 
+		PROCEDURE ^ Reset; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	BEGIN{ACTIVE} 
+	END Window; 
+VAR 
+	colors: ARRAY (NofBlocks + 1) OF Raster.Pixel; 
+	nofWindows: SIGNED32; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMTetris.

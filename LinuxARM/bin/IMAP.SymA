@@ -1,0 +1,93 @@
+MODULE IMAP;
+	IMPORT DNS, IP, Streams, TCP, Strings, KernelLog, Classes := TFClasses, IMAPUtilities;
+CONST 
+	DEBUG = FALSE; 
+	DEBUGLEVEL = 1; 
+	DEAD* =  -1; 
+	NOAUTH* = 0; 
+	AUTH* = 1; 
+	SELECT* = 2; 
+	LITERAL* = 0; 
+	STRING* = 1; 
+	LIST* = 2; 
+	ATOM* = 3; 
+	HEADER* = 4; 
+	OK* = 0; 
+	BAD = 1; 
+	READBACKERR = 2; 
+	SENDERR = 3; 
+TYPE 
+	String = Strings.String; 
+
+	Entry* = POINTER TO RECORD 
+		data-: String; 
+		list-: Classes.List; 
+		type-: SIGNED32; 
+		command-: ARRAY 40 OF CHAR; 
+		number-: SIGNED32; 
+	END; 
+
+	Connection* = OBJECT {EXCLUSIVE} 
+	VAR 
+		in: Streams.Reader; 
+		out: Streams.Writer; 
+		tag: SIGNED32; 
+		state: SIGNED32; 
+		tagString: ARRAY 80 OF CHAR; 
+		buffer: ARRAY 80 OF CHAR; 
+		connection: TCP.Connection; 
+		capability: Classes.List; 
+		ret: Classes.List; 
+		first: BOOLEAN; 
+		logout: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(VAR host: ARRAY OF CHAR; port: SIGNED32; VAR result: SIGNED32); 
+		PROCEDURE ^ MakeOneArgumentCommand(command: ARRAY OF CHAR; VAR argument: ARRAY OF CHAR): String; 
+		PROCEDURE ^ MakeTwoArgumentCommand(command: ARRAY OF CHAR; VAR argument1, argument2: ARRAY OF CHAR): String; 
+		PROCEDURE ^ Login*(username: ARRAY OF CHAR; password: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ Logout*(): SIGNED32; 
+		PROCEDURE ^ GetCurrentState*(): SIGNED32; 
+		PROCEDURE ^ Expunge*(VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ Create*(mailbox: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ Delete*(mailbox: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ Rename*(from, to: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ Select*(mailbox: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ Examine*(mailbox: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ List*(refName, mailbox: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ Subscribe*(mailbox: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ Unsubscribe*(mailbox: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ Append*(VAR mailbox, message: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ UIDCopy*(what, to: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ Close*(): SIGNED32; 
+		PROCEDURE ^ Noop*(VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ Status*(VAR mailbox, items: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ Search*(CONST criteria: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ Fetch*(set: ARRAY OF CHAR; items: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ UIDFetch*(set: ARRAY OF CHAR; items: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ UIDStore*(set: ARRAY OF CHAR; flags: ARRAY OF CHAR; plus: BOOLEAN; VAR ret: Classes.List): SIGNED32; 
+		PROCEDURE ^ SendIMAPCommand(command: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ CheckResultCode(list: Classes.List): BOOLEAN; 
+		PROCEDURE ^ SendContinuedCommand(VAR command, continuation: ARRAY OF CHAR; VAR ret: Classes.List; newstate, failstate: SIGNED32): SIGNED32; 
+		PROCEDURE ^ SendContinuation(VAR continuation: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ SendToIMAPServer(command: ARRAY OF CHAR; VAR ret: Classes.List; newstate, failstate: SIGNED32): SIGNED32; 
+		PROCEDURE ^ ReadResponse(VAR ret: Classes.List): BOOLEAN; 
+		PROCEDURE ^ Parse(command: ARRAY OF CHAR; num: SIGNED32; numflag: BOOLEAN; VAR ret: Classes.List): BOOLEAN; 
+		PROCEDURE ^ ReadResponseCode(): BOOLEAN; 
+		PROCEDURE ^ NextLine(): BOOLEAN; 
+		PROCEDURE ^ ReadText(VAR text: String): BOOLEAN; 
+		PROCEDURE ^ ReadNumberEnumeration(VAR list: Classes.List): BOOLEAN; 
+		PROCEDURE ^ ReadList(VAR list: Classes.List): BOOLEAN; 
+		PROCEDURE ^ ReadLiteral(VAR buffer: String): BOOLEAN; 
+		PROCEDURE ^ ReadQuotedString(VAR buffer: String): BOOLEAN; 
+		PROCEDURE ^ ReadAtom(VAR buffer: String): BOOLEAN; 
+		PROCEDURE ^ ReadFlag(VAR buffer: String): BOOLEAN; 
+		PROCEDURE ^ ReadToken(VAR token: String): BOOLEAN; 
+		PROCEDURE ^ ReadUToken(VAR resp: String): BOOLEAN; 
+		PROCEDURE ^ ReadPToken(VAR buffer: String): BOOLEAN; 
+		PROCEDURE ^ DBGList*(VAR listP: Classes.List); 
+		PROCEDURE ^ DBGLiteral(VAR text: String); 
+		PROCEDURE ^ DBGString(VAR text: String); 
+		PROCEDURE ^ DBGAtom(VAR text: String); 
+	END Connection; 
+BEGIN
+END IMAP.

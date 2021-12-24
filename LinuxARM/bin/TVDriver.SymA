@@ -1,0 +1,125 @@
+MODULE TVDriver;
+	IMPORT SYSTEM, Plugins, Modules, KernelLog, Strings, ActiveTimers;
+CONST 
+	RegistryName = \"TVDriver"\; 
+	RegistryDesc = \"TV drivers for Bluebottle"\; 
+	WesternEuropeanChnlSet* = 0; 
+	VbiMaxLines* = 16; 
+	VbiLineSize* = 2048; 
+	VbiBufferItems = 20; 
+	VbiDataSize* = ((VbiLineSize * VbiMaxLines) * 2); 
+	VbiBufferSize* = (VbiDataSize * VbiBufferItems); 
+TYPE 
+	VbiBuffer* = OBJECT {EXCLUSIVE} 
+	VAR 
+		data*: ARRAY VbiBufferSize OF CHAR; 
+		readPos*: SIGNED32; 
+		insertPos*: SIGNED32; 
+		vbiSize*: SIGNED32; 
+		timeout: BOOLEAN; 
+		timer: ActiveTimers.Timer; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ TimeoutHandler; 
+		PROCEDURE ^ AwaitData*; 
+		PROCEDURE ^ Finalize*; 
+	END VbiBuffer; 
+
+	TVTuner* = OBJECT 
+	VAR 
+		frequency*: SIGNED32; 
+
+		PROCEDURE ^  & Init*(vcd: VideoCaptureDevice); 
+		PROCEDURE ^ OpenVbi*(): SIGNED32; 
+		PROCEDURE ^ CloseVbi*; 
+		PROCEDURE ^ Open*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ SetChannelSet*(chnlSet: SIGNED32); 
+		PROCEDURE ^ GetChannelSet*(): SIGNED32; 
+		PROCEDURE ^ SetChannel*(chnl: SIGNED32); 
+		PROCEDURE ^ GetChannel*(): SIGNED32; 
+		PROCEDURE ^ GetMaxChannel*(): SIGNED32; 
+		PROCEDURE ^ SetTVFrequency*(freq: SIGNED32); 
+		PROCEDURE ^ SetTVFrequencyImpl*(freq: SIGNED32); 
+		PROCEDURE ^ GetFrequency*(): SIGNED32; 
+		PROCEDURE ^ SetRadioFrequency*(freq: SIGNED32); 
+		PROCEDURE ^ InstallChannelSwitchHandler*(handler: ChannelSwitchHandler); 
+		PROCEDURE ^ NotifyChannelSwitchObservers(freq: SIGNED32); 
+		PROCEDURE ^ GetTunerStatus*(): SIGNED32; 
+		PROCEDURE ^ CalcFieldStrength*(): SIGNED32; 
+		PROCEDURE ^ IsLocked*(): BOOLEAN; 
+		PROCEDURE ^ IsStereo*(): BOOLEAN; 
+		PROCEDURE ^ SetHue*(hue: SIGNED32); 
+		PROCEDURE ^ GetHue*(): SIGNED32; 
+		PROCEDURE ^ SetBrightness*(brightness: SIGNED32); 
+		PROCEDURE ^ GetBrightness*(): SIGNED32; 
+		PROCEDURE ^ SetChromaSaturation*(saturation: SIGNED32); 
+		PROCEDURE ^ GetChromaSaturation*(): SIGNED32; 
+		PROCEDURE ^ SetChromaVSaturation*(saturation: SIGNED32); 
+		PROCEDURE ^ GetChromaVSaturation*(): SIGNED32; 
+		PROCEDURE ^ SetChromaUSaturation*(saturation: SIGNED32); 
+		PROCEDURE ^ GetChromaUSaturation*(): SIGNED32; 
+		PROCEDURE ^ SetLumaNotch*(notch: SIGNED32); 
+		PROCEDURE ^ GetLumaNotch*(): SIGNED32; 
+		PROCEDURE ^ SetContrast*(contrast: SIGNED32); 
+		PROCEDURE ^ GetContrast*(): SIGNED32; 
+		PROCEDURE ^ SetColorBars*(enable: BOOLEAN); 
+	END TVTuner; 
+
+	ChannelSwitchHandler* = PROCEDURE {DELEGATE}(freq: SIGNED32; tuner: TVTuner); 
+
+	ChannelSwitchObserver = OBJECT 
+	VAR 
+		next: ChannelSwitchObserver; 
+		handler: ChannelSwitchHandler; 
+	END ChannelSwitchObserver; 
+
+	NotificationHandler* = PROCEDURE {DELEGATE}; 
+
+	VideoCaptureDevice* = OBJECT (Plugins.Plugin)
+
+		PROCEDURE ^  & Init*(base: ADDRESS; irq, product, rev: SIGNED32); 
+		PROCEDURE ^ GetVbiBuffer*(): VbiBuffer; 
+		PROCEDURE ^ GetTuner*(): TVTuner; 
+		PROCEDURE ^ GetAudio*(): Audio; 
+		PROCEDURE ^ InstallNotificationHandler*(handler: NotificationHandler); 
+		PROCEDURE ^ VideoOpen*; 
+		PROCEDURE ^ VideoClose*; 
+		PROCEDURE ^ IsVideoOpen*(): BOOLEAN; 
+		PROCEDURE ^ IsVbiOpen*(): BOOLEAN; 
+		PROCEDURE ^ SetClipRegion*; 
+		PROCEDURE ^ GetStatus*(): SIGNED32; 
+		PROCEDURE ^ SetInputFormat*(format: SIGNED32); 
+		PROCEDURE ^ GetInputFormat*(): SIGNED32; 
+		PROCEDURE ^ SetPixelFormat*(format: SIGNED32); 
+		PROCEDURE ^ SetInputDev0*; 
+		PROCEDURE ^ SetInputDev1*; 
+		PROCEDURE ^ SetInputDev2*; 
+		PROCEDURE ^ SetInputDevSVideo*; 
+		PROCEDURE ^ SetInputDev3*; 
+		PROCEDURE ^ SetVideo*(addr: ADDRESS; width: SIZE); 
+		PROCEDURE ^ CaptureSingle*; 
+		PROCEDURE ^ CaptureContinuous*; 
+		PROCEDURE ^ StopCaptureContinuous*; 
+		PROCEDURE ^ SetGeometry*(columns, rows, frames: SIGNED32; format: SET); 
+	END VideoCaptureDevice; 
+
+	Audio* = OBJECT 
+
+		PROCEDURE ^  & Init*(vcd: VideoCaptureDevice); 
+		PROCEDURE ^ SetAudioTuner*; 
+		PROCEDURE ^ SetAudioExtern*; 
+		PROCEDURE ^ SetAudioIntern*; 
+		PROCEDURE ^ SetAudioMute*; 
+		PROCEDURE ^ SetAudioUnmute*; 
+		PROCEDURE ^ IsAudioMute*(): BOOLEAN; 
+	END Audio; 
+VAR 
+	channelSwitchObservers: ChannelSwitchObserver; 
+	devices*: Plugins.Registry; 
+
+	PROCEDURE ^ GetVideoDevice*(idx: SIGNED32): VideoCaptureDevice; 
+	PROCEDURE ^ GetDefaultDevice*(): VideoCaptureDevice; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END TVDriver.

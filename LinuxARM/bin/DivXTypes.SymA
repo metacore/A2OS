@@ -1,0 +1,139 @@
+MODULE DivXTypes;
+	IMPORT SYSTEM;
+CONST 
+	Debug* = FALSE; 
+	EnableMMX* = TRUE; 
+	DecMbc* = 45; 
+	DecMbr* = 36; 
+	VisualObjectSequenceStartCode* = 432; 
+	VideoObjectStartCode* = 8; 
+	VisualObjectLayerStartCode* = 18; 
+	GroupOfVopStartCode* = 435; 
+	VideoObjectPlaneStartCode* = 438; 
+	UserDataStartCode* = 434; 
+	IVOP* = 0; 
+	PVOP* = 1; 
+	BVOP* = 2; 
+	Rectangular* = 0; 
+	Binary* = 1; 
+	BinaryShapeOnly* = 2; 
+	GrayScaleOnly* = 3; 
+	StaticSprite* = 1; 
+	NotCoded* =  -1; 
+	Inter* = 0; 
+	InterQ* = 1; 
+	Inter4V* = 2; 
+	Intra* = 3; 
+	IntraQ* = 4; 
+	Stuffing* = 7; 
+	Top* = 1; 
+	Left* = 0; 
+TYPE 
+	PointerToArrayOfCHAR* = POINTER TO ARRAY OF CHAR; 
+
+	PointerToArrayOfLONGINT* = POINTER TO ARRAY OF SIGNED32; 
+
+	PointerToArrayOfSHORTINT* = POINTER TO ARRAY OF SIGNED8; 
+
+	DCStoreLumArray* = POINTER TO ARRAY OF ARRAY OF SIGNED32; 
+
+	ACLeftLumArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
+
+	ACTopLumArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
+
+	DCStoreChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
+
+	ACLeftChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
+
+	ACTopChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
+
+	VideoBuffer* = RECORD 
+		data*: POINTER TO ARRAY OF CHAR; 
+		index*: SIZE; 
+		size*: SIZE; 
+	END; 
+
+	MyUtils* = OBJECT 
+
+		PROCEDURE ^ CompareCharArrays*(VAR ar1, ar2: ARRAY OF CHAR; len: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ MemSet*(d: PointerToArrayOfCHAR; offset: SIGNED32; val: CHAR; len: SIGNED32); 
+	END MyUtils; 
+
+	TabTypePtr* = POINTER TO TabType; 
+
+	TabType* = RECORD 
+		val*, len*: SIGNED32; 
+	END; 
+
+	MP4Tables* = OBJECT 
+	VAR 
+		intraQuantMatrix*: ARRAY 64 OF SIGNED32; 
+		nonIntraQuantMatrix*: ARRAY 64 OF SIGNED32; 
+		zigZagScan*, alternateHorizontalScan*, alternateVerticalScan*: PointerToArrayOfLONGINT; 
+
+		PROCEDURE ^  & init*; 
+	END MP4Tables; 
+
+	ACDC* = OBJECT 
+	VAR 
+		dcStoreLum*: DCStoreLumArray; 
+		acLeftLum*: ACLeftLumArray; 
+		acTopLum*: ACTopLumArray; 
+		dcStoreChr*: DCStoreChrArray; 
+		acLeftChr*: ACLeftChrArray; 
+		acTopChr*: ACTopChrArray; 
+		predictDir*: SIGNED32; 
+
+		PROCEDURE ^  & init*; 
+	END ACDC; 
+
+	MP4State* = OBJECT 
+	VAR 
+		hdr*: MP4Header; 
+		mp4Tables*: MP4Tables; 
+		quantStore*: ARRAY (DecMbr + 1) OF ARRAY (DecMbc + 1) OF SIGNED32; 
+		coeffPred*: ACDC; 
+		clpData*, clp*: POINTER TO ARRAY OF SIGNED32; 
+		horizontalSize*, verticalSize*, juiceHor*, juiceVer*, codedPictureWidth*, codedPictureHeight*, chromWidth*, chromHeight*: SIGNED32; 
+		edgedRef*, edgedFor*, frameRef*, frameFor*, displayFrame*: PointerToArrayOfCHAR; 
+		edgedRefBaseOffset*: ARRAY 3 OF SIGNED32; 
+		edgedForBaseOffset*: ARRAY 3 OF SIGNED32; 
+		frameRefBaseOffset*: ARRAY 3 OF SIGNED32; 
+		frameForBaseOffset*: ARRAY 3 OF SIGNED32; 
+		displayFrameBaseOffset*: ARRAY 3 OF SIGNED32; 
+		modeMap*: ARRAY (DecMbr + 1) OF ARRAY (DecMbc + 2) OF SIGNED32; 
+		mbWidth*, mbHeight*: SIGNED32; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ SetUpState*(buffers: MP4Buffers); 
+	END MP4State; 
+
+	MP4Header = OBJECT 
+	VAR 
+		ident*, randomAccessibleVol*, typeIndication*, isObjectLayerIdentifier*, visualObjectLayerVerId*, visualObjectLayerPriority*, aspectRatioInfo*, volControlParameters*, chromaFormat*, lowDelay*, vbvParameters*, firstHalfBitRate*, latterHalfBitRate*, firstHalfvbvBufferSize*, latterHalfvbvBufferSize*, firstHalfvbvOccupancy*, latterHalfvbvOccupancy*, shape*, timeIncrementResolution*, fixedVopRate*, fixedVopTimeIncrement*, width*, height*, interlaced*, obmcDisable*, spriteUsage*, not8Bit*, quantPrecision*, bitsPerPixel*, quantType*, loadIntraQuantMatrix*, loadNonIntraQuantMatrix*, quarterPixel*, complexityEstimationDisable*, errorResDisable*, dataPartitioning*, intraacdcPredDisable*, scalability*: SIGNED32; 
+		timeCode*, closedGov*, brokenLink*, vop*, predictionType*, timeBase*, timeInc*, vopCoded*, roundingType*, horSpatRef*, verSpatRef*, changeCRDisable*, constantAlpha*, constantAlphaValue*, intradcvlcthr*, quantizer*, fCodeFor*, shapeCodingType*: SIGNED32; 
+		notCoded*, mcbpc*, derivedMbType*, cbpc*, acPredFlag*, cbpy*, dQuant*, cbp*: SIGNED32; 
+		mbASize*, mbXSize*, mbYSize*, picNum*, mba*, mbXPos*, mbYPos*, intraBlockRescaled*: SIGNED32; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ FinishHeader*; 
+	END MP4Header; 
+
+	DecoderOptions* = OBJECT 
+	VAR 
+		xDim*, yDim*, displayYSize*, displayCSize*: SIGNED32; 
+		deblockYH*, deblockYV*, deringY*, deblockCH*, deblockCV*, deringC*: BOOLEAN; 
+
+		PROCEDURE ^  & init*(width: SIGNED32; height: SIGNED32); 
+		PROCEDURE ^ SetPostProcessLevel*(n: SIGNED32); 
+	END DecoderOptions; 
+
+	MP4Buffers* = OBJECT 
+	VAR 
+		displayBuffer*, edgedRefBuffer*, edgedForBuffer*: PointerToArrayOfCHAR; 
+		edgedRefBufferSize*, edgedForBufferSize*, displayBufferSize*: SIGNED32; 
+
+		PROCEDURE ^  & init*(opt: DecoderOptions); 
+	END MP4Buffers; 
+BEGIN
+END DivXTypes.

@@ -1,0 +1,108 @@
+MODULE WMFontCCGConverter;
+	IMPORT KernelLog, Modules, Streams, WMRectangles, Files, UTF8Strings, WMGraphics, WMWindowManager, WMGrids, WMBitmapFont, WMComponents, Standard := WMStandardComponents, Editor := WMEditors, Classes := TFClasses, WMGraphicUtilities, Strings;
+CONST 
+	MaxStrokes = 128; 
+	MaxGlyphRefs = 64; 
+	MaxSplineSeg = 16; 
+	CMDStrokeMove = 0; 
+	CMDStrokeLine = 1; 
+	CMDStrokeSpline = 2; 
+	MaxRangeSize = 256; 
+TYPE 
+	TestWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		mainPanel, toolbar, right, paintBox: Standard.Panel; 
+		l1: Standard.Label; 
+		startEdit: Editor.Editor; 
+		grid: WMGrids.GenericGrid; 
+		selectedGlyph: Glyph; 
+		font: RawCCGFont; 
+		colWidths: WMGrids.Spacings; 
+		scaler: Standard.Scrollbar; 
+		scale: SIZE; 
+
+		PROCEDURE ^  & New*(f: RawCCGFont); 
+		PROCEDURE ^ Rescale(sender, data: ANY ); 
+		PROCEDURE ^ GlyphSelected(sender, data: ANY ); 
+		PROCEDURE ^ PaintBoxPaint(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
+		PROCEDURE ^ RenderGlyphReal(canvas: WMGraphics.Canvas; glyph: Glyph; x, y, w, h: FLOAT32; level: SIGNED32; trace: BOOLEAN); 
+		PROCEDURE ^ CalcBB(glyph: Glyph): WMRectangles.Rectangle; 
+		PROCEDURE ^ Close*; 
+	END TestWindow; 
+
+	StrokeElement = RECORD 
+		cmd: SIGNED32; 
+		x, y: SIGNED32; 
+	END; 
+
+	GlyphRef = RECORD 
+		x, y, w, h: SIGNED32; 
+		refucs, refvariant: SIGNED32; 
+		refPtr: Glyph; 
+	END; 
+
+	StrokeArray = POINTER TO ARRAY OF StrokeElement; 
+
+	GlyphRefArray = POINTER TO ARRAY OF GlyphRef; 
+
+	GlyphRange = RECORD 
+		firstCode, lastCode: SIGNED32; 
+		filePos: SIGNED32; 
+		glyphs: POINTER TO ARRAY OF Glyph; 
+	END; 
+
+	RangeArray = POINTER TO ARRAY OF GlyphRange; 
+
+	Glyph = POINTER TO RECORD 
+		ucs, variant: SIGNED32; 
+		nofStrokes, nofSubComponents: SIGNED32; 
+		strokes: StrokeArray; 
+		subComponents: GlyphRefArray; 
+		nextVariant: Glyph; 
+	END; 
+
+	GlyphArray = POINTER TO ARRAY OF Glyph; 
+
+	RawCCGFont = OBJECT 
+	VAR 
+		workStrokes: StrokeArray; 
+		workGlyphRef: GlyphRefArray; 
+		nofStrokes, nofGlyphRefs: SIGNED32; 
+		glyphList: Classes.List; 
+		glyphRanges: RangeArray; 
+		fontFile: Files.File; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ FindGlyphRange(code: SIGNED32; VAR glyphRangeIndex: SIZE): BOOLEAN; 
+		PROCEDURE ^ WritePackedGlyph(w: Streams.Writer; g: Glyph); 
+		PROCEDURE ^ ReadPackedGlyph(r: Streams.Reader; VAR glyph: Glyph); 
+		PROCEDURE ^ StoreRange(w: Streams.Writer; VAR range: GlyphRange); 
+		PROCEDURE ^ LoadRange(f: Files.File; rangeIndex: SIZE); 
+		PROCEDURE ^ GetGlyph(ucs, variant: SIGNED32): Glyph; 
+		PROCEDURE ^ Save(CONST fileName: ARRAY OF CHAR); 
+		PROCEDURE ^ Load(CONST fileName: ARRAY OF CHAR); 
+		PROCEDURE ^ DumpRange(VAR r: GlyphRange); 
+		PROCEDURE ^ CreateRanges; 
+		PROCEDURE ^ FindGlyph(ucs, variant: SIGNED32): Glyph; 
+		PROCEDURE ^ FindGlyphSubComponent(VAR ref: GlyphRef): Glyph; 
+		PROCEDURE ^ GetNCharHex(r: Streams.Reader; nofChars: SIGNED32): SIGNED32; 
+		PROCEDURE ^ ReadUCSVariant(r: Streams.Reader; VAR ucs, variant: SIGNED32); 
+		PROCEDURE ^ ReadStrokes(r: Streams.Reader; g: Glyph); 
+		PROCEDURE ^ ReadBasicGlyph(r: Streams.Reader; g: Glyph); 
+		PROCEDURE ^ ReadGlyphComponents(r: Streams.Reader; g: Glyph); 
+		PROCEDURE ^ ReadCompositGlyph(r: Streams.Reader; g: Glyph); 
+		PROCEDURE ^ ParseGlyph(r: Streams.Reader): Glyph; 
+		PROCEDURE ^ LoadFromStream*(r: Streams.Reader): BOOLEAN; 
+		PROCEDURE ^ LoadFromFile*(CONST fileName: ARRAY OF CHAR): BOOLEAN; 
+	END RawCCGFont; 
+VAR 
+	testWindow: TestWindow; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Export*; 
+	PROCEDURE ^ GetUTF8Char(r: Streams.Reader; VAR u: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ SplineReal(canvas: WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h: FLOAT32; color, mode: SIGNED32); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMFontCCGConverter.

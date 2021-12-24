@@ -1,0 +1,40 @@
+MODULE ComponentViewer;
+	IMPORT Modules, Commands, Options, XML, Repositories, WMMessages, WMWindowManager, WMComponents, WMRestorable, Streams, D := Debugging, Files, WMGraphicsSmooth;
+CONST 
+	DefaultWidth = 320; 
+	DefaultHeight = 240; 
+	InvalidPosition* = MIN(SIGNED32); 
+	FlagMoveable* = 20; 
+	FlagSmoothGraphics* = 21; 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		dragging: BOOLEAN; 
+		lastX, lastY: SIZE; 
+
+		PROCEDURE ^ RestoreWindow*(c: WMRestorable.Context); 
+		PROCEDURE ^  & InitWindow(width, height: SIZE; alpha: BOOLEAN); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+	END Window; 
+VAR 
+	nofWindows: SIZE; 
+
+	PROCEDURE ^ DoShow*(vc: WMComponents.VisualComponent; VAR window: Window; x, y, width, height: SIZE; client, alpha, fullscreen: BOOLEAN; flags: SET); 
+	PROCEDURE ^ DoLoad*(CONST filename: ARRAY OF CHAR; error: Streams.Writer): WMComponents.VisualComponent; 
+	PROCEDURE ^ DoOpen*(CONST filename: ARRAY OF CHAR; error: Streams.Writer; x, y, width, height: SIZE; client, alpha, fullscreen: BOOLEAN; flags: SET): WMComponents.VisualComponent; 
+	PROCEDURE ^ SetProperties(c: WMComponents.Component; CONST attr: ARRAY OF CHAR); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Store*(context: Commands.Context); 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END ComponentViewer.

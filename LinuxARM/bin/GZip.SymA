@@ -1,0 +1,55 @@
+MODULE GZip;
+	IMPORT Streams, Files, Strings, ZlibInflate, ZlibDeflate, Zlib, ZlibBuffers, Commands;
+CONST 
+	WriteError = 2907; 
+	DefaultWriterSize = 4096; 
+	DefaultReaderSize = 4096; 
+	BufSize = 16384; 
+	FileError =  -1; 
+	DefaultCompression* = ZlibDeflate.DefaultCompression; 
+	NoCompression* = ZlibDeflate.NoCompression; 
+	BestSpeed* = ZlibDeflate.BestSpeed; 
+	BestCompression* = ZlibDeflate.BestCompression; 
+	DefaultStrategy* = ZlibDeflate.DefaultStrategy; 
+	Filtered* = ZlibDeflate.Filtered; 
+	HuffmanOnly* = ZlibDeflate.HuffmanOnly; 
+	DeflateMethod = 8; 
+	NoFlush* = ZlibDeflate.NoFlush; 
+	SyncFlush* = ZlibDeflate.SyncFlush; 
+	FullFlush* = ZlibDeflate.FullFlush; 
+TYPE 
+	Deflator* = OBJECT 
+	VAR 
+		writer: Streams.Writer; 
+		s: ZlibDeflate.Stream; 
+		res: INTEGER; 
+		crc32-: SIGNED32; 
+		out: POINTER TO ARRAY BufSize OF CHAR; 
+		flush: SIGNED8; 
+		inputsize: SIZE; 
+
+		PROCEDURE ^ WriteHeader(w: Streams.Writer); 
+		PROCEDURE ^  & Init*(writer: Streams.Writer; level, strategy, flush: SIGNED8); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+	END Deflator; 
+
+	Inflator* = OBJECT 
+	VAR 
+		reader: Streams.Reader; 
+		res: INTEGER; 
+		transparent: BOOLEAN; 
+		crc32-: SIGNED32; 
+		in: POINTER TO ARRAY BufSize OF CHAR; 
+		s: ZlibInflate.Stream; 
+
+		PROCEDURE ^  & Init*(reader: Streams.Reader); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ CheckHeader; 
+	END Inflator; 
+
+	PROCEDURE ^ Deflate*(in, out: Files.File; level, strategy, flush: SIGNED8); 
+	PROCEDURE ^ Inflate*(in, out: Files.File); 
+	PROCEDURE ^ GZip*(context: Commands.Context); 
+	PROCEDURE ^ UnGZip*(context: Commands.Context); 
+BEGIN
+END GZip.

@@ -1,0 +1,172 @@
+MODULE WMPartitionsComponents;
+	IMPORT AosDisks := Disks, PartitionsLib, Strings, Kernel, WMWindowManager, WMGraphics, WMGraphicUtilities, WMProperties, WMEvents, XML, WMComponents, WMStandardComponents, WMGrids, WMStringGrids;
+CONST 
+	MainPanelMarginH = 5; 
+	MainPanelMarginV = 5; 
+	BevelBorderWidth = 2; 
+	DiskOverviewPanelMarginH = 7; 
+	DiskOverviewPanelMarginV = 7; 
+	DiskOverviewTableColumns = 6; 
+	DiskPanelHeight = 40; 
+	DiskPanelMarginH = 5; 
+	DiskPanelMarginV = 5; 
+	DiskPanelSpacer = 5; 
+	PanelMinWidth = 10; 
+	LabelHeight = 18; 
+	LabelTxtColor = WMGraphics.Black; 
+	GridMinSpacerV = 2; 
+	GridMinSpacerH = 2; 
+	Multiplier = 30; 
+	Initializing = 0; 
+	Running = 1; 
+	Terminating = 2; 
+	Terminated = 3; 
+TYPE 
+	NoWheelGrid* = OBJECT {EXCLUSIVE} (WMStringGrids.StringGrid)
+
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+	END NoWheelGrid; 
+
+	BevelPanel* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END BevelPanel; 
+
+	Disk = RECORD (PartitionsLib.Disk)
+		panel: BevelPanel; 
+		label: WMStandardComponents.Label; 
+		buttons: POINTER TO ARRAY OF WMStandardComponents.Button; 
+		mapping: POINTER TO ARRAY OF SIGNED32; 
+		vtable: AosDisks.PartitionTable; 
+		grid, titlegrid: NoWheelGrid; 
+	END; 
+
+	Disks = POINTER TO ARRAY OF Disk; 
+
+	DiskModel = OBJECT {EXCLUSIVE} 
+	VAR 
+		disks: Disks; 
+		diskmodel: PartitionsLib.DisksModel; 
+		locked: BOOLEAN; 
+
+		PROCEDURE ^ Acquire; 
+		PROCEDURE ^ Release; 
+		PROCEDURE ^ IsLocked(): BOOLEAN; 
+		PROCEDURE ^ Synchronize; 
+		PROCEDURE ^  & Init*(model: PartitionsLib.DisksModel); 
+	END DiskModel; 
+
+	Selection* = PartitionsLib.Selection; 
+
+	SelectionWrapper* = OBJECT 
+	VAR 
+		selection-: PartitionsLib.Selection; 
+	END SelectionWrapper; 
+
+	PartitionSelector* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		showDetails-: WMProperties.BooleanProperty; 
+		showDiskGeometry-: WMProperties.BooleanProperty; 
+		onSelection-: WMEvents.EventSource; 
+		clSelected-, clBackground-: WMProperties.ColorProperty; 
+		model: DiskModel; 
+		selection: Selection; 
+		diskOverviewScrollPanel: WMStandardComponents.Panel; 
+		diskOverviewPanel: WMStandardComponents.Panel; 
+		scrollbarX, scrollbarY: WMStandardComponents.Scrollbar; 
+		scrollX, scrollY: SIGNED32; 
+		titleGrid: NoWheelGrid; 
+		maxWidths: ARRAY DiskOverviewTableColumns OF SIZE; 
+		maxHeight: SIZE; 
+		minWidth, minHeight: SIZE; 
+		firstAlign: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetSelection*(): Selection; 
+		PROCEDURE ^ ClearSelection*; 
+		PROCEDURE ^ Synchronize*; 
+		PROCEDURE ^ AlignSubComponents*; 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ CreateContent(): WMComponents.VisualComponent; 
+		PROCEDURE ^ ScrollY(sender, data: ANY ); 
+		PROCEDURE ^ ScrollX(sender, data: ANY ); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ GridClicked(sender, x: ANY ); 
+		PROCEDURE ^ UpdateDiskOverview(disk: Disk; top: SIZE; updateContent: BOOLEAN): WMStandardComponents.Panel; 
+		PROCEDURE ^ BuildVTable(VAR disk: Disk); 
+		PROCEDURE ^ BuildDiskPanel(VAR disk: Disk): WMStandardComponents.Panel; 
+		PROCEDURE ^ UpdateDiskPanel(disk: Disk); 
+		PROCEDURE ^ DiskEventHandler(sender, data: ANY ); 
+		PROCEDURE ^ DiskPanelHandler(owner, par: ANY ); 
+		PROCEDURE ^ RebuildDiskOverview; 
+		PROCEDURE ^ BuildSkeleton; 
+		PROCEDURE ^ GetSizeString(nbrOfBlocks, blockSize: SIGNED32): Strings.String; 
+		PROCEDURE ^ UpdateDiskGrids; 
+		PROCEDURE ^ CalcDiskPanelBounds(VAR minWidth, minHeight: SIZE); 
+		PROCEDURE ^ BuildTitleGrid(): NoWheelGrid; 
+		PROCEDURE ^ SetGridBounds(VAR grid: NoWheelGrid); 
+		PROCEDURE ^ UpdateLayout(w, h: SIZE; updateContent: BOOLEAN); 
+		PROCEDURE ^ UpdateSelection(disk, partition: SIZE); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+	END PartitionSelector; 
+
+	Operation* = PartitionsLib.Operation; 
+
+	OperationWrapper* = OBJECT 
+	VAR 
+		operation-: PartitionsLib.Operation; 
+	END OperationWrapper; 
+
+	OperationSelector* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		onSelection-: WMEvents.EventSource; 
+		grid, titleGrid: NoWheelGrid; 
+		spacings: WMGrids.Spacings; 
+		noOfCols: SIGNED32; 
+		operations: PartitionsLib.AllOperations; 
+		selectedOperation: PartitionsLib.Operation; 
+		scrollbarY: WMStandardComponents.Scrollbar; 
+		scrollPanel: WMStandardComponents.Panel; 
+		scrollY: SIGNED32; 
+		state: SIGNED32; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ ScrollY(sender, data: ANY ); 
+		PROCEDURE ^ GetSelection*(): Operation; 
+		PROCEDURE ^ GridClicked(sender, x: ANY ); 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ UpdateGrid(updateContent: BOOLEAN); 
+		PROCEDURE ^ OperationEventHandler(sender, data: ANY ); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ PollStatus; 
+	BEGIN{ACTIVE} 
+	END OperationSelector; 
+
+	TestWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		showDetailsBtn, showGeometryBtn: WMStandardComponents.Button; 
+		showDetails, showGeometry: BOOLEAN; 
+		selectionLabel: WMStandardComponents.Label; 
+		selector: PartitionSelector; 
+
+		PROCEDURE ^ HandleButtons(sender, data: ANY ); 
+		PROCEDURE ^ HandleSelection(sender, data: ANY ); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*; 
+	END TestWindow; 
+VAR 
+	PrototypeShowDetails, PrototypeShowDiskGeometry: WMProperties.BooleanProperty; 
+	PrototypeClSelected, PrototypeClBackground: WMProperties.ColorProperty; 
+	StrPartitionSelector, StrOperationSelector: Strings.String; 
+
+	PROCEDURE ^ TestPartitionSelector*; 
+	PROCEDURE ^ GenPartitionSelector*(): XML.Element; 
+	PROCEDURE ^ GenOperationSelector*(): XML.Element; 
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ InitPrototypes; 
+BEGIN
+END WMPartitionsComponents.

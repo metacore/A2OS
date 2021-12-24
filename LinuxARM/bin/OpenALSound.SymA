@@ -1,0 +1,66 @@
+MODULE OpenALSound;
+	IMPORT S := SYSTEM, Modules, SoundDevices, AL := OpenAL, Objects, Files, Strings, Streams, Log := KernelLog;
+CONST 
+	StatePlaying = 1; 
+	StatePaused = 3; 
+	StateStoped = 4; 
+	StateClosed = 5; 
+	Debug = TRUE; 
+	NumBuffers = 20; 
+	OpenALConfig = \"openalplay.ini"\; 
+TYPE 
+	Driver = OBJECT {EXCLUSIVE} (SoundDevices.Driver)
+	VAR 
+		enabled: BOOLEAN; 
+		playChannel: PlayChannel; 
+		ctx: AL.ALCcontext; 
+		dev: AL.ALCdevice; 
+
+		PROCEDURE ^  & Initialize; 
+		PROCEDURE ^ CreateALContext(): BOOLEAN; 
+		PROCEDURE ^ DestroyALContext; 
+		PROCEDURE ^ Enable*; 
+		PROCEDURE ^ Disable*; 
+		PROCEDURE ^ GetNativeFrequency*(nr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ OpenPlayChannel*(VAR channel: SoundDevices.Channel; samplingRate, samplingResolution: SIGNED32; nofSubChannels, format: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ OpenRecordChannel*(VAR channel: SoundDevices.Channel; samplingRate, samplingResolution: SIGNED32; nofSubChannels, format: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ RegisterMixerChangeListener*(mixChangedProc: SoundDevices.MixerChangedProc); 
+		PROCEDURE ^ UnregisterMixerChangeListener*(mixChangeProc: SoundDevices.MixerChangedProc); 
+		PROCEDURE ^ GetMixerChannel*(channelNr: SIGNED32; VAR channel: SoundDevices.MixerChannel); 
+		PROCEDURE ^ GetNofMixerChannels*(): SIGNED32; 
+	END Driver; 
+
+	PlayChannel = OBJECT {EXCLUSIVE} (SoundDevices.Channel)
+	VAR 
+		source: AL.ALuint; 
+		buffers: ARRAY NumBuffers OF AL.ALuint; 
+		freeBuffers: AL.ALint; 
+		bufferListener: SoundDevices.BufferListener; 
+		frequency: AL.ALuint; 
+		format: AL.ALenum; 
+		count: SIGNED32; 
+		volume: SIGNED32; 
+		state: SIGNED32; 
+		driver: Driver; 
+
+		PROCEDURE ^  & Initialize*(driver: Driver; samplingRate, bitsPerSample, nofChannels: SIGNED32); 
+		PROCEDURE ^ RegisterBufferListener*(bufferListener: SoundDevices.BufferListener); 
+		PROCEDURE ^ QueueBuffer*(x: SoundDevices.Buffer); 
+		PROCEDURE ^ SetVolume*(vol: SIGNED32); 
+		PROCEDURE ^ GetVolume*(): SIGNED32; 
+		PROCEDURE ^ GetPosition*(): SIGNED32; 
+		PROCEDURE ^ Start*; 
+		PROCEDURE ^ Pause*; 
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ Close*; 
+	END PlayChannel; 
+VAR 
+	driver: Driver; 
+
+	PROCEDURE ^ GetDeviceName(VAR sdev: ARRAY OF CHAR); 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Enable*; 
+	PROCEDURE ^ Disable*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END OpenALSound.

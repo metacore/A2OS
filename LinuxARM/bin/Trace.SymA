@@ -1,0 +1,37 @@
+MODULE Trace;
+	IMPORT SYSTEM;
+CONST 
+TYPE 
+	CharProc* = PROCEDURE (c: CHAR); 
+VAR 
+	Char*: CharProc; 
+	Color*: PROCEDURE (c: SIGNED8); 
+
+	PROCEDURE ^ Enter*; 
+	PROCEDURE ^ Exit*; 
+	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ Ln*; 
+	PROCEDURE ^ String*(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ StringLn*(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ Int*(x: SIGNED64; w: SIZE); 
+	PROCEDURE ^ Boolean*(x: BOOLEAN); 
+	PROCEDURE ^ IntSuffix*(x: SIGNED64; w: SIZE; CONST suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ Hex*(x: SIGNED64; w: SIZE); 
+	PROCEDURE ^ Address*(x: ADDRESS); 
+	PROCEDURE ^ Size*(x: SIZE); 
+	PROCEDURE ^ HIntHex*(x: SIGNED64; w: SIZE); 
+	PROCEDURE ^ Memory*(adr: ADDRESS; size: SIZE); 
+	PROCEDURE ^ StackFrames-(skip, count, size: SIZE); 
+	PROCEDURE ^ Buffer*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE); 
+	PROCEDURE ^ Bits*(x: SET; ofs, n: SIZE); 
+	PROCEDURE ^ Set*(x: SET); 
+	PROCEDURE ^ Blue*; 
+	PROCEDURE ^ Green*; 
+	PROCEDURE ^ Red*; 
+	PROCEDURE ^ Yellow*; 
+	PROCEDURE ^ Default*; 
+	PROCEDURE ^ NullChar(c: CHAR); 
+	PROCEDURE ^ NullColor(c: SIGNED8); 
+	PROCEDURE ^ Init*; 
+BEGIN
+END Trace.

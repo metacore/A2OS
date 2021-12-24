@@ -1,0 +1,43 @@
+MODULE CryptoCAST;
+	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils;
+CONST 
+TYPE 
+	Key = RECORD 
+		val: SIGNED32; 
+		rot: SIGNED8; 
+	END; 
+
+	Keys = RECORD 
+		short: BOOLEAN; 
+		data: ARRAY 16 OF Key; 
+	END; 
+
+	Block = ARRAY 2 OF SET32; 
+
+	Cipher* = OBJECT (Ciphers.Cipher)
+	VAR 
+		keys: Keys; 
+		iv: Block; 
+
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIZE); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; p: SIZE); 
+		PROCEDURE ^ DecryptBlock(VAR buf: ARRAY OF CHAR; p: SIZE); 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+VAR 
+	T0, T1, T2, T3: ARRAY 256 OF SIGNED32; 
+	T4, T5, T6, T7: ARRAY 256 OF SET32; 
+
+	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
+	PROCEDURE ^ InitKeys(VAR keys: Keys; CONST src: ARRAY OF CHAR; len: SIGNED32); 
+	PROCEDURE ^ CAST1(VAR k: Key; VAR L, R: SET32); 
+	PROCEDURE ^ CAST2(VAR k: Key; VAR L, R: SET32); 
+	PROCEDURE ^ CAST3(VAR k: Key; VAR L, R: SET32); 
+	PROCEDURE ^ encrypt(VAR k: Keys; VAR b: Block); 
+	PROCEDURE ^ decrypt(VAR k: Keys; VAR b: Block); 
+	PROCEDURE ^ Init; 
+BEGIN
+END CryptoCAST.

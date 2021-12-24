@@ -1,0 +1,36 @@
+MODULE KernelLogger;
+	IMPORT KernelLog, Texts, TextUtilities, Kernel, Modules, Configuration;
+CONST 
+	BufSize = (SIGNED32(8192) * 8); 
+	DeleteSize = (BufSize DIV 8); 
+	UpdateInterval = 200; 
+	LocalBuf = (SIGNED32(4096) * 2); 
+	MaxLogSize = (4 * BufSize); 
+TYPE 
+	Logger = OBJECT {EXCLUSIVE} 
+	VAR 
+		timer: Kernel.Timer; 
+		alive, dead, added: BOOLEAN; 
+		buf: ARRAY LocalBuf OF CHAR; 
+		bufPos: SIZE; 
+		ch: CHAR; 
+		tw: TextUtilities.TextWriter; 
+		limitCounter, n: SIZE; 
+
+		PROCEDURE ^  & Open; 
+		PROCEDURE ^ Close; 
+		PROCEDURE ^ Get(): CHAR; 
+	BEGIN{ACTIVE} 
+	END Logger; 
+VAR 
+	logger: Logger; 
+	buf: POINTER TO ARRAY OF CHAR; 
+	kernelLog-: Texts.Text; 
+	monospace, default: ARRAY 256 OF CHAR; 
+	res: INTEGER; 
+
+	PROCEDURE ^ Start*; 
+	PROCEDURE ^ Stop*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END KernelLogger.

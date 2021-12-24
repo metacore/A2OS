@@ -1,0 +1,264 @@
+MODULE PCOFPE;
+	IMPORT SYSTEM, KernelLog, StringPool, PCDebug, PCBT, PCLIR, PCM, PCT, PCOM, Dates, Strings, Streams, Files, Clock;
+CONST 
+	Loader = \"AosRuntime"\; 
+	Heap = \"AosRuntime"\; 
+	Active = \"Objects"\; 
+	ImageDosSignature = 23117; 
+	ImageNtSignature = 17744; 
+	EXEImageBase = 4194304; 
+	DLLImageBase = 268435456; 
+	ImageSubsystemUnknown = 0; 
+	ImageSubsystemNative = 1; 
+	ImageSubsystemWindowsGui = 2; 
+	ImageSubsystemWindowsCui = 3; 
+	ImageNumberOfDirectoryEntries = 16; 
+	ImageFileRelocsStripped = 0; 
+	ImageFileExecutableImage = 1; 
+	ImageFileLineNumsStripped = 2; 
+	ImageFileLocalSymsStripped = 3; 
+	ImageFile32BitMachine = 8; 
+	ImageFileDll = 13; 
+	ImageFileMachineI386 = 332; 
+	ImageOptionalMagic = 267; 
+	MajorLinkerVersion = 0X; 
+	MinorLinkerVersion = 0X; 
+	ImageSizeOfShortName = 8; 
+	ImageScnCntCode = 5; 
+	ImageScnCntInitializedData = 6; 
+	ImageScnMemDiscardable = 25; 
+	ImageScnMemExecute = 29; 
+	ImageScnMemRead = 30; 
+	ImageScnMemWrite = 31; 
+	PageSize = 4096; 
+	SectorSize = 512; 
+	DefaultFileAlign = SectorSize; 
+	DefaultSectionAlign = PageSize; 
+	BaseRVA = DefaultSectionAlign; 
+	DefaultHeapSize = (64 * 1024); 
+	DefaultStackSize = (1024 * 1024); 
+	ImageDirectoryEntryExport = 0; 
+	ImageDirectoryEntryImport = 1; 
+	ImageDirectoryEntryBasereloc = 5; 
+	ImageDirectoryEntryIAT = 12; 
+	ImageRelBasedHighLow = 3; 
+	ModeDef = 0; 
+	ModeDLL = 1; 
+	ModeEXE = 2; 
+	EUEnd = 0X; 
+	EURecord = 1X; 
+	EUProcFlag = SIGNED32(2147483648); 
+TYPE 
+	ImageFileHeader = RECORD 
+		Machine: SIGNED16; 
+		NumberOfSections: SIGNED16; 
+		TimeDateStamp: SIGNED32; 
+		PointerToSymbolTable: SIGNED32; 
+		NumberOfSymbols: SIGNED32; 
+		SizeOfOptionalHeader: SIGNED16; 
+		Characteristics: SIGNED16; 
+	END; 
+
+	ImageDataDirectory = RECORD 
+		VirtualAddress, Size: SIGNED32; 
+	END; 
+
+	ImageOptionalHeader = RECORD 
+		Magic: SIGNED16; 
+		MajorLinkerVersion, MinorLinkerVersion: CHAR; 
+		SizeOfCode, SizeOfInitializedData, SizeOfUninitializedData, AddressOfEntryPoint, BaseOfCode, BaseOfData, ImageBase, SectionAlignment, FileAlignment: SIGNED32; 
+		MajorOperatingSystemVersion, MinorOperatingSystemVersion, MajorImageVersion, MinorImageVersion, MajorSubsystemVersion, MinorSubsystemVersion: SIGNED16; 
+		Win32VersionValue, SizeOfImage, SizeOfHeaders, CheckSum: SIGNED32; 
+		Subsystem, DllCharacteristics: SIGNED16; 
+		SizeOfStackReserve, SizeOfStackCommit, SizeOfHeapReserve, SizeOfHeapCommit, LoaderFlags, NumberOfRvaAndSizes: SIGNED32; 
+		DataDirectory: ARRAY ImageNumberOfDirectoryEntries OF ImageDataDirectory; 
+	END; 
+
+	ImageSectionHeader = RECORD 
+		Name: ARRAY ImageSizeOfShortName OF CHAR; 
+		VirtualSize: SIGNED32; 
+		VirtualAddress: SIGNED32; 
+		SizeOfRawData: SIGNED32; 
+		PointerToRawData: SIGNED32; 
+		PointerToRelocations: SIGNED32; 
+		PointerToLinenumbers: SIGNED32; 
+		NumberOfRelocations: SIGNED16; 
+		NumberOfLinenumbers: SIGNED16; 
+		Characteristics: SET; 
+	END; 
+
+	ImageExportDirectory = RECORD 
+		Characteristics, TimeDateStamp: SIGNED32; 
+		MajorVersion, MinorVersion: SIGNED16; 
+		Name, Base, NumberOfFunctions, NumberOfNames, AddressOfFunctions, AddressOfNames, AddressOfNameOrdinals: SIGNED32; 
+	END; 
+
+	ImageImportDescriptor = RECORD 
+		Characteristics, TimeDateStamp, ForwarderChain, Name, FirstThunk: SIGNED32; 
+	END; 
+
+	Bytes = POINTER TO ARRAY OF CHAR; 
+
+	Name = ARRAY 256 OF CHAR; 
+
+	ExportFPList = POINTER TO ARRAY OF SIGNED32; 
+
+	SectionReader = OBJECT (Streams.Reader)
+	VAR 
+		sect: Section; 
+		org, ofs: SIZE; 
+
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+		PROCEDURE ^ SetPos*(ofs: Streams.Position); 
+		PROCEDURE ^  & Open*(sect: Section; ofs: SIGNED32); 
+	END SectionReader; 
+
+	SectionWriter = OBJECT (Streams.Writer)
+	VAR 
+		sect: Section; 
+		org, ofs: SIGNED32; 
+
+		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+		PROCEDURE ^ SetPos*(ofs: Streams.Position); 
+		PROCEDURE ^  & Open*(sect: Section; ofs: SIGNED32); 
+	END SectionWriter; 
+
+	Section = OBJECT 
+	VAR 
+		head: ImageSectionHeader; 
+		data: Bytes; 
+		len, used: SIGNED32; 
+		imports: ImportReloc; 
+		relocs: BaseReloc; 
+		W: SectionWriter; 
+		R: SectionReader; 
+		next: Section; 
+
+		PROCEDURE ^ Resize(min: SIGNED32); 
+		PROCEDURE ^ SetBase(VAR base: SIGNED32); 
+		PROCEDURE ^  & New*(pe: PEModule; name: ARRAY OF CHAR; chars: SET); 
+	END Section; 
+
+	BaseReloc = POINTER TO RECORD 
+		ofs: Streams.Position; 
+		base: Section; 
+		next: BaseReloc; 
+	END; 
+
+	ImportMod = POINTER TO RECORD 
+		desc: ImageImportDescriptor; 
+		name: Name; 
+		objs: ImportObj; 
+		next: ImportMod; 
+	END; 
+
+	ImportObj = POINTER TO RECORD 
+		name: Name; 
+		next: ImportObj; 
+		iat: SIGNED32; 
+	END; 
+
+	ImportReloc = POINTER TO RECORD 
+		ofs: Streams.Position; 
+		obj: ImportObj; 
+		next: ImportReloc; 
+		iat, abs, uofs: BOOLEAN; 
+	END; 
+
+	ExportObj = POINTER TO RECORD 
+		name: Name; 
+		sect: Section; 
+		ofs: SIGNED32; 
+		next: ExportObj; 
+	END; 
+
+	PEModule = OBJECT 
+	TYPE 
+		; 
+	VAR 
+		name: Files.FileName; 
+		mod: PCT.Module; 
+		adr: PCBT.Module; 
+		codearr: PCLIR.CodeArray; 
+		hdrCodeSize, addressFactor: SIGNED32; 
+		fileHdr: ImageFileHeader; 
+		optHdr: ImageOptionalHeader; 
+		sects, type, var, const, code, idata, edata, reloc: Section; 
+		exports: ExportObj; 
+		imports: ImportMod; 
+		explist: ExportFPList; 
+		exppos, explen, nofstr, nofImp, count: SIGNED32; 
+		desc: RECORD 
+			modules, commands, methods, pointers, exports, imports, types: SIGNED32; 
+			iatfix: SIGNED32; 
+		END; 
+
+		PROCEDURE ^ AddImportMod(name: ARRAY OF CHAR): ImportMod; 
+		PROCEDURE ^ FixupSysCall(l: PCBT.Fixup; entry: SIGNED32); 
+		PROCEDURE ^ FixupCase(l: PCBT.Fixup); 
+		PROCEDURE ^ FixupLinks; 
+		PROCEDURE ^ TypeAlign4; 
+		PROCEDURE ^ Commands; 
+		PROCEDURE ^ UseModule(m: PCBT.Module); 
+		PROCEDURE ^ UseModules; 
+		PROCEDURE ^ FixupProc(p: PCBT.Procedure); 
+		PROCEDURE ^ FixupOwnProcs; 
+		PROCEDURE ^ PtrAdr(W: SectionWriter; offset: SIGNED32; type: PCT.Struct; fixadr: BOOLEAN); 
+		PROCEDURE ^ Pointers; 
+		PROCEDURE ^ FixupVar(p: PCBT.GlobalVariable); 
+		PROCEDURE ^ FixupOwnVars; 
+		PROCEDURE ^ AddExport(sect: Section; ofs: SIGNED32; name: ARRAY OF CHAR); 
+		PROCEDURE ^ ExportType(W: SectionWriter; t: PCT.Struct); 
+		PROCEDURE ^ ExportSymbol(W: SectionWriter; p: PCT.Symbol; sect: Section; ofs: SIGNED32); 
+		PROCEDURE ^ ExportConsts(W: SectionWriter); 
+		PROCEDURE ^ ExportVars(W: SectionWriter); 
+		PROCEDURE ^ ExportTypes(W: SectionWriter); 
+		PROCEDURE ^ ExportProcs(W: SectionWriter); 
+		PROCEDURE ^ CheckExport(name: ARRAY OF CHAR); 
+		PROCEDURE ^ Exports; 
+		PROCEDURE ^ UseEntry(W: SectionWriter; m: PCT.Module; p: PCT.Symbol; offset: SIGNED32; imp: ImportMod): ImportObj; 
+		PROCEDURE ^ UseType(W: SectionWriter; m: PCT.Module; i: SIGNED32; t: PCT.Struct); 
+		PROCEDURE ^ ImportConsts(W: SectionWriter; m: PCT.Module); 
+		PROCEDURE ^ ImportVars(W: SectionWriter; m: PCT.Module; i: SIGNED32; imp: ImportMod); 
+		PROCEDURE ^ ImportTypes(W: SectionWriter; m: PCT.Module; i: SIGNED32); 
+		PROCEDURE ^ ImportProcs(W: SectionWriter; m: PCT.Module; imp: ImportMod); 
+		PROCEDURE ^ Imports; 
+		PROCEDURE ^ WriteType(W: SectionWriter; rec: PCT.Record); 
+		PROCEDURE ^ Types; 
+		PROCEDURE ^ PutName(W: SectionWriter; name: ARRAY OF CHAR); 
+		PROCEDURE ^ ModDesc; 
+		PROCEDURE ^ IATFix; 
+		PROCEDURE ^ GenStub; 
+		PROCEDURE ^ GenIData(base: SIGNED32); 
+		PROCEDURE ^ GenEData(base: SIGNED32); 
+		PROCEDURE ^ BeginBlock(W: SectionWriter; adr: SIGNED32; VAR blockva, blocksize: SIGNED32; VAR blockfix: Streams.Position); 
+		PROCEDURE ^ EndBlock(W: SectionWriter; blockfix: Streams.Position; VAR blocksize: SIGNED32); 
+		PROCEDURE ^ LocalRelocs; 
+		PROCEDURE ^ GenReloc(base: SIGNED32); 
+		PROCEDURE ^ ToFile; 
+		PROCEDURE ^  & New*(mod: PCT.Module; adr: PCBT.Module); 
+	END PEModule; 
+VAR 
+	mode: SIGNED32; 
+	subsystem: SIGNED32; 
+
+	PROCEDURE ^ WriteImageFileHeader(W: Streams.Writer; VAR head: ImageFileHeader); 
+	PROCEDURE ^ WriteImageOptionalHeader(W: Streams.Writer; VAR head: ImageOptionalHeader); 
+	PROCEDURE ^ WriteImageSectionHeader(W: Streams.Writer; VAR head: ImageSectionHeader); 
+	PROCEDURE ^ WriteImageImportDescriptor(W: Streams.Writer; VAR desc: ImageImportDescriptor); 
+	PROCEDURE ^ WriteImageExportDirectory(W: Streams.Writer; VAR dir: ImageExportDirectory); 
+	PROCEDURE ^ TimeDateStamp(): SIGNED32; 
+	PROCEDURE ^ AddOfsReloc(sect: Section; ofs: Streams.Position; base: Section); 
+	PROCEDURE ^ AddImportObj(mod: ImportMod; name: ARRAY OF CHAR): ImportObj; 
+	PROCEDURE ^ AddImportReloc(sect: Section; offset: Streams.Position; obj: ImportObj; iat, abs, ofs: BOOLEAN); 
+	PROCEDURE ^ Align(value, align: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Generate*(VAR R: PCM.Rider; scope: PCT.ModScope; VAR codeSize: SIGNED32); 
+	PROCEDURE ^ SetDLL*; 
+	PROCEDURE ^ SetEXE*; 
+	PROCEDURE ^ SetCUI*; 
+	PROCEDURE ^ SetGUI*; 
+	PROCEDURE ^ Install*; 
+BEGIN
+END PCOFPE.

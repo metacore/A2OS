@@ -1,0 +1,40 @@
+MODULE Random;
+	IMPORT SYSTEM, Math;
+CONST 
+	max = 2147483647; 
+	msbit = 1073741824; 
+	allbits = 2147483647; 
+	halfrange = 536870912; 
+	step = 7; 
+	allbitsInv = (1 / FLOAT32(allbits)); 
+TYPE 
+	Generator* = OBJECT 
+	VAR 
+		buffer: ARRAY 250 OF SET32; 
+		index: SIGNED32; 
+		Z: SIGNED32; 
+
+		PROCEDURE ^ Rand(): SIGNED32; 
+		PROCEDURE ^ InitSeed*(seed: SIGNED32); 
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Integer*(): SIGNED32; 
+		PROCEDURE ^ Dice*(sides: SIGNED32): SIGNED32; 
+		PROCEDURE ^ Uniform*(): FLOAT32; 
+		PROCEDURE ^ Exp*(mu: FLOAT32): FLOAT32; 
+		PROCEDURE ^ Gaussian*(): FLOAT32; 
+	END Generator; 
+
+	Sequence* = OBJECT {EXCLUSIVE} 
+	VAR 
+		r: Generator; 
+
+		PROCEDURE ^ InitSeed*(seed: SIGNED32); 
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Integer*(): SIGNED32; 
+		PROCEDURE ^ Dice*(sides: SIGNED32): SIGNED32; 
+		PROCEDURE ^ Uniform*(): FLOAT32; 
+		PROCEDURE ^ Exp*(mu: FLOAT32): FLOAT32; 
+		PROCEDURE ^ Gaussian*(): FLOAT32; 
+	END Sequence; 
+BEGIN
+END Random.

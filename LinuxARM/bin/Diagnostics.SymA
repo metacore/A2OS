@@ -1,0 +1,59 @@
+MODULE Diagnostics;
+	IMPORT Streams;
+CONST 
+	TypeInformation* = 0; 
+	TypeWarning* = 1; 
+	TypeError* = 2; 
+	All* = {TypeInformation, TypeWarning, TypeError}; 
+TYPE 
+	Diagnostics* = OBJECT 
+
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+	END Diagnostics; 
+
+	Entry* = POINTER TO RECORD 
+		type*: INTEGER; 
+		source*: ARRAY 128 OF CHAR; 
+		position*: Streams.Position; 
+		message*: ARRAY 256 OF CHAR; 
+		next*: Entry; 
+	END; 
+
+	EntryArray* = POINTER TO ARRAY OF Entry; 
+
+	EnumProc* = PROCEDURE {DELEGATE}(e: Entry); 
+
+	DiagnosticsList* = OBJECT {EXCLUSIVE} (Diagnostics)
+	VAR 
+		entries-: Entry; 
+		nofErrors-: SIZE; 
+		nofWarnings-: SIZE; 
+		nofInformations-: SIZE; 
+		nofMessages-: SIZE; 
+
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer; mask: SET); 
+		PROCEDURE ^  & Reset*; 
+		PROCEDURE ^ ForAll*(proc: EnumProc); 
+		PROCEDURE ^ GetEntries*(): EntryArray; 
+		PROCEDURE ^ InsertSorted(type: INTEGER; CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR; VAR counter: SIZE); 
+		PROCEDURE ^ NewEntry*(type: INTEGER; CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR; next: Entry): Entry; 
+	END DiagnosticsList; 
+
+	StreamDiagnostics* = OBJECT (Diagnostics)
+	VAR 
+		writer: Streams.Writer; 
+
+		PROCEDURE ^  & Init*(w: Streams.Writer); 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+	END StreamDiagnostics; 
+
+	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position: Streams.Position; type: INTEGER; CONST message: ARRAY OF CHAR); 
+BEGIN
+END Diagnostics.

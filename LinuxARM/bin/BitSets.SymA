@@ -1,0 +1,29 @@
+MODULE BitSets;
+	IMPORT SYSTEM;
+CONST 
+	Elements = ((MAX(SET) - MIN(SET)) + 1); 
+TYPE 
+	Bits = SIZE; 
+
+	Data = POINTER TO ARRAY OF SET; 
+
+	BitSet* = OBJECT 
+	VAR 
+		size: Bits; 
+		data: Data; 
+
+		PROCEDURE ^  & InitBitSet*(size: Bits); 
+		PROCEDURE ^ Zero*; 
+		PROCEDURE ^ Resize*(size: Bits); 
+		PROCEDURE ^ GetSize*(): SIZE; 
+		PROCEDURE ^ SetBit*(pos: Bits; value: BOOLEAN); 
+		PROCEDURE ^ GetBit*(pos: Bits): BOOLEAN; 
+		PROCEDURE ^ SetBits*(startPos, bits: Bits; value: SIGNED64); 
+		PROCEDURE ^ SetBytes*(startPos, bytes: SIZE; CONST values: ARRAY OF CHAR); 
+		PROCEDURE ^ GetBits*(startPos, bits: Bits): INTEGER; 
+		PROCEDURE ^ CopyTo*(address: ADDRESS; bits: Bits); 
+	END BitSet; 
+
+	PROCEDURE ^ CopyBits*(source: BitSet; sourcePos: Bits; dest: BitSet; destPos, count: Bits); 
+BEGIN
+END BitSets.

@@ -1,0 +1,46 @@
+MODULE UnihanParser;
+	IMPORT Streams, Files, Strings, UTF8Strings, TextUtilities, KernelLog;
+CONST 
+	MaxCode = 200000; 
+TYPE 
+	String = Strings.String; 
+
+	Character* = OBJECT 
+	VAR 
+		radical*, tradvariant*, simpvariant*, additionalstrokes*, totalstrokes*, freq*, xfreq*: SIGNED32; 
+		mandarin*, pinyin*, cantonese*, korean*, definition*: String; 
+	END Character; 
+
+	ListElement = POINTER TO RECORD 
+		next: ListElement; 
+	END; 
+
+	CompareProc = PROCEDURE {DELEGATE}(a, b: ListElement):SIGNED32; 
+
+	PIMEEntry = POINTER TO RECORD (ListElement)
+		pinyin: ARRAY 8 OF CHAR; 
+		ucs: SIGNED32; 
+		freq: SIGNED32; 
+	END; 
+VAR 
+	codeArray: POINTER TO ARRAY OF Character; 
+	nofLines: SIGNED32; 
+	tok: ARRAY 32 OF CHAR; 
+	data: ARRAY 256 OF CHAR; 
+	cap: ARRAY 256 OF CHAR; 
+	isNum: ARRAY 256 OF BOOLEAN; 
+
+	PROCEDURE ^ GetHex(r: Streams.Reader): SIGNED32; 
+	PROCEDURE ^ HasCode*(code: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ GetCharacter*(code: SIGNED32): Character; 
+	PROCEDURE ^ CountCharacters(): SIGNED32; 
+	PROCEDURE ^ ParseLine(r: Streams.Reader); 
+	PROCEDURE ^ AddRadicals; 
+	PROCEDURE ^ AddFrequencies; 
+	PROCEDURE ^ ParseFile*; 
+	PROCEDURE ^ Sort(root: ListElement; compare: CompareProc); 
+	PROCEDURE ^ ComparePinyinFreq(a, b: ListElement): SIGNED32; 
+	PROCEDURE ^ BuildBasicPinyinIMETable*; 
+	PROCEDURE ^ InitLookup; 
+BEGIN
+END UnihanParser.

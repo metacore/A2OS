@@ -1,0 +1,132 @@
+MODULE WMFigures;
+	IMPORT KernelLog, Streams, Math, Strings, XML, WMRectangles, WMGraphics, WMGraphicUtilities, WMProperties, WMComponents;
+CONST 
+	Filled* = 0; 
+	Closed* = 1; 
+	EditPoints* = 2; 
+	Reshape* = 3; 
+	Arrow* = 4; 
+	PointSize = 6; 
+TYPE 
+	Point* = POINTER TO RECORD 
+		x-, y-: SIZE; 
+		previous-, next-: Point; 
+	END; 
+
+	Figure* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		width-: WMProperties.Int32Property; 
+		color-, clHover-: WMProperties.ColorProperty; 
+		closed-: WMProperties.BooleanProperty; 
+		filled-: WMProperties.BooleanProperty; 
+		reshape-: WMProperties.BooleanProperty; 
+		arrow-: WMProperties.BooleanProperty; 
+		points-: Point; 
+		nofPoints-: SIGNED32; 
+		hover, selectedPoint: WMProperties.Property; 
+		selectedLine: BOOLEAN; 
+		mouseOver: BOOLEAN; 
+		lastKeys, state: SET; 
+		oldx, oldy: SIZE; 
+		PArray: WMProperties.PropertyArray; 
+		lineCB*: PROCEDURE {DELEGATE}(canvas: WMGraphics.Canvas; y, x0, x1: SIZE); 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AddPoint*(x, y: SIZE); 
+		PROCEDURE ^ MovePoint*(point: WMProperties.Property; fx, fy: SIZE); 
+		PROCEDURE ^ RemovePoint*(fx, fy: SIZE); 
+		PROCEDURE ^ ThisPoint*(fx, fy: SIZE): WMProperties.Property; 
+		PROCEDURE ^ IndexedPoint*(index: SIGNED32): WMProperties.Property; 
+		PROCEDURE ^ MoveFigure*(dx, dy: SIZE); 
+		PROCEDURE ^ PointerDown*(fx, fy: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(fx, fy: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(fx, fy: SIZE; keys: SET); 
+		PROCEDURE ^ Inside*(X, Y: SIZE): BOOLEAN; 
+		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
+		PROCEDURE ^ Length*(): REAL; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ AddDisplayPoint(x, y: SIZE); 
+		PROCEDURE ^ MoveDisplayPoints(dx, dy: SIGNED32); 
+		PROCEDURE ^ Normalize*; 
+		PROCEDURE ^ Scale; 
+		PROCEDURE ^ GetBoundingBox(): WMRectangles.Rectangle; 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ RecachePoints*; 
+		PROCEDURE ^ DrawDisplayPoint(canvas: WMGraphics.Canvas; pp: WMProperties.PointProperty); 
+		PROCEDURE ^ DrawForeground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ DrawArrow*(canvas: WMGraphics.Canvas; p0, p1: Point); 
+	END Figure; 
+
+	PointArray = POINTER TO ARRAY OF WMGraphics.Point2d; 
+
+	Line* = OBJECT {EXCLUSIVE} (Figure)
+	VAR 
+		pointArray: PointArray; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ Scale; 
+		PROCEDURE ^ Inside*(X, Y: SIZE): BOOLEAN; 
+		PROCEDURE ^ IsHit*(mx, my: SIZE): BOOLEAN; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END Line; 
+
+	Circle* = OBJECT {EXCLUSIVE} (Figure)
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ Normalize*; 
+		PROCEDURE ^ IsHit*(mx, my: SIZE): BOOLEAN; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END Circle; 
+
+	Rectangle* = OBJECT {EXCLUSIVE} (Figure)
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ IsHit*(mx, my: SIZE): BOOLEAN; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END Rectangle; 
+
+	Spline* = OBJECT {EXCLUSIVE} (Figure)
+	VAR 
+		pointArray-: ARRAY 2048 OF WMGraphics.Point2d; 
+		nSegments-: SIGNED32; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ Inside*(X, Y: SIZE): BOOLEAN; 
+		PROCEDURE ^ IsHit*(mx, my: SIZE): BOOLEAN; 
+		PROCEDURE ^ RecachePoints*; 
+		PROCEDURE ^ Normalize*; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ Length*(): REAL; 
+		PROCEDURE ^ LineIntegral*(VAR length, sum: REAL; VAR count: SIZE; getter: PROCEDURE {DELEGATE}(x, y: SIZE):REAL): REAL; 
+	END Spline; 
+VAR 
+	log: Streams.Writer; 
+	gravity: SIGNED32; 
+	PrototypeWidth: WMProperties.Int32Property; 
+	PrototypeColor, PrototypeclHover: WMProperties.ColorProperty; 
+	PrototypeClosed: WMProperties.BooleanProperty; 
+	PrototypeFilled: WMProperties.BooleanProperty; 
+	PrototypeReshape: WMProperties.BooleanProperty; 
+	PrototypeArrow: WMProperties.BooleanProperty; 
+	StrFigure, StrLine, StrCircle, StrRectangle, StrSpline: Strings.String; 
+
+	PROCEDURE ^ arctan2(y, x: FLOAT32): FLOAT32; 
+	PROCEDURE ^ FillDotted*(canvas: WMGraphics.Canvas; y, x0, x1: SIZE); 
+	PROCEDURE ^ MakePoly*(CONST RX, RY, RXstrich, RYstrich, RS: ARRAY OF FLOAT32; n: SIGNED32; VAR points: ARRAY OF WMGraphics.Point2d; VAR k: SIGNED32); 
+	PROCEDURE ^ SplineToPoly*(c: Point; closed: BOOLEAN; VAR points: ARRAY OF WMGraphics.Point2d; VAR k: SIGNED32); 
+	PROCEDURE ^ Invicinity*(mx, my, X, Y: SIZE): BOOLEAN; 
+	PROCEDURE ^ InLineVicinity*(mx, my, X, Y, X1, Y1: SIZE): BOOLEAN; 
+	PROCEDURE ^ Intersect*(X, Y, x0, y0, x1, y1: SIZE): BOOLEAN; 
+	PROCEDURE ^ Distance*(x, y, x0, y0: SIZE): SIZE; 
+	PROCEDURE ^ GenLine*(): XML.Element; 
+	PROCEDURE ^ GenCircle*(): XML.Element; 
+	PROCEDURE ^ GenRectangle*(): XML.Element; 
+	PROCEDURE ^ GenSpline*(): XML.Element; 
+	PROCEDURE ^ InitPrototypes; 
+	PROCEDURE ^ InitStrings; 
+BEGIN
+END WMFigures.

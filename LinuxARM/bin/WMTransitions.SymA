@@ -1,0 +1,39 @@
+MODULE WMTransitions;
+	IMPORT SYSTEM, BIT, Raster, WMGraphics, WMGraphicUtilities, WMRectangles, WMWindowManager, Machine, KernelLog;
+CONST 
+	DEBUG = FALSE; 
+TYPE 
+	Transition* = OBJECT 
+
+		PROCEDURE ^ Init*(w, h: SIZE); 
+		PROCEDURE ^ CalcImage*(a, b, result: Raster.Image; per255: SIGNED32); 
+	END Transition; 
+
+	TransitionMask* = OBJECT (Transition)
+	VAR 
+		mW, mH: SIZE; 
+		mask: POINTER TO ARRAY OF CHAR; 
+
+		PROCEDURE ^ Init*(w, h: SIZE); 
+		PROCEDURE ^ SetMask*(mi: Raster.Image); 
+		PROCEDURE ^ DumpMask; 
+		PROCEDURE ^ CalcImage*(a, b, result: Raster.Image; per255: SIGNED32); 
+	END TransitionMask; 
+
+	TransitionFade* = OBJECT (Transition)
+	VAR 
+		mW, mH: SIZE; 
+		mode: Raster.Mode; 
+
+		PROCEDURE ^ Init*(w, h: SIZE); 
+		PROCEDURE ^ CalcImage*(a, b, result: Raster.Image; per255: SIGNED32); 
+	END TransitionFade; 
+
+	PROCEDURE ^ Calc565Opt(a, b: Raster.Image; VAR result: Raster.Image; per255: SIGNED32); 
+	PROCEDURE ^ Calc888Opt(a, b: Raster.Image; VAR result: Raster.Image; per255: SIGNED32); 
+	PROCEDURE ^ CalcGenUnknown(a, b: Raster.Image; VAR result: Raster.Image; perc: SIGNED32); 
+	PROCEDURE ^ LoadImage(CONST fileName: ARRAY OF CHAR): Raster.Image; 
+	PROCEDURE ^ Test*; 
+	PROCEDURE ^ Test2*; 
+BEGIN
+END WMTransitions.

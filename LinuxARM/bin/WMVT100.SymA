@@ -1,0 +1,132 @@
+MODULE WMVT100;
+	IMPORT WMWindowManager, WMComponents, WMStandardComponents, WMGraphics, WMPopups, WMEditors, WMDialogs, WMMessages, Strings, Texts, Inputs, Streams, Commands, IP, DNS, TCP, Telnet, KernelLog, Modules;
+CONST 
+	Border = 2; 
+	BoxW = 8; 
+	BoxH = 18; 
+	Left = 0; 
+	Right = 2; 
+	Underscore = 0; 
+	Blink = 1; 
+	CursorKeyMode = 0; 
+	AppKeypadMode = 1; 
+	AutoWrapMode = 2; 
+	WindowSize = 31; 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	Connection = OBJECT {EXCLUSIVE} (Telnet.Connection)
+	VAR 
+		frame: Frame; 
+		mode: SET; 
+
+		PROCEDURE ^ Do*(option: CHAR); 
+		PROCEDURE ^ SB*(option: CHAR); 
+		PROCEDURE ^ ESC(ch: CHAR); 
+		PROCEDURE ^ Consume*(ch: CHAR); 
+		PROCEDURE ^  & Init*(C: Streams.Connection); 
+		PROCEDURE ^ SetFrame(frame: Frame); 
+		PROCEDURE ^ Setup*; 
+	END Connection; 
+
+	Attribute = POINTER TO RECORD 
+		fnt: WMGraphics.Font; 
+		bg, fg: WMGraphics.Color; 
+		special: SET; 
+	END; 
+
+	Char = RECORD 
+		attr: Attribute; 
+		char: SIGNED32; 
+	END; 
+
+	Data = POINTER TO ARRAY OF Char; 
+
+	Line = POINTER TO RECORD 
+		data: Data; 
+		t, b: SIZE; 
+		next: Line; 
+	END; 
+
+	Position = RECORD 
+		line: Line; 
+		ofs: SIZE; 
+	END; 
+
+	Frame = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	TYPE 
+		; 
+	VAR 
+		C: Connection; 
+		first, last, top: Line; 
+		bg: WMGraphics.Color; 
+		rows, cols, boxW, boxH, dX, dY: SIZE; 
+		tabs: POINTER TO ARRAY OF BOOLEAN; 
+		attr: Attribute; 
+		cursor: Position; 
+		sel: RECORD 
+			beg, end: Position; 
+		END; 
+		popup: WMPopups.Popup; 
+		doEcho: BOOLEAN; 
+
+		PROCEDURE ^ GetCol(): SIZE; 
+		PROCEDURE ^ GetRow(): SIGNED32; 
+		PROCEDURE ^ appendLine(): Line; 
+		PROCEDURE ^ AppendLine(): Line; 
+		PROCEDURE ^ UpdateBox(line: Line; ofs: SIZE); 
+		PROCEDURE ^ UpdateRect(al, bl: Line; aofs, bofs: SIZE; cur: SET); 
+		PROCEDURE ^ UpdateAll; 
+		PROCEDURE ^ writeChars(VAR buf: ARRAY OF SIGNED32; n: SIZE); 
+		PROCEDURE ^ WriteChars(VAR buf: ARRAY OF SIGNED32; n: SIZE); 
+		PROCEDURE ^ Delete; 
+		PROCEDURE ^ goto(col, row: SIZE; scroll: BOOLEAN); 
+		PROCEDURE ^ Goto(col, row: SIZE; scroll: BOOLEAN); 
+		PROCEDURE ^ SetTop(row: SIGNED32); 
+		PROCEDURE ^ RightTab; 
+		PROCEDURE ^ EraseLine(l: Line; from, to: SIZE); 
+		PROCEDURE ^ Erase(mode: CHAR; par: ARRAY OF SIGNED32; n: SIGNED32); 
+		PROCEDURE ^ NewAttr; 
+		PROCEDURE ^ Bright; 
+		PROCEDURE ^ Dim; 
+		PROCEDURE ^ SetAttributes(attrs: ARRAY OF SIGNED32; n: SIGNED32); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ FocusReceived*; 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ LocateBox(x, y: SIZE; VAR pos: Position); 
+		PROCEDURE ^ Copy; 
+		PROCEDURE ^ Paste; 
+		PROCEDURE ^ ClickHandler(sender, par: ANY ); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ CursorKey(keySym: SIZE); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keySym: SIZE); 
+		PROCEDURE ^ resized; 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^  & New*(C: Connection; cols, rows: SIGNED32); 
+	END Frame; 
+
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		panel: WMStandardComponents.Panel; 
+		frame: Frame; 
+
+		PROCEDURE ^  & New*(C: Connection); 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ Close*; 
+	END Window; 
+VAR 
+	nofWindows: SIGNED32; 
+
+	PROCEDURE ^ Open*(CONST name: ARRAY OF CHAR; port: SIGNED32; type: SIGNED32; error: Streams.Writer): Window; 
+	PROCEDURE ^ GetRemote(context: Commands.Context; VAR name: ARRAY OF CHAR; VAR port: SIGNED32); 
+	PROCEDURE ^ Start*(context: Commands.Context); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMVT100.

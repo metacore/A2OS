@@ -1,0 +1,148 @@
+MODULE WMPerfMonAlerts;
+	IMPORT KernelLog, Modules, Commands, Streams, Files, Events, Strings, XML, XMLObjects, XMLScanner, XMLParser, WMPerfMonPlugins;
+CONST 
+	Ok* = 0; 
+	Error* = 1; 
+	DefaultAlertFile = \"WMPerfMonAlerts.XML"\; 
+	Sticky* = 0; 
+	SingleShot* = 1; 
+	MultiShot* = 2; 
+	Invalid* =  -1; 
+	Undefined* = 0; 
+	Greater* = 1; 
+	GreaterOrEqual* = 2; 
+	Equals* = 3; 
+	NotEquals* = 4; 
+	Less* = 5; 
+	LessOrEqual* = 6; 
+	OutOfInterval* = 7; 
+	InInterval* = 8; 
+	FirstValueChangedBy* = 9; 
+	LastValueChangedBy* = 10; 
+	Off* = 0; 
+	On* = 1; 
+	Triggered* = 2; 
+	Reset* = 3; 
+	XmlElementAlert = \"Alert"\; 
+	XmlAttributeFullname = \"fullname"\; 
+	XmlAttributeType = \"type"\; 
+	XmlAttributeValue1 = \"value1"\; 
+	XmlAttributeValue2 = \"value2"\; 
+	XmlAttributeOnAlertCommand = \"onAlert"\; 
+	XmlAttributeOnLeaveAlertCommand = \"onLeave"\; 
+	XmlAttributeTrigger = \"trigger"\; 
+	XmlGreater = \">"\; 
+	XmlGreaterOrEqual = \">="\; 
+	XmlEquals = \"="\; 
+	XmlNotEquals = \"!="\; 
+	XmlLess = \"<"\; 
+	XmlLessOrEqual = \"<="\; 
+	XmlOutOfInterval = \"out"\; 
+	XmlInInterval = \"in"\; 
+	XmlFirstValueChangedBy = \"changedBy0"\; 
+	XmlLastValueChangedBy = \"changedBy"\; 
+	ShowOnKernelLog = FALSE; 
+	GenerateEvents = TRUE; 
+	EventOriginator = \"WMPerfMonAlerts"\; 
+TYPE 
+	AlertInfo* = RECORD 
+		id-: SIGNED32; 
+		fullname-: ARRAY 256 OF CHAR; 
+		type-: SIGNED32; 
+		state-: SIGNED32; 
+		trigger-: SIGNED32; 
+		value1-, value2-: FLOAT64; 
+		violation-: FLOAT64; 
+		nbrOfViolations-: SIGNED32; 
+		lastValueIsValid: BOOLEAN; 
+		lastValue: FLOAT64; 
+		onAlertCommand-: XML.String; 
+		onLeaveAlertCommand-: XML.String; 
+	END; 
+
+	AlertObject = OBJECT 
+	VAR 
+		info: AlertInfo; 
+		onAlertCalled, onLeaveCalled: BOOLEAN; 
+		plugin: WMPerfMonPlugins.Plugin; 
+		lastState: SIGNED32; 
+		datasetIdx: SIGNED32; 
+		next: AlertObject; 
+
+		PROCEDURE ^ SetState(state: SIGNED32); 
+		PROCEDURE ^ ResetState; 
+		PROCEDURE ^ Alert(value: FLOAT64); 
+		PROCEDURE ^ AlarmTriggered(): BOOLEAN; 
+		PROCEDURE ^ HandleAlert(lastState: SIGNED32; triggered: BOOLEAN); 
+		PROCEDURE ^ Finalize; 
+		PROCEDURE ^ ToXML(): XML.Element; 
+		PROCEDURE ^ Show(details: BOOLEAN; out: Streams.Writer); 
+		PROCEDURE ^  & Init*(CONST fullname: ARRAY OF CHAR; plugin: WMPerfMonPlugins.Plugin; datasetIdx: SIGNED32); 
+	END AlertObject; 
+
+	Alerts* = POINTER TO ARRAY OF AlertInfo; 
+
+	Status* = RECORD 
+		enabled-: BOOLEAN; 
+		filename-: ARRAY 256 OF CHAR; 
+		nbrOfRules-: SIGNED32; 
+		nbrOfAlerts-: SIGNED32; 
+		stamp-: SIGNED32; 
+	END; 
+VAR 
+	alerts: AlertObject; 
+	alertsEnabled: BOOLEAN; 
+	alertFile: ARRAY 256 OF CHAR; 
+	nbrOfRules, nbrOfAlerts: SIGNED32; 
+	stamp: SIGNED32; 
+	uniqueID: SIGNED32; 
+	xmlHasErrors: BOOLEAN; 
+
+	PROCEDURE ^ Add*(CONST fullname: ARRAY OF CHAR; type, trigger: SIGNED32; value1, value2: FLOAT64; onAlert, onLeave: XML.String; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ AddByString*(CONST string: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ AddByStream(r: Streams.Reader; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ AddByCommand*(context: Commands.Context); 
+	PROCEDURE ^ RemoveAlertX(alert: AlertObject); 
+	PROCEDURE ^ RemoveAlerts*(CONST fullname: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ RemoveAlertByID*(id: SIGNED32): SIGNED32; 
+	PROCEDURE ^ SetStateByID*(id, state: SIGNED32; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ GetByIdX(id: SIGNED32): AlertObject; 
+	PROCEDURE ^ HandleEvents(events: SET; perf: FLOAT32); 
+	PROCEDURE ^ CheckAlerts; 
+	PROCEDURE ^ ExecuteCommand(command: XML.String); 
+	PROCEDURE ^ GetAttributeValue(elem: XML.Element; CONST name: ARRAY OF CHAR): XML.String; 
+	PROCEDURE ^ GetLongreal(elem: XML.Element; CONST name: ARRAY OF CHAR; VAR res: INTEGER): FLOAT64; 
+	PROCEDURE ^ GetLongrealString(value: FLOAT64; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ GetTriggerPtr(string: XML.String): SIGNED32; 
+	PROCEDURE ^ GetTrigger(CONST string: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ GetTriggerString(trigger: SIGNED32; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ GetTypePtr(string: XML.String): SIGNED32; 
+	PROCEDURE ^ GetType(string: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ GetStateString*(state: SIGNED32; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ GetTypeString*(type: SIGNED32; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ GetFullTriggerString*(ai: AlertInfo; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ GetEvent(CONST message: Events.Message; code: SIGNED8): Events.Event; 
+	PROCEDURE ^ ParseAlert*(r: Streams.Reader; VAR alert: AlertInfo; VAR msg: ARRAY OF CHAR; res: INTEGER); 
+	PROCEDURE ^ ParseXmlAlert(elem: XML.Element; VAR msg: ARRAY OF CHAR): AlertObject; 
+	PROCEDURE ^ ParseXmlDocument(document: XML.Document; VAR msg: ARRAY OF CHAR; VAR nbrOfRules: SIGNED32; VAR res: INTEGER): AlertObject; 
+	PROCEDURE ^ ReportError(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ LoadXmlDocument(CONST filename: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: INTEGER): XML.Document; 
+	PROCEDURE ^ GetStatus*(): Status; 
+	PROCEDURE ^ GetAlerts*(): Alerts; 
+	PROCEDURE ^ SetRulesX(CONST filename: ARRAY OF CHAR; alertList: AlertObject; nbrOfRulesP: SIGNED32; append: BOOLEAN); 
+	PROCEDURE ^ GetRulesAsXmlX(): XML.Element; 
+	PROCEDURE ^ LoadRuleFileX(CONST filename: ARRAY OF CHAR; VAR alerts: AlertObject; VAR nbrOfRules: SIGNED32; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ StoreRuleFileX(CONST filename: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ LoadRules*(CONST filename: ARRAY OF CHAR; append: BOOLEAN; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ StoreRules*(CONST filename: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ Load*(context: Commands.Context); 
+	PROCEDURE ^ Store*(context: Commands.Context); 
+	PROCEDURE ^ Show*(context: Commands.Context); 
+	PROCEDURE ^ EnableAlerts*; 
+	PROCEDURE ^ DisableAlerts*; 
+	PROCEDURE ^ Enable*(context: Commands.Context); 
+	PROCEDURE ^ Disable*(context: Commands.Context); 
+	PROCEDURE ^ UnloadX; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPerfMonAlerts.

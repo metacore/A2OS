@@ -1,0 +1,37 @@
+MODULE GfxBuffer;
+	IMPORT Images := Raster, GfxMatrix, GfxImages, GfxRegions, Gfx, GfxRaster;
+TYPE 
+	Context* = POINTER TO ContextDesc; 
+
+	ContextDesc* = RECORD (GfxRaster.ContextDesc)
+		orgX*, orgY*: FLOAT32; 
+		scale*: FLOAT32; 
+		bgCol*: Gfx.Color; 
+		img*: Images.Image; 
+		pix: Images.Pixel; 
+		compOp: SIGNED8; 
+	END; 
+
+	RegData = RECORD (GfxRegions.EnumData)
+		dx, dy: SIGNED16; 
+		bc: Context; 
+		mode: Images.Mode; 
+	END; 
+VAR 
+	Methods: Gfx.Methods; 
+
+	PROCEDURE ^ Color(llx, lly, urx, ury: SIGNED16; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ Tile(llx, lly, urx, ury: SIGNED16; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ Dot(rc: GfxRaster.Context; x, y: SIGNED32); 
+	PROCEDURE ^ Rect(rc: GfxRaster.Context; llx, lly, urx, ury: SIGNED32); 
+	PROCEDURE ^ SetColPat(rc: GfxRaster.Context; col: Gfx.Color; pat: Gfx.Pattern); 
+	PROCEDURE ^ ResetCTM(ctxt: Gfx.Context); 
+	PROCEDURE ^ ResetClip(ctxt: Gfx.Context); 
+	PROCEDURE ^ Image(ctxt: Gfx.Context; x, y: FLOAT32; img: Images.Image; VAR filter: GfxImages.Filter); 
+	PROCEDURE ^ InitMethods; 
+	PROCEDURE ^ SetCoordinates*(bc: Context; x, y, scale: FLOAT32); 
+	PROCEDURE ^ SetBGColor*(bc: Context; col: Gfx.Color); 
+	PROCEDURE ^ SetCompOp*(bc: Context; op: SIGNED8); 
+	PROCEDURE ^ Init*(bc: Context; img: Images.Image); 
+BEGIN
+END GfxBuffer.

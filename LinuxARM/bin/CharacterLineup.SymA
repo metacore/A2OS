@@ -1,0 +1,59 @@
+MODULE CharacterLineup;
+	IMPORT KernelLog, Modules, WMComponents, WMStandardComponents, WMEditors, Strings, UTF8Strings, WMGraphics, UnihanParser, WM := WMWindowManager, WMGrids, WMCCGFonts, WMRectangles;
+CONST 
+	MaxCharacterCode = 200000; 
+	NofCols = 25; 
+	MaxFilters = 8; 
+TYPE 
+	CharacterArray = POINTER TO ARRAY OF WMCCGFonts.Glyph; 
+
+	HistoEntry = RECORD 
+		ucs, freq: SIGNED32; 
+	END; 
+
+	FilterHisto = POINTER TO ARRAY OF HistoEntry; 
+
+	Identifier = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		mainPanel, toolbar, infobar, textInfoPanel, selectionPanel, filterPanel, paintBox: WMStandardComponents.Panel; 
+		characterEdit, pinyinEdit, mandarinEdit, cantoneseEdit, koreanEdit, definitionEdit, codeEdit: WMEditors.Editor; 
+		characters, filterComponents: WMGrids.GenericGrid; 
+		toggleFilter: WMStandardComponents.Button; 
+		curChar: SIGNED32; 
+		fontinfo: WMCCGFonts.GenericFont; 
+		bigFont: WMGraphics.Font; 
+		charInfo: UnihanParser.Character; 
+		allCharacters: CharacterArray; 
+		nofCharacters: SIGNED32; 
+		filtered: CharacterArray; 
+		filterArray: ARRAY MaxFilters OF SIGNED32; 
+		nofFilters: SIGNED32; 
+		nofInFilter: SIGNED32; 
+		useFilter: BOOLEAN; 
+		relevantSubcomponents: FilterHisto; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ LoadAllCharacters; 
+		PROCEDURE ^ Update; 
+		PROCEDURE ^ IsComponentUsed(glyph: WMCCGFonts.Glyph; code: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ Filter(nofSubs: SIGNED32; CONST subs: ARRAY OF SIGNED32); 
+		PROCEDURE ^ ToggleFilter(sender, data: ANY ); 
+		PROCEDURE ^ NewCharacter(sender, data: ANY ); 
+		PROCEDURE ^ NewCode(sender, data: ANY ); 
+		PROCEDURE ^ SelectChar(sender, data: ANY ); 
+		PROCEDURE ^ FilterSelection(sender, data: ANY ); 
+		PROCEDURE ^ IsInFilterArray(ucs: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ AddToFilter(ucs: SIGNED32); 
+		PROCEDURE ^ RemoveFromFilter(ucs: SIGNED32); 
+		PROCEDURE ^ PaintCharacter(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ DrawAll(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
+		PROCEDURE ^ DrawFilterComponents(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
+	END Identifier; 
+VAR 
+	winstance: Identifier; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END CharacterLineup.

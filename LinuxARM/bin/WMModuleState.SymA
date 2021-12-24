@@ -1,0 +1,47 @@
+MODULE WMModuleState;
+	IMPORT SYSTEM, Streams, Modules, TextUtilities, WMComponents, WMEditors, WMGraphics, WMStandardComponents, WMDialogs, WMWindowManager, Commands, WMRectangles, Kernel;
+CONST 
+	MaxString = 64; 
+	MaxArray = 10; 
+	RefreshOff = \"Refresh is off"\; 
+	RefreshOn = \"Refresh is on"\; 
+TYPE 
+	Bytes = Modules.Bytes; 
+
+	StateWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		tw-: TextUtilities.TextWriter; 
+		panel: WMStandardComponents.Panel; 
+		out-: WMEditors.Editor; 
+		open: BOOLEAN; 
+		refresh: WMStandardComponents.Button; 
+		refreshOn: BOOLEAN; 
+		timer: Kernel.Timer; 
+		module: Modules.Module; 
+		interval: SIGNED32; 
+		autorefresh: WMStandardComponents.Checkbox; 
+
+		PROCEDURE ^  & New*(title: ARRAY OF CHAR; interval: SIGNED32; name: Modules.Name); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ ClearText(sender, data: ANY ); 
+		PROCEDURE ^ Load(sender, data: ANY ); 
+		PROCEDURE ^ OutState(name: Modules.Name); 
+		PROCEDURE ^ RefreshSwitch(sender, data: ANY ); 
+		PROCEDURE ^ Refresh(sender, data: ANY ); 
+		PROCEDURE ^ SetInterval*(interval: SIGNED32); 
+		PROCEDURE ^ Variables(refs: Bytes; i: SIZE; base: ADDRESS; w: Streams.Writer); 
+		PROCEDURE ^ FindProc(refs: Bytes; ofs: ADDRESS): SIZE; 
+		PROCEDURE ^ WriteProc(mod: Modules.Module; pc, fp: ADDRESS; VAR refs: Bytes; VAR refpos: SIZE; VAR base: ADDRESS; w: Streams.Writer); 
+		PROCEDURE ^ GetNum(refs: Bytes; VAR i: SIZE; VAR num: SIGNED32); 
+	BEGIN{ACTIVE} 
+	END StateWindow; 
+
+	WinCollection = POINTER TO ARRAY OF StateWindow; 
+VAR 
+	stateWins: WinCollection; 
+	nrWins: SIGNED32; 
+
+	PROCEDURE ^ Remove(stateWin: StateWindow); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+BEGIN
+END WMModuleState.

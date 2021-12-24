@@ -1,0 +1,39 @@
+MODULE CryptoBlowfish;
+	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils;
+CONST 
+	N = 16; 
+TYPE 
+	TP = ARRAY (N + 2) OF SET32; 
+
+	TS = RECORD 
+		a: ARRAY 256 OF SIGNED32; 
+		b: ARRAY 256 OF SIGNED32; 
+		c: ARRAY 256 OF SET32; 
+		d: ARRAY 256 OF SIGNED32; 
+	END; 
+
+	Cipher* = OBJECT (Ciphers.Cipher)
+	VAR 
+		p: TP; 
+		s: TS; 
+		ivl, ivr: SET32; 
+
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIZE); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; pos: SIZE); 
+		PROCEDURE ^ DecryptBlock(VAR buf: ARRAY OF CHAR; pos: SIZE); 
+		PROCEDURE ^ F(x: SIGNED32): SET32; 
+		PROCEDURE ^ encrypt0(xl, xr: SET32; VAR yl, yr: SET32); 
+		PROCEDURE ^ decrypt0(xl, xr: SET32; VAR yl, yr: SET32); 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+VAR 
+	p0: TP; 
+	s0: TS; 
+
+	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
+	PROCEDURE ^ Init0; 
+BEGIN
+END CryptoBlowfish.

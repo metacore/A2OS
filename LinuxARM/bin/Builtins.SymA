@@ -1,0 +1,74 @@
+MODULE Builtins;
+	IMPORT SYSTEM, FPE64;
+CONST 
+	B = 127; 
+	C = 8388608; 
+	E = 256; 
+	S = SIGNED32(2147483648); 
+	MAXFLOAT32 = 2139095039; 
+TYPE 
+	Single = SIGNED32; 
+
+	Double = SIGNED64; 
+
+	DoubleWord = RECORD 
+		low*: UNSIGNED32; 
+		high*: SIGNED32; 
+	END; 
+
+	PROCEDURE ^ DivS8*(left, right: SIGNED8): SIGNED8; 
+	PROCEDURE ^ DivS16*(left, right: SIGNED16): SIGNED16; 
+	PROCEDURE ^ DivS32*(left, right: SIGNED32): SIGNED32; 
+	PROCEDURE ^ DivU32*(left, right: UNSIGNED32): UNSIGNED32; 
+	PROCEDURE ^ DivS64*(left, right: SIGNED64): SIGNED64; 
+	PROCEDURE ^ DivU64*(left, right: UNSIGNED64): UNSIGNED64; 
+	PROCEDURE ^ ModS8*(left, right: SIGNED8): SIGNED8; 
+	PROCEDURE ^ ModS16*(left, right: SIGNED16): SIGNED16; 
+	PROCEDURE ^ ModS32*(left, right: SIGNED32): SIGNED32; 
+	PROCEDURE ^ ModU32*(left, right: UNSIGNED32): UNSIGNED32; 
+	PROCEDURE ^ ModS64*(left, right: SIGNED64): SIGNED64; 
+	PROCEDURE ^ ModU64*(left, right: UNSIGNED64): UNSIGNED64; 
+	PROCEDURE ^ RolS64*(source: SIGNED64; amount: UNSIGNED32): SIGNED64; 
+	PROCEDURE ^ RolU64*(source: SIGNED64; amount: UNSIGNED32): SIGNED64; 
+	PROCEDURE ^ RorS64*(source: SIGNED64; amount: UNSIGNED32): SIGNED64; 
+	PROCEDURE ^ RorU64*(source: SIGNED64; amount: UNSIGNED32): SIGNED64; 
+	PROCEDURE ^ DivModS32(dividend, divisor: SIGNED32; VAR quotient, remainder: SIGNED32); 
+	PROCEDURE ^ DivModU32*(dividend, divisor: UNSIGNED32; VAR quotient, remainder: UNSIGNED32); 
+	PROCEDURE ^ DivModS64*(dividend, divisor: SIGNED64; VAR quotient, remainder: SIGNED64); 
+	PROCEDURE ^ Clz64*(x: UNSIGNED64): SIGNED32; 
+	PROCEDURE ^ DivModU64*(dividend, divisor: UNSIGNED64; VAR quotient, remainder: UNSIGNED64); 
+	PROCEDURE ^ NegF32*(float: Single): Single; 
+	PROCEDURE ^ AbsF32*(float: Single): Single; 
+	PROCEDURE ^ AddF32*(x, y: Single): Single; 
+	PROCEDURE ^ AddF64*(x, y: Double): Double; 
+	PROCEDURE ^ MulF64*(x, y: Double): Double; 
+	PROCEDURE ^ DivF64*(x, y: Double): Double; 
+	PROCEDURE ^ SubF64*(x, y: Double): Double; 
+	PROCEDURE ^ AbsF64*(x: Double): Double; 
+	PROCEDURE ^ NegF64*(x: Double): Double; 
+	PROCEDURE ^ ConvS32F64*(x: Double): SIGNED32; 
+	PROCEDURE ^ ConvS64F64*(x: Double): SIGNED64; 
+	PROCEDURE ^ ConvS64F32*(x: Single): SIGNED64; 
+	PROCEDURE ^ ConvF32F64*(x: Double): Single; 
+	PROCEDURE ^ ConvF32F64F*(x: Double): FLOAT32; 
+	PROCEDURE ^ ConvF64F32*(x: Single): Double; 
+	PROCEDURE ^ ConvF64S64*(x: SIGNED64): Double; 
+	PROCEDURE ^ ConvF64U32*(x: UNSIGNED32): Double; 
+	PROCEDURE ^ ConvF64S64F*(x: DoubleWord): FLOAT64; 
+	PROCEDURE ^ ConvF64S32*(x: SIGNED32): Double; 
+	PROCEDURE ^ ConvF64S16*(x: SIGNED16): Double; 
+	PROCEDURE ^ ConvF32S16*(x: SIGNED16): Single; 
+	PROCEDURE ^ ConvF32S8*(x: SIGNED8): Single; 
+	PROCEDURE ^ ConvF64S8*(x: SIGNED8): Double; 
+	PROCEDURE ^ SubF32*(left, right: Single): Single; 
+	PROCEDURE ^ MulF32*(x, y: Single): Single; 
+	PROCEDURE ^ DivF32*(x, y: Single): Single; 
+	PROCEDURE ^ ConvS32F32*(x: Single): SIGNED32; 
+	PROCEDURE ^ ConvF32S32*(x: SIGNED32): Single; 
+	PROCEDURE ^ ConvF32S64*(x: SIGNED64): Single; 
+	PROCEDURE ^ ConvF32U32*(x: UNSIGNED32): Single; 
+	PROCEDURE ^ ConvF32S64F*(x: DoubleWord): FLOAT32; 
+	PROCEDURE ^ CompareString*(CONST left, right: ARRAY OF CHAR): SIGNED8; 
+	PROCEDURE ^ CopyString*(VAR destination: ARRAY OF CHAR; CONST source: ARRAY OF CHAR); 
+BEGIN
+END Builtins.

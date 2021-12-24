@@ -1,0 +1,14 @@
+MODULE CryptoTestHMAC;
+	IMPORT CryptoHMAC, Utils := CryptoUtils, Log := KernelLog;
+CONST 
+
+	PROCEDURE ^ Check(CONST a, b: ARRAY OF CHAR; len: SIZE): BOOLEAN; 
+	PROCEDURE ^ DoTest(CONST modname, data, key, expDigest: ARRAY OF CHAR; dataLen, keyLen, hashLen: SIGNED32); 
+	PROCEDURE ^ ConcatenateTest(modname: ARRAY OF CHAR; hashLen: SIZE); 
+	PROCEDURE ^ Test1MD5*; 
+	PROCEDURE ^ Test1SHA1*; 
+	PROCEDURE ^ Fill(VAR a: ARRAY OF CHAR; len: SIZE; val: CHAR); 
+	PROCEDURE ^ Test1SHA256*; 
+	PROCEDURE ^ MD5ConcatenateTest*; 
+BEGIN
+END CryptoTestHMAC.

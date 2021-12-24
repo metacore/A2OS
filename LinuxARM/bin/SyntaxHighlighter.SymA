@@ -1,0 +1,260 @@
+MODULE SyntaxHighlighter;
+	IMPORT KernelLog, Streams, Commands, Strings, Files, Diagnostics, Texts, TextUtilities, XML, XMLScanner, XMLParser, XMLObjects, Options;
+CONST 
+	DefineMask* = {0 .. 5}; 
+	FontMask* = {0 .. 2}; 
+	FontName* = 0; 
+	FontSize* = 1; 
+	FontStyle* = 2; 
+	Color* = 3; 
+	BgColor* = 4; 
+	Voff* = 5; 
+	DefaultBgColor = 0; 
+	DefaultVoff = 0; 
+	DefaultHighlighterFile = \"SyntaxHighlighter.XML"\; 
+	XmlRootElementName = \"SyntaxHighlighter"\; 
+	XmlHighlighters = \"Highlighters"\; 
+	XmlHighlighter = \"Highlighter"\; 
+	XmlWords = \"Words"\; 
+	XmlTokens = \"Tokens"\; 
+	XmlAttributeAllowCharacters = \"allowCharacters"\; 
+	XmlStyles = \"Styles"\; 
+	XmlStyle = \"Style"\; 
+	XmlAttributeName = \"name"\; 
+	XmlAttributeDefaultStyle = \"defaultstyle"\; 
+	XmlAttributeNumberStyle = \"numberStyle"\; 
+	XmlAttributeFontName = \"fontname"\; 
+	XmlAttributeFontSize = \"fontsize"\; 
+	XmlAttributeFontStyle = \"fontstyle"\; 
+	XmlAttributeColor = \"color"\; 
+	XmlAttributeBgColor = \"bgcolor"\; 
+	XmlAttributeVoff = \"voff"\; 
+	XmlAttributeStyle = \"style"\; 
+	XmlAttributeStyleOpen = \"styleOpen"\; 
+	XmlAttributeStyleClose = \"styleClose"\; 
+	XmlAttributeStyleContent = \"style"\; 
+	XmlGroup = \"Group"\; 
+	XmlRegions = \"Regions"\; 
+	XmlRegion = \"Region"\; 
+	XmlAttributeOpen = \"open"\; 
+	XmlAttributeClose = \"close"\; 
+	XmlAttributeNesting = \"nesting"\; 
+	XmlAttributeMultiLine = \"multiline"\; 
+	XmlDontCare = \"*"\; 
+	Trace_None = 0; 
+	Trace_1 = 1; 
+	Trace_Max = 2; 
+	Statistics = TRUE; 
+	NOTCLOSED = (MAX(SIGNED32) - 128); 
+	MaxOpenLength = 32; 
+	MaxCloseLength = 32; 
+	MaxWordLength = 32; 
+	Dim1Length = 128; 
+	MaxTokenLength = 64; 
+	Ok = 0; 
+	StringTooLong = 1; 
+	Outside = 0; 
+	OpenString = 1; 
+	Content = 2; 
+	CloseString = 3; 
+	NoMatch = 0; 
+	Matching = 1; 
+	OpenMatch = 2; 
+	CloseMatch = 3; 
+	Type_Invalid* = 0; 
+	Type_Identifier* = 1; 
+	Type_Number* = 2; 
+	Type_Token* = 3; 
+	Subtype_Decimal* = 0; 
+	Subtype_Hex* = 1; 
+	Subtype_Float* = 2; 
+	Subtype_Binary* = 3; 
+	Subtype_Char* = 3; 
+	TypeWords = 1; 
+	TypeTokens = 2; 
+TYPE 
+	Identifier = ARRAY 64 OF CHAR; 
+
+	Style* = OBJECT 
+	VAR 
+		name-: Identifier; 
+		attributes-: Texts.Attributes; 
+		defined-: SET; 
+		next: Style; 
+
+		PROCEDURE ^  & Init(CONST name: Identifier; color, bgcolor, voff: SIGNED32; CONST fontname: ARRAY OF CHAR; fontsize: SIGNED32; fontstyle: SET); 
+	END Style; 
+
+	Styles = OBJECT {EXCLUSIVE} 
+	VAR 
+		styles: Style; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Add(style: Style); 
+		PROCEDURE ^ Find(CONST name: ARRAY OF CHAR): Style; 
+		PROCEDURE ^ FindIntern(CONST name: ARRAY OF CHAR): Style; 
+	END Styles; 
+
+	Word = POINTER TO RECORD 
+		name: ARRAY MaxWordLength OF CHAR; 
+		style: Style; 
+		next: Word; 
+	END; 
+
+	DataEntry = RECORD 
+		open, close: SIZE; 
+		region: RegionMatcher; 
+		eol: BOOLEAN; 
+	END; 
+
+	DataArray = POINTER TO ARRAY OF DataEntry; 
+
+	State* = OBJECT 
+	VAR 
+		matchers: RegionMatcher; 
+		data: DataArray; 
+		nofData: SIZE; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ AddMatcher(matcher: RegionMatcher); 
+		PROCEDURE ^ ResetMatchers; 
+		PROCEDURE ^ GetStyle(position: SIZE; VAR start, end: SIZE): Style; 
+		PROCEDURE ^ Find(position: SIZE; VAR entry: DataEntry): BOOLEAN; 
+		PROCEDURE ^ FindTriple(position: SIZE; VAR hasLeft, hasMiddle, hasRight: BOOLEAN; VAR left, middle, right: DataEntry); 
+		PROCEDURE ^ Patch(fromPosition: SIZE; length: SIZE); 
+		PROCEDURE ^ Add(CONST entry: DataEntry); 
+		PROCEDURE ^ Remove(CONST entry: DataEntry); 
+		PROCEDURE ^ RemoveFrom(position: SIZE); 
+		PROCEDURE ^ RemoveFromTo(position, length: SIZE): BOOLEAN; 
+		PROCEDURE ^ Clear; 
+		PROCEDURE ^ EnlargeDataArray; 
+		PROCEDURE ^ ShowEntry(CONST entry: DataEntry; out: Streams.Writer); 
+		PROCEDURE ^ Dump(out: Streams.Writer); 
+	END State; 
+
+	RegionDescriptor = OBJECT 
+	VAR 
+		open, close: Identifier; 
+		nesting, multiline: BOOLEAN; 
+		styleOpen, styleClose, styleContent: Style; 
+		openLength, closeLength: SIZE; 
+		next: RegionDescriptor; 
+
+		PROCEDURE ^  & Init(CONST open, close: ARRAY OF CHAR; nesting, multiline: BOOLEAN; styleOpen, styleClose, styleContent: Style); 
+	END RegionDescriptor; 
+
+	RegionMatcher = OBJECT 
+	VAR 
+		open, close: Identifier; 
+		nesting, multiline: BOOLEAN; 
+		styleOpen, styleClose, styleContent: Style; 
+		openLength, closeLength: SIZE; 
+		openChars: ARRAY MaxOpenLength OF CHAR; 
+		closeChars: ARRAY MaxCloseLength OF CHAR; 
+		firstOpenChar, nofOpenChars, firstCloseChar, nofCloseChars: SIZE; 
+		lastChar: CHAR; 
+		entry: DataEntry; 
+		level: SIGNED32; 
+		state: SIGNED32; 
+		firstPosition: SIZE; 
+		next: RegionMatcher; 
+
+		PROCEDURE ^  & Init(descriptor: RegionDescriptor); 
+		PROCEDURE ^ GetEntry(): DataEntry; 
+		PROCEDURE ^ ResetMatching; 
+		PROCEDURE ^ CheckOpen(reader: Texts.TextReader; position: SIZE; VAR length: SIZE): BOOLEAN; 
+		PROCEDURE ^ FeedChar(char32: Texts.Char32; position: SIZE; VAR newState: SIGNED32); 
+	END RegionMatcher; 
+
+	Token* = RECORD 
+		type-, subtype-: SIGNED8; 
+		startPosition-, endPosition-: SIZE; 
+		value-: ARRAY MaxTokenLength OF CHAR; 
+		length: SIZE; 
+		style-: Style; 
+	END; 
+
+	Highlighter* = OBJECT 
+	TYPE 
+		; 
+	VAR 
+		name: Identifier; 
+		defaultStyle, numberStyle: Style; 
+		words: ARRAY Dim1Length OF ARRAY MaxWordLength OF Word; 
+		wildcardWords: ARRAY MaxWordLength OF Word; 
+		wildcardsEnabled: BOOLEAN; 
+		tokens: ARRAY Dim1Length OF RECORD 
+			length: ARRAY MaxWordLength OF Word; 
+			maxLength: SIZE; 
+		END; 
+		regions: RegionDescriptor; 
+		longestOpen, longestClose: SIZE; 
+		regionChars, wordChars, isAllowedCharacter: ARRAY 256 OF BOOLEAN; 
+		next: Highlighter; 
+
+		PROCEDURE ^  & Init(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ IsAllowedCharacter*(character: Texts.Char32): BOOLEAN; 
+		PROCEDURE ^ AllowCharacter(character: CHAR); 
+		PROCEDURE ^ Scan(reader: Texts.TextReader; from, to: SIZE; CONST state: State; VAR match: BOOLEAN); 
+		PROCEDURE ^ RebuildRegions*(reader: Texts.TextReader; CONST state: State); 
+		PROCEDURE ^ PatchRegions*(info: Texts.TextChangeInfo; reader: Texts.TextReader; state: State; VAR fullLayout: BOOLEAN); 
+		PROCEDURE ^ GetDefaultStyle*(): Style; 
+		PROCEDURE ^ GetState*(): State; 
+		PROCEDURE ^ MatchToken(char32: Texts.Char32; reader: Texts.TextReader; VAR lookaheadIdx: SIZE; VAR token: Token): BOOLEAN; 
+		PROCEDURE ^ GetToken*(reader: Texts.TextReader; position: SIZE; VAR token: Token); 
+		PROCEDURE ^ GetWordStyle*(reader: Texts.TextReader; position: SIZE; VAR end: SIZE): Style; 
+		PROCEDURE ^ GetRegionStyle*(position: SIZE; state: State; VAR start, end: SIZE): Style; 
+		PROCEDURE ^ GetStyle*(CONST keyword: ARRAY OF CHAR; length: SIZE): Style; 
+		PROCEDURE ^ AddToken(CONST tokenname: ARRAY OF CHAR; style: Style; VAR res: INTEGER); 
+		PROCEDURE ^ AddWord(CONST keyword: ARRAY OF CHAR; style: Style; VAR res: INTEGER); 
+		PROCEDURE ^ AddRegion(CONST open, close: ARRAY OF CHAR; nesting, multiline: BOOLEAN; styleOpen, styleClose, styleContent: Style); 
+		PROCEDURE ^ DebugInterface*(code: INTEGER; state: State); 
+		PROCEDURE ^ Dump(out: Streams.Writer); 
+	END Highlighter; 
+
+	Highlighters = OBJECT {EXCLUSIVE} 
+	VAR 
+		list: Highlighter; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Add(highlighter: Highlighter); 
+		PROCEDURE ^ Find(CONST name: ARRAY OF CHAR): Highlighter; 
+		PROCEDURE ^ Dump(out: Streams.Writer); 
+	END Highlighters; 
+VAR 
+	source: Files.FileName; 
+	diagnostics: Diagnostics.Diagnostics; 
+	error, autoinit: BOOLEAN; 
+	global_highlighters: Highlighters; 
+	traceLevel: SIGNED32; 
+	NnofRebuildRegions, NnofPatchRegions, NnofPatchInsert, NnofPatchInsertHit, NnofPiOpenClose, NnofPiNestedFull, NnofPiNestedSimple, NnofPiRescan, NnofPiSimple, NnofPiNoHit, NnofPiNoHitRescan, NnofPiNoHitFull: SIZE; 
+
+	PROCEDURE ^ GetHighlighter*(CONST name: ARRAY OF CHAR): Highlighter; 
+	PROCEDURE ^ GetTokenType(VAR token: Token); 
+	PROCEDURE ^ Unescape(string: Strings.String); 
+	PROCEDURE ^ NofWildcards(CONST string: ARRAY OF CHAR): SIZE; 
+	PROCEDURE ^ Equal(CONST s1, s2: ARRAY OF CHAR; length: SIZE): BOOLEAN; 
+	PROCEDURE ^ Indent(out: Streams.Writer; level: SIGNED32); 
+	PROCEDURE ^ GetLocation(position: SIZE; CONST entry: DataEntry): INTEGER; 
+	PROCEDURE ^ ParseStyle(CONST element: XML.Element; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ ParseStyles(CONST element: XML.Element; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ ParseGroup(CONST element: XML.Element; CONST highlighter: Highlighter; CONST styles: Styles; CONST type: SIGNED32; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ ParseTokens(CONST element: XML.Element; CONST highlighter: Highlighter; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ ParseWords(CONST element: XML.Element; CONST highlighter: Highlighter; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ ParseRegion(CONST element: XML.Element; CONST highlighter: Highlighter; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ ParseRegions(CONST element: XML.Element; CONST highlighter: Highlighter; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ ParseHighlighter(CONST element: XML.Element; CONST highlighters: Highlighters; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ ParseHighlighters(CONST element: XML.Element; CONST highlighters: Highlighters; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ ParseDocument(CONST document: XML.Document; CONST source: ARRAY OF CHAR; VAR highlighters: Highlighters; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ Parse(CONST filename: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN): Highlighters; 
+	PROCEDURE ^ FindChild(parent: XML.Element; CONST childName: ARRAY OF CHAR): XML.Element; 
+	PROCEDURE ^ TrapHandler(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ LoadDocument(CONST filename: ARRAY OF CHAR; CONST d: Diagnostics.Diagnostics; VAR e: BOOLEAN): XML.Document; 
+	PROCEDURE ^ Copy(CONST source: ARRAY OF CHAR; VAR target: ARRAY OF CHAR); 
+	PROCEDURE ^ HighlightText*(text: Texts.Text; highlighter: Highlighter); 
+	PROCEDURE ^ Highlight*(context: Commands.Context); 
+	PROCEDURE ^ ClearStats*(context: Commands.Context); 
+	PROCEDURE ^ Dump*(context: Commands.Context); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+BEGIN
+END SyntaxHighlighter.

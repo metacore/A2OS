@@ -1,0 +1,58 @@
+MODULE IP;
+	IMPORT S := SYSTEM, KernelLog, Strings, Network;
+CONST 
+	Ok* = 0; 
+	NilAdrIPv4 = 0; 
+	IPv4* = 4; 
+	IPv6* = 6; 
+	NilAdrIdent =  -1; 
+	MaxNofDNS = 4; 
+TYPE 
+	Adr* = RECORD 
+		ipv4Adr*: SIGNED32; 
+		ipv6Adr*: ARRAY 16 OF CHAR; 
+		usedProtocol*: SIGNED32; 
+		data*: SIGNED32; 
+	END; 
+
+	Packet* = POINTER TO ARRAY OF CHAR; 
+
+	Name* = ARRAY 128 OF CHAR; 
+
+	ARPHandler* = PROCEDURE {DELEGATE}(ip: Adr; complete: BOOLEAN; link: Network.LinkAdr; size, sendTime, updateTime, updateDate, hash: SIGNED32); 
+
+	Interface* = OBJECT 
+	VAR 
+		localAdr-, maskAdr-, gatewayAdr-, subnetAdr-, broadAdr-: Adr; 
+		name-: Name; 
+		dev-: Network.LinkDevice; 
+		DNS-: ARRAY MaxNofDNS OF Adr; 
+		DNScount-: SIGNED32; 
+		next*: Interface; 
+		closed-: BOOLEAN; 
+		protocol-: SIGNED32; 
+
+		PROCEDURE ^  & Init*(addr: Adr); 
+	END Interface; 
+
+	InterfaceHandler* = PROCEDURE {DELEGATE}(int: Interface); 
+VAR 
+	NilAdr*, Nil4Adr*, Nil6Adr*: Adr; 
+	preferredProtocol*: SIGNED32; 
+
+	PROCEDURE ^ IsNilAdr*(adr: Adr): BOOLEAN; 
+	PROCEDURE ^ AdrsEqual*(adr1, adr2: Adr): BOOLEAN; 
+	PROCEDURE ^ StrToAdr*(ipString: ARRAY OF CHAR): Adr; 
+	PROCEDURE ^ AdrToStr*(adr: Adr; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ ArrayToAdr*(CONST arr: ARRAY OF CHAR; ofs, protocol: SIGNED32; LSBfirst: BOOLEAN): Adr; 
+	PROCEDURE ^ AdrToArray*(adr: Adr; VAR arr: ARRAY OF CHAR; ofs: SIGNED32; LSBfirst: BOOLEAN); 
+	PROCEDURE ^ IPConfig*(par: ANY ): ANY ; 
+	PROCEDURE ^ MatchPrefix*(adr: Adr; prefix: Adr): BOOLEAN; 
+	PROCEDURE ^ IsValidIPv4Str(CONST ipString: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ IsValidIPv6Str(ipString: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ SetIPv6AdrNil(adr: Adr); 
+	PROCEDURE {Fingerprint(7622940362159962290)}  - SwapEndian(VAR adr: SIGNED32);
+	CODE
+	END SwapEndian; 
+BEGIN
+END IP.

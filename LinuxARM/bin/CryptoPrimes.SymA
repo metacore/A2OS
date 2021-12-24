@@ -1,0 +1,21 @@
+MODULE CryptoPrimes;
+	IMPORT B := CryptoBigNumbers, Log := KernelLog;
+CONST 
+	N = 2048; 
+TYPE 
+	BigNumber = B.BigNumber; 
+VAR 
+	one: BigNumber; 
+	primes: ARRAY N OF SIGNED32; 
+
+	PROCEDURE ^ NewPrime*(bits: SIGNED16; safe: BOOLEAN): BigNumber; 
+	PROCEDURE ^ NewDHPrime*(bits: SIGNED16; safe: BOOLEAN; add, rem: BigNumber): BigNumber; 
+	PROCEDURE ^ Checks(b: SIZE): SIGNED16; 
+	PROCEDURE ^ ProbablePrime(bits: SIGNED16): BigNumber; 
+	PROCEDURE ^ ProbableDHPrime(bits: SIGNED16; add, rem: BigNumber): BigNumber; 
+	PROCEDURE ^ ProbableDHPrimeSafe(bits: SIGNED16; padd, rem: BigNumber): BigNumber; 
+	PROCEDURE ^ IsPrime*(a: BigNumber; checks: SIGNED16; doTrialDiv: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ witness(W, a, a1, a1odd: BigNumber; k: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ Init; 
+BEGIN
+END CryptoPrimes.

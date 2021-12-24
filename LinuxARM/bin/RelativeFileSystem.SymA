@@ -1,0 +1,27 @@
+MODULE RelativeFileSystem;
+	IMPORT Files, UTF8Strings, Commands;
+CONST 
+TYPE 
+	PathName = ARRAY 272 OF CHAR; 
+
+	FileSystem = OBJECT (Files.FileSystem)
+	VAR 
+		relTo: PathName; 
+		fs: Files.FileSystem; 
+
+		PROCEDURE ^  & InitFileSystem*(relTo: ARRAY OF CHAR; fs: Files.FileSystem); 
+		PROCEDURE ^ MakeRel(CONST name: ARRAY OF CHAR; VAR new: ARRAY OF CHAR); 
+		PROCEDURE ^ New0*(CONST name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER); 
+	END FileSystem; 
+
+	PROCEDURE ^ RemovePrefix(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ NewFS*(context: Files.Parameters); 
+BEGIN
+END RelativeFileSystem.

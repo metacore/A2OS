@@ -1,0 +1,24 @@
+MODULE ZlibBuffers;
+	IMPORT SYSTEM;
+TYPE 
+	Buffer* = RECORD 
+		avail-: SIZE; 
+		size-: SIZE; 
+		totalOut-, totalIn-: SIZE; 
+		next: ADDRESS; 
+		adr: ADDRESS; 
+	END; 
+
+	PROCEDURE ^ Reset*(VAR buf: Buffer); 
+	PROCEDURE ^ Init*(VAR buf: Buffer; CONST mem: ARRAY OF CHAR; offset, size, avail: SIZE); 
+	PROCEDURE ^ Read*(VAR buf: Buffer; VAR ch: CHAR); 
+	PROCEDURE ^ ReadBytes*(VAR buf: Buffer; VAR dst: ARRAY OF CHAR; offset, len: SIZE); 
+	PROCEDURE ^ Write*(VAR buf: Buffer; ch: CHAR); 
+	PROCEDURE ^ WriteBytes*(VAR buf: Buffer; CONST src: ARRAY OF CHAR; offset, len: SIZE); 
+	PROCEDURE ^ Rewind*(VAR buf: Buffer; avail: SIZE); 
+	PROCEDURE ^ Reread*(VAR buf: Buffer; offset: SIZE); 
+	PROCEDURE ^ Rewrite*(VAR buf: Buffer); 
+	PROCEDURE ^ Fill*(VAR buf: Buffer; CONST src: ARRAY OF CHAR; offset, size: SIZE); 
+	PROCEDURE ^ Drain*(VAR buf: Buffer; VAR dst: ARRAY OF CHAR; offset, size: SIZE); 
+BEGIN
+END ZlibBuffers.

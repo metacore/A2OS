@@ -1,0 +1,27 @@
+MODULE Traps;
+	IMPORT S := SYSTEM, Unix, Objects, Machine, Streams, Modules, Reflection, TrapWriters, Commands, StdIO;
+CONST 
+	AddrSize = SIZEOF(ADDRESS); 
+	MaxRecursion = 2; 
+TYPE 
+	ExceptionHandler = RECORD 
+		pc, fp, sp: ADDRESS; 
+	END; 
+VAR 
+	trapHandlingLevel: SIGNED32; 
+	trace: BOOLEAN; 
+	unix: Commands.Context; 
+	trapMutex: Unix.Mutex_t; 
+
+	PROCEDURE ^ LockTrap; 
+	PROCEDURE ^ UnlockTrap; 
+	PROCEDURE ^ Append(VAR ar: ARRAY OF CHAR; CONST this: ARRAY OF CHAR); 
+	PROCEDURE ^ TimeTag(w: Streams.Writer); 
+	PROCEDURE ^ FinishTrap(w: Streams.Writer; p: Objects.Process); 
+	PROCEDURE ^ Register(w: Streams.Writer; CONST name: ARRAY OF CHAR; value: ADDRESS); 
+	PROCEDURE ^ Registers(CONST mc: Unix.Mcontext; w: Streams.Writer); 
+	PROCEDURE ^ Trap(sig: SIGNED32; mc: Unix.Mcontext); 
+	PROCEDURE ^ UnlockOberon; 
+	PROCEDURE ^ SearchExceptionHandler(process: Objects.Process; mc: Unix.Mcontext; VAR handler: ExceptionHandler); 
+BEGIN
+END Traps.

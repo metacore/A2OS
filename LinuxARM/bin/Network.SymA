@@ -1,0 +1,135 @@
+MODULE Network;
+	IMPORT SYSTEM, Machine, KernelLog, Plugins, Kernel, Objects, Modules;
+CONST 
+	MaxLinkAdrSize* = 8; 
+	MaxPacketSize* = 1600; 
+	MaxNofBuffers = 10000; 
+	TypePointToPoint* = 0; 
+	TypeEthernet* = 1; 
+	LinkNotLinked* = 0; 
+	LinkLinked* = 1; 
+	LinkUnknown* = 2; 
+	ChecksumIP* = 0; 
+	ChecksumUDP* = 1; 
+	ChecksumTCP* = 2; 
+	MaxLoopbackPacketsPerMS = 500; 
+TYPE 
+	LinkAdr* = ARRAY MaxLinkAdrSize OF CHAR; 
+
+	Buffer* = POINTER TO RECORD 
+		data*: ARRAY MaxPacketSize OF CHAR; 
+		ofs*: SIGNED32; 
+		len*: SIGNED32; 
+		l3ofs*: SIGNED32; 
+		l4ofs*: SIGNED32; 
+		src*: LinkAdr; 
+		calcChecksum*: SET; 
+		int*: SIGNED32; 
+		set*: SET; 
+		next*, prev*: Buffer; 
+		nextFragment*: Buffer; 
+	END; 
+
+	TypeList = POINTER TO RECORD 
+		next: TypeList; 
+		type: SIGNED32; 
+		recList: ReceiverList; 
+	END; 
+
+	ReceiverList = POINTER TO RECORD 
+		next: ReceiverList; 
+		owner: ANY ; 
+		receiver: Receiver; 
+		isPacketValid: IsPacketValid; 
+		isPacketForSingleRec: IsPacketForSingleRec; 
+		isPacketAccepted: IsPacketAccepted; 
+		isForwardingOn: BOOLEAN; 
+	END; 
+
+	SendSnifferList = POINTER TO RECORD 
+		next: SendSnifferList; 
+		sniffer: SendSniffer; 
+	END; 
+
+	RecvSnifferList = POINTER TO RECORD 
+		next: RecvSnifferList; 
+		sniffer: ReceiveSniffer; 
+	END; 
+
+	LinkDevice* = OBJECT {EXCLUSIVE} (Plugins.Plugin)
+	VAR 
+		type-: SIGNED32; 
+		local*: LinkAdr; 
+		broadcast*: LinkAdr; 
+		mtu-: SIGNED32; 
+		adrSize*: SIGNED32; 
+		sendCount*, recvCount-: SIGNED64; 
+		calcChecksum*: SET; 
+		typeList: TypeList; 
+		recList: ReceiverList; 
+		sendSnifferList: SendSnifferList; 
+		recvSnifferList: RecvSnifferList; 
+		typeItem: TypeList; 
+		recItem: ReceiverList; 
+		sniffer: RecvSnifferList; 
+		discard: BOOLEAN; 
+		finalized: BOOLEAN; 
+		upBufFirst, upBufLast: Buffer; 
+		buf: Buffer; 
+		bufSec: Buffer; 
+		timer: Kernel.MilliTimer; 
+		packetCount: SIGNED32; 
+		i: SIGNED32; 
+
+		PROCEDURE ^  & Constr*(type, mtu, adrSize: SIGNED32); 
+		PROCEDURE ^ Finalize*(connected: BOOLEAN); 
+		PROCEDURE ^ Linked*(): SIGNED32; 
+		PROCEDURE ^ Send*(dst: LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32; loopback: BOOLEAN); 
+		PROCEDURE ^ DoSend*(dst: LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32); 
+		PROCEDURE ^ Loopback(dst: LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32); 
+		PROCEDURE ^ InstallReceiver*(owner: ANY ; type: SIGNED32; receiver: Receiver; isPacketValid: IsPacketValid; isPacketForSingleRec: IsPacketForSingleRec; isPacketAccepted: IsPacketAccepted; isForwardingOn: BOOLEAN); 
+		PROCEDURE ^ RemoveReceiver*(owner: ANY ; type: SIGNED32); 
+		PROCEDURE ^ InstallSendSniffer*(s: SendSniffer); 
+		PROCEDURE ^ RemoveSendSniffer*(s: SendSniffer); 
+		PROCEDURE ^ InstallReceiveSniffer*(s: ReceiveSniffer); 
+		PROCEDURE ^ RemoveReceiveSniffer*(s: ReceiveSniffer); 
+		PROCEDURE ^ QueueBuffer*(buf: Buffer; type: SIGNED32); 
+	BEGIN{ACTIVE, PRIORITY(Objects.High)} 
+	END LinkDevice; 
+
+	Receiver* = PROCEDURE {DELEGATE}(dev: LinkDevice; type: SIGNED32; buffer: Buffer); 
+
+	IsPacketForSingleRec* = PROCEDURE {DELEGATE}(buffer: Buffer):BOOLEAN; 
+
+	IsPacketAccepted* = PROCEDURE {DELEGATE}(buffer: Buffer):BOOLEAN; 
+
+	IsPacketValid* = PROCEDURE {DELEGATE}(VAR buffer: Buffer):BOOLEAN; 
+
+	SendSniffer* = PROCEDURE {DELEGATE}(dev: LinkDevice; VAR dst: LinkAdr; VAR type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; VAR h3len, h4len, dofs, dlen: SIGNED32):BOOLEAN; 
+
+	ReceiveSniffer* = PROCEDURE {DELEGATE}(dev: LinkDevice; VAR type: SIGNED32; buffer: Buffer):BOOLEAN; 
+VAR 
+	registry*: Plugins.Registry; 
+	nofBuf: SIGNED32; 
+	nofFreeBuf: SIGNED32; 
+	freeBufList: Buffer; 
+
+	PROCEDURE ^ GetNewBuffer*(): Buffer; 
+	PROCEDURE ^ ReturnBuffer*(buf: Buffer); 
+	PROCEDURE ^ Finalize(p: Plugins.Plugin); 
+	PROCEDURE ^ Equal*(VAR buf1, buf2: ARRAY OF CHAR; ofs1, ofs2, n: SIZE): BOOLEAN; 
+	PROCEDURE ^ Put4*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: INTEGER); 
+	PROCEDURE ^ Put2*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: INTEGER); 
+	PROCEDURE ^ Get4*(CONST buf: ARRAY OF CHAR; ofs: SIZE): INTEGER; 
+	PROCEDURE ^ Get2*(CONST buf: ARRAY OF CHAR; ofs: SIZE): INTEGER; 
+	PROCEDURE ^ PutNet4*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: INTEGER); 
+	PROCEDURE ^ PutNet2*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: INTEGER); 
+	PROCEDURE ^ GetNet4*(CONST buf: ARRAY OF CHAR; ofs: SIZE): INTEGER; 
+	PROCEDURE ^ GetNet2*(CONST buf: ARRAY OF CHAR; ofs: SIZE): INTEGER; 
+	PROCEDURE ^ LinkAdrToStr*(VAR adr: LinkAdr; size: SIZE; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ OutLinkAdr*(VAR adr: LinkAdr; size: SIZE); 
+	PROCEDURE ^ LinkAdrsEqual*(adr1: LinkAdr; adr2: LinkAdr): BOOLEAN; 
+	PROCEDURE ^ Copy*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR; fofs, tofs, len: SIZE); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END Network.

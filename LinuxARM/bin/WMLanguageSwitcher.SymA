@@ -1,0 +1,36 @@
+MODULE WMLanguageSwitcher;
+	IMPORT Commands, Options, Localization, Repositories, Strings, Modules, WMComponents, WMMessages, WMWindowManager, WMStandardComponents;
+CONST 
+	Toleft = 300; 
+	Fromtop = 400; 
+	PanelWidth = 100; 
+	ButtonHeight = 20; 
+TYPE 
+	String = Strings.String; 
+
+	Chars = ARRAY OF CHAR; 
+
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		nofLanguages: SIZE; 
+		nextINchain: Window; 
+		buttonArr: POINTER TO ARRAY OF WMStandardComponents.Button; 
+		languages: Localization.Languages; 
+
+		PROCEDURE ^  & New*(languages: Localization.Languages); 
+		PROCEDURE ^ FindSender(sender: WMStandardComponents.Button; VAR index: SIGNED32); 
+		PROCEDURE ^ SetLanguage(sender, data: ANY ); 
+		PROCEDURE ^ Close*; 
+	END Window; 
+VAR 
+	windows: Window; 
+
+	OPERATOR ^ "+"(CONST a1, a2: Chars): String; 
+	PROCEDURE ^ FreeWindow(free: Window); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ SetLanguageInternal(language: Localization.Language); 
+	PROCEDURE ^ SetLanguage*(ctx: Commands.Context); 
+	PROCEDURE ^ GetLanguages*(): Localization.Languages; 
+BEGIN
+END WMLanguageSwitcher.

@@ -1,0 +1,25 @@
+MODULE WMEthiopicIME;
+	IMPORT Strings, WMInputMethods, WMGraphics, Texts, KernelLog, Commands, TextUtilities;
+CONST 
+	imeName* = \"Ethiopic"\; 
+TYPE 
+	IME* = OBJECT {EXCLUSIVE} (WMInputMethods.IME)
+	VAR 
+		cons, vow: SIGNED32; 
+		ucs0: SIZE; 
+		geez: SIGNED32; 
+
+		PROCEDURE ^ GetName*(): Strings.String; 
+		PROCEDURE ^ Reset; 
+		PROCEDURE ^ Remap(ucs1: SIGNED32): SIGNED32; 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
+	END IME; 
+VAR 
+	i: SIGNED32; 
+	done: BOOLEAN; 
+
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ SelectedCharToUCS*; 
+	PROCEDURE ^ UCSToChar*(context: Commands.Context); 
+BEGIN
+END WMEthiopicIME.

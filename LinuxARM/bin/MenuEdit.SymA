@@ -1,0 +1,39 @@
+MODULE MenuEdit;
+	IMPORT Strings, WMGraphics, WMMessages, WMComponents, WMStandardComponents, Modules, KernelLog, WMRectangles, Streams, MultiLogger, Random, WMDialogs, XML, XMLObjects, WM := WMWindowManager;
+CONST 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		add, store, delete, edit, toFront: WMStandardComponents.Button; 
+		panel, toolbar: WMStandardComponents.Panel; 
+		selectedObj: WMComponents.VisualComponent; 
+		lx, ly: SIZE; 
+		generator: Random.Generator; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ AddButton(sender, data: ANY ); 
+		PROCEDURE ^ Delete(sender, data: ANY ); 
+		PROCEDURE ^ ToFront(sender, data: ANY ); 
+		PROCEDURE ^ Edit(sender, data: ANY ); 
+		PROCEDURE ^ Store(sender, data: ANY ); 
+		PROCEDURE ^ Select(vc: WMComponents.VisualComponent); 
+		PROCEDURE ^ SelectPresent(sender, data: ANY ); 
+		PROCEDURE ^ HandlePointerDown(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ HandlePointerMove(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+VAR 
+	nofWindows: SIGNED32; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END MenuEdit.

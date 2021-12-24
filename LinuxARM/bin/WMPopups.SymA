@@ -1,0 +1,69 @@
+MODULE WMPopups;
+	IMPORT Strings, WMRectangles, WMGraphics, WMEvents, WMWindowManager, WMComponents, WMStandardComponents, Localization, Repositories;
+CONST 
+	LineHeight = 20; 
+TYPE 
+	Entry = OBJECT 
+	VAR 
+		caption: Strings.String; 
+		onClickHandler: WMEvents.EventListener; 
+		parameter: ANY ; 
+		next: Entry; 
+
+		PROCEDURE ^  & Init(caption: Strings.String; onClickHandler: WMEvents.EventListener; parameter: ANY ); 
+	END Entry; 
+
+	PopupWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		isClosed: BOOLEAN; 
+		languages: Localization.Languages; 
+
+		PROCEDURE ^  & New(entries: Entry); 
+		PROCEDURE ^ Translate(value: Strings.String): Strings.String; 
+		PROCEDURE ^ CreateForm(entries: Entry): WMComponents.VisualComponent; 
+		PROCEDURE ^ Clicked(sender, data: ANY ); 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ FocusGot*; 
+	END PopupWindow; 
+
+	Popup* = OBJECT {EXCLUSIVE} 
+	VAR 
+		first, last: Entry; 
+		window-: PopupWindow; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Add*(CONST caption: ARRAY OF CHAR; onClickHandler: WMEvents.EventListener); 
+		PROCEDURE ^ AddParButton*(CONST caption: ARRAY OF CHAR; onClickHandler: WMEvents.EventListener; par: ANY ); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Popup0*(x, y: SIZE; getFocus: BOOLEAN; windowFlags: SET); 
+		PROCEDURE ^ Popup*(x, y: SIZE); 
+	END Popup; 
+
+	ColorSwatchPopup* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		colorPanel: ColorSwatchPanel; 
+		color-: WMGraphics.Color; 
+		onColorChosen*: PROCEDURE {DELEGATE}(color: WMGraphics.Color); 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ CreatePopup; 
+		PROCEDURE ^ Popup*(x, y: SIZE); 
+		PROCEDURE ^ Clicked*(sender, data: ANY ); 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ FocusGot*; 
+		PROCEDURE ^ SetColor(color: WMGraphics.Color); 
+	END ColorSwatchPopup; 
+
+	ColorSwatchPanel* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		colors: ARRAY 19 OF WMGraphics.Color; 
+		ChosenColorProc*: PROCEDURE {DELEGATE}(color: WMGraphics.Color); 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ BuildPalette; 
+	END ColorSwatchPanel; 
+BEGIN
+END WMPopups.

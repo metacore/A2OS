@@ -1,0 +1,180 @@
+MODULE ZlibInflate;
+	IMPORT SYSTEM, Zlib, ZlibBuffers;
+CONST 
+	Ok* = Zlib.Ok; 
+	StreamEnd* = Zlib.StreamEnd; 
+	NeedDict* = Zlib.NeedDict; 
+	StreamError* = Zlib.StreamError; 
+	DataError* = Zlib.DataError; 
+	MemError* = Zlib.MemError; 
+	BufError* = Zlib.BufError; 
+	NoFlush* = Zlib.NoFlush; 
+	SyncFlush* = Zlib.SyncFlush; 
+	FullFlush* = Zlib.FullFlush; 
+	Finish* = Zlib.Finish; 
+	MaxNodes = 1440; 
+	MaxFixedNodes = 544; 
+	MaxLitLenCodes = 288; 
+	MaxNonSimpleCodes = ((MaxLitLenCodes - 256) - 1); 
+	MaxDistCodes = 31; 
+	OpBase =  -128; 
+	OpSpecial = 64; 
+	OpInvalid = 128; 
+	OpEndBlock = 32; 
+	OpExtra = 16; 
+	WindowBits = 15; 
+	WindowSize = ASH(1, WindowBits); 
+	CodeStart = 0; 
+	CodeLen = 1; 
+	CodeLenExt = 2; 
+	CodeDist = 3; 
+	CodeDistExt = 4; 
+	CodeCopy = 5; 
+	CodeLit = 6; 
+	CodeWash = 7; 
+	CodeEnd = 8; 
+	CodeBad = 9; 
+	BlkType = 0; 
+	BlkLens = 1; 
+	BlkStored = 2; 
+	BlkTable = 3; 
+	BlkBTree = 4; 
+	BlkDTree = 5; 
+	BlkCodes = 6; 
+	BlkDry = 7; 
+	BlkDone = 8; 
+	BlkBad = 9; 
+	DeflateMethod* = 8; 
+	PresetDict = 32; 
+	InfMethod = 0; 
+	InfFlag = 1; 
+	InfDict4 = 2; 
+	InfDict3 = 3; 
+	InfDict2 = 4; 
+	InfDict1 = 5; 
+	InfDict0 = 6; 
+	InfBlocks = 7; 
+	InfCheck4 = 8; 
+	InfCheck3 = 9; 
+	InfCheck2 = 10; 
+	InfCheck1 = 11; 
+	InfDone = 12; 
+	InfBad = 13; 
+TYPE 
+	Result* = RECORD 
+		code-: INTEGER; 
+		msg-: POINTER TO ARRAY OF CHAR; 
+	END; 
+
+	Lengths = ARRAY OF SIGNED8; 
+
+	Code = RECORD 
+		bits: SIGNED16; 
+		offset: SIGNED16; 
+		size: SIGNED16; 
+		simple: SIGNED16; 
+		extra: ARRAY MaxNonSimpleCodes OF SIGNED8; 
+		base: ARRAY MaxNonSimpleCodes OF SIGNED16; 
+	END; 
+
+	Node = RECORD 
+		base: SIGNED16; 
+		exop: SIGNED8; 
+		bits: SIGNED8; 
+	END; 
+
+	Nodes = POINTER TO ARRAY OF Node; 
+
+	TreeNodes = RECORD 
+		node: Nodes; 
+		next: SIGNED32; 
+	END; 
+
+	Tree = RECORD 
+		node: Nodes; 
+		base: SIGNED32; 
+		bits: SIGNED16; 
+	END; 
+
+	Window = ARRAY WindowSize OF CHAR; 
+
+	CheckFunc = PROCEDURE (old: SIGNED32; CONST buf: ARRAY OF CHAR; idx, len: SIZE):SIGNED32; 
+
+	Stream* = RECORD 
+		in*, out*: ZlibBuffers.Buffer; 
+		res-: Result; 
+		wrapper-: BOOLEAN; 
+		open-: BOOLEAN; 
+		window: POINTER TO Window; 
+		read, write: SIZE; 
+		checkFn: CheckFunc; 
+		check: SIGNED32; 
+		buf: SIGNED32; 
+		bits: SIZE; 
+		inf: RECORD 
+			state: SIGNED16; 
+			method: SIGNED16; 
+			marker: SIGNED16; 
+			check: RECORD 
+				calc: SIGNED32; 
+				stored: SIGNED32; 
+			END; 
+		END; 
+		block: RECORD 
+			state: SIGNED8; 
+			last: BOOLEAN; 
+			left: SIZE; 
+			nlit: SIGNED16; 
+			ndist: SIGNED8; 
+			nclen: SIGNED8; 
+			clen: ARRAY (MaxLitLenCodes + MaxDistCodes) OF SIGNED8; 
+			index: SIGNED16; 
+			nodes: Nodes; 
+			btree: Tree; 
+		END; 
+		decode: RECORD 
+			state: SIGNED8; 
+			lltree, dtree: Tree; 
+			tree: Tree; 
+			lit: SIGNED16; 
+			extra: SIGNED16; 
+			len: SIGNED16; 
+			dist: SIGNED16; 
+		END; 
+	END; 
+VAR 
+	FixedBuilt: BOOLEAN; 
+	FixedLitLenTree, FixedDistTree: Tree; 
+	Order: ARRAY 19 OF SIGNED8; 
+
+	PROCEDURE ^ SetMsg(VAR res: Result; msg: ARRAY OF CHAR); 
+	PROCEDURE ^ MakeLitLenCode(VAR code: Code; bits, offset, size, simple: SIGNED16); 
+	PROCEDURE ^ MakeDistCode(VAR code: Code; bits, offset, size, simple: SIGNED16); 
+	PROCEDURE ^ MakeFixedLitLenCode(VAR len: Lengths; VAR code: Code); 
+	PROCEDURE ^ MakeFixedDistCode(VAR len: Lengths; VAR code: Code); 
+	PROCEDURE ^ BuildTree(VAR clen: Lengths; VAR code: Code; VAR tn: TreeNodes; VAR tree: Tree; VAR res: INTEGER); 
+	PROCEDURE ^ Flush(VAR s: Stream); 
+	PROCEDURE ^ Need(VAR s: Stream; bits: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Dump(VAR s: Stream; bits: SIZE); 
+	PROCEDURE ^ NeedOut(VAR s: Stream; VAR wavail: SIZE): BOOLEAN; 
+	PROCEDURE ^ NewCodes(VAR s: Stream; VAR lltree, dtree: Tree); 
+	PROCEDURE ^ FreeCodes(VAR s: Stream); 
+	PROCEDURE ^ InflateFast(VAR s: Stream; VAR wavail: SIZE); 
+	PROCEDURE ^ InflateCodes(VAR s: Stream); 
+	PROCEDURE ^ ResetBlocks(VAR s: Stream; VAR check: SIGNED32); 
+	PROCEDURE ^ NewBlocks(VAR s: Stream; checkFn: CheckFunc); 
+	PROCEDURE ^ FreeBlocks(VAR s: Stream); 
+	PROCEDURE ^ InflateBlocks(VAR s: Stream); 
+	PROCEDURE ^ SetBlockDict(VAR s: Stream; VAR dict: ARRAY OF CHAR; offset, len: SIGNED32); 
+	PROCEDURE ^ BlockSyncPoint(VAR s: Stream): BOOLEAN; 
+	PROCEDURE ^ Reset0(VAR stream: Stream); 
+	PROCEDURE ^ Reset*(VAR stream: Stream); 
+	PROCEDURE ^ Open*(VAR stream: Stream; wrapper: BOOLEAN); 
+	PROCEDURE ^ Close*(VAR stream: Stream); 
+	PROCEDURE ^ Inflate*(VAR stream: Stream; flush: SIGNED8); 
+	PROCEDURE ^ SetDictionary*(VAR stream: Stream; VAR dict: ARRAY OF CHAR; dictLen: SIGNED32); 
+	PROCEDURE ^ Sync*(VAR stream: Stream); 
+	PROCEDURE ^ SyncPoint*(VAR stream: Stream): BOOLEAN; 
+	PROCEDURE ^ Uncompress*(VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: SIGNED32; VAR len: SIZE; VAR res: Result); 
+BEGIN
+END ZlibInflate.

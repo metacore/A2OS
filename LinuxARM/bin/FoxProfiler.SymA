@@ -1,0 +1,68 @@
+MODULE FoxProfiler;
+	IMPORT KernelLog, Objects, SYSTEM, Streams, Commands;
+CONST 
+	TraceAdd = FALSE; 
+	TraceEnter = FALSE; 
+	MaxModules = 1024; 
+	MaxProcedures = 1024; 
+	MaxProcesses = 1024; 
+	MaxStackSize = 1024; 
+TYPE 
+	Name = ARRAY 128 OF CHAR; 
+
+	Procedures = POINTER TO ARRAY OF Name; 
+
+	Modules = ARRAY MaxModules OF Procedures; 
+
+	ProcedureTime = RECORD 
+		calls: SIGNED32; 
+		time, brut: SIGNED64; 
+	END; 
+
+	ProcedureTimes = ARRAY MaxProcedures OF ProcedureTime; 
+
+	Process = OBJECT 
+	VAR 
+		stackPosition: SIGNED32; 
+		startTime, correcture: ARRAY MaxStackSize OF SIGNED64; 
+		module, procedure: ARRAY MaxStackSize OF SIGNED32; 
+		modules: ARRAY MaxModules OF ProcedureTimes; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Enter(moduleId, procedureId: SIGNED32; enterTime: SIGNED64); 
+		PROCEDURE ^ Exit(moduleId, procedureId: SIGNED32; enterTime: SIGNED64); 
+	END Process; 
+
+	HashEntryInt = RECORD 
+		used: BOOLEAN; 
+		key, value: SIZE; 
+	END; 
+
+	HashIntArray = ARRAY (2 * MaxProcesses) OF HashEntryInt; 
+VAR 
+	modules: Modules; 
+	numberModules: SIGNED32; 
+	table: HashIntArray; 
+	numberProcesses: SIGNED32; 
+	processes: ARRAY MaxProcesses OF Process; 
+	log: Streams.Writer; 
+	frequency: FLOAT64; 
+
+	PROCEDURE ^ Put*(key, value: SIZE); 
+	PROCEDURE ^ Get*(key: SIZE): SIZE; 
+	PROCEDURE ^ Has*(key: SIZE): BOOLEAN; 
+	PROCEDURE ^ HashValue(key: SIZE): SIZE; 
+	PROCEDURE ^ GetProcess(): Process; 
+	PROCEDURE ^ AddModule*(VAR moduleId: SIGNED32; procedures: SIGNED32; CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ AddProcedure*(moduleId, procedureId: SIGNED32; CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ GetTimer(): SIGNED64; 
+	PROCEDURE ^ EnterProcedure*(moduleId, procedureId: SIGNED32); 
+	PROCEDURE ^ ExitProcedure*(moduleId, procedureId: SIGNED32); 
+	PROCEDURE ^ Initialize*; 
+	PROCEDURE ^ Report*(context: Commands.Context); 
+	PROCEDURE ^ CalibrateProc; 
+	PROCEDURE ^ Calibrate; 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ Reset*; 
+BEGIN
+END FoxProfiler.

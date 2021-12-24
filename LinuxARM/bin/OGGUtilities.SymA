@@ -1,0 +1,155 @@
+MODULE OGGUtilities;
+	IMPORT SYSTEM, Strings, Files, KernelLog, SoundDevices, BIT;
+CONST 
+	Trace = 1; 
+	Error = 2; 
+	Debug = {Error}; 
+	MaxCodewordLength* = 33; 
+	MaxBlocksize* = 8192; 
+	NoHuffmanLeaf =  -1; 
+	GoLeft = 0; 
+	GoRight = 1; 
+	BaseVectorSize = 256; 
+	Nx* = 20; 
+TYPE 
+	PCMBuffer* = OBJECT 
+	VAR 
+		data*: ARRAY MaxBlocksize OF SIGNED64; 
+
+		PROCEDURE ^ Print*(name: ARRAY OF CHAR; len: SIGNED32); 
+		PROCEDURE ^ PrintShort(name: ARRAY OF CHAR; len: SIGNED32); 
+		PROCEDURE ^ ZeroBuffer*; 
+	END PCMBuffer; 
+
+	HuffmanTree* = OBJECT 
+	VAR 
+		start-: HuffmanNode; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AddNode(value, length, codeword: SIGNED32); 
+		PROCEDURE ^ IsValidLengthList*(VAR list: IntList; unused: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ IsOverspecified*(VAR list: IntList; unused: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ IsUnderspecified*(VAR list: IntList; unused: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetSumAndLimit(VAR list: IntList; VAR sum, limit: SIGNED64; unused: SIGNED32); 
+		PROCEDURE ^ HasUsedEntries*(VAR list: IntList; unused: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ BuildTree*(VAR lengths: IntList; VAR codes: IntList; unused: SIGNED32); 
+		PROCEDURE ^ GoLeftOrRight*(VAR node: HuffmanNode; bit: SIGNED32); 
+		PROCEDURE ^ Print; 
+	END HuffmanTree; 
+
+	HuffmanNode* = OBJECT 
+	VAR 
+		left, right: HuffmanNode; 
+		value: SIGNED32; 
+		isLeaf, isFull: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(value: SIGNED32; isLeaf, isFull: BOOLEAN); 
+		PROCEDURE ^ GetValue*(): SIGNED32; 
+		PROCEDURE ^ IsLeaf*(): BOOLEAN; 
+		PROCEDURE ^ Print; 
+		PROCEDURE ^ AddNode(value, length, restCodeword: SIGNED32); 
+	END HuffmanNode; 
+
+	Vector* = OBJECT 
+	VAR 
+		capacity, len: SIGNED32; 
+		data: ARRAY BaseVectorSize OF SIGNED64; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Print*; 
+		PROCEDURE ^ Add*(value: SIGNED64); 
+		PROCEDURE ^ Increase(inc: SIGNED64); 
+		PROCEDURE ^ GetLen(): SIGNED32; 
+		PROCEDURE ^ GetLast(): SIGNED64; 
+		PROCEDURE ^ GetValueAt*(idx: SIGNED32): SIGNED64; 
+		PROCEDURE ^ IncValueAt(inc: SIGNED64; idx: SIGNED32); 
+		PROCEDURE ^ SetValueAt(val: SIGNED64; idx: SIGNED32); 
+		PROCEDURE ^ Concatenate(VAR v: Vector); 
+	END Vector; 
+
+	List* = OBJECT 
+	VAR 
+		length*: SIGNED64; 
+		start-, last-: ListElement; 
+
+		PROCEDURE ^  & Init*(first: ListElement); 
+		PROCEDURE ^ Append*(node: ListElement); 
+		PROCEDURE ^ Print*; 
+	END List; 
+
+	IntList* = OBJECT (List)
+	END IntList; 
+
+	ListElement* = OBJECT 
+	VAR 
+		next-: ListElement; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Print; 
+	END ListElement; 
+
+	IntElement* = OBJECT (ListElement)
+	VAR 
+		long-: SIGNED32; 
+
+		PROCEDURE ^  & InitInt*(long: SIGNED32); 
+		PROCEDURE ^ Print; 
+	END IntElement; 
+
+	BufferPool* = OBJECT {EXCLUSIVE} 
+	VAR 
+		head, num: SIZE; 
+		buffer: POINTER TO ARRAY OF SoundDevices.Buffer; 
+
+		PROCEDURE ^ Append*(x: SoundDevices.Buffer); 
+		PROCEDURE ^ Remove*(): SoundDevices.Buffer; 
+		PROCEDURE ^  & Init*(n: SIZE); 
+	END BufferPool; 
+VAR 
+	f: Files.File; 
+	w*: Files.Writer; 
+	Ny: SIGNED32; 
+	ScaleFactor: SIGNED64; 
+
+	PROCEDURE ^ ILog*(x: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Float32Unpack*(val: SIGNED32): SIGNED64; 
+	PROCEDURE ^ Lookup1Values*(cbEntries, cbDimensions: SIGNED32): SIGNED32; 
+	PROCEDURE ^ LowNeighbor*(v: ARRAY OF SIGNED32; x: SIGNED32): SIGNED32; 
+	PROCEDURE ^ HighNeighbor*(v: ARRAY OF SIGNED32; x: SIGNED32): SIGNED32; 
+	PROCEDURE ^ RenderPoint*(x0, y0, x1, y1, x: SIGNED32): SIGNED32; 
+	PROCEDURE ^ RenderLine*(x0, y0, x1, y1: SIGNED32; VAR v: ARRAY OF SIGNED64); 
+	PROCEDURE ^ EasySortRemember*(VAR data, sortptr: ARRAY OF SIGNED32; n: SIGNED32); 
+	PROCEDURE ^ Power*(x, n: SIGNED32): SIGNED32; 
+	PROCEDURE ^ PowerH(x: SIGNED64; n: SIGNED32): SIGNED64; 
+	PROCEDURE ^ PowerR*(x: FLOAT32; n: SIGNED32): FLOAT32; 
+	PROCEDURE ^ Log2n*(n: SIGNED32): SIGNED32; 
+	PROCEDURE ^ MultHugeFP*(a, b: SIGNED64): SIGNED64; 
+	PROCEDURE ^ MultDotProductFP*(residue, floor: SIGNED64): SIGNED64; 
+	PROCEDURE ^ MultFP*(a, b: SIGNED64): SIGNED64; 
+	PROCEDURE ^ DivFP*(a, b: SIGNED32): SIGNED32; 
+	PROCEDURE ^ ScaleUpHuge*(r: FLOAT32): SIGNED64; 
+	PROCEDURE ^ ScaleUp*(r: FLOAT64): SIGNED32; 
+	PROCEDURE ^ ScaleUpRealToHuge*(r: FLOAT64): SIGNED64; 
+	PROCEDURE ^ ScaleUpInt*(i: SIGNED32): SIGNED32; 
+	PROCEDURE ^ ScaleUpHugeInt*(i: SIGNED64): SIGNED64; 
+	PROCEDURE ^ ScaleDownRoundedHuge*(i: SIGNED64): SIGNED32; 
+	PROCEDURE ^ ScaleDownHuge(i: SIGNED64): SIGNED64; 
+	PROCEDURE ^ GetFilename*(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ Array2D*(name: ARRAY OF CHAR; VAR a: ARRAY OF ARRAY OF SIGNED32); 
+	PROCEDURE ^ ArrayBool*(name: ARRAY OF CHAR; VAR a: ARRAY OF BOOLEAN); 
+	PROCEDURE ^ Array*(name: ARRAY OF CHAR; VAR a: ARRAY OF SIGNED32); 
+	PROCEDURE ^ ArrayHuge*(name: ARRAY OF CHAR; VAR a: ARRAY OF SIGNED64); 
+	PROCEDURE ^ ArrayHugeLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF SIGNED64; n: SIZE); 
+	PROCEDURE ^ ArrayLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF SIGNED32; n: SIZE); 
+	PROCEDURE ^ String*(str: ARRAY OF CHAR); 
+	PROCEDURE ^ Buffer*(VAR buf: ARRAY OF CHAR; ofs, len: SIGNED32); 
+	PROCEDURE ^ CharToHex(ch: CHAR; VAR hex: ARRAY OF CHAR); 
+	PROCEDURE ^ GetHexDigit(val: SIGNED32): CHAR; 
+	PROCEDURE ^ Var*(name: ARRAY OF CHAR; value: SIGNED32); 
+	PROCEDURE ^ VarH*(name: ARRAY OF CHAR; value: SIGNED64); 
+	PROCEDURE ^ VarH2*(value: SIGNED64); 
+	PROCEDURE ^ PrintHex(x: SIGNED32); 
+	PROCEDURE ^ VarReal*(name: ARRAY OF CHAR; value: FLOAT64); 
+	PROCEDURE ^ InitLogger*; 
+BEGIN
+END OGGUtilities.

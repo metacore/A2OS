@@ -1,0 +1,51 @@
+MODULE MathL;
+	IMPORT SYSTEM;
+CONST 
+	e* = 2.718281828459046; 
+	pi* = 3.141592653589793; 
+	ln2* = 6.931471805599454E-1; 
+	eps = 2.2E-16; 
+TYPE 
+	Value = FLOAT64; 
+
+	PROCEDURE ^ Expo(x: Value): UNSIGNED32; 
+	PROCEDURE ^ Mantissa(x: Value): UNSIGNED64; 
+	PROCEDURE ^ Equal(x, y: Value): BOOLEAN; 
+	PROCEDURE ^ sin*(x: Value): Value; 
+	PROCEDURE ^ cos*(x: Value): Value; 
+	PROCEDURE  - arctan0(y: Value): Value;
+	VAR 
+		k: INTEGER; 
+		prev, res, term, yk: Value; 
+	BEGIN
+		IF ((y = 1) OR (y =  -1)) THEN 
+			RETURN ((y * pi) / 4)
+		ELSIF ((y > 1) OR (y <  -1)) THEN 
+			RETURN ((pi / 2) - arctan((1 / y)))
+		ELSE
+			prev := (pi / 2); 
+			res := 0.; 
+			yk := y; 
+			k := 0; 
+			REPEAT 
+				prev := res; 
+				term := ((1 / ((2 * k) + 1)) * yk); 
+				IF ODD(k) THEN 
+					res := (res - term)
+				ELSE
+					res := (res + term)
+				END; 
+				yk := ((yk * y) * y); 
+				INC(k, 1)
+			UNTIL (Equal(prev, res) OR (k = 50000)); 
+			RETURN res
+		END
+	END arctan0; 
+	PROCEDURE ^ arctan2*(y: Value; x:= 1.: Value): Value; 
+	PROCEDURE ^ arctan*(y: Value): Value; 
+	PROCEDURE ^ sqrt*(x: Value): Value; 
+	PROCEDURE ^ ln*(x: Value): Value; 
+	PROCEDURE ^ exp*(x: Value): Value; 
+	PROCEDURE ^ {TEST} Test*; 
+BEGIN
+END MathL.

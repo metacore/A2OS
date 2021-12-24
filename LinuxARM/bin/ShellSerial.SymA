@@ -1,0 +1,17 @@
+MODULE ShellSerial;
+	IMPORT Modules, Kernel, Commands, Streams, Files, Serials, Shell, Objects, XYModem;
+CONST 
+	BufferSize = 1024; 
+	DefaultPrompt = \"SHELL>"\; 
+VAR 
+	shells: ARRAY (Serials.MaxPorts + 1) OF Shell.Shell; 
+
+	PROCEDURE ^ Yield(): BOOLEAN; 
+	PROCEDURE ^ ModemReceive(context: Commands.Context; modemMode: SIGNED32); 
+	PROCEDURE ^ XReceive*(context: Commands.Context); 
+	PROCEDURE ^ YReceive*(context: Commands.Context); 
+	PROCEDURE ^ Wait(ms: SIGNED32); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END ShellSerial.

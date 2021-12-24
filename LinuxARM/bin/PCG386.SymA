@@ -1,0 +1,218 @@
+MODULE PCG386;
+	IMPORT SYSTEM, KernelLog, PCM, PCO, PCLIR, PCBT;
+CONST 
+	TraceReg = FALSE; 
+	Experimental = FALSE; 
+	Huge = TRUE; 
+	EAX = 0; 
+	ECX = 1; 
+	EDX = 2; 
+	EBX = 3; 
+	ESP = 4; 
+	EBP = 5; 
+	ESI = 6; 
+	EDI = 7; 
+	AX = 8; 
+	CX = 9; 
+	DX = 10; 
+	BX = 11; 
+	SI = 14; 
+	DI = 15; 
+	AL = 16; 
+	CL = 17; 
+	DL = 18; 
+	BL = 19; 
+	AH = 20; 
+	CH = 21; 
+	DH = 22; 
+	BH = 23; 
+	Reg32 = {EAX .. EDI}; 
+	Reg16 = {AX .. BX, SI, DI}; 
+	Reg8L = {AL .. BL}; 
+	Reg8H = {AH .. BH}; 
+	Reg8 = (Reg8L + Reg8H); 
+	RegI = ((Reg32 + Reg16) + Reg8); 
+	RegFP = {24 .. 31}; 
+	Regs = (RegI + RegFP); 
+	Free = 0; 
+	Splitted = MAX(SIGNED32); 
+	Blocked = (Splitted - 1); 
+	register = 1; 
+	relative = 2; 
+	indexed = 3; 
+	scaled = 4; 
+	absolute = 5; 
+	immediate = 6; 
+	noScale = PCO.noScale; 
+	noBase = PCO.noBase; 
+	noInx = PCO.noInx; 
+	noDisp = PCO.noDisp; 
+	noImm = PCO.noImm; 
+	none =  -1; 
+	left = 0; 
+	right = 1; 
+	intMode = 0; 
+	floatMode = 1; 
+TYPE 
+	Register = SIGNED8; 
+
+	SavedRegistersDesc = ARRAY 8 OF RECORD 
+		vreg0, vreg1, freg: PCLIR.Register; 
+	END; 
+
+	SavedRegistersType = POINTER TO ARRAY OF SavedRegistersDesc; 
+
+	AliveSet = ARRAY 8 OF RECORD 
+		reg: PCLIR.Register; 
+		mask: SET; 
+	END; 
+
+	AliveSetPtr = POINTER TO AliveSet; 
+
+	Address = OBJECT (PCLIR.InstructionAttribute)
+	VAR 
+		mode, scale: SIGNED8; 
+		base, index: PCLIR.Register; 
+		imm, imm2, disp: SIGNED32; 
+		addr: PCM.Attribute; 
+		alias: PCLIR.Register; 
+		count: SIGNED32; 
+		i386: Register; 
+		i3862: Register; 
+	END Address; 
+
+	RealAddress = RECORD 
+		mode: SIGNED8; 
+		base, index: Register; 
+		scale: SIGNED8; 
+		imm, imm2, disp: SIGNED32; 
+		addr: PCM.Attribute; 
+		size: PCLIR.Size; 
+		base2: Register; 
+	END; 
+
+	RegSet = ARRAY 8 OF SIGNED32; 
+
+	; 
+
+	; 
+VAR 
+	SavedRegisters: SavedRegistersType; 
+	SaveLevel: SIGNED32; 
+	CCTableSwitch: SIGNED8; 
+	FPSize: ARRAY 7 OF SIGNED8; 
+	TccOpcode: ARRAY 2 OF SIGNED8; 
+	JccOpcode: ARRAY 16 OF ARRAY 2 OF SIGNED8; 
+	Jcc2Opcode: ARRAY 16 OF ARRAY 3 OF SIGNED8; 
+	Typ1Opcode: ARRAY 5 OF SIGNED8; 
+	Typ1Opcode2: ARRAY 5 OF SIGNED8; 
+	Group3Opcode: ARRAY 2 OF SIGNED8; 
+	BitOpcode: ARRAY 2 OF SIGNED8; 
+	ShiftOpcode: ARRAY 6 OF ARRAY 2 OF SIGNED8; 
+	RegName: ARRAY 8 OF CHAR; 
+	IReg: ARRAY 24 OF ARRAY 4 OF CHAR; 
+	reg32, reg8: RegSet; 
+	regFP: RegSet; 
+	FSP: SIGNED8; 
+
+	PROCEDURE ^ Assert(cond: BOOLEAN; reason: SIGNED32); 
+	PROCEDURE ^ FreeAll; 
+	PROCEDURE ^ GetThisReg(reg: Register; pc: SIGNED32); 
+	PROCEDURE ^ GetReg(VAR reg: Register; size: SIGNED8; pc: SIGNED32; mask: SET); 
+	PROCEDURE ^ GetTempReg32(VAR reg: Register); 
+	PROCEDURE ^ GetTempReg8(VAR reg: Register; mask: SET); 
+	PROCEDURE ^ GetFPReg(VAR reg: Register; pc: SIGNED32); 
+	PROCEDURE ^ FreeReg(reg: Register); 
+	PROCEDURE ^ Owner(reg: Register): SIGNED32; 
+	PROCEDURE ^ Dump(VAR instr: PCLIR.Instruction; info: Address); 
+	PROCEDURE ^ RegisterOverlaps(reg1, reg2: Register): BOOLEAN; 
+	PROCEDURE ^ RegisterSize(reg: Register): SIGNED8; 
+	PROCEDURE ^ MakeMask(reg: Register): SET; 
+	PROCEDURE ^ RegisterA(size: PCLIR.Size): Register; 
+	PROCEDURE ^ RegisterD(size: PCLIR.Size): Register; 
+	PROCEDURE ^ ConstSize(c: SIGNED32; allow16: BOOLEAN): SIGNED8; 
+	PROCEDURE ^ InstructionInit(VAR instr: PCLIR.Instruction); 
+	PROCEDURE ^ FSM(code: PCLIR.Code; pc: SIGNED32; VAR instr: PCLIR.Instruction; addr: Address); 
+	PROCEDURE ^ AliveSetInit(VAR set: AliveSet); 
+	PROCEDURE ^ AliveAdd(VAR set: AliveSet; reg: SIGNED32; size: PCLIR.Size); 
+	PROCEDURE ^ AliveAddComplex(VAR set: AliveSet; code: PCLIR.Code; reg: SIGNED32); 
+	PROCEDURE ^ AliveRemove(VAR set: AliveSet; reg: SIGNED32); 
+	PROCEDURE ^ SetRegisterHint(code: PCLIR.Code; barrier: SIGNED32; vreg: PCLIR.Register; ireg: Register); 
+	PROCEDURE ^ SetRegisterHint2(code: PCLIR.Code; barrier: SIGNED32; vreg: PCLIR.Register; ireg, ireg2: Register); 
+	PROCEDURE ^ Optimize(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32; context: ANY ); 
+	PROCEDURE ^ UseRegisterI(VAR instr: PCLIR.Instruction; VAR reg: Register); 
+	PROCEDURE ^ UseRegister(code: PCLIR.Code; vreg: PCLIR.Register; VAR reg: Register); 
+	PROCEDURE ^ UseRegisterI2(VAR instr: PCLIR.Instruction; VAR reg, reg2: Register); 
+	PROCEDURE ^ UseRegister2(code: PCLIR.Code; vreg: PCLIR.Register; VAR reg, reg2: Register); 
+	PROCEDURE ^ UseComplexI(code: PCLIR.Code; VAR instr: PCLIR.Instruction; VAR addr: RealAddress); 
+	PROCEDURE ^ UseComplex(code: PCLIR.Code; vreg: PCLIR.Register; VAR addr: RealAddress); 
+	PROCEDURE ^ AllocateRegI(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32): Register; 
+	PROCEDURE ^ AllocateReg(code: PCLIR.Code; vreg: PCLIR.Register): Register; 
+	PROCEDURE ^ AllocateRegI2(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32; VAR reg, reg2: Register); 
+	PROCEDURE ^ AllocateThisRegI(VAR instr: PCLIR.Instruction; pc: SIGNED32; ireg: Register); 
+	PROCEDURE ^ AllocateThisReg(code: PCLIR.Code; vreg: PCLIR.Register; ireg: Register); 
+	PROCEDURE ^ AllocateThisRegI2(VAR instr: PCLIR.Instruction; pc: SIGNED32; ireg, ireg2: Register); 
+	PROCEDURE ^ ReleaseReg(code: PCLIR.Code; reg: Register; protect: SET); 
+	PROCEDURE ^ ForceRegister(code: PCLIR.Code; VAR reg: Register; dest: Register; protect: SET); 
+	PROCEDURE ^ FixAbsolute(adr: PCM.Attribute; offset: SIGNED32); 
+	PROCEDURE ^ GenEnter(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenExit(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenTrap(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GetRegSaveSize(): SIGNED32; 
+	PROCEDURE ^ GenSaveRegistersAligned(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenSaveRegisters(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenRestoreRegisters(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenPop(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenResult(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenReturn(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ LoadReg(reg: Register; src: RealAddress); 
+	PROCEDURE ^ LoadRegHi(reg: Register; src: RealAddress); 
+	PROCEDURE ^ GenLoad(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenLoadSP(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenLoadFP(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenStore(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenOut(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenIn(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenNop(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenLabel(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ EmitJcc(op: SIGNED8; dest: SIGNED32; VAR chain: SIGNED32); 
+	PROCEDURE ^ GenJcc(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenJmp(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenCall(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenCallReg(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenSysCall(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenSetcc(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenKill(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenPhi(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenPush(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ IntExpansion(op: PCLIR.Opcode; src: RealAddress; dst: Register); 
+	PROCEDURE ^ Entier(dst, dst2: Register; dest64: BOOLEAN); 
+	PROCEDURE ^ GenConv(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenNegNot(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenAbs(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenBitOp(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenBitTest(code: PCLIR.Code; VAR src1, src2: RealAddress); 
+	PROCEDURE ^ GenCmp1(code: PCLIR.Code; VAR src1, src2: RealAddress); 
+	PROCEDURE ^ GenCmp2(code: PCLIR.Code; VAR src1, src2: RealAddress); 
+	PROCEDURE ^ GenFtyp1(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenMul64(src1, src2: RealAddress; dst1, dst2: Register); 
+	PROCEDURE ^ GenMul(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenDivMod(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenTyp1(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenShift(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenMoveDown(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenMove(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenInline(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenCase(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenCaseLine(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ GenCaseElse(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32); 
+	PROCEDURE ^ DumpCode(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32; context: ANY ); 
+	PROCEDURE ^ DoOptimize(code: PCLIR.Code); 
+	PROCEDURE ^ IncSaveLevel; 
+	PROCEDURE ^ Init(): BOOLEAN; 
+	PROCEDURE ^ Done(VAR result: INTEGER); 
+	PROCEDURE ^ GetCode(VAR codeArr: PCLIR.CodeArray; VAR length, hdrlength, addressFactor: SIGNED32); 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Configure; 
+BEGIN
+END PCG386.

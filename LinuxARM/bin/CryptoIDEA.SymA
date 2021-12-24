@@ -1,0 +1,53 @@
+MODULE CryptoIDEA;
+	IMPORT Ciphers := CryptoCiphers;
+CONST 
+TYPE 
+	Card16 = SIGNED32; 
+
+	Block = ARRAY 4 OF Card16; 
+
+	KeyBlock = ARRAY 9 OF ARRAY 6 OF Card16; 
+
+	Cipher* = OBJECT (Ciphers.Cipher)
+	VAR 
+		ekeys, dkeys: KeyBlock; 
+		iv: Block; 
+
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIZE); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; p: SIZE); 
+		PROCEDURE ^ DecryptBlock(VAR buf: ARRAY OF CHAR; p: SIZE); 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+
+	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
+	PROCEDURE ^ Inverse(x: Card16): Card16; 
+	PROCEDURE ^ shor(a, b: Card16): Card16; 
+	PROCEDURE ^ CalcEncryptionKeys(CONST src: ARRAY OF CHAR; VAR e: KeyBlock); 
+	PROCEDURE ^ CalcDecryptionKeys(CONST e: KeyBlock; VAR d: KeyBlock); 
+	PROCEDURE ^ IDEACipher(VAR b: Block; CONST key: KeyBlock); 
+	PROCEDURE  - Xor(a, b: Card16): Card16;
+	BEGIN
+		RETURN Card16((SET32(a) / SET32(b)))
+	END Xor; 
+	PROCEDURE  - Mul(a, b: Card16): Card16;
+	VAR 
+		p, q: SIGNED32; 
+	BEGIN
+		IF (a = 0) THEN 
+			p := (65537 - b)
+		ELSIF (b = 0) THEN 
+			p := (65537 - a)
+		ELSE
+			q := ((a MOD 65536) * (b MOD 65536)); 
+			p := ((q MOD 65536) - LSH(q,  -16)); 
+			IF (p <= 0) THEN 
+				INC(p, 65537)
+			END
+		END; 
+		RETURN (p MOD 65536)
+	END Mul; 
+BEGIN
+END CryptoIDEA.

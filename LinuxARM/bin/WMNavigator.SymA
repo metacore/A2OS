@@ -1,0 +1,77 @@
+MODULE WMNavigator;
+	IMPORT Modules, Kernel, Locks, Displays, Raster, Strings, XML, WMRectangles, WMGraphics, WMGraphicUtilities, WMWindowManager, WMComponents;
+CONST 
+TYPE 
+	Level = RECORD 
+		x, y, width, height: SIZE; 
+	END; 
+
+	OnDrawnProc = PROCEDURE {DELEGATE}; 
+
+	ViewPort* = OBJECT (WMWindowManager.ViewPort)
+	VAR 
+		backbuffer-: WMGraphics.Image; 
+		deviceRect: WMRectangles.Rectangle; 
+		width, height: SIZE; 
+		canvas: WMGraphics.BufferCanvas; 
+		state: WMGraphics.CanvasState; 
+		internnavig, navig: BOOLEAN; 
+		fx, fy, inffx, inffy, factor, intfactor: FLOAT32; 
+		lock: Locks.Lock; 
+		onDrawn: OnDrawnProc; 
+		zoomLevel: ARRAY 7 OF Level; 
+		currentZoomLevel: SIZE; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ SetZoomLevels(width, height: SIZE); 
+		PROCEDURE ^ SetZoomLevel(level, xg, yg: SIZE); 
+		PROCEDURE ^ ChangeZoom(dz, xg, yg: SIZE); 
+		PROCEDURE ^ ReInit(width, height: SIZE; format: INTEGER; onDrawn: OnDrawnProc); 
+		PROCEDURE ^ GetWMCoordinates*(CONST r: WMRectangles.Rectangle): WMRectangles.Rectangle; 
+		PROCEDURE ^ GetWMPosition(x, y: SIZE; VAR xg, yg: SIZE); 
+		PROCEDURE ^ GetKeyState*(VAR state: SET); 
+		PROCEDURE ^ SetRange*(x, y, w, h: FLOAT32; showTransition: BOOLEAN); 
+		PROCEDURE ^ Update*(r: WMRectangles.Rectangle; top: WMWindowManager.Window); 
+		PROCEDURE ^ Refresh*(top: WMWindowManager.Window); 
+		PROCEDURE ^ DrawWindow(window: WMWindowManager.Window): BOOLEAN; 
+		PROCEDURE ^ Draw(r: WMRectangles.Rectangle; top: WMWindowManager.Window); 
+	END ViewPort; 
+
+	Navigator = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		viewPort: ViewPort; 
+		selectedWindow: WMWindowManager.Window; 
+		timer: Kernel.Timer; 
+		alive, dead, refresh, doRefresh: BOOLEAN; 
+		offsetX, offsetY: SIZE; 
+		lastX, lastY: SIZE; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY ); 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ PointerLeave*; 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ Refresh; 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
+	BEGIN{ACTIVE} 
+	END Navigator; 
+
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+
+		PROCEDURE ^ Close*; 
+	END Window; 
+VAR 
+	manager: WMWindowManager.WindowManager; 
+	viewport: WMWindowManager.ViewPort; 
+	window: Window; 
+
+	PROCEDURE ^ GenNavigator*(): XML.Element; 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Close*; 
+BEGIN
+END WMNavigator.

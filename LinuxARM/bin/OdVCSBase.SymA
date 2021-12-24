@@ -1,0 +1,87 @@
+MODULE OdVCSBase;
+	IMPORT SYSTEM, Dates, Strings, Files, Out := KernelLog, Clock;
+CONST 
+	BaseDir* = \"FTP:/WebDAV/repo/"\; 
+	TmpDFile = \"FTP:/WebDAV/repo/VCSBaseD.Temp"\; 
+	FormatLen* = 8; 
+	FormatName* = \"dsfantf1"\; 
+	MakroBit* = 0; 
+	VersionTag = 1X; 
+	DateTag = 2X; 
+	AuthorTag = 3X; 
+	LogTextTag = 4X; 
+	DeltaAddTag = 5X; 
+	DeltaCopyTag = 6X; 
+	AttachmentTag = 7X; 
+	TextTag = 8X; 
+	DiffTag = 9X; 
+	AccessTag = 0AX; 
+	HashLen = 16381; 
+	D = 256; 
+	PrefixLen = 7; 
+	MaxVersions* = 100; 
+TYPE 
+	PLinkNode = POINTER TO TLinkNode; 
+
+	TLinkNode = RECORD 
+		next: PLinkNode; 
+		pos: SIGNED32; 
+	END; 
+
+	THashList = ARRAY HashLen OF PLinkNode; 
+
+	PHashList = POINTER TO THashList; 
+
+	TWorkBytes = ARRAY PrefixLen OF CHAR; 
+
+	TData = POINTER TO ARRAY OF CHAR; 
+
+	TLog* = RECORD 
+		versionID*: SIGNED32; 
+		author*: ARRAY 127 OF CHAR; 
+		logText*: ARRAY 256 OF CHAR; 
+		date*: ARRAY 22 OF CHAR; 
+		lenOfDelta: SIGNED32; 
+		lenOfOld: SIGNED32; 
+		flags*: SET; 
+	END; 
+
+	TFileName* = ARRAY 256 OF CHAR; 
+
+	TDeltaEntry* = ARRAY 20 OF CHAR; 
+
+	TDList* = ARRAY MaxVersions OF TDeltaEntry; 
+VAR 
+	errMsg*: ARRAY 256 OF CHAR; 
+	formatStr: ARRAY (FormatLen + 1) OF CHAR; 
+	res: INTEGER; 
+
+	PROCEDURE ^ splitDirBase(fileName: ARRAY OF CHAR; VAR dir, base: ARRAY OF CHAR); 
+	PROCEDURE ^ makeDirs(name: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ DateTime*(VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ Hash(toHash: TWorkBytes): SIGNED32; 
+	PROCEDURE ^ AccessArray(arr: TData; len, left, right: SIGNED32; VAR ret: ARRAY OF CHAR); 
+	PROCEDURE ^ BuildLinkList(new: TData; lenNew: SIGNED32; hashList: PHashList); 
+	PROCEDURE ^ FindLongest(old, new: TData; lenOld, lenNew, oldPos: SIGNED32; VAR copyStart: PLinkNode; VAR copyLen: SIGNED32; hashList: PHashList); 
+	PROCEDURE ^ EmitAdd(old: TData; VAR dr: Files.Rider; offset, length: SIGNED32); 
+	PROCEDURE ^ EmitCopy(VAR dr: Files.Rider; offset, length: SIGNED32); 
+	PROCEDURE ^ CreateDelta*(old, new: TData; VAR dr: Files.Rider; lenOld, lenNew: SIGNED32); 
+	PROCEDURE ^ ApplyDelta*(old, new: TData; dr: Files.Rider); 
+	PROCEDURE ^ NameToDelta(name: TFileName; VAR df: TFileName); 
+	PROCEDURE ^ NameToBak(name: TFileName; VAR df: TFileName); 
+	PROCEDURE ^ GetTextLen(VAR fr: Files.Rider; f: Files.File): SIGNED32; 
+	PROCEDURE ^ GetNewestVersion(fr: Files.Rider; f: Files.File): SIGNED32; 
+	PROCEDURE ^ GetDiffPos(fr: Files.Rider; f: Files.File; n: SIGNED32): Files.Position; 
+	PROCEDURE ^ Init*(name: TFileName): SIGNED32; 
+	PROCEDURE ^ GetLog*(name: TFileName; n: SIGNED32; VAR log: TLog); 
+	PROCEDURE ^ GetDelta*(name: TFileName; n: SIGNED32; VAR df: Files.File; VAR dr: Files.Rider); 
+	PROCEDURE ^ SetLog*(name: TFileName; n: SIGNED16; log: TLog); 
+	PROCEDURE ^ GetDeltaList*(name: TFileName; VAR list: TDList): SIGNED16; 
+	PROCEDURE ^ WriteTag(VAR rdr: Files.Rider; tag: CHAR; len: SIZE; VAR data: ARRAY OF CHAR); 
+	PROCEDURE ^ Create*(historyName, name: TFileName; log: TLog; flags: SET): SIGNED32; 
+	PROCEDURE ^ NewVersion*(name: TFileName; log: TLog; flags: SET): SIGNED32; 
+	PROCEDURE ^ newVersion(historyName, name: TFileName; log: TLog; flags: SET): SIGNED32; 
+	PROCEDURE ^ View*(name: TFileName; n: SIGNED32; newFileName: TFileName): INTEGER; 
+	PROCEDURE ^ Extract*(name: TFileName; n: SIGNED32): SIGNED32; 
+BEGIN
+END OdVCSBase.

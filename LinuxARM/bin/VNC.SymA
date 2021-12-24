@@ -1,0 +1,136 @@
+MODULE VNC;
+	IMPORT SYSTEM, Streams, KernelLog, Objects, Commands, Network, IP, TCP, DNS, DES, Inputs, Raster, WMWindowManager, Rect := WMRectangles, Dialogs := WMDialogs, Beep, Files;
+CONST 
+	OpenTimeout = 10000; 
+	CloseTimeout = 2000; 
+	PollTimeout = 0; 
+	Shared = TRUE; 
+	AlphaCursor = 128; 
+	InBufSize = 8192; 
+	OutBufSize = 4096; 
+	ImgBufSize = 8192; 
+	BellDelay = 20; 
+	BellFreq = 550; 
+	Trace = FALSE; 
+	TraceVisual = TRUE; 
+	TraceAudio = FALSE; 
+	Ok = TCP.Ok; 
+TYPE 
+	Connection* = POINTER TO RECORD 
+		next: Connection; 
+		pcb: TCP.Connection; 
+		w: Window; 
+		res: INTEGER; 
+		id: SIGNED32; 
+		receiver: Receiver; 
+		sender: Sender; 
+		nb: Raster.Image; 
+		fmt: Raster.Format; 
+		mode: Raster.Mode; 
+		bytesPerPixel: SIGNED32; 
+		rcvbuf, imgbuf: POINTER TO ARRAY OF CHAR; 
+		rcvbufpos, rcvbuflen: SIZE; 
+		fip: IP.Adr; 
+	END; 
+
+	EnumProc = PROCEDURE (c: Connection; out: Streams.Writer); 
+
+	ConnectionPool = OBJECT {EXCLUSIVE} 
+	VAR 
+		head, tail: Connection; 
+		id: SIGNED32; 
+
+		PROCEDURE ^ Empty(): BOOLEAN; 
+		PROCEDURE ^ Add(c: Connection); 
+		PROCEDURE ^ Remove(c: Connection); 
+		PROCEDURE ^ Enumerate(p: EnumProc; out: Streams.Writer); 
+		PROCEDURE ^ Find(id: SIGNED32): Connection; 
+		PROCEDURE ^  & Init*; 
+	END ConnectionPool; 
+
+	Window = OBJECT {EXCLUSIVE} (WMWindowManager.BufferWindow)
+	VAR 
+		sender: Sender; 
+
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
+		PROCEDURE ^ Close*; 
+	END Window; 
+
+	Receiver = OBJECT {EXCLUSIVE} 
+	VAR 
+		c: Connection; 
+		exception, double: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(c: Connection); 
+	BEGIN{ACTIVE, SAFE} 
+	END Receiver; 
+
+	Sender = OBJECT {EXCLUSIVE} 
+	VAR 
+		c: Connection; 
+		head, middle, tail, lx, ly: SIZE; 
+		res: INTEGER; 
+		lkeys: SET; 
+		buf: ARRAY OutBufSize OF CHAR; 
+		done, poll: BOOLEAN; 
+		timer: Objects.Timer; 
+
+		PROCEDURE ^ Available(): SIZE; 
+		PROCEDURE ^ Put(x: CHAR); 
+		PROCEDURE ^ PutInt(x: SIGNED32); 
+		PROCEDURE ^ Pointer(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ Wheel(dz: SIZE); 
+		PROCEDURE ^ Key(keysym: SIZE; flags: SET); 
+		PROCEDURE ^ Paste(r: Streams.Reader); 
+		PROCEDURE ^ AwaitEvent; 
+		PROCEDURE ^ SendEvents; 
+		PROCEDURE ^ Terminate; 
+		PROCEDURE ^ HandleTimeout; 
+		PROCEDURE ^  & Init*(c: Connection); 
+	BEGIN{ACTIVE} 
+	END Sender; 
+
+	Bell = OBJECT {EXCLUSIVE} 
+	VAR 
+		timer: Objects.Timer; 
+
+		PROCEDURE ^ Ring; 
+		PROCEDURE ^ HandleTimeout; 
+	END Bell; 
+VAR 
+	pool: ConnectionPool; 
+	bell: Bell; 
+
+	PROCEDURE ^ ReceiveBytes(c: Connection; VAR buf: ARRAY OF CHAR; size: SIZE; VAR len: SIGNED32); 
+	PROCEDURE ^ Receive(c: Connection; VAR ch: CHAR); 
+	PROCEDURE ^ ReceiveInt(c: Connection; VAR x: SIGNED32); 
+	PROCEDURE ^ ReceiveLInt(c: Connection; VAR x: SIGNED32); 
+	PROCEDURE ^ ReceiveIgnore(c: Connection; len: SIGNED32); 
+	PROCEDURE ^ Send(c: Connection; x: CHAR); 
+	PROCEDURE ^ DoVersion(c: Connection): BOOLEAN; 
+	PROCEDURE ^ DoAuthentication(c: Connection; VAR pwd: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ PutEncodings(VAR buf: ARRAY OF CHAR; ofs: SIGNED32; code: ARRAY OF CHAR; VAR len: SIGNED32); 
+	PROCEDURE ^ DoInit(c: Connection): BOOLEAN; 
+	PROCEDURE ^ SendRequest(c: Connection; inc: BOOLEAN; x, y, w, h: SIZE); 
+	PROCEDURE ^ UpdateDisplay(c: Connection; x, y, w, h: SIGNED32); 
+	PROCEDURE ^ ReceiveRaw(c: Connection; x, y, w, h: SIGNED32); 
+	PROCEDURE ^ ReceiveCopyRect(c: Connection; x, y, w, h: SIGNED32); 
+	PROCEDURE ^ ReceivePixel(c: Connection; VAR pixel: Raster.Pixel); 
+	PROCEDURE ^ ReceiveRRE(c: Connection; x, y, w, h: SIGNED32); 
+	PROCEDURE ^ ReceiveCoRRE(c: Connection; x, y, w, h: SIGNED32); 
+	PROCEDURE ^ ReceiveHextile(c: Connection; x, y, w, h: SIGNED32); 
+	PROCEDURE ^ ReceiveRectangle(c: Connection); 
+	PROCEDURE ^ AwaitResponse(c: Connection); 
+	PROCEDURE ^ OpenVNC*(c: Connection; server: IP.Adr; port: SIGNED32; pwd: ARRAY OF CHAR); 
+	PROCEDURE ^ CloseVNC*(VAR c: Connection); 
+	PROCEDURE ^ PrintConnection(c: Connection; out: Streams.Writer); 
+	PROCEDURE ^ Show*(context: Commands.Context); 
+	PROCEDURE ^ ReadString(r: Streams.Reader; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Paste*(context: Commands.Context); 
+BEGIN
+END VNC.

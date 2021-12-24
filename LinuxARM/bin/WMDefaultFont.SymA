@@ -1,0 +1,37 @@
+MODULE WMDefaultFont;
+	IMPORT KernelLog, Streams, Graphics := WMGraphics, Raster;
+CONST 
+	TraceInstallation = FALSE; 
+TYPE 
+	Glyph = RECORD 
+		img: Graphics.Image; 
+		available: BOOLEAN; 
+		dx, x, y, w, h: SIGNED32; 
+	END; 
+
+	Font = OBJECT (Graphics.Font)
+	VAR 
+		glyphs: ARRAY 256 OF Glyph; 
+		placeholderimg: Graphics.Image; 
+		height: SIGNED32; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ MapChars(VAR ch: SIGNED32); 
+		PROCEDURE ^ HasChar*(code: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetGlyphMap*(code: SIGNED32; VAR map: Graphics.Image); 
+		PROCEDURE ^ GetGlyphSpacings*(code: SIGNED32; VAR glyphSpacings: Graphics.GlyphSpacings); 
+	END Font; 
+VAR 
+	bit: ARRAY 256 OF ARRAY 8 OF BOOLEAN; 
+	buffer: ARRAY 2500 OF CHAR; 
+	nof: SIGNED32; 
+	f: Font; 
+
+	PROCEDURE ^ LoadDefaultFont*(): Font; 
+	PROCEDURE ^ StreamLoad(r: Streams.Reader): Font; 
+	PROCEDURE ^ InitBitTable; 
+	PROCEDURE ^ A(hv: SIGNED64); 
+	PROCEDURE ^ DefaultFont; 
+	PROCEDURE ^ Load*; 
+BEGIN
+END WMDefaultFont.

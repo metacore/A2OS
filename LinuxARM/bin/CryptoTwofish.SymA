@@ -1,0 +1,48 @@
+MODULE CryptoTwofish;
+	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils;
+CONST 
+	N = 16; 
+	FDBK = 361; 
+	Fdbk2 = SET32((FDBK DIV 2)); 
+	Fdbk4 = SET32((FDBK DIV 4)); 
+	Byte0 = SET32(255); 
+	S14d = SET32(333); 
+	S0a6 = SET32(166); 
+TYPE 
+	Block = ARRAY 4 OF SET32; 
+
+	SKey = ARRAY 4 OF SET32; 
+
+	Cipher* = OBJECT (Ciphers.Cipher)
+	VAR 
+		keybits: SIZE; 
+		sbox: ARRAY 4 OF SIGNED32; 
+		subkeys: ARRAY (8 + (2 * N)) OF SIGNED32; 
+		iv: Block; 
+
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIZE); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; pos: SIZE); 
+		PROCEDURE ^ DecryptBlock(VAR buf: ARRAY OF CHAR; pos: SIZE); 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+VAR 
+	tab0: ARRAY 256 OF SET32; 
+	tab1: ARRAY 256 OF SET32; 
+
+	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
+	PROCEDURE ^ m1(x: SIGNED32): SET32; 
+	PROCEDURE ^ mx(x: SIGNED32): SET32; 
+	PROCEDURE ^ my(x: SIGNED32): SET32; 
+	PROCEDURE ^ split(x: SIGNED32; VAR v: SKey); 
+	PROCEDURE  - Int(x: SET32): SIGNED32;
+	BEGIN
+		RETURN SIGNED32(x)
+	END Int; 
+	PROCEDURE ^ F32(x: SET32; CONST k32: ARRAY OF SIGNED32; keybits: SIZE): SIGNED32; 
+	PROCEDURE ^ Encode(k0, k1: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Init0; 
+BEGIN
+END CryptoTwofish.

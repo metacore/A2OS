@@ -1,0 +1,56 @@
+MODULE PCARMCP;
+	IMPORT SYSTEM, PCO := PCOARM, PCM, PCBT, KernelLog;
+CONST 
+	Trace = FALSE; 
+	ErrInternalError* = 100; 
+	ErrConstantNotRegistered* = 101; 
+	ErrAddressNotRegistered* = 102; 
+	FlushThreshold = 128; 
+TYPE 
+	UseList = OBJECT 
+	VAR 
+		pc: SIGNED32; 
+		next: UseList; 
+
+		PROCEDURE ^  & Init*(pc: SIGNED32); 
+	END UseList; 
+
+	Element = OBJECT 
+	VAR 
+		pc: SIGNED32; 
+		firstUse: SIGNED32; 
+		next: Element; 
+		uses: UseList; 
+
+		PROCEDURE ^  & InitElement*; 
+	END Element; 
+
+	Constant = OBJECT (Element)
+	VAR 
+		value: SIGNED32; 
+
+		PROCEDURE ^  & Init*(value: SIGNED32); 
+	END Constant; 
+
+	Address = OBJECT (Element)
+	VAR 
+		adr: PCM.Attribute; 
+
+		PROCEDURE ^  & Init*(adr: PCM.Attribute); 
+	END Address; 
+
+	ConstantPool* = OBJECT {EXCLUSIVE} 
+	VAR 
+		items: Element; 
+		limitPC: SIGNED32; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Insert(i: Element); 
+		PROCEDURE ^ AddConstant*(pc, c: SIGNED32): SIGNED32; 
+		PROCEDURE ^ AddAddress*(pc: SIGNED32; adr: PCM.Attribute): SIGNED32; 
+		PROCEDURE ^ Flush*(pc: SIGNED32); 
+		PROCEDURE ^ FlushCallback(pc: SIGNED32); 
+		PROCEDURE ^ Error(pc: SIGNED32; CONST msg: ARRAY OF CHAR); 
+	END ConstantPool; 
+BEGIN
+END PCARMCP.

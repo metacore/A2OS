@@ -1,0 +1,322 @@
+MODULE HTMLTransformer;
+	IMPORT WebBrowserComponents, XMLTransformer, Strings, XML, XMLObjects, DynamicStrings, UTF8Strings, WMGraphics, KernelLog, WMEvents, WMCharCodes, WMComponents, WMRectangles, WMTextView, TextUtilities, Texts, WMStandardComponents, WMMessages, Streams, WMEditors, WMPopups, Messages := WMMessages;
+CONST 
+	verbose = TRUE; 
+	cText = 0; 
+	cNewLine = 1; 
+	cParagraph = 2; 
+	alignLeft = 0; 
+	alignCenter = 1; 
+	alignRight = 2; 
+	alignJustify = 3; 
+TYPE 
+	String = Strings.String; 
+
+	VisualComponent = WMComponents.VisualComponent; 
+
+	CharsetConvProc = PROCEDURE {DELEGATE}(VAR input: ARRAY OF CHAR):String; 
+
+	TextStyle = RECORD 
+		font: String; 
+		size: SIGNED32; 
+		style: SIGNED32; 
+		color: SIGNED32; 
+		bgcolorPresent: BOOLEAN; 
+		bgcolor: SIGNED32; 
+		link: String; 
+		linktarget: String; 
+		shift: SIGNED32; 
+		align: SIGNED32; 
+		indent: SIGNED32; 
+		enumtype: SIGNED32; 
+		preformatted: BOOLEAN; 
+		form: Form; 
+	END; 
+
+	OLULStackItem = POINTER TO RECORD 
+		prev: OLULStackItem; 
+		value: SIGNED32; 
+	END; 
+
+	EmbeddedObject* = POINTER TO RECORD 
+		prev*: EmbeddedObject; 
+		object*: VisualComponent; 
+	END; 
+
+	Transformer* = OBJECT 
+	VAR 
+		doc: XML.Container; 
+		url: String; 
+		baseAddress: String; 
+		baseTarget: String; 
+		sequencer: WMMessages.MsgSequencer; 
+		initWidth: SIZE; 
+		loadLink*: WMEvents.EventListener; 
+		charset: String; 
+		frameName: String; 
+		txtElem: XML.Element; 
+		paragraph: XML.Element; 
+		title-: String; 
+		pageBgColor-: SIGNED32; 
+		bgImage-: String; 
+		embeddedObjectsList-: EmbeddedObject; 
+		textColor: SIGNED32; 
+		linkColor: SIGNED32; 
+		vlinkColor: SIGNED32; 
+		alinkColor: SIGNED32; 
+		crlfStr: String; 
+		crlfDoubleStr: String; 
+		charsetConv: CharsetConvProc; 
+		currentText: SIGNED32; 
+		olulStackTop: OLULStackItem; 
+		ulDepth: SIGNED32; 
+		inDL: BOOLEAN; 
+		currentAlign: SIGNED32; 
+		currentIndent: SIGNED32; 
+		form: Form; 
+		formButton: FormButton; 
+		formCheckbox: FormCheckbox; 
+		formTextInput: FormTextInput; 
+		formRadioButton: FormRadioButton; 
+		formMenu: FormMenu; 
+		formHiddenControl: FormHiddenControl; 
+		initAlignment: SIGNED32; 
+		isTableContent: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(doc: XML.Container; url: String; initWidth: SIZE; loadLink: WMEvents.EventListener; charset: String; frameName: String); 
+		PROCEDURE ^ Transform*(): XML.Document; 
+		PROCEDURE ^ TransformContent(container: XML.Container; style: TextStyle); 
+		PROCEDURE ^ GetText(container: XML.Container): String; 
+		PROCEDURE ^ TransformElement(elem: XML.Element; style: TextStyle); 
+		PROCEDURE ^ SetAlignmentAndIndent(align: SIGNED32; indent: SIGNED32); 
+		PROCEDURE ^ NewLine(allowMultiple: BOOLEAN); 
+		PROCEDURE ^ NewParagraph(allowMultiple: BOOLEAN); 
+		PROCEDURE ^ AddText(txt: String; style: TextStyle); 
+		PROCEDURE ^ AddImage(src: String; x: SIGNED32; y: SIGNED32; style: TextStyle); 
+		PROCEDURE ^ AddSVG(svgRoot: XML.Element; style: TextStyle); 
+		PROCEDURE ^ ToEmbeddedObjectsList(obj: VisualComponent); 
+		PROCEDURE ^ AddHR(align: SIGNED32); 
+		PROCEDURE ^ AddTable(tableElem: XML.Element; style: TextStyle); 
+		PROCEDURE ^ AddVisualComponent(vc: WMComponents.VisualComponent; style: TextStyle); 
+		PROCEDURE ^ AddLabel(s: String); 
+	END Transformer; 
+
+	CellSizes = POINTER TO ARRAY OF SIZE; 
+
+	StringArray = POINTER TO ARRAY OF String; 
+
+	CellWrapper = POINTER TO RECORD 
+		cell: TableCell; 
+	END; 
+
+	TableGrid = POINTER TO ARRAY OF ARRAY OF CellWrapper; 
+
+	Table* = OBJECT {EXCLUSIVE} (VisualComponent)
+	VAR 
+		tableElem: XML.Element; 
+		parentWidth: SIZE; 
+		align-: INTEGER; 
+		textColor, linkColor, vlinkColor, alinkColor: SIGNED32; 
+		url: String; 
+		loadLink: WMEvents.EventListener; 
+		charset: String; 
+		frameName: String; 
+		form: Form; 
+		baseAddress: String; 
+		baseTarget: String; 
+		isSubtable: BOOLEAN; 
+		width: SIGNED32; 
+		relativeWidth: BOOLEAN; 
+		border: SIGNED32; 
+		rules: BOOLEAN; 
+		cellspacing: SIGNED32; 
+		relativeCellspacing: BOOLEAN; 
+		cellpadding: SIGNED32; 
+		relativeCellpadding: BOOLEAN; 
+		bgColor: SIGNED32; 
+		grid: TableGrid; 
+		colsCnt: SIGNED32; 
+		rowsCnt: SIGNED32; 
+		minCellWidths, maxCellWidths: CellSizes; 
+		minTableWidth, maxTableWidth: SIZE; 
+		x, y: SIGNED32; 
+		internalWidth, internalHeight: SIGNED32; 
+
+		PROCEDURE ^  & New*(tableElem: XML.Element; parentWidth: SIZE; align: SIGNED32; textColor, linkColor, vlinkColor, alinkColor: SIGNED32; url: String; loadLink: WMEvents.EventListener; charset: String; frameName: String; form: Form; baseAddress: String; baseTarget: String; seq: WMMessages.MsgSequencer; isSubtable: BOOLEAN); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ BuildCellGrid; 
+		PROCEDURE ^ AddCell(elem: XML.Element; newRow: BOOLEAN); 
+		PROCEDURE ^ CalculateMinMaxTableWidth; 
+		PROCEDURE ^ AlignCells; 
+		PROCEDURE ^ ParentTvWidthChanged*(x: SIZE); 
+	END Table; 
+
+	TableCell = OBJECT {EXCLUSIVE} (VisualComponent)
+	VAR 
+		parentTable: Table; 
+		transformer: Transformer; 
+		tv: WMTextView.TextView; 
+		text: Texts.Text; 
+		minWidth, maxWidth: SIZE; 
+		width, height: SIGNED32; 
+		colspan, rowspan: SIGNED32; 
+		bgImage: WebBrowserComponents.TileImagePanel; 
+		writer: Streams.Writer; 
+		textWriter: TextUtilities.TextWriter; 
+
+		PROCEDURE ^  & New*(seq: WMMessages.MsgSequencer; parentTable: Table; elem: XML.Element; textColor, linkColor, vlinkColor, alinkColor: SIGNED32; url: String; loadLink: WMEvents.EventListener; charset: String; frameName: String; form: Form; baseAddress: String; baseTarget: String); 
+		PROCEDURE ^ SetWidth(width: SIZE); 
+	END TableCell; 
+
+	Form = OBJECT 
+	VAR 
+		action: String; 
+		loadLink: WMEvents.EventListener; 
+		firstComp, lastComp: FormComponent; 
+		firstRadioButtonGroup, lastRadioButtonGroup: RadioButtonGroup; 
+
+		PROCEDURE ^  & Init*(action: String; loadLink: WMEvents.EventListener); 
+		PROCEDURE ^ Send(sender, par: ANY ); 
+		PROCEDURE ^ Reset(sender, par: ANY ); 
+		PROCEDURE ^ AddFormComponent(comp: FormComponent); 
+		PROCEDURE ^ AddRadioButton(radioButton: FormRadioButton); 
+	END Form; 
+
+	FormComponent = OBJECT 
+	VAR 
+		nextComp: FormComponent; 
+		name: String; 
+
+		PROCEDURE ^ IsSuccessful(): BOOLEAN; 
+		PROCEDURE ^ GetValue(): String; 
+		PROCEDURE ^ Reset; 
+	END FormComponent; 
+
+	FormButton = OBJECT (FormComponent)
+	VAR 
+		button: WMStandardComponents.Button; 
+		value: String; 
+		proc: WMEvents.EventListener; 
+		active: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(name: String; value: String; proc: WMEvents.EventListener); 
+		PROCEDURE ^ IsSuccessful(): BOOLEAN; 
+		PROCEDURE ^ GetValue(): String; 
+		PROCEDURE ^ Click(sender, par: ANY ); 
+	END FormButton; 
+
+	FormCheckbox = OBJECT (FormComponent)
+	VAR 
+		checkbox: WMStandardComponents.Checkbox; 
+		value: String; 
+		init: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(name: String; value: String; checked: BOOLEAN); 
+		PROCEDURE ^ IsSuccessful(): BOOLEAN; 
+		PROCEDURE ^ GetValue(): String; 
+		PROCEDURE ^ Reset; 
+	END FormCheckbox; 
+
+	FormTextInput = OBJECT (FormComponent)
+	VAR 
+		editor: WMEditors.Editor; 
+		init: String; 
+
+		PROCEDURE ^  & Init*(name: String; value: String; size: SIGNED32; maxlength: SIGNED32; isPassword: BOOLEAN); 
+		PROCEDURE ^ IsSuccessful(): BOOLEAN; 
+		PROCEDURE ^ GetValue(): String; 
+		PROCEDURE ^ Reset; 
+	END FormTextInput; 
+
+	FormRadioButton = OBJECT 
+	VAR 
+		next: FormRadioButton; 
+		radioButton: WMStandardComponents.Checkbox; 
+		name: String; 
+		value: String; 
+		group: RadioButtonGroup; 
+		init: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(name: String; value: String; checked: BOOLEAN); 
+		PROCEDURE ^ Clicked(sender, par: ANY ); 
+	END FormRadioButton; 
+
+	RadioButtonGroup = OBJECT (FormComponent)
+	VAR 
+		next: RadioButtonGroup; 
+		firstB, lastB: FormRadioButton; 
+
+		PROCEDURE ^  & Init*(name: String); 
+		PROCEDURE ^ IsSuccessful(): BOOLEAN; 
+		PROCEDURE ^ GetValue(): String; 
+		PROCEDURE ^ Reset; 
+		PROCEDURE ^ Add(radioButton: FormRadioButton); 
+		PROCEDURE ^ ClearOthers(exclude: FormRadioButton); 
+	END RadioButtonGroup; 
+
+	FormMenuItem = OBJECT 
+	VAR 
+		caption-: ARRAY 128 OF CHAR; 
+		value: String; 
+
+		PROCEDURE ^  & New*(caption: ARRAY OF CHAR; value: String); 
+	END FormMenuItem; 
+
+	FormMenu = OBJECT (FormComponent)
+	VAR 
+		button: WMStandardComponents.Button; 
+		popup: WMPopups.Popup; 
+		init: FormMenuItem; 
+		current: FormMenuItem; 
+
+		PROCEDURE ^  & Init*(name: String); 
+		PROCEDURE ^ MenuHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ MenuPopupHandler(sender, data: ANY ); 
+		PROCEDURE ^ NewItem(value: String; label: String; selected: BOOLEAN); 
+		PROCEDURE ^ IsSuccessful(): BOOLEAN; 
+		PROCEDURE ^ GetValue(): String; 
+		PROCEDURE ^ Reset; 
+	END FormMenu; 
+
+	FormHiddenControl = OBJECT (FormComponent)
+	VAR 
+		value: String; 
+
+		PROCEDURE ^  & Init*(name: String; value: String); 
+		PROCEDURE ^ IsSuccessful(): BOOLEAN; 
+		PROCEDURE ^ GetValue(): String; 
+	END FormHiddenControl; 
+VAR 
+	serif: ARRAY 64 OF CHAR; 
+	sansSerif: ARRAY 64 OF CHAR; 
+	cursive: ARRAY 64 OF CHAR; 
+	fantasy: ARRAY 64 OF CHAR; 
+	monospace: ARRAY 64 OF CHAR; 
+	defaultFont: ARRAY 64 OF CHAR; 
+	res: INTEGER; 
+	systemFont: WMGraphics.Font; 
+
+	PROCEDURE ^ EncodeLinkData(link, target, url: String): String; 
+	PROCEDURE ^ Utf82UrlEncodedUtf8*(CONST in: ARRAY OF CHAR): String; 
+	PROCEDURE ^ GetElems(root: XML.Element; wanted: StringArray; stopAt: StringArray; checkMe: BOOLEAN): XMLObjects.Enumerator; 
+	PROCEDURE ^ GetCharsetConverter(charset: ARRAY OF CHAR): CharsetConvProc; 
+	PROCEDURE ^ Iso2Utf8(VAR input: ARRAY OF CHAR): String; 
+	PROCEDURE ^ Utf82Utf8(VAR input: ARRAY OF CHAR): String; 
+	PROCEDURE ^ Gb23122Utf8(VAR input: ARRAY OF CHAR): String; 
+	PROCEDURE ^ GetColor(s: String): SIGNED32; 
+	PROCEDURE ^ StringIsWhiteSpace(VAR txt: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ StringHasNewLine(VAR txt: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ReplaceWhiteSpaces(VAR txt: String): String; 
+	PROCEDURE ^ TrimLineBreak(VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ ResolveAddress*(baseAddress: String; url: String): String; 
+	PROCEDURE ^ GetElemAttributeValue*(elem: XML.Element; key: ARRAY OF CHAR; lowerCase: BOOLEAN): String; 
+	PROCEDURE ^ MapFontSize(font: String; size: SIGNED32): SIGNED32; 
+	PROCEDURE ^ MapBaselineShift(size: SIGNED32): SIGNED32; 
+	PROCEDURE ^ GetExistingFontName(f: String): String; 
+	PROCEDURE ^ FontExists(f: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ IntToABCString(val: SIGNED32; upperCase: BOOLEAN): String; 
+	PROCEDURE ^ IntToRomanString(val: SIGNED32; uppercase: BOOLEAN): String; 
+	PROCEDURE ^ TransformCharEnt*(in: String): String; 
+	PROCEDURE ^ GetCharEnt(VAR ent: ARRAY OF CHAR): String; 
+BEGIN
+END HTMLTransformer.

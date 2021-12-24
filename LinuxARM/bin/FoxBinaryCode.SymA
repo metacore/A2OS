@@ -1,0 +1,124 @@
+MODULE FoxBinaryCode;
+	IMPORT Basic := FoxBasic, Sections := FoxSections, Streams, ObjectFile, BitSets, Reals, SYSTEM;
+CONST 
+	Absolute* = ObjectFile.Absolute; 
+	Relative* = ObjectFile.Relative; 
+	Byte = 8; 
+TYPE 
+	Code* = BitSets.BitSet; 
+
+	Unit* = ObjectFile.Unit; 
+
+	Bits* = ObjectFile.Bits; 
+
+	FixupPatterns* = ObjectFile.FixupPatterns; 
+
+	Alias* = OBJECT 
+	VAR 
+		nextAlias-: Alias; 
+		identifier-: ObjectFile.Identifier; 
+		offset-: Unit; 
+
+		PROCEDURE ^  & InitAlias*(identifier: ObjectFile.Identifier; offset: Unit); 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END Alias; 
+
+	AliasList* = OBJECT 
+	VAR 
+		firstAlias-, lastAlias-: Alias; 
+		aliases-: SIZE; 
+
+		PROCEDURE ^  & InitAliasList*; 
+		PROCEDURE ^ AddAlias*(alias: Alias); 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END AliasList; 
+
+	Fixup* = OBJECT 
+	VAR 
+		nextFixup-: Fixup; 
+		mode-: INTEGER; 
+		displacement-: Unit; 
+		scale-: ObjectFile.Bits; 
+		patterns-: SIZE; 
+		pattern-: FixupPatterns; 
+		offset-: Unit; 
+		symbol-: ObjectFile.Identifier; 
+		symbolOffset-: SIZE; 
+		resolved*: Sections.Section; 
+
+		PROCEDURE ^  & InitFixup*(mode: INTEGER; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns); 
+		PROCEDURE ^ SetFixupOffset*(offset: Unit); 
+		PROCEDURE ^ SetSymbol*(symbol: Sections.SectionName; fp: ObjectFile.Fingerprint; symbolOffset: SIZE; displacement: Unit); 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END Fixup; 
+
+	FixupList* = OBJECT 
+	VAR 
+		firstFixup-, lastFixup-: Fixup; 
+		fixups-: SIZE; 
+
+		PROCEDURE ^  & InitFixupList*; 
+		PROCEDURE ^ AddFixup*(fixup: Fixup); 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END FixupList; 
+
+	LabelList* = POINTER TO RECORD 
+		offset-: Unit; 
+		position-: Basic.Position; 
+		prev-: LabelList; 
+	END; 
+
+	Section* = OBJECT 
+	VAR 
+		os*: ObjectFile.Section; 
+		labels-: LabelList; 
+		fixupList-: FixupList; 
+		aliasList-: AliasList; 
+		finally-: Unit; 
+		comments-: Sections.CommentWriter; 
+		bigEndian-: BOOLEAN; 
+		pc-: Unit; 
+
+		PROCEDURE ^ GetPC(): Unit; 
+		PROCEDURE ^  & InitBinarySection*(type: INTEGER; unit: Bits; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ AddLabel*(position: Basic.Position); 
+		PROCEDURE ^ SetPC*(pc: Unit); 
+		PROCEDURE ^ Align*(alignment: Unit); 
+		PROCEDURE ^ SetFinally*(atPC: Unit); 
+		PROCEDURE ^ SetAlignment*(fixed: BOOLEAN; alignat: Unit); 
+		PROCEDURE ^ CheckSize(size: SIZE); 
+		PROCEDURE ^ CopyBits*(src: BitSets.BitSet; srcPos, len: Bits); 
+		PROCEDURE ^ PutBits*(d: SIGNED64; size: Bits); 
+		PROCEDURE ^ PutBitsAt*(at: Unit; d: SIGNED64; size: Bits); 
+		PROCEDURE ^ PutByte*(b: INTEGER); 
+		PROCEDURE ^ PutWord*(w: INTEGER); 
+		PROCEDURE ^ PutDWord*(d: INTEGER); 
+		PROCEDURE ^ PutQWord*(q: SIGNED64); 
+		PROCEDURE ^ PutReal*(f: FLOAT32); 
+		PROCEDURE ^ PutLongreal*(f: FLOAT64); 
+		PROCEDURE ^ PutByteAt*(at: Unit; d: INTEGER); 
+		PROCEDURE ^ PutWordAt*(at: Unit; d: INTEGER); 
+		PROCEDURE ^ PutDWordAt*(at: Unit; d: INTEGER); 
+		PROCEDURE ^ PutQWordAt*(at: Unit; d: SIGNED64); 
+		PROCEDURE ^ PutBytes*(data: SIGNED64; bytes: INTEGER); 
+		PROCEDURE ^ GetByte*(pc: Unit): CHAR; 
+		PROCEDURE ^ GetWord*(pc: Unit): INTEGER; 
+		PROCEDURE ^ GetDWord*(pc: Unit): INTEGER; 
+		PROCEDURE ^ GetQWord*(pc: Unit): SIGNED64; 
+		PROCEDURE ^ GetReal*(pc: Unit): FLOAT32; 
+		PROCEDURE ^ GetLongreal*(pc: Unit): FLOAT64; 
+		PROCEDURE ^ GetBits*(pc: Unit; size: Bits): INTEGER; 
+		PROCEDURE ^ ApplyFixup*(fixup: Fixup): BOOLEAN; 
+		PROCEDURE ^ DumpCode*(w: Streams.Writer; from, to: Unit); 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END Section; 
+
+	PROCEDURE ^ ConvertReal*(value: FLOAT32): SIGNED32; 
+	PROCEDURE ^ ConvertLongreal*(value: FLOAT64): SIGNED64; 
+	PROCEDURE ^ ConvertToReal*(x: SIGNED32): FLOAT32; 
+	PROCEDURE ^ ConvertToLongreal*(x: SIGNED64): FLOAT64; 
+	PROCEDURE ^ NewFixup*(mode: INTEGER; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns): Fixup; 
+	PROCEDURE ^ NewBinarySection*(type: INTEGER; unit: Bits; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN): Section; 
+BEGIN
+END FoxBinaryCode.

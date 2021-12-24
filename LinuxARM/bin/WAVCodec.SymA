@@ -1,0 +1,83 @@
+MODULE WAVCodec;
+	IMPORT Codecs, SoundDevices, Streams, KernelLog, SYSTEM;
+CONST 
+	MAXBUF = 4096; 
+TYPE 
+	Chunk = ARRAY 5 OF CHAR; 
+
+	WaveHeader* = RECORD 
+		chunkRIFF: Chunk; 
+		chunkWAVE: Chunk; 
+		chunkfmt: Chunk; 
+		waveFormatSize: SIGNED32; 
+		formatTag: SIGNED16; 
+		nofCh: SIGNED16; 
+		sRate: SIGNED32; 
+		bRate: SIGNED32; 
+		blockAlign: SIGNED16; 
+		bitsPerSample: SIGNED16; 
+		chunkdata: Chunk; 
+		fileSize: SIGNED32; 
+		dataSize: SIGNED32; 
+	END; 
+
+	WAVEncoder* = OBJECT (Codecs.AudioEncoder)
+	VAR 
+		out: Streams.Writer; 
+		h: WaveHeader; 
+
+		PROCEDURE ^ Open*(out: Streams.Writer; sRate, sRes, nofCh: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Write*(buffer: SoundDevices.Buffer; VAR res: INTEGER); 
+	END WAVEncoder; 
+
+	WAVDecoder* = OBJECT (Codecs.AudioDecoder)
+	VAR 
+		in: Streams.Reader; 
+		h: WaveHeader; 
+		hasMoreBytes: BOOLEAN; 
+
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
+		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: SIGNED32); 
+		PROCEDURE ^ DumpHeader; 
+		PROCEDURE ^ CanSeek*(): BOOLEAN; 
+		PROCEDURE ^ GetCurrentSample*(): SIGNED32; 
+		PROCEDURE ^ GetTotalSamples*(): SIGNED32; 
+		PROCEDURE ^ GetCurrentTime*(): SIGNED32; 
+		PROCEDURE ^ SetStreamLength*(length: SIGNED32); 
+		PROCEDURE ^ SeekSample*(sample: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Next*; 
+		PROCEDURE ^ FillBuffer*(buffer: SoundDevices.Buffer); 
+	END WAVDecoder; 
+
+	PCMDecoder* = OBJECT (Codecs.AudioDecoder)
+	VAR 
+		in: Streams.Reader; 
+		h: WaveHeader; 
+		hasMoreBytes: BOOLEAN; 
+
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
+		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: SIGNED32); 
+		PROCEDURE ^ SetAudioInfo*(nofChannels, samplesPerSecond, bitsPerSample: SIGNED32); 
+		PROCEDURE ^ CanSeek*(): BOOLEAN; 
+		PROCEDURE ^ GetCurrentSample*(): SIGNED32; 
+		PROCEDURE ^ GetTotalSamples*(): SIGNED32; 
+		PROCEDURE ^ GetCurrentTime*(): SIGNED32; 
+		PROCEDURE ^ SetStreamLength*(length: SIGNED32); 
+		PROCEDURE ^ SeekSample*(sample: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Next*; 
+		PROCEDURE ^ FillBuffer*(buffer: SoundDevices.Buffer); 
+	END PCMDecoder; 
+
+	PROCEDURE ^ ReadRawBEInteger(VAR r: Streams.Reader; VAR value: SIGNED16); 
+	PROCEDURE ^ ReadRawBELongInt(VAR r: Streams.Reader; VAR value: SIGNED32); 
+	PROCEDURE ^ WriteRawBEInteger(VAR w: Streams.Writer; value: SIGNED16); 
+	PROCEDURE ^ WriteRawBELongInt(VAR w: Streams.Writer; value: SIGNED32); 
+	PROCEDURE ^ EncoderFactory*(): Codecs.AudioEncoder; 
+	PROCEDURE ^ DecoderFactory*(): Codecs.AudioDecoder; 
+	PROCEDURE ^ PCMDecoderFactory*(): Codecs.AudioDecoder; 
+BEGIN
+END WAVCodec.

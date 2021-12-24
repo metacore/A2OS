@@ -1,0 +1,13 @@
+MODULE WMTrapWriter;
+	IMPORT Modules, Streams, TrapWriters, WMGraphics, WMUtilities;
+CONST 
+VAR 
+	w: WMUtilities.WindowWriter; 
+
+	PROCEDURE ^ TrapWriterFactory*(): Streams.Writer; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Uninstall*; 
+	PROCEDURE ^ HaltTest*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMTrapWriter.

@@ -1,0 +1,17 @@
+MODULE FoxTestBackend;
+	IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats, Backend := FoxBackend, Options, Files, Commands, Strings;
+CONST 
+	DefaultContext = \"A2"\; 
+TYPE 
+	TestBackend = OBJECT (Backend.Backend)
+	VAR 
+		fileName: Files.FileName; 
+
+		PROCEDURE ^ ProcessSyntaxTreeModule*(module: SyntaxTree.Module): Formats.GeneratedModule; 
+		PROCEDURE ^ DefineOptions*(options: Options.Options); 
+		PROCEDURE ^ GetOptions*(options: Options.Options); 
+	END TestBackend; 
+
+	PROCEDURE ^ Get*(): Backend.Backend; 
+BEGIN
+END FoxTestBackend.

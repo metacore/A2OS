@@ -1,0 +1,24 @@
+MODULE DiskCaches;
+	IMPORT SYSTEM, Disks;
+CONST 
+	BlockSize = 512; 
+	NumberCacheLines = 128; 
+TYPE 
+	TransferProcedure = PROCEDURE {DELEGATE}(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+
+	CacheLine = RECORD 
+		globalIndex: SIZE; 
+		data: POINTER TO ARRAY OF CHAR; 
+	END; 
+
+	Cache* = OBJECT 
+	VAR 
+		lines: ARRAY NumberCacheLines OF CacheLine; 
+		blocksPerCacheLine: SIGNED32; 
+		transfer: TransferProcedure; 
+
+		PROCEDURE ^  & Init*(transfer: TransferProcedure; blocksPerCacheLine:= 32: SIGNED32); 
+		PROCEDURE ^ Transfer*(op: SIGNED32; block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+	END Cache; 
+BEGIN
+END DiskCaches.

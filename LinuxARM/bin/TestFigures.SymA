@@ -1,0 +1,7 @@
+MODULE TestFigures;
+	IMPORT WMFigures, WMWindowManager, WMGraphics, WMComponents, WMStandardComponents;
+
+	PROCEDURE ^ Do*; 
+	PROCEDURE ^ Do1*; 
+BEGIN
+END TestFigures.

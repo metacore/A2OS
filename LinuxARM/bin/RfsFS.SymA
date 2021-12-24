@@ -1,0 +1,76 @@
+MODULE RfsFS;
+	IMPORT SYSTEM, Modules, Clock, Files, RfsClientProxy, KernelLog;
+CONST 
+	BufSize = RfsClientProxy.Payload; 
+	MaxBufs = 2; 
+	FnLength = 32; 
+	EnumRegular = 0; 
+	EnumDetail = 1; 
+	Ok = RfsClientProxy.REPLYOK; 
+	Trace = 0; 
+TYPE 
+	DiskSector = RECORD 
+	END; 
+
+	FileName = ARRAY FnLength OF CHAR; 
+
+	DataSector = RECORD (DiskSector)
+		B: ARRAY BufSize OF CHAR; 
+	END; 
+
+	Buffer* = POINTER TO RECORD (Files.Hint)
+		apos*, lim*: SIGNED32; 
+		mod: BOOLEAN; 
+		next: Buffer; 
+		data*: DataSector; 
+	END; 
+
+	FileSystem* = OBJECT {EXCLUSIVE} (Files.FileSystem)
+	VAR 
+		stubs: RfsClientProxy.Proxy; 
+
+		PROCEDURE ^ New0*(CONST name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER); 
+		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^  & RfsInit*(vol: RfsClientProxy.Proxy); 
+		PROCEDURE ^ Finalize*; 
+	END FileSystem; 
+
+	File* = OBJECT {EXCLUSIVE} (Files.File)
+	VAR 
+		aleng, bleng: SIGNED32; 
+		nofbufs: SIGNED32; 
+		modH, registered: BOOLEAN; 
+		firstbuf*: Buffer; 
+		name*, nameTemp*: FileName; 
+		time, date: SIGNED32; 
+
+		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: Files.Position); 
+		PROCEDURE ^ Pos*(VAR r: Files.Rider): Files.Position; 
+		PROCEDURE ^ Read*(VAR r: Files.Rider; VAR x: CHAR); 
+		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Write*(VAR r: Files.Rider; x: CHAR); 
+		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Length*(): Files.Size; 
+		PROCEDURE ^ GetDate*(VAR t, d: SIGNED32); 
+		PROCEDURE ^ SetDate*(t, d: SIGNED32); 
+		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ Register0*(VAR res: INTEGER); 
+		PROCEDURE ^ Update*; 
+	END File; 
+VAR 
+	newfs*: FileSystem; 
+
+	PROCEDURE ^ Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: INTEGER); 
+	PROCEDURE ^ ReadBuf(f: File; buf: Buffer; pos: SIGNED32; VAR errorcode: SIGNED32); 
+	PROCEDURE ^ WriteBuf(f: File; buf: Buffer; VAR errorcode: SIGNED32); 
+	PROCEDURE ^ SearchBuf(f: File; pos: SIGNED32): Buffer; 
+	PROCEDURE ^ GetBuf(f: File; pos: SIGNED32): Buffer; 
+	PROCEDURE ^ NewFS*(context: Files.Parameters); 
+	PROCEDURE ^ FillBuf(VAR x: ARRAY OF CHAR; ch: CHAR); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END RfsFS.

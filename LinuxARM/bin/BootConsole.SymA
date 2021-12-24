@@ -1,0 +1,16 @@
+MODULE BootConsole;
+	IMPORT S := SYSTEM, Trace, Unix, Machine, Modules, Objects, Commands, KernelLog;
+CONST 
+TYPE 
+	Module = Modules.Module; 
+
+	CommandProc = PROCEDURE ; 
+
+	PROCEDURE ^ LoadModule(CONST name: Modules.Name); 
+	PROCEDURE ^ Command(CONST cmd: Modules.Name); 
+	PROCEDURE ^ ThisCommand(m: Module; CONST name: Modules.Name): CommandProc; 
+	PROCEDURE ^ Execute(CONST modName, procName: Modules.Name); 
+	PROCEDURE ^ StartSystem; 
+	PROCEDURE ^ InitSignalHandling; 
+BEGIN
+END BootConsole.

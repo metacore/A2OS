@@ -1,0 +1,128 @@
+MODULE Tar;
+	IMPORT Commands, Streams, Files, KernelLog, Strings, Archives, Locks;
+CONST 
+	RecordSize = 512; 
+	NamSiz = 100; 
+	TuNmLen = 32; 
+	TgNmLen = 32; 
+	EntryNameSize = 128; 
+	SegmentSize = (1024 * 8); 
+	StreamClosed* = 10; 
+TYPE 
+	Header = POINTER TO RECORD 
+		name: ARRAY NamSiz OF CHAR; 
+		mode: ARRAY 8 OF CHAR; 
+		uid: ARRAY 8 OF CHAR; 
+		gid: ARRAY 8 OF CHAR; 
+		size: ARRAY 12 OF CHAR; 
+		mtime: ARRAY 12 OF CHAR; 
+		chksum: ARRAY 8 OF CHAR; 
+		linkflag: ARRAY 1 OF CHAR; 
+		linkname: ARRAY NamSiz OF CHAR; 
+		magic: ARRAY 8 OF CHAR; 
+		uname: ARRAY TuNmLen OF CHAR; 
+		gname: ARRAY TgNmLen OF CHAR; 
+		devmajor: ARRAY 8 OF CHAR; 
+		devminor: ARRAY 8 OF CHAR; 
+	END; 
+
+	EntryInfo* = OBJECT (Archives.EntryInfo)
+	VAR 
+		name: ARRAY EntryNameSize OF CHAR; 
+		size: SIGNED32; 
+
+		PROCEDURE ^  & Init*(CONST name: ARRAY OF CHAR; size: SIGNED32); 
+		PROCEDURE ^ GetName*(): Strings.String; 
+		PROCEDURE ^ GetSize*(): SIGNED32; 
+		PROCEDURE ^ GetInfoString*(): Strings.String; 
+	END EntryInfo; 
+
+	Entry = OBJECT 
+	VAR 
+		next: Entry; 
+		pos: Files.Position; 
+		header: Header; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetName(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ SetSize(size: SIGNED32); 
+		PROCEDURE ^ GetSize(): SIGNED32; 
+		PROCEDURE ^ CalculateCheckSum; 
+	END Entry; 
+
+	SizeReader = OBJECT 
+	VAR 
+		input: Streams.Reader; 
+		max: SIZE; 
+		archive: Archive; 
+
+		PROCEDURE ^  & Init*(input: Streams.Reader; size: SIGNED32; archive: Archive); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+	END SizeReader; 
+
+	Buffer = OBJECT 
+
+		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+	END Buffer; 
+
+	BufferSegment = OBJECT 
+	VAR 
+		buf: ARRAY SegmentSize OF CHAR; 
+		next: BufferSegment; 
+	END BufferSegment; 
+
+	MemoryBuffer = OBJECT (Buffer)
+	VAR 
+		first, current: BufferSegment; 
+		segmentCount, currentIndex: SIGNED32; 
+		archive: Archive; 
+		name: ARRAY NamSiz OF CHAR; 
+		closed: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(a: Archive; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ NewSegment; 
+		PROCEDURE ^ WriteBuffer; 
+	END MemoryBuffer; 
+
+	Archive* = OBJECT (Archives.Archive)
+	VAR 
+		index: Entry; 
+		file: Files.File; 
+		lock: Locks.RecursiveLock; 
+
+		PROCEDURE ^  & Init*(f: Files.File); 
+		PROCEDURE ^ Acquire*; 
+		PROCEDURE ^ Release*; 
+		PROCEDURE ^ GetIndex*(): Archives.Index; 
+		PROCEDURE ^ GetEntryInfo*(CONST name: ARRAY OF CHAR): Archives.EntryInfo; 
+		PROCEDURE ^ RemoveEntry*(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ RenameEntry*(CONST from, to: ARRAY OF CHAR): Archives.EntryInfo; 
+		PROCEDURE ^ OpenSender*(CONST name: ARRAY OF CHAR): Streams.Sender; 
+		PROCEDURE ^ OpenReceiver*(CONST name: ARRAY OF CHAR): Streams.Receiver; 
+		PROCEDURE ^ Copy*(CONST name: ARRAY OF CHAR): Archives.Archive; 
+		PROCEDURE ^ BuildIndex; 
+		PROCEDURE ^ FindEntry(CONST name: ARRAY OF CHAR): Entry; 
+		PROCEDURE ^ AddEntryNode(e: Entry); 
+	END Archive; 
+
+	PROCEDURE ^ ReadHeaderBytes(R: Streams.Reader; VAR buf: ARRAY OF CHAR; len: SIGNED32; VAR chksum: SIGNED32); 
+	PROCEDURE ^ ReadHeader(R: Streams.Reader; VAR hdr: Header): BOOLEAN; 
+	PROCEDURE ^ Empty(VAR buf: ARRAY OF CHAR; len: SIGNED32); 
+	PROCEDURE ^ EmptyHeader(VAR hdr: Header); 
+	PROCEDURE ^ CheckHeaderBytes(CONST buf: ARRAY OF CHAR; len: SIGNED32; VAR chksum: SIGNED32); 
+	PROCEDURE ^ CalcCheckSum(VAR hdr: Header); 
+	PROCEDURE ^ WriteHeader(W: Streams.Writer; VAR hdr: Header); 
+	PROCEDURE ^ OctStrToInt(CONST str: ARRAY OF CHAR; VAR val: SIGNED32); 
+	PROCEDURE ^ IntToOctStr(val: SIGNED64; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ CopyArchiveName(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR); 
+	PROCEDURE ^ Backup(f: Files.File); 
+	PROCEDURE ^ CopyFiles(VAR from, to: Files.File); 
+	PROCEDURE ^ TransferBytes(from: Files.Reader; to: Files.Writer; n: Files.Size); 
+	PROCEDURE ^ Old*(name: Archives.StringObject): Archives.Archive; 
+	PROCEDURE ^ New*(name: Archives.StringObject): Archives.Archive; 
+	PROCEDURE ^ List*(context: Commands.Context); 
+	PROCEDURE ^ Extract*(context: Commands.Context); 
+	PROCEDURE ^ Create*(context: Commands.Context); 
+BEGIN
+END Tar.

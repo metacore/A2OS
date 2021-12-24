@@ -1,0 +1,18 @@
+MODULE DisplayNull;
+	IMPORT Displays, KernelLog;
+CONST 
+	Trace = TRUE; 
+TYPE 
+	Display* = OBJECT (Displays.Display)
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: INTEGER); 
+		PROCEDURE ^ Fill*(col, x, y, w, h: SIGNED32); 
+		PROCEDURE ^ Dot*(col, x, y: SIGNED32); 
+		PROCEDURE ^ Mask*(VAR buf: ARRAY OF CHAR; bitofs, stride, fg, bg, x, y, w, h: SIGNED32); 
+		PROCEDURE ^ Copy*(sx, sy, w, h, dx, dy: SIGNED32); 
+	END Display; 
+
+	PROCEDURE ^ Install*; 
+BEGIN
+END DisplayNull.

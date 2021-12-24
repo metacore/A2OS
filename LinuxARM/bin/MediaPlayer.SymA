@@ -1,0 +1,248 @@
+MODULE MediaPlayer;
+	IMPORT SoundDevices, Codecs, KernelLog, Streams, Commands, Kernel, Modules, WMTransitions, WMRectangles, WMGraphics, WMWindowManager, Raster, Strings;
+CONST 
+	Ok* = 0; 
+	CouldNotOpenStream* = 1; 
+	AudioNotCompatible* = 2; 
+	VideoNotCompatible* = 3; 
+	DemuxNotCompatible* = 4; 
+	NoVideoDecoder* = 5; 
+	NoAudioDecoder* = 6; 
+	NoDecoders* = 7; 
+	WrongParameters* = 8; 
+	NotReady* = 1; 
+	Ready* = 2; 
+	Playing* = 3; 
+	Paused* = 4; 
+	Stopped* = 5; 
+	Stepping* = 6; 
+	InTransition* = 7; 
+	Finished* = 9; 
+	Closed* = 10; 
+	Error* = 99; 
+	NoRequest = 0; 
+	AudioBufferSize = 288; 
+	AudioBuffers = 160; 
+	AudioConstantDelay = 100; 
+	VBUFFERS = 10; 
+	UpdateInterval = 500; 
+	ForceFullscreen = FALSE; 
+	ForceDefaultView = FALSE; 
+	PointerInvisibleAfter = 2000; 
+	PerformanceStats = FALSE; 
+	TraceNone = {}; 
+	TracePlayer = {1}; 
+	TraceOpen = {2}; 
+	TraceFiller = {3}; 
+	TraceTransitions = {4}; 
+	TraceStates = {5}; 
+	TraceRendering = {6}; 
+	TraceEof = {7}; 
+	Trace = {2, 4}; 
+	Debug = TRUE; 
+TYPE 
+	VideoBuffer* = WMGraphics.Image; 
+
+	VideoBufferPool = OBJECT {EXCLUSIVE} 
+	VAR 
+		head, num: SIZE; 
+		buffer: POINTER TO ARRAY OF VideoBuffer; 
+
+		PROCEDURE ^  & Init*(n: SIZE); 
+		PROCEDURE ^ Add(x: VideoBuffer); 
+		PROCEDURE ^ Remove(): VideoBuffer; 
+		PROCEDURE ^ Preview(delta: SIZE): VideoBuffer; 
+		PROCEDURE ^ NofBuffers(): SIZE; 
+	END VideoBufferPool; 
+
+	KeyEventHandler* = PROCEDURE {DELEGATE}(ucs: SIZE; flags: SET; keysym: SIZE); 
+
+	PointerDownHandler* = PROCEDURE {DELEGATE}(x, y: SIZE; keys: SET); 
+
+	ContextMenuHandler* = PROCEDURE {DELEGATE}(sender: ANY ; x, y: SIZE); 
+
+	PlayerWindow* = OBJECT {EXCLUSIVE} (WMWindowManager.DoubleBufferWindow)
+	VAR 
+		player: Player; 
+		rect: WMRectangles.Rectangle; 
+		videoWidth, videoHeight: SIZE; 
+		fullscreenEnabled*, fullscreen-: BOOLEAN; 
+		lastFrame-: WMGraphics.Image; 
+		posX, posY: SIZE; 
+		timer: Kernel.Timer; 
+		lastTimestamp, timestamp: SIGNED32; 
+		extPointerDownHandler*: PointerDownHandler; 
+		extContextMenuHandler*: ContextMenuHandler; 
+		extKeyEventHandler*: KeyEventHandler; 
+		alive, dead: BOOLEAN; 
+
+		PROCEDURE ^  & New*(w, h: SIGNED32; alpha: BOOLEAN; player: Player; autoHideCursor: BOOLEAN); 
+		PROCEDURE ^ ToggleFullscreen*; 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: SIGNED32); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
+		PROCEDURE ^ ShowBlack*; 
+		PROCEDURE ^ ShowFrame*(frame: WMGraphics.Image); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ SetPointerVisible(visible: BOOLEAN); 
+	BEGIN{ACTIVE} 
+	END PlayerWindow; 
+
+	Filler = OBJECT {EXCLUSIVE} 
+	VAR 
+		videoDecoder: Codecs.VideoDecoder; 
+		vBufferPool: VideoBufferPool; 
+		readyBufferPool: VideoBufferPool; 
+		vBuffer: VideoBuffer; 
+		blackBuffer: VideoBuffer; 
+		drop: SIGNED32; 
+		frame: VideoBuffer; 
+		alive, positionChanged: BOOLEAN; 
+		framesDecoded: SIGNED32; 
+		min, max, tot: SIGNED32; 
+		perf: SIGNED32; 
+		dropped: SIGNED32; 
+
+		PROCEDURE ^  & New*(videoWidth, videoHeight: SIZE; videoDecoder: Codecs.VideoDecoder); 
+		PROCEDURE ^ GetNextBuffer(): VideoBuffer; 
+		PROCEDURE ^ ReturnBuffer(buf: VideoBuffer); 
+		PROCEDURE ^ DropFrames(n: SIGNED32); 
+		PROCEDURE ^ GetFrame(): SIGNED32; 
+		PROCEDURE ^ SeekAndGetFrame(pos: SIGNED32; VAR f: WMGraphics.Image; VAR res: SIGNED32); 
+		PROCEDURE ^ SeekFrame(pos: SIGNED32; isKeyFrame: BOOLEAN; VAR res: SIGNED32); 
+		PROCEDURE ^ NofFullBuffers(): SIZE; 
+		PROCEDURE ^ Stop; 
+		PROCEDURE ^ Close; 
+	BEGIN{ACTIVE} 
+	END Filler; 
+
+	Setup* = POINTER TO RECORD 
+		uri-: ARRAY 256 OF CHAR; 
+		hasAudio-, hasVideo-: BOOLEAN; 
+		canSeek-: BOOLEAN; 
+		maxTime-: SIGNED32; 
+		width-, height-: SIGNED32; 
+		mspf-: SIGNED32; 
+		maxFrames-: SIGNED32; 
+		channels-, bits-, rate-: SIGNED32; 
+	END; 
+
+	Context = POINTER TO RECORD 
+		uri: ARRAY 256 OF CHAR; 
+		hasVideo, hasAudio: BOOLEAN; 
+		canSeek: BOOLEAN; 
+		pos, oldPos: SIGNED32; 
+		video: Codecs.VideoDecoder; 
+		maxFrames, maxTime: SIGNED32; 
+		width, height, mspf: SIGNED32; 
+		filler: Filler; 
+		vBuffer: VideoBuffer; 
+		audio: Codecs.AudioDecoder; 
+		channels, bits, rate: SIGNED32; 
+		posRate: SIGNED32; 
+		aBuffer: SoundDevices.Buffer; 
+		channel: SoundDevices.Channel; 
+		bufferpool: SoundDevices.BufferPool; 
+		delay: SIGNED32; 
+		transition: WMTransitions.TransitionFade; 
+		transitionFrame: SIGNED32; 
+		transitionDuration: SIGNED32; 
+		transitionImg: VideoBuffer; 
+		black: VideoBuffer; 
+	END; 
+
+	EofProc = PROCEDURE {DELEGATE}(sender, data: ANY ); 
+
+	EofHandler* = OBJECT {EXCLUSIVE} 
+	VAR 
+		proc*: EofProc; 
+		player*: Player; 
+		alive, dead, called: BOOLEAN; 
+
+		PROCEDURE ^ Call*; 
+		PROCEDURE ^ Terminate*; 
+		PROCEDURE ^  & New*(player: Player); 
+	BEGIN{ACTIVE} 
+	END EofHandler; 
+
+	Player* = OBJECT {EXCLUSIVE} 
+	VAR 
+		state-: SIGNED32; 
+		current, next: Context; 
+		nextState: SIGNED32; 
+		nextContext: Context; 
+		requestProcessed: BOOLEAN; 
+		lock: BOOLEAN; 
+		console*: BOOLEAN; 
+		soundDevice: SoundDevices.Driver; 
+		mixerChannel, pcmChannel, mChannel: SoundDevices.MixerChannel; 
+		channelName: ARRAY 128 OF CHAR; 
+		pw-: PlayerWindow; 
+		timer: Kernel.Timer; 
+		tickStart: SIGNED32; 
+		tickDelay: SIGNED32; 
+		lastUpdate: SIGNED32; 
+		videoFramesPlayed: SIGNED32; 
+		mspf: SIGNED32; 
+		setup*: PROCEDURE {DELEGATE}(data: Setup); 
+		update*: PROCEDURE {DELEGATE}(state, frame, maxFrame, time, displayTime: SIGNED32); 
+		eof: EofHandler; 
+		pointerDownHandler*: PROCEDURE {DELEGATE}(x, y: SIZE; keys: SET); 
+
+		PROCEDURE ^ Open*(CONST uri: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Play*; 
+		PROCEDURE ^ Step*; 
+		PROCEDURE ^ DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration: SIGNED32; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ Pause*; 
+		PROCEDURE ^ GetTimePos*(): SIGNED32; 
+		PROCEDURE ^ GetFrame*(): SIGNED32; 
+		PROCEDURE ^ PreviewFrame*(delta: SIZE): VideoBuffer; 
+		PROCEDURE ^ GetPos*(): SIGNED32; 
+		PROCEDURE ^ SetPos*(pos: SIGNED32); 
+		PROCEDURE ^ SetEofAction*(proc: EofProc); 
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Acquire; 
+		PROCEDURE ^ Release; 
+		PROCEDURE ^ RequestState(state: SIGNED32; context: Context); 
+		PROCEDURE ^ GetRequestedState(VAR state: SIGNED32; VAR context: Context); 
+		PROCEDURE ^ SetState*(state: SIGNED32); 
+		PROCEDURE ^ GetState*(): SIGNED32; 
+		PROCEDURE ^ CanSeek*(): BOOLEAN; 
+		PROCEDURE ^ GetCurrentFrame*(): VideoBuffer; 
+		PROCEDURE ^ ToggleFullScreen*(sender, data: ANY ); 
+		PROCEDURE ^ CheckWindow(context: Context); 
+		PROCEDURE ^ InitTime; 
+		PROCEDURE ^ GetContext(CONST uri: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: INTEGER): Context; 
+		PROCEDURE ^ FreeContext(context: Context); 
+		PROCEDURE ^ NoAction*(sender, data: ANY ); 
+		PROCEDURE ^ Reset*(sender, data: ANY ); 
+		PROCEDURE ^ Loop*(sender, data: ANY ); 
+		PROCEDURE ^ Quit*(sender, data: ANY ); 
+		PROCEDURE ^ RenderAudio(c: Context); 
+		PROCEDURE ^ RenderVideo(c: Context); 
+		PROCEDURE ^ RenderVideoTransition(from, to: Context); 
+		PROCEDURE ^ Render(c1, c2: Context); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ StopIntern; 
+		PROCEDURE ^ StartPlayIntern; 
+		PROCEDURE ^ PauseIntern; 
+		PROCEDURE ^ ResumeIntern; 
+		PROCEDURE ^ OpenIntern(nextContext: Context); 
+		PROCEDURE ^ IsValidStateTransition(from, to: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ EvaluateState; 
+	BEGIN{ACTIVE} 
+	END Player; 
+VAR 
+	mplayer: Player; 
+
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Pause*(context: Commands.Context); 
+	PROCEDURE ^ Step*(context: Commands.Context); 
+	PROCEDURE ^ TransitionTo*(context: Commands.Context); 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ SetEofAction*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END MediaPlayer.

@@ -1,0 +1,26 @@
+MODULE AFM;
+	IMPORT Files, KernelLog;
+CONST 
+TYPE 
+	CharInfo = RECORD 
+		w: SIGNED32; 
+	END; 
+
+	FontMetrics* = OBJECT 
+	VAR 
+		chars: ARRAY 256 OF CharInfo; 
+		fontName: ARRAY 64 OF CHAR; 
+
+		PROCEDURE ^ AddCharInfo(ucs: SIGNED32; ci: CharInfo); 
+		PROCEDURE ^ InternalGetWidth(ucs: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetWidth*(size: FLOAT32; ucs: SIGNED32): FLOAT32; 
+		PROCEDURE ^ Kerning(ucs0, ucs1: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetStringWidth*(size: FLOAT32; str: ARRAY OF CHAR): FLOAT32; 
+		PROCEDURE ^ LoadAFM(filename: ARRAY OF CHAR; VAR res: INTEGER); 
+	END FontMetrics; 
+VAR 
+	times*, helvetica*, helveticaBold*: FontMetrics; 
+	res: INTEGER; 
+
+BEGIN
+END AFM.

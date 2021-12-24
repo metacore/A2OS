@@ -1,0 +1,26 @@
+MODULE W3dObjectGenerator;
+	IMPORT AbstractWorld := W3dAbstractWorld, Matrix := W3dMatrix, Vectors := W3dVectors, MathL;
+TYPE 
+	VectorArray = POINTER TO ARRAY OF Vectors.TVector3d; 
+
+	VertexArray = POINTER TO ARRAY OF AbstractWorld.Vertex; 
+
+	Path* = OBJECT 
+	VAR 
+		points: VectorArray; 
+		nofPoints: SIZE; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AddPoint*(p: Vectors.TVector3d); 
+		PROCEDURE ^ GetNofPoints*(): SIZE; 
+		PROCEDURE ^ GetPoint*(i: SIZE): Vectors.TVector3d; 
+	END Path; 
+
+	PROCEDURE ^ RotationObject*(mat: Matrix.Matrix4x4; path: Path; axis: Vectors.TVector3d; sides: SIGNED32; obj: AbstractWorld.Object; color: SIGNED32); 
+	PROCEDURE ^ ConnectVLists(a, b: VertexArray; obj: AbstractWorld.Object; color: SIGNED32); 
+	PROCEDURE ^ Arrow*(mat: Matrix.Matrix4x4; l0, l1, r0, r1: FLOAT64; segments: SIGNED32; obj: AbstractWorld.Object; color: SIGNED32); 
+	PROCEDURE ^ Sphere*(mat: Matrix.Matrix4x4; radius: FLOAT64; segments: SIGNED32; obj: AbstractWorld.Object; color: SIGNED32); 
+	PROCEDURE ^ Box*(mat: Matrix.Matrix4x4; x, y, z: FLOAT64; obj: AbstractWorld.Object; color: SIGNED32); 
+	PROCEDURE ^ TexBox*(mat: Matrix.Matrix4x4; x, y, z: FLOAT64; obj: AbstractWorld.Object; color: SIGNED32; tex: AbstractWorld.Texture); 
+BEGIN
+END W3dObjectGenerator.

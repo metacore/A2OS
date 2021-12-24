@@ -1,0 +1,34 @@
+MODULE GfxMatrix;
+	IMPORT Streams, Math;
+CONST 
+	Eps = 1.E-5; 
+TYPE 
+	Matrix* = ARRAY 3 OF ARRAY 2 OF FLOAT32; 
+VAR 
+	Identity*: Matrix; 
+
+	PROCEDURE ^ Init*(VAR m: Matrix; m00, m01, m10, m11, m20, m21: FLOAT32); 
+	PROCEDURE ^ Get3PointTransform*(px0, py0, px1, py1, qx0, qy0, qx1, qy1, rx0, ry0, rx1, ry1: FLOAT32; VAR res: Matrix); 
+	PROCEDURE ^ Get2PointTransform*(px0, py0, px1, py1, qx0, qy0, qx1, qy1: FLOAT32; VAR res: Matrix); 
+	PROCEDURE ^ Invert*(m: Matrix; VAR res: Matrix); 
+	PROCEDURE ^ Det*(VAR m: Matrix): FLOAT32; 
+	PROCEDURE ^ Singular*(VAR m: Matrix): BOOLEAN; 
+	PROCEDURE ^ Scaled*(VAR m: Matrix): BOOLEAN; 
+	PROCEDURE ^ Rotated*(VAR m: Matrix): BOOLEAN; 
+	PROCEDURE ^ Equal*(VAR m, n: Matrix): BOOLEAN; 
+	PROCEDURE ^ Translate*(m: Matrix; dx, dy: FLOAT32; VAR res: Matrix); 
+	PROCEDURE ^ Scale*(m: Matrix; sx, sy: FLOAT32; VAR res: Matrix); 
+	PROCEDURE ^ ScaleAt*(m: Matrix; ox, oy, sx, sy: FLOAT32; VAR res: Matrix); 
+	PROCEDURE ^ Rotate*(m: Matrix; sin, cos: FLOAT32; VAR res: Matrix); 
+	PROCEDURE ^ RotateAt*(m: Matrix; ox, oy, sin, cos: FLOAT32; VAR res: Matrix); 
+	PROCEDURE ^ Concat*(m, n: Matrix; VAR res: Matrix); 
+	PROCEDURE ^ Atan2*(x, y: FLOAT32): FLOAT32; 
+	PROCEDURE ^ Apply*(VAR m: Matrix; xin, yin: FLOAT32; VAR xout, yout: FLOAT32); 
+	PROCEDURE ^ ApplyToVector*(VAR m: Matrix; xin, yin: FLOAT32; VAR xout, yout: FLOAT32); 
+	PROCEDURE ^ ApplyToDist*(VAR m: Matrix; din: FLOAT32; VAR dout: FLOAT32); 
+	PROCEDURE ^ ApplyToRect*(VAR m: Matrix; ilx, ily, irx, iuy: FLOAT32; VAR olx, oly, orx, ouy: FLOAT32); 
+	PROCEDURE ^ Solve*(VAR m: Matrix; u, v: FLOAT32; VAR x, y: FLOAT32); 
+	PROCEDURE ^ Write*(VAR w: Streams.Writer; VAR m: Matrix); 
+	PROCEDURE ^ Read*(VAR r: Streams.Reader; VAR m: Matrix); 
+BEGIN
+END GfxMatrix.

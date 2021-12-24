@@ -1,0 +1,67 @@
+MODULE PNGDecoder;
+	IMPORT SYSTEM, KernelLog, CRC, Raster, Streams, Inflate, WMGraphics, Codecs, Kernel;
+CONST 
+	BufSize = (4096 * 8); 
+	Trace = FALSE; 
+TYPE 
+	ChunkHeader = RECORD 
+		length: SIGNED32; 
+		name: ARRAY 5 OF CHAR; 
+	END; 
+
+	PNGHead = RECORD 
+		width: SIGNED32; 
+		height: SIGNED32; 
+		bitDepth: SIGNED32; 
+		colorType: SIGNED32; 
+		compressMethod: SIGNED32; 
+		filterMethod: SIGNED32; 
+		interlaceMethod: SIGNED32; 
+	END; 
+
+	IDATReader* = OBJECT 
+	VAR 
+		inR: Streams.Reader; 
+		remain: SIGNED32; 
+		eof: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(firstChunk: SIGNED32; inR: Streams.Reader; VAR outR: Streams.Reader); 
+		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+	END IDATReader; 
+
+	PNGDecoder = OBJECT (Codecs.ImageDecoder)
+	VAR 
+		in: Streams.Reader; 
+		errors: BOOLEAN; 
+		first, last, isIDAT: BOOLEAN; 
+		hdr: PNGHead; 
+		crc: CRC.CRC32Stream; 
+		pic: Raster.Image; 
+		format8: Raster.Format; 
+		palette: Raster.Palette; 
+		bpp: SIGNED32; 
+		decoder: Inflate.Reader; 
+
+		PROCEDURE ^ GetLineSize(width: SIGNED32): SIGNED32; 
+		PROCEDURE ^ Init; 
+		PROCEDURE ^ Decode; 
+		PROCEDURE ^ ReadChunkHeader(VAR x: ChunkHeader); 
+		PROCEDURE ^ Error(x: ARRAY OF CHAR); 
+		PROCEDURE ^ SkipChunk(x: ChunkHeader); 
+		PROCEDURE ^ CheckCRC; 
+		PROCEDURE ^ ProcessChunk(x: ChunkHeader); 
+		PROCEDURE ^ GetByte(): CHAR; 
+		PROCEDURE ^ GetLongint(): SIGNED32; 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: SIGNED32); 
+		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
+		PROCEDURE ^ Render*(img: Raster.Image); 
+	END PNGDecoder; 
+VAR 
+	StartingRow, StartingCol, RowIncrement, ColIncrement: ARRAY 7 OF SIGNED32; 
+	MagicID: ARRAY 8 OF CHAR; 
+
+	PROCEDURE ^ PaethPredictor(a, b, c: SIGNED32): CHAR; 
+	PROCEDURE ^ Factory*(): Codecs.ImageDecoder; 
+BEGIN
+END PNGDecoder.

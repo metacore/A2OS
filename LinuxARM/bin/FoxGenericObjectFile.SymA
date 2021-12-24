@@ -1,0 +1,37 @@
+MODULE FoxGenericObjectFile;
+	IMPORT Streams, Commands, Basic := FoxBasic, Formats := FoxFormats, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, SyntaxTree := FoxSyntaxTree, BinaryCode := FoxBinaryCode, Global := FoxGlobal, Fingerprinter := FoxFingerprinter, Files, Options, ObjectFile, SymbolFileFormat := FoxTextualSymbolFile, Strings, KernelLog, D := Debugging;
+CONST 
+	Trace = FALSE; 
+	TraceAliases = FALSE; 
+	WarnDuplicateFingerprints = FALSE; 
+	PatchFixups = TRUE; 
+	AliasOnlyExported = TRUE; 
+TYPE 
+	Unit = BinaryCode.Unit; 
+
+	ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
+	VAR 
+		binary: BOOLEAN; 
+		mergeSections: BOOLEAN; 
+
+		PROCEDURE ^  & InitObjectFileFormat; 
+		PROCEDURE ^ Export*(module: Formats.GeneratedModule; symbolFileFormat: Formats.SymbolFileFormat): BOOLEAN; 
+		PROCEDURE ^ DefineOptions*(options: Options.Options); 
+		PROCEDURE ^ GetOptions*(options: Options.Options); 
+		PROCEDURE ^ DefaultSymbolFileFormat*(): Formats.SymbolFileFormat; 
+	END ObjectFileFormat; 
+
+	PROCEDURE ^ GetFingerprint(section: Sections.Section; fingerprinter: Fingerprinter.Fingerprinter): ObjectFile.Fingerprint; 
+	PROCEDURE ^ CheckAlias(sections: Sections.SectionList; VAR identifier: ObjectFile.Identifier; VAR offset: SIZE); 
+	PROCEDURE ^ CopyFixups(sections: Sections.SectionList; from, to: BinaryCode.Section; offset: Unit); 
+	PROCEDURE ^ UpdateAliases(section: BinaryCode.Section; fingerprinter: Fingerprinter.Fingerprinter); 
+	PROCEDURE ^ Get*(): Formats.ObjectFileFormat; 
+	PROCEDURE ^ ReadHeader(reader: Streams.Reader; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList); 
+	PROCEDURE ^ WriteHeader(writer: Streams.Writer; binary: BOOLEAN; sections: Sections.SectionList; VAR poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList; fingerprinter: Fingerprinter.Fingerprinter); 
+	PROCEDURE ^ GCD(a, b: Unit): Unit; 
+	PROCEDURE ^ SCM(a, b: Unit): Unit; 
+	PROCEDURE ^ CommonAlignment(a, b: Unit): Unit; 
+	PROCEDURE ^ Show*(context: Commands.Context); 
+	PROCEDURE ^ MakeLibrary*(context: Commands.Context); 
+BEGIN
+END FoxGenericObjectFile.

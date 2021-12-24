@@ -1,0 +1,26 @@
+MODULE ProcessInfo;
+	IMPORT SYSTEM, Streams, Reflection, Modules, Objects, ProcessInfo0;
+CONST 
+	MaxNofProcesses* = 1000; 
+TYPE 
+	ProcessArray* = ProcessInfo0.ProcessArray; 
+
+	IsGreaterThanProc* = PROCEDURE {DELEGATE}(p1, p2: Objects.Process):BOOLEAN; 
+
+	PROCEDURE ^ Clear*(VAR array: ProcessArray); 
+	PROCEDURE ^ Copy*(CONST from: ProcessArray; VAR to: ProcessArray); 
+	PROCEDURE ^ Sort*(VAR processes: ProcessArray; nofProcesses: SIZE; isGreaterThan: IsGreaterThanProc); 
+	PROCEDURE ^ Find*(CONST processes: ProcessArray; id: INTEGER): Objects.Process; 
+	PROCEDURE ^ SortByID*(p1, p2: Objects.Process): BOOLEAN; 
+	PROCEDURE ^ SortByPriority*(p1, p2: Objects.Process): BOOLEAN; 
+	PROCEDURE ^ SortByMode*(p1, p2: Objects.Process): BOOLEAN; 
+	PROCEDURE ^ GetProcesses*(VAR processes: ProcessArray; VAR nofProcesses: SIZE); 
+	PROCEDURE ^ GetProcess*(pid: INTEGER): Objects.Process; 
+	PROCEDURE ^ WriteMode*(mode: INTEGER; out: Streams.Writer); 
+	PROCEDURE ^ WriteActiveObject*(t: Objects.Process; out: Streams.Writer); 
+	PROCEDURE ^ WriteWaitingOn*(t: Objects.Process; out: Streams.Writer); 
+	PROCEDURE ^ WriteFlags*(flags: SET; out: Streams.Writer); 
+	PROCEDURE ^ ShowStack*(p: Objects.Process; out: Streams.Writer); 
+	PROCEDURE ^ ShowProcess*(p: Objects.Process; out: Streams.Writer); 
+BEGIN
+END ProcessInfo.

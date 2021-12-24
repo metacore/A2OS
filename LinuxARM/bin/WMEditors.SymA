@@ -1,0 +1,223 @@
+MODULE WMEditors;
+	IMPORT Inputs, Strings, XML, PositionDebugging, UTF8Strings, Texts, TextUtilities, UndoManager, HostClipboard, KernelLog, Types, Models, Raster, WMRectangles, WMGraphics, WMGraphicUtilities, WMEvents, WMProperties, WMDropTarget, WMWindowManager, WMComponents, WMStandardComponents, WMTextView, WMInputMethods, Reals;
+CONST 
+	None* = 0; 
+	Decimal* = 1; 
+	Hex* = 2; 
+	Ascii* = 3; 
+	Unicode* = 4; 
+	InitialStringSize = 32; 
+	MaxStringSize = 2048; 
+	InterclickNone = 0; 
+	Interclick01 = 1; 
+	Interclick02 = 2; 
+	InterclickCancelled = 99; 
+	DragMinDistance = 5; 
+	TextBorder = 4; 
+TYPE 
+	SetStringProcedure = PROCEDURE {DELEGATE}(CONST string: ARRAY OF CHAR; position: SIGNED32; VAR res: INTEGER); 
+
+	DropTarget = OBJECT (WMDropTarget.DropTarget)
+	VAR 
+		originator: ANY ; 
+		setString: SetStringProcedure; 
+		position: SIGNED32; 
+
+		PROCEDURE ^  & Init(originator: ANY ; setString: SetStringProcedure; position: SIGNED32); 
+		PROCEDURE ^ GetInterface*(type: SIGNED32): WMDropTarget.DropInterface; 
+	END DropTarget; 
+
+	DropString = OBJECT (WMDropTarget.DropString)
+	VAR 
+		originator: ANY ; 
+		setString: SetStringProcedure; 
+		position: SIGNED32; 
+
+		PROCEDURE ^  & Init(originator: ANY ; setString: SetStringProcedure; position: SIGNED32); 
+		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: INTEGER); 
+	END DropString; 
+
+	TextField* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	TYPE 
+		; 
+	VAR 
+		type-: WMProperties.Int32Property; 
+		typeI: SIGNED32; 
+		readOnly-: WMProperties.BooleanProperty; 
+		readOnlyI: BOOLEAN; 
+		textBorder-: WMProperties.Int32Property; 
+		textColor-: WMProperties.ColorProperty; 
+		textColorI: WMGraphics.Color; 
+		alignH-: WMProperties.Int32Property; 
+		alignV-: WMProperties.Int32Property; 
+		onEscape-, onEnter-, onChanged-: WMEvents.EventSource; 
+		ime: WMInputMethods.IME; 
+		currentFlags: SET; 
+		string: Texts.PUCS32String; 
+		cursorPosition: SIZE; 
+		curLen: SIZE; 
+		selection: RECORD 
+			start, end: SIZE; 
+		END; 
+		cursorIsVisible: BOOLEAN; 
+		selecting, doubleClicking: BOOLEAN; 
+		selectingCursorPos: SIZE; 
+		interclick: SIGNED32; 
+		dragPossible: BOOLEAN; 
+		dragString: Strings.String; 
+		dragCopy: BOOLEAN; 
+		changeDue: BOOLEAN; 
+		renderOffsetX: SIZE; 
+		lastX, lastY: SIZE; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ SetCurrentCursorVisibility(isVisible: BOOLEAN); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ CheckSize(min: SIZE); 
+		PROCEDURE ^ GetAsString*(VAR x: ARRAY OF CHAR); 
+		PROCEDURE ^ SetAsString*(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ LinkChanged*(sender, object: ANY ); 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ Changed; 
+		PROCEDURE ^ GetCursorPosition(x: SIZE): SIGNED32; 
+		PROCEDURE ^ GetCursorCoordinateX(): SIGNED32; 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ SelectionIsValid(): BOOLEAN; 
+		PROCEDURE ^ IsAllowedCharacter(ch: Texts.Char32): BOOLEAN; 
+		PROCEDURE ^ IsAllowedString(CONST string: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ IsValidUCS32String(CONST string: Texts.UCS32String): BOOLEAN; 
+		PROCEDURE ^ InsertChar(ch: SIGNED32); 
+		PROCEDURE ^ InsertStringAt(CONST x: ARRAY OF CHAR; position: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ InsertUCS32(atPosition: SIZE; CONST string: Texts.UCS32String); 
+		PROCEDURE ^ Backspace; 
+		PROCEDURE ^ Delete; 
+		PROCEDURE ^ Home; 
+		PROCEDURE ^ End; 
+		PROCEDURE ^ CursorLeft; 
+		PROCEDURE ^ CursorRight; 
+		PROCEDURE ^ DeleteSelection; 
+		PROCEDURE ^ CopySelection; 
+		PROCEDURE ^ GetSelectionAsString(VAR string: Strings.String): BOOLEAN; 
+		PROCEDURE ^ ResetSelection; 
+		PROCEDURE ^ SelectAll; 
+		PROCEDURE ^ Paste; 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keySym: SIZE); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerLeave*; 
+		PROCEDURE ^ AutoStartDrag*; 
+		PROCEDURE ^ DragWasAccepted(sender, data: ANY ); 
+		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; position: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ SetCursorInfo(charsAdded: SIZE); 
+		PROCEDURE ^ GetCurrentCursorPosition(): SIZE; 
+		PROCEDURE ^ GetCursorScreenPosition(VAR x, y: SIZE); 
+		PROCEDURE ^ SetIMEInterface(ime: WMInputMethods.IME); 
+		PROCEDURE ^ FocusReceived*; 
+		PROCEDURE ^ FocusLost*; 
+	END TextField; 
+
+	NumberField* = OBJECT {EXCLUSIVE} (TextField)
+	VAR 
+		fractionalDigits-: WMProperties.Int32Property; 
+		unitModel-: WMProperties.ReferenceProperty; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetUnit(VAR u: FLOAT64): BOOLEAN; 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ LinkChanged*(sender, data: ANY ); 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+	END NumberField; 
+
+	MacroData* = OBJECT 
+	VAR 
+		text*: Texts.Text; 
+		cursor*: WMTextView.PositionMarker; 
+		keySym*: SIZE; 
+		flags*: SET; 
+		handled*: BOOLEAN; 
+	END MacroData; 
+
+	Editor* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		tv-: WMTextView.TextView; 
+		vScrollbar-: WMStandardComponents.Scrollbar; 
+		hScrollbar-: WMStandardComponents.Scrollbar; 
+		ime: WMInputMethods.IME; 
+		multiLine-, readOnly-: WMProperties.BooleanProperty; 
+		highlighting-: WMProperties.StringProperty; 
+		extInterface-: ANY ; 
+		text-: Texts.Text; 
+		utilreader: Texts.TextReader; 
+		onEnter-, onEscape-: WMEvents.EventSource; 
+		macros-: WMEvents.EventSource; 
+		macroData: MacroData; 
+		currentFlags: SET; 
+		allowIME*: BOOLEAN; 
+		allowScrollbars-: WMProperties.BooleanProperty; 
+		undoMgr*: UndoManager.UndoManager; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ SetUndoManager*(uMgr: UndoManager.UndoManager); 
+		PROCEDURE ^ Undo*; 
+		PROCEDURE ^ Redo*; 
+		PROCEDURE ^ SetFocus*; 
+		PROCEDURE ^ CheckScrollbars; 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ LinkChanged*(sender, data: ANY ); 
+		PROCEDURE ^ SetText*(t: Texts.Text); 
+		PROCEDURE ^ SetCursorInfo(charsAdded: SIZE); 
+		PROCEDURE ^ GetCursorPosition(): SIZE; 
+		PROCEDURE ^ GetCursorScreenPosition(VAR x, y: SIZE); 
+		PROCEDURE ^ SetIMEInterface(ime: WMInputMethods.IME; text: Texts.Text); 
+		PROCEDURE ^ SetExtInterface*(extInterface: ANY ); 
+		PROCEDURE ^ FocusReceived*; 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ InsertChar*(ch: Texts.Char32); 
+		PROCEDURE ^ InsertString*(CONST string: Texts.UCS32String); 
+		PROCEDURE ^ CopySelection*; 
+		PROCEDURE ^ DeleteSelection*; 
+		PROCEDURE ^ PasteToHostClipboard*; 
+		PROCEDURE ^ Paste*; 
+		PROCEDURE ^ Delete(flags: SET); 
+		PROCEDURE ^ Backspace(word: BOOLEAN); 
+		PROCEDURE ^ Enter(flags: SET); 
+		PROCEDURE ^ IndentLeft; 
+		PROCEDURE ^ IndentRight; 
+		PROCEDURE ^ MousePressed(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ KeyPressed*(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
+		PROCEDURE ^ GetAsString*(VAR x: ARRAY OF CHAR); 
+		PROCEDURE ^ SetAsString*(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Finalize*; 
+	END Editor; 
+VAR 
+	manager: WMWindowManager.WindowManager; 
+	typeProto: WMProperties.Int32Property; 
+	textColorProto: WMProperties.ColorProperty; 
+	multiLineProto, readOnlyProto, allowScrollbarsProto: WMProperties.BooleanProperty; 
+	highlightingProto: WMProperties.StringProperty; 
+	GSonEnter, GSonEnterInfo: Strings.String; 
+	GSonEscape, GSonEscapeInfo: Strings.String; 
+	GSmacros, GSmacrosInfo: Strings.String; 
+	GSTextField, GSEditor, GSNumberField: Strings.String; 
+	GSModel, GSModelInfo: Strings.String; 
+	PrototypeAlignH, PrototypeAlignV, PrototypeTextBorder: WMProperties.Int32Property; 
+	PrototypeFractionalDigits*: WMProperties.Int32Property; 
+	PrototypeUnit*: WMProperties.ReferenceProperty; 
+
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ InitPrototypes; 
+	PROCEDURE ^ GenTextField*(): XML.Element; 
+	PROCEDURE ^ GenNumberField*(): XML.Element; 
+	PROCEDURE ^ GenEditor*(): XML.Element; 
+	PROCEDURE ^ FindTextField*(CONST uid: ARRAY OF CHAR; component: WMComponents.Component): TextField; 
+	PROCEDURE ^ FindEditor*(CONST uid: ARRAY OF CHAR; component: WMComponents.Component): Editor; 
+BEGIN
+END WMEditors.

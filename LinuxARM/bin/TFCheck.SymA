@@ -1,0 +1,17 @@
+MODULE TFCheck;
+	IMPORT TS := TFTypeSys, ST := TFScopeTools, Trace;
+CONST 
+
+	PROCEDURE ^ CheckExpressionList(e: TS.ExpressionList; scope: TS.Scope); 
+	PROCEDURE ^ CheckExpression(e: TS.Expression; scope: TS.Scope); 
+	PROCEDURE ^ CheckSuperClass(o: TS.Class; scope: TS.Scope); 
+	PROCEDURE ^ GetModule(imp: TS.Import): TS.Module; 
+	PROCEDURE ^ FindType(d: TS.Designator; scope: TS.Scope): TS.Type; 
+	PROCEDURE ^ DealiaseType(t: TS.Type): TS.Type; 
+	PROCEDURE ^ CheckDesignator(d: TS.Designator; scope: TS.Scope); 
+	PROCEDURE ^ Generate(s: TS.Statement; scope: TS.Scope); 
+	PROCEDURE ^ CheckProcedure(p: TS.ProcDecl); 
+	PROCEDURE ^ CheckType*(t: TS.Type); 
+	PROCEDURE ^ CheckDeclarations*(d: TS.Scope); 
+BEGIN
+END TFCheck.

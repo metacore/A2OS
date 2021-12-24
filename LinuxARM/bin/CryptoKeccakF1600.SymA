@@ -1,0 +1,43 @@
+MODULE CryptoKeccakF1600;
+	IMPORT S := SYSTEM;
+CONST 
+	Width* = 1600; 
+	LaneSize* = 8; 
+	nrRounds = 24; 
+	nrLanes = 25; 
+TYPE 
+	Lane = RECORD 
+		low, high: SET32; 
+	END; 
+
+	State = ARRAY nrLanes OF Lane; 
+
+	Instance* = OBJECT 
+	VAR 
+		state: State; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ XORBytesInLane*(laneNo, laneOffset, length: SIZE; CONST data: ARRAY OF CHAR; dataOffset: SIZE); 
+		PROCEDURE ^ XORLanes*(CONST data: ARRAY OF CHAR; offset, laneCount: SIZE); 
+		PROCEDURE ^ ComplementBit*(position: SIZE); 
+		PROCEDURE ^ ExtractBytesInLane*(laneNo, laneOffset, length: SIZE; VAR data: ARRAY OF CHAR; dataOffset: SIZE); 
+		PROCEDURE ^ ExtractLanes*(VAR data: ARRAY OF CHAR; offset, laneCount: SIZE); 
+		PROCEDURE ^ XORPermute*(CONST inData: ARRAY OF CHAR; offset, count: SIZE); 
+		PROCEDURE ^ XORPermuteExtract*(CONST inData: ARRAY OF CHAR; inOffset, inLaneCount: SIZE; VAR outData: ARRAY OF CHAR; outOffset, outLaneCount: SIZE); 
+		PROCEDURE ^ Permute*; 
+	END Instance; 
+VAR 
+	roundConstants: ARRAY nrRounds OF Lane; 
+	rhoOffsets: ARRAY nrLanes OF SIGNED32; 
+
+	PROCEDURE ^ ToBitInterleaving(CONST in: Lane; VAR out: Lane); 
+	PROCEDURE ^ FromBitInterleaving(CONST in: Lane; VAR out: Lane); 
+	PROCEDURE ^ ROL64(VAR lane: Lane; offset: SIZE); 
+	PROCEDURE ^ ROL64_1XOR(CONST in1, in2: Lane; VAR out: Lane); 
+	PROCEDURE ^ Round(VAR a: State; r: SIZE); 
+	PROCEDURE ^ InitializeRoundConstants; 
+	PROCEDURE ^ InitializeRhoOffsets; 
+	PROCEDURE ^ LFSR86540(VAR LFSR: SET32): BOOLEAN; 
+BEGIN
+END CryptoKeccakF1600.

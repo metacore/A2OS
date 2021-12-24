@@ -1,0 +1,78 @@
+MODULE VNCTetrisServer;
+	IMPORT Raster, KernelLog, Commands, Kernel, Random, VNCServer, WMRectangles, WMGraphics, Inputs, Modules, Files, IP, Dates, Strings;
+CONST 
+	Width = 10; 
+	Height = 30; 
+	BoxSize = 16; 
+	BlockSize = 5; 
+	NofBlocks = 7; 
+	ScoreHeight = 108; 
+	DataFile = \"VNCTetris.dat"\; 
+TYPE 
+	Block = ARRAY BlockSize OF ARRAY BlockSize OF CHAR; 
+
+	TimeDate = RECORD 
+		h, m, s, day, month, year: SIGNED32; 
+	END; 
+
+	TT = OBJECT {EXCLUSIVE} 
+	VAR 
+		alive, dropped: BOOLEAN; 
+		field: ARRAY Width OF ARRAY Height OF CHAR; 
+		block: Block; 
+		posX, posY: SIGNED32; 
+		timer: Kernel.Timer; 
+		mode: Raster.Mode; 
+		random: Random.Generator; 
+		lines, blocks, delay, delayDec: SIGNED32; 
+		img: Raster.Image; 
+		paused, run: BOOLEAN; 
+		cheated: SIGNED32; 
+		time: TimeDate; 
+		adrStr, timeStr: ARRAY 32 OF CHAR; 
+		vncInfo: VNCServer.VNCInfo; 
+		canvas: WMGraphics.BufferCanvas; 
+
+		PROCEDURE ^  & Create*(vncInfo: VNCServer.VNCInfo); 
+		PROCEDURE ^ Run; 
+		PROCEDURE ^ Bound(VAR x: SIZE; min, max: SIZE); 
+		PROCEDURE ^ ClipAtImage(VAR x: WMRectangles.Rectangle; img: Raster.Image); 
+		PROCEDURE ^ AddDirty(l, t, r, b: SIGNED32); 
+		PROCEDURE ^ Close; 
+		PROCEDURE ^ RotateBlock(VAR block: Block): Block; 
+		PROCEDURE ^ DrawBox(x, y: SIGNED32; color: CHAR); 
+		PROCEDURE ^ SetBlock(x, y: SIGNED32; clear: BOOLEAN); 
+		PROCEDURE ^ HasDownCollision(x, y: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ HasCollision(VAR bl: Block; x, y: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ Move(dir: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ KeyPressed(ucs: SIGNED32; flags: SET; keysym: SIGNED32); 
+		PROCEDURE ^ NewBlock; 
+		PROCEDURE ^ RemoveLine(y: SIGNED32); 
+		PROCEDURE ^ ClearLines; 
+		PROCEDURE ^ DropStep; 
+		PROCEDURE ^ UpdateScore(eog: BOOLEAN); 
+		PROCEDURE ^ AwaitRun; 
+	BEGIN{ACTIVE} 
+	END TT; 
+VAR 
+	colors: ARRAY (NofBlocks + 1) OF Raster.Pixel; 
+	gamesRunning, gamesTotal, maxConcurrent, highScore: SIGNED32; 
+	shuttingDown: BOOLEAN; 
+	server: VNCServer.Server; 
+
+	PROCEDURE ^ StartTT(vncInfo: VNCServer.VNCInfo); 
+	PROCEDURE ^ AddGame; 
+	PROCEDURE ^ ReportScore(score: SIGNED32); 
+	PROCEDURE ^ GetGamesTotal(): SIGNED32; 
+	PROCEDURE ^ GetMaxConcurrent(): SIGNED32; 
+	PROCEDURE ^ GetHighscore(): SIGNED32; 
+	PROCEDURE ^ GetGamesRunning(): SIGNED32; 
+	PROCEDURE ^ GetIsShuttingDown(): BOOLEAN; 
+	PROCEDURE ^ SubGame; 
+	PROCEDURE ^ Run*(context: Commands.Context); 
+	PROCEDURE ^ StopNew*(context: Commands.Context); 
+	PROCEDURE ^ Uninstall*; 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ ReadData; 
+BEGIN
+END VNCTetrisServer.

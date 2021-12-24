@@ -1,0 +1,441 @@
+MODULE WMTextView;
+	IMPORT Kernel, Modules, Inputs, KernelLog, XML, Texts, TextUtilities, SyntaxHighlighter, WMGraphics, WMGraphicUtilities, WMMessages, WMComponents, WMStandardComponents, Strings, WMDropTarget, Raster, WMRectangles, WMWindowManager, WMProperties, Commands, FileHandlers, Streams, WMPopups, FP1616, WMPieMenu, WMEvents, UnicodeBidirectionality, PositionDebugging, ContextualDependency, D := Debugging;
+CONST 
+	TraceRenderOptimize = 0; 
+	TraceLayout = 1; 
+	TraceBaseLine = 2; 
+	TraceInvalidate = 3; 
+	TraceCopy = 4; 
+	TraceCommands = 5; 
+	Trace = {}; 
+	AltMMCommand = \"WMUtilities.Call"\; 
+	CallURLPointer = 0; 
+	NoWrap* = 0; 
+	Wrap* = 1; 
+	WrapWord* = 2; 
+	AlignLeft = 0; 
+	AlignCenter = 1; 
+	AlignRight = 2; 
+	DragDist = 5; 
+	MaxCallParameterBuf = ((1 * 1024) * 1024); 
+	MaxCommandLength = 256; 
+	UsePieMenu = TRUE; 
+	InterclickNone = 0; 
+	Interclick01 = 1; 
+	Interclick02 = 2; 
+	InterclickCancelled = 99; 
+	SelectionColor = 65376; 
+	SelectionColorInterclick01 = SIGNED32(4294901856); 
+	SelectionColorInterclick02 = SIGNED32(4278190176); 
+	TextViewMinimalDelay = 30; 
+	HLOver* = 0; 
+	HLUnder* = 1; 
+	HLWave* = 2; 
+TYPE 
+	Char32 = Texts.Char32; 
+
+	ClickInfo = OBJECT 
+	VAR 
+		cmd, cmdPar: Strings.String; 
+	END ClickInfo; 
+
+	TabStops* = OBJECT 
+	VAR 
+		tabDist: SIZE; 
+
+		PROCEDURE ^ GetNextTabStop*(x: SIZE): SIZE; 
+	END TabStops; 
+
+	TabPositions* = POINTER TO ARRAY OF SIZE; 
+
+	CustomTabStops* = OBJECT (TabStops)
+	VAR 
+		positions: TabPositions; 
+
+		PROCEDURE ^ GetNextTabStop*(x: SIZE): SIZE; 
+		PROCEDURE ^  & New*(tp: TabPositions); 
+	END CustomTabStops; 
+
+	LineInfo = RECORD 
+		leftIndent, rightIndent, firstIndent, spaceBefore, spaceAfter: SIZE; 
+		firstInParagraph, lastInParagraph: BOOLEAN; 
+		height, width, ascent: SIZE; 
+		pos: SIZE; 
+		align: SIZE; 
+		tabStops: TabStops; 
+	END; 
+
+	LineInfoArray = POINTER TO ARRAY OF LineInfo; 
+
+	Layout = RECORD 
+		nofLines: SIZE; 
+		lines: LineInfoArray; 
+		text: Texts.Text; 
+		paperWidth: SIZE; 
+		textWidth: SIZE; 
+		textHeight: SIZE; 
+		layoutLineProc: PROCEDURE {DELEGATE}(VAR pos: SIZE; VAR ch: Char32; VAR lineInfo: LineInfo; wrapWidth: SIZE; stopPos: SIZE; stopXPos: SIZE); 
+		bidiFormatter: UnicodeBidirectionality.BidiFormatter; 
+		initialized: BOOLEAN; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ SetText(text: Texts.Text); 
+		PROCEDURE ^ GrowLines; 
+		PROCEDURE ^ FindLineNrByPos(pos: SIZE): SIZE; 
+		PROCEDURE ^ GetLineStartPos(lineNr: SIZE): SIZE; 
+		PROCEDURE ^ GetLineLength(lineNr: SIZE): SIZE; 
+		PROCEDURE ^ LayoutLine(VAR pos: SIZE; VAR lineInfo: LineInfo); 
+		PROCEDURE ^ FullLayout(textChanged: BOOLEAN); 
+		PROCEDURE ^ FixLayoutFrom(pos, delta: SIZE; VAR first, last: SIZE; VAR linesChanged: BOOLEAN); 
+	END
+	; 
+
+	Highlight* = OBJECT 
+	VAR 
+		kind: INTEGER; 
+		from*, to*: Texts.TextPosition; 
+		a*, b*: SIZE; 
+		active*: BOOLEAN; 
+		oldFrom, oldTo: SIZE; 
+		oldColor, color: WMGraphics.Color; 
+		text: Texts.UnicodeText; 
+		onChanged: WMMessages.CompCommand; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ SetKind*(kind: INTEGER); 
+		PROCEDURE ^ SetColor*(color: WMGraphics.Color); 
+		PROCEDURE ^ SetFrom*(from: SIZE); 
+		PROCEDURE ^ SetTo*(to: SIZE); 
+		PROCEDURE ^ SetFromTo*(from, to: SIZE); 
+		PROCEDURE ^ Sort*; 
+		PROCEDURE ^ SetText(text: Texts.UnicodeText); 
+	END Highlight; 
+
+	HighlightArray = POINTER TO ARRAY OF Highlight; 
+
+	PositionMarker* = OBJECT 
+	VAR 
+		pos: Texts.TextPosition; 
+		img: WMGraphics.Image; 
+		color: WMGraphics.Color; 
+		hotX, hotY: SIZE; 
+		currentArea: WMRectangles.Rectangle; 
+		text: Texts.UnicodeText; 
+		onChanged: WMMessages.CompCommand; 
+		visible: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; x, y, ascent: SIZE); 
+		PROCEDURE ^ GetArea(x, y, ascent: SIZE): WMRectangles.Rectangle; 
+		PROCEDURE ^ Load*(CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ SetVisible*(visible: BOOLEAN); 
+		PROCEDURE ^ SetPosition*(pos: SIZE); 
+		PROCEDURE ^ GetPosition*(): SIZE; 
+		PROCEDURE ^ SetColor*(color: WMGraphics.Color); 
+		PROCEDURE ^ SetText(text: Texts.UnicodeText); 
+		PROCEDURE ^ SetNextInternalPosition*(next: SIZE); 
+		PROCEDURE ^ GetNextInternalPosition*(): SIZE; 
+	END PositionMarker; 
+
+	PositionMarkerArray = POINTER TO ARRAY OF PositionMarker; 
+
+	Cursor = OBJECT (PositionMarker)
+	VAR 
+		isVisible: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetCurrentVisibility(isVisible: BOOLEAN); 
+		PROCEDURE ^ GetArea(x, y, ascent: SIZE): WMRectangles.Rectangle; 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; x, y, ascent: SIZE); 
+	END Cursor; 
+
+	CursorBlinkerCallback = PROCEDURE {DELEGATE}(isVisible: BOOLEAN); 
+
+	CursorBlinker* = OBJECT {EXCLUSIVE} 
+	VAR 
+		cursor: ANY ; 
+		callback: CursorBlinkerCallback; 
+		interval: SIGNED32; 
+		isVisible: BOOLEAN; 
+		alive, dead: BOOLEAN; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Set*(cursor: ANY ; callback: CursorBlinkerCallback); 
+		PROCEDURE ^ SetInterval*(ms: SIGNED32); 
+		PROCEDURE ^ Remove*(cursor: ANY ); 
+		PROCEDURE ^ Show*(cursor: ANY ); 
+		PROCEDURE ^ Finalize; 
+	BEGIN{ACTIVE} 
+	END CursorBlinker; 
+
+	TextDropTarget* = OBJECT (WMDropTarget.DropTarget)
+	VAR 
+		text: Texts.Text; 
+		pos: Texts.TextPosition; 
+
+		PROCEDURE ^  & New*(text: Texts.Text; pos: Texts.TextPosition); 
+		PROCEDURE ^ GetInterface*(type: INTEGER): WMDropTarget.DropInterface; 
+	END TextDropTarget; 
+
+	LinkWrapper* = POINTER TO RECORD 
+		link*: Texts.Link; 
+	END; 
+
+	TextView* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		defaultTextColor-, defaultTextBgColor-: WMProperties.ColorProperty; 
+		defaultTextColorI, defaultTextBgColorI: WMGraphics.Color; 
+		isMultiLine-: WMProperties.BooleanProperty; 
+		isMultiLineI: BOOLEAN; 
+		wrapMode-: WMProperties.Int32Property; 
+		wrapModeI: SIGNED32; 
+		firstLine-: WMProperties.SizeProperty; 
+		firstLineI: SIZE; 
+		leftShift-: WMProperties.SizeProperty; 
+		leftShiftI: SIZE; 
+		showBorder-: WMProperties.BooleanProperty; 
+		showBorderI: BOOLEAN; 
+		borders-: WMProperties.RectangleProperty; 
+		bordersI, borderClip: WMRectangles.Rectangle; 
+		x0: SIZE; 
+		alwaysShowCursor-: WMProperties.BooleanProperty; 
+		alwaysShowCursorI: BOOLEAN; 
+		showLabels-: WMProperties.BooleanProperty; 
+		isPassword-: WMProperties.BooleanProperty; 
+		isPasswordI: BOOLEAN; 
+		passwordChar-: WMProperties.Int32Property; 
+		mouseWheelScrollSpeed-: WMProperties.Int32Property; 
+		mouseWheelScrollSpeedI: SIGNED32; 
+		allowCommandExecution-: WMProperties.BooleanProperty; 
+		allowTextSelection-: WMProperties.BooleanProperty; 
+		allowPiemenu-: WMProperties.BooleanProperty; 
+		highlighting-: WMProperties.StringProperty; 
+		highlighter: SyntaxHighlighter.Highlighter; 
+		state: SyntaxHighlighter.State; 
+		fontCache: FontCache; 
+		textAlignV-: WMProperties.Int32Property; 
+		showLineNumbers-: WMProperties.BooleanProperty; 
+		showLineNumbersI: BOOLEAN; 
+		lineNumberColor-, lineNumberBgColor-: WMProperties.ColorProperty; 
+		lineNumberColorI, lineNumberBgColorI: WMGraphics.Color; 
+		lineNumberFont, lineNumberFont10: WMGraphics.Font; 
+		indicateTabs-: WMProperties.BooleanProperty; 
+		indicateTabsI: BOOLEAN; 
+		clBgCurrentLine-: WMProperties.ColorProperty; 
+		clBgCurrentLineI: WMGraphics.Color; 
+		selection-: Highlight; 
+		cursor-: Cursor; 
+		onLinkClicked-: WMEvents.EventSource; 
+		onCtrlClicked-: WMEvents.EventSource; 
+		commandCaller*: OBJECT; 
+		commandWriter*, errorWriter*: Streams.Writer; 
+		onCursorChanged*: PROCEDURE {DELEGATE}; 
+		optimize*: BOOLEAN; 
+		piemenu: WMPieMenu.Menu; 
+		text: Texts.Text; 
+		layout: Layout; 
+		utilreader: Texts.TextReader; 
+		clipState: WMGraphics.CanvasState; 
+		defaultTabStops: TabStops; 
+		vScrollbar: WMStandardComponents.Scrollbar; 
+		hScrollbar: WMStandardComponents.Scrollbar; 
+		nofHighlights: SIZE; 
+		highlights: HighlightArray; 
+		nofPositionMarkers: SIZE; 
+		positionMarkers: PositionMarkerArray; 
+		lastCursorPos: SIZE; 
+		selecting: BOOLEAN; 
+		doubleclickedWord: BOOLEAN; 
+		dragPossible: BOOLEAN; 
+		dragSelA, dragSelB: Texts.TextPosition; 
+		dragCopy: BOOLEAN; 
+		canStart, openFile: BOOLEAN; 
+		commandMarker: Highlight; 
+		downX, downY: SIZE; 
+		selectWords: BOOLEAN; 
+		wordSelOrdered: BOOLEAN; 
+		lineEnter: SIZE; 
+		modifierFlags: SET; 
+		oldFlags: SET; 
+		interclick: SIGNED32; 
+		lastTimeStamp: SIGNED32; 
+		oldObject, focusObject: ANY ; 
+		oldPos, focusPos: SIZE; 
+		objHasFocus: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ FocusReceived*; 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ InsertChar(char: Char32): SIGNED16; 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ SetScrollbars*(hScrollbar, vScrollbar: WMStandardComponents.Scrollbar); 
+		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY ); 
+		PROCEDURE ^ UpdateScrollbars; 
+		PROCEDURE ^ BordersChanged; 
+		PROCEDURE ^ WrapModeChanged; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ SetText*(text: Texts.Text); 
+		PROCEDURE ^ SetSyntaxHighlighter*(highlighter: SyntaxHighlighter.Highlighter); 
+		PROCEDURE ^ ShowLineNumbers(enabled: BOOLEAN); 
+		PROCEDURE ^ SetTabStops*(ts: TabStops); 
+		PROCEDURE ^ AddHighlight(highlight: Highlight); 
+		PROCEDURE ^ CreateHighlight*(): Highlight; 
+		PROCEDURE ^ RemoveHighlight*(x: Highlight); 
+		PROCEDURE ^ InvalidateRange(a, b: SIZE); 
+		PROCEDURE ^ HighlightChanged(sender, data: ANY ); 
+		PROCEDURE ^ AddPositionMarker(pm: PositionMarker); 
+		PROCEDURE ^ CreatePositionMarker*(): PositionMarker; 
+		PROCEDURE ^ CreateCursor*(): Cursor; 
+		PROCEDURE ^ RemovePositionMarker*(x: PositionMarker); 
+		PROCEDURE ^ PositionMarkerChanged(sender, data: ANY ); 
+		PROCEDURE ^ CheckNumberOfLines; 
+		PROCEDURE ^ CheckCursor; 
+		PROCEDURE ^ CheckParagraphBegin(lineNr: SIZE; VAR height: SIZE); 
+		PROCEDURE ^ CheckParagraphEnd(lineNr: SIZE; VAR height: SIZE); 
+		PROCEDURE ^ TextChanged(sender, data: ANY ); 
+		PROCEDURE ^ GetLineLeftIndent(linenr: SIZE): SIZE; 
+		PROCEDURE ^ FindLineByY*(firstLine, y: SIZE): SIZE; 
+		PROCEDURE ^ ViewToTextPos*(x, y: SIZE; VAR pos: SIZE); 
+		PROCEDURE ^ GetHeight*(width: SIZE): SIZE; 
+		PROCEDURE ^ GetMinMaxWidth*(VAR word, line: SIZE); 
+		PROCEDURE ^ LineYPos(lineNr: SIZE; VAR y0, y1: SIZE); 
+		PROCEDURE ^ FindScreenPos*(pos: SIZE; VAR x, y: SIZE): BOOLEAN; 
+		PROCEDURE ^ GetInternalPos*(pos: SIZE): SIZE; 
+		PROCEDURE ^ GetDisplayPos*(pos: SIZE): SIZE; 
+		PROCEDURE ^ IsRightToLeft*(pos: SIZE): BOOLEAN; 
+		PROCEDURE ^ GetParagraphEmbeddingLevel*(pos: SIZE): SIZE; 
+		PROCEDURE ^ LayoutLine(VAR pos: SIZE; VAR ch: Char32; VAR l: LineInfo; wrapwidth: SIZE; stopPos: SIZE; stopXPos: SIZE); 
+		PROCEDURE ^ RenderLine*(canvas: WMGraphics.Canvas; VAR l: LineInfo; linenr: SIZE; top: SIZE; llen: SIZE); 
+		PROCEDURE ^ RenderAboveTextMarkers*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ StoreLineEnter; 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+		PROCEDURE ^ AbortStart; 
+		PROCEDURE ^ DoubleClickSelect(pos: SIZE); 
+		PROCEDURE ^ SetInterclick(new: SIGNED32); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ TransformCoordinates(VAR x, y: SIZE; obj: WMComponents.VisualComponent); 
+		PROCEDURE ^ ChangePointer(pointerInfo: WMWindowManager.PointerInfo); 
+		PROCEDURE ^ HitObject(x, y: SIZE; VAR pos: SIZE; VAR obj: ANY ): BOOLEAN; 
+		PROCEDURE ^ HitLink(x, y: SIZE; VAR pos: SIZE; VAR link: Texts.Link): BOOLEAN; 
+		PROCEDURE ^ LinkClick(link: Texts.Link); 
+		PROCEDURE ^ LinkClicked*(sender, data: ANY ); 
+		PROCEDURE ^ FindLabel*(CONST label: ARRAY OF CHAR; VAR pos: SIZE): BOOLEAN; 
+		PROCEDURE ^ AutoStartDrag*; 
+		PROCEDURE ^ DragWasAccepted(sender, data: ANY ); 
+		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ ConfirmDrag*(accept: BOOLEAN; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ CopySelection*; 
+		PROCEDURE ^ DeleteSelection*; 
+		PROCEDURE ^ Paste*; 
+		PROCEDURE ^ SelectAll*; 
+		PROCEDURE ^ KeyStartSelection(pos: SIZE); 
+		PROCEDURE ^ KeyUpdateSelection(pos: SIZE); 
+		PROCEDURE ^ CursorChanged; 
+		PROCEDURE ^ CursorUp*(select: BOOLEAN); 
+		PROCEDURE ^ CursorDown*(select: BOOLEAN); 
+		PROCEDURE ^ CursorLeft*(word, select: BOOLEAN); 
+		PROCEDURE ^ CursorRight*(word, select: BOOLEAN); 
+		PROCEDURE ^ PageDown*(select: BOOLEAN); 
+		PROCEDURE ^ PageUp*(select: BOOLEAN); 
+		PROCEDURE ^ Home*(ctrl, select: BOOLEAN); 
+		PROCEDURE ^ End*(ctrl, select: BOOLEAN); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keysym: SIZE); 
+		PROCEDURE ^ SetFlags*(flags: SET); 
+		PROCEDURE ^ FindCommandRange*(pos: SIZE; VAR start, end, nofLastSelections: SIZE); 
+		PROCEDURE ^ FindCommand*(pos: SIZE; VAR start, end: SIZE); 
+		PROCEDURE ^ StartCommand*(pos: SIZE; openFile: BOOLEAN); 
+		PROCEDURE ^ Start(sender, data: ANY ); 
+		PROCEDURE ^ Open(sender, data: ANY ); 
+		PROCEDURE ^ PieMenuStart(sender, data: ANY ); 
+		PROCEDURE ^ PieMenuOpen(sender, data: ANY ); 
+		PROCEDURE ^ PieMenuCopy(sender, data: ANY ); 
+		PROCEDURE ^ PieMenuPaste(sender, data: ANY ); 
+		PROCEDURE ^ ShowContextMenu*(x, y: SIZE); 
+		PROCEDURE ^ HandleInternal*(VAR x: WMMessages.Message); 
+	END TextView; 
+
+	FontEntry = OBJECT 
+	VAR 
+		name: ARRAY 256 OF CHAR; 
+		attributes: FontAttributes; 
+		next: FontEntry; 
+
+		PROCEDURE ^  & Init(CONST name: ARRAY OF CHAR); 
+	END FontEntry; 
+
+	FontAttributes = OBJECT 
+	VAR 
+		font: WMGraphics.Font; 
+		size: SIZE; 
+		style: SET; 
+		next: FontAttributes; 
+
+		PROCEDURE ^  & Init(size: SIZE; style: SET); 
+	END FontAttributes; 
+
+	FontCache = OBJECT 
+	VAR 
+		entries: FontEntry; 
+		defaultFont: WMGraphics.Font; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Find(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): WMGraphics.Font; 
+		PROCEDURE ^ Add(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): WMGraphics.Font; 
+		PROCEDURE ^ GetFont(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): WMGraphics.Font; 
+	END FontCache; 
+
+	DZ = OBJECT (Texts.Attributes)
+	VAR 
+		value: SIZE; 
+
+		PROCEDURE ^  & Init(v: SIZE); 
+	END DZ; 
+
+	; 
+VAR 
+	manager: WMWindowManager.WindowManager; 
+	cursorBlinker-: CursorBlinker; 
+	PTVIsMultiLine, PTVIsPassword, PTVShowBorder, PTValwaysShowCursor, PTVShowLabels: WMProperties.BooleanProperty; 
+	PTVAllowCommandExecution, PTVAllowTextSelection, PTVAllowPiemenu: WMProperties.BooleanProperty; 
+	PTVWrapMode, PTVMouseWheelScrollSpeed, PVTtextAlignV: WMProperties.Int32Property; 
+	PTVPasswordChar: WMProperties.Int32Property; 
+	PTVfirstLine, PTVleftShift: WMProperties.SizeProperty; 
+	PTVdefaultTextColor, PTVdefaultTextBgColor: WMProperties.ColorProperty; 
+	PTVborders: WMProperties.RectangleProperty; 
+	PTVonLinkClick, PTVonLinkClickInfo: Strings.String; 
+	PTVonCtrlLinkClick, PTVonCtrlLinkClickInfo: Strings.String; 
+	PTVShowLineNumbers, PTVIndicateTabs: WMProperties.BooleanProperty; 
+	PTVHighlighting: WMProperties.StringProperty; 
+	PTVLineNumberColor, PTVLineNumberBgColor, PTVclBgCurrentLine: WMProperties.ColorProperty; 
+	currentTextView: TextView; 
+	StrTextView: Strings.String; 
+	DefaultStyle: POINTER TO RECORD 
+	END; 
+	DefaultMinimalUpdateDelay* := 30: SIGNED32; 
+
+	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; value, currentSize: SIZE; VAR newSize: SIZE); 
+	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
+	PROCEDURE ^ ChangeAttribute(VAR attr: Texts.Attributes; userData: ANY ); 
+	PROCEDURE ^ GetFontFromAttr(info: Texts.FontInfo): WMGraphics.Font; 
+	PROCEDURE ^ IsSameFont(f1, f2: WMGraphics.Font): BOOLEAN; 
+	PROCEDURE ^ CheckFont(style: SyntaxHighlighter.Style; font: WMGraphics.Font; VAR fontCache: FontCache); 
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ InitPrototypes; 
+	PROCEDURE ^ SetDefaultMinimalUpdateDelay(c: Commands.Context); 
+	PROCEDURE ^ EnablePiemenu*; 
+	PROCEDURE ^ DisablePiemenu*; 
+	PROCEDURE ^ TextViewFactory*(): XML.Element; 
+	PROCEDURE ^ InsertChar*(newChar: Char32): SIGNED16; 
+	PROCEDURE ^ Refresh*; 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ GenTextView*(): XML.Element; 
+BEGIN
+END WMTextView.

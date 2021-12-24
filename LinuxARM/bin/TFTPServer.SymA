@@ -1,0 +1,103 @@
+MODULE TFTPServer;
+	IMPORT IP, UDP, Files, Kernel, KernelLog, Random;
+CONST 
+	Ok = UDP.Ok; 
+	TFTPPort = 69; 
+	MaxSocketRetries = 64; 
+	MaxRetries = 5; 
+	MaxWait = 3; 
+	BlockSize = 512; 
+	DataTimeout = 3000; 
+	AckTimeout = 3000; 
+	RRQ = 1; 
+	WRQ = 2; 
+	DATA = 3; 
+	ACK = 4; 
+	ERROR = 5; 
+	RRQId = \"TFTP RRQ: "\; 
+	WRQId = \"TFTP WRQ: "\; 
+	TFTPId = \"TFTP Server: "\; 
+TYPE 
+	ErrorMsg = ARRAY 32 OF CHAR; 
+
+	TFTP = OBJECT {EXCLUSIVE} 
+	VAR 
+		socket: UDP.Socket; 
+		fip: IP.Adr; 
+		lport, fport: SIGNED32; 
+		res: INTEGER; 
+		dead: BOOLEAN; 
+		buf: ARRAY (BlockSize + 4) OF CHAR; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^ LogEnter(level: INTEGER); 
+		PROCEDURE ^ LogExit(level: INTEGER); 
+		PROCEDURE ^ Log(level: INTEGER; CONST s: ARRAY OF CHAR); 
+		PROCEDURE ^ LogInt(level: INTEGER; i: SIZE); 
+		PROCEDURE ^ Get2(CONST buf: ARRAY OF CHAR; ofs: SIZE): SIGNED32; 
+		PROCEDURE ^ Put2(VAR buf: ARRAY OF CHAR; ofs: SIZE; value: SIGNED32); 
+		PROCEDURE ^ PacketType(CONST buf: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ ExtractString(CONST buf: ARRAY OF CHAR; VAR ofs: SIZE; VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ SendAck(blockNr: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ SendError(errNo: SIGNED16; s: ErrorMsg; VAR res: INTEGER); 
+		PROCEDURE ^ Die; 
+		PROCEDURE ^ AwaitDeath; 
+	END TFTP; 
+
+	TFTPRRQ = OBJECT {EXCLUSIVE} (TFTP)
+	VAR 
+		ip: IP.Adr; 
+		ack: ARRAY 4 OF CHAR; 
+		port, wait, retries, blockNr: SIGNED32; 
+		len: SIZE; 
+		acked: BOOLEAN; 
+		file: Files.File; 
+		r: Files.Rider; 
+
+		PROCEDURE ^  & Init*(fip: IP.Adr; fport: SIGNED32; CONST filename: Files.FileName; VAR res: INTEGER); 
+	BEGIN{ACTIVE} 
+	END TFTPRRQ; 
+
+	TFTPWRQ = OBJECT {EXCLUSIVE} (TFTP)
+	VAR 
+		ip: IP.Adr; 
+		port, waitPacket, retries, blockNr: SIGNED32; 
+		len: SIZE; 
+		Abort: BOOLEAN; 
+		file: Files.File; 
+		r: Files.Rider; 
+
+		PROCEDURE ^  & Init*(fip: IP.Adr; fport: SIGNED32; CONST filename: Files.FileName; VAR res: INTEGER); 
+	BEGIN{ACTIVE} 
+	END TFTPWRQ; 
+
+	TFTPServer = OBJECT {EXCLUSIVE} (TFTP)
+	VAR 
+		ofs, len: SIZE; 
+		ipstr, mode: ARRAY 16 OF CHAR; 
+		filename: Files.FileName; 
+		Stop, allowWrite: BOOLEAN; 
+		tftprrq: TFTPRRQ; 
+		tftpwrq: TFTPWRQ; 
+
+		PROCEDURE ^  & Init*(port: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ WriteMode(allow: BOOLEAN); 
+		PROCEDURE ^ Close; 
+	BEGIN{ACTIVE} 
+	END TFTPServer; 
+VAR 
+	tftpserver: TFTPServer; 
+	TraceLevel: INTEGER; 
+	errorMsg: ARRAY 8 OF ErrorMsg; 
+	generator: Random.Generator; 
+
+	PROCEDURE ^ Start*; 
+	PROCEDURE ^ Stop*; 
+	PROCEDURE ^ AllowWrite*; 
+	PROCEDURE ^ DenyWrite*; 
+	PROCEDURE ^ TraceLevel0*; 
+	PROCEDURE ^ TraceLevel1*; 
+	PROCEDURE ^ TraceLevel2*; 
+	PROCEDURE ^ TraceLevel3*; 
+BEGIN
+END TFTPServer.

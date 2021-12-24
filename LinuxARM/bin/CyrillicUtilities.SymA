@@ -1,0 +1,168 @@
+MODULE CyrillicUtilities;
+	IMPORT KernelLog, Codecs, Streams, Texts, Commands;
+CONST 
+	PRIME = 977; 
+	CR = 0DX; 
+	LF = 0AX; 
+TYPE 
+	Encodings = ENUM CP1251 = 0, KOI8R = 1, KOI8U = 2, CP866 = 3, ISO88595 = 4, CP1250 = 5, HIGH = 6 END; 
+
+	Char32 = Texts.Char32; 
+
+	StaticTable = ARRAY 256 OF Char32; 
+
+	HashTable = ARRAY PRIME OF RECORD 
+		ucs32: Char32; 
+		encodings: SET; 
+		ch: ARRAY (SIGNED8(Encodings.HIGH) + 1) OF CHAR; 
+	END; 
+
+	LowBound = ARRAY (SIGNED8(Encodings.HIGH) + 1) OF UNSIGNED8; 
+
+	CP1250Decoder = OBJECT (Codecs.TextDecoder)
+	VAR 
+		errors: BOOLEAN; 
+		in: Streams.Reader; 
+		text: Texts.Text; 
+
+		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetText*(): Texts.Text; 
+	END CP1250Decoder; 
+
+	CP1250Encoder = OBJECT (Codecs.TextEncoder)
+	VAR 
+		out: Streams.Writer; 
+
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
+	END CP1250Encoder; 
+
+	CP1251Decoder = OBJECT (Codecs.TextDecoder)
+	VAR 
+		errors: BOOLEAN; 
+		in: Streams.Reader; 
+		text: Texts.Text; 
+
+		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetText*(): Texts.Text; 
+	END CP1251Decoder; 
+
+	CP1251Encoder = OBJECT (Codecs.TextEncoder)
+	VAR 
+		out: Streams.Writer; 
+
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
+	END CP1251Encoder; 
+
+	KOI8RDecoder = OBJECT (Codecs.TextDecoder)
+	VAR 
+		errors: BOOLEAN; 
+		in: Streams.Reader; 
+		text: Texts.Text; 
+
+		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetText*(): Texts.Text; 
+	END KOI8RDecoder; 
+
+	KOI8REncoder = OBJECT (Codecs.TextEncoder)
+	VAR 
+		out: Streams.Writer; 
+
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
+	END KOI8REncoder; 
+
+	KOI8UDecoder = OBJECT (Codecs.TextDecoder)
+	VAR 
+		errors: BOOLEAN; 
+		in: Streams.Reader; 
+		text: Texts.Text; 
+
+		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetText*(): Texts.Text; 
+	END KOI8UDecoder; 
+
+	KOI8UEncoder = OBJECT (Codecs.TextEncoder)
+	VAR 
+		out: Streams.Writer; 
+
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
+	END KOI8UEncoder; 
+
+	CP866Decoder = OBJECT (Codecs.TextDecoder)
+	VAR 
+		errors: BOOLEAN; 
+		in: Streams.Reader; 
+		text: Texts.Text; 
+
+		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetText*(): Texts.Text; 
+	END CP866Decoder; 
+
+	CP866Encoder = OBJECT (Codecs.TextEncoder)
+	VAR 
+		out: Streams.Writer; 
+
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
+	END CP866Encoder; 
+
+	ISO88595Decoder = OBJECT (Codecs.TextDecoder)
+	VAR 
+		errors: BOOLEAN; 
+		in: Streams.Reader; 
+		text: Texts.Text; 
+
+		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetText*(): Texts.Text; 
+	END ISO88595Decoder; 
+
+	ISO88595Encoder = OBJECT (Codecs.TextEncoder)
+	VAR 
+		out: Streams.Writer; 
+
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
+	END ISO88595Encoder; 
+
+	; 
+VAR 
+	aLowBound: LowBound; 
+	koi8r, koi8u, cp1250, cp1251, cp866, iso88595: StaticTable; 
+	hash: HashTable; 
+	bFirst: BOOLEAN; 
+	setInitDone: SET; 
+	nCollisions: SIZE; 
+	ucs32Min, ucs32Max: Char32; 
+
+	PROCEDURE ^ hashSearch(encoding: SIGNED8; bAddAllowed: BOOLEAN; ucs32: Char32; VAR ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ koi8rInit; 
+	PROCEDURE ^ koi8uInit; 
+	PROCEDURE ^ cp1250Init; 
+	PROCEDURE ^ cp1251Init; 
+	PROCEDURE ^ cp866Init; 
+	PROCEDURE ^ iso88595Init; 
+	PROCEDURE ^ CP1250DecoderFactory*(): Codecs.TextDecoder; 
+	PROCEDURE ^ CP1250EncoderFactory*(): Codecs.TextEncoder; 
+	PROCEDURE ^ CP1251DecoderFactory*(): Codecs.TextDecoder; 
+	PROCEDURE ^ CP1251EncoderFactory*(): Codecs.TextEncoder; 
+	PROCEDURE ^ KOI8RDecoderFactory*(): Codecs.TextDecoder; 
+	PROCEDURE ^ KOI8REncoderFactory*(): Codecs.TextEncoder; 
+	PROCEDURE ^ KOI8UDecoderFactory*(): Codecs.TextDecoder; 
+	PROCEDURE ^ KOI8UEncoderFactory*(): Codecs.TextEncoder; 
+	PROCEDURE ^ CP866DecoderFactory*(): Codecs.TextDecoder; 
+	PROCEDURE ^ CP866EncoderFactory*(): Codecs.TextEncoder; 
+	PROCEDURE ^ ISO88595DecoderFactory*(): Codecs.TextDecoder; 
+	PROCEDURE ^ ISO88595EncoderFactory*(): Codecs.TextEncoder; 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ HashStat*(context: Commands.Context); 
+BEGIN
+END CyrillicUtilities.

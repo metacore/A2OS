@@ -1,0 +1,15 @@
+MODULE Out;
+	IMPORT Commands, Streams;
+
+	PROCEDURE ^ GetWriter*(): Streams.Writer; 
+	PROCEDURE ^ String*(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ Char*(c: CHAR); 
+	PROCEDURE ^ Ln*; 
+	PROCEDURE ^ Set*(s: SET); 
+	PROCEDURE ^ Int*(i: SIGNED64; n:= 1: INTEGER); 
+	PROCEDURE ^ Hex*(i: SIGNED64; n:=  -16: INTEGER); 
+	PROCEDURE ^ Address*(a: ADDRESS); 
+	PROCEDURE ^ Float*(x: FLOAT64; n:= 4, f:= 3, d:= 0: INTEGER); 
+	PROCEDURE ^ Update*; 
+BEGIN
+END Out.

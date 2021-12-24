@@ -1,0 +1,23 @@
+MODULE Drand48;
+CONST 
+	m = 281474976710656; 
+	X = 20017429951246; 
+	A = 25214903917; 
+	C = 11; 
+TYPE 
+	Generator* = OBJECT 
+	VAR 
+		x, a: SIGNED64; 
+		c: SIGNED32; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Drand48*(): FLOAT64; 
+		PROCEDURE ^ Lrand48*(): SIGNED32; 
+		PROCEDURE ^ Mrand48*(): SIGNED32; 
+		PROCEDURE ^ Xrand48*(): SIGNED64; 
+		PROCEDURE ^ Srand48*(seed: SIGNED32); 
+		PROCEDURE ^ Seed48*(seed: SIGNED64): SIGNED64; 
+		PROCEDURE ^ Lcong48*(par: ARRAY OF SIGNED64); 
+	END Generator; 
+BEGIN
+END Drand48.

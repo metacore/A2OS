@@ -1,0 +1,20 @@
+MODULE FoxARMAssembler;
+	IMPORT InstructionSet := FoxARMInstructionSet, FoxAssembler, Scanner := FoxScanner, Diagnostics, Strings, Basic := FoxBasic;
+CONST 
+	Trace = FoxAssembler.Trace; 
+TYPE 
+	Assembler* = OBJECT (FoxAssembler.Assembler)
+
+		PROCEDURE ^  & Init2*(diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^ GetRegister*(VAR registerNumber: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetRegisterList(VAR registerList: SET): BOOLEAN; 
+		PROCEDURE ^ GetSpecialRegisterWithFields(VAR registerNumber: SIGNED32; VAR fields: SET): BOOLEAN; 
+		PROCEDURE ^ GetShiftMode*(VAR shiftModeNumber: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetCoprocessor*(VAR coprocessorNumber: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetCoprocessorOpcode*(VAR coprocessorOpcode: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetPlainValue*(VAR value: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetImmediateValue*(VAR immediateValue: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ Instruction*(CONST mnemonic: ARRAY OF CHAR); 
+	END Assembler; 
+BEGIN
+END FoxARMAssembler.

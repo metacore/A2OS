@@ -1,0 +1,80 @@
+MODULE SambaClient;
+	IMPORT SYSTEM, Streams, KernelLog, Dates, Strings, Locks, Files, DNS, IP, TCP;
+CONST 
+	PID = 9876; 
+	NativeOS = \"A2"\; 
+	NativeLanMan = \"STECIFS"\; 
+	PrimaryDomain = \"WORKGROUP"\; 
+	Trace = FALSE; 
+	SendBufferSize = 32000; 
+	RWLimit = 2048; 
+	SMBPort* = 445; 
+TYPE 
+	Connection = POINTER TO RECORD 
+		out: Streams.Writer; 
+		in: Streams.Reader; 
+		tid, uid, sid: SIGNED16; 
+		ipaddr: ARRAY 16 OF CHAR; 
+		user, pw: ARRAY 64 OF CHAR; 
+		path, mask, fnLast: ARRAY 256 OF CHAR; 
+	END; 
+
+	FileSystem* = OBJECT (Files.FileSystem)
+	VAR 
+		c: Connection; 
+		connection: TCP.Connection; 
+		lock: Locks.RecursiveLock; 
+
+		PROCEDURE ^ New0*(CONST name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER); 
+		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Finalize*; 
+	END FileSystem; 
+
+	File* = OBJECT (Files.File)
+	VAR 
+		c: Connection; 
+		filename: ARRAY 256 OF CHAR; 
+		openRead: BOOLEAN; 
+
+		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: Files.Position); 
+		PROCEDURE ^ Pos*(VAR r: Files.Rider): Files.Position; 
+		PROCEDURE ^ Read*(VAR r: Files.Rider; VAR x: CHAR); 
+		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Write*(VAR r: Files.Rider; x: CHAR); 
+		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Length*(): Files.Size; 
+		PROCEDURE ^ GetDate*(VAR t, d: SIGNED32); 
+		PROCEDURE ^ SetDate*(t, d: SIGNED32); 
+		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ Register0*(VAR res: INTEGER); 
+		PROCEDURE ^ Update*; 
+	END File; 
+
+	TCPSender = OBJECT {EXCLUSIVE} 
+	VAR 
+		connection: TCP.Connection; 
+
+		PROCEDURE ^ Connect(CONST host: ARRAY OF CHAR; port: SIGNED32; VAR c: Connection); 
+	END TCPSender; 
+
+	PROCEDURE ^ SendSMBHeader(ntb: SIGNED16; cmd: CHAR; c: Connection); 
+	PROCEDURE ^ RecieveResponse(cmd: CHAR; c: Connection): BOOLEAN; 
+	PROCEDURE ^ CheckFFSMB(c: Connection): BOOLEAN; 
+	PROCEDURE ^ ReplaceSlash(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ NegotiateProtocol(c: Connection): BOOLEAN; 
+	PROCEDURE ^ SessionSetup(c: Connection): BOOLEAN; 
+	PROCEDURE ^ TreeConnect(c: Connection): BOOLEAN; 
+	PROCEDURE ^ Trans2Find(c: Connection; cmd: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ OpenAndX(c: Connection; name: ARRAY OF CHAR; access: SIGNED16; create: BOOLEAN): SIGNED16; 
+	PROCEDURE ^ CloseFile(c: Connection; key: SIGNED32); 
+	PROCEDURE ^ NewFS*(context: Files.Parameters); 
+	PROCEDURE ^ StartClient(VAR c: Connection; VAR connection: TCP.Connection): BOOLEAN; 
+	PROCEDURE ^ GetDateTime(t: ARRAY OF SIGNED32; VAR datetime: Dates.DateTime); 
+BEGIN
+END SambaClient.

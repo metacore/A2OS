@@ -1,0 +1,1008 @@
+MODULE X11;
+	IMPORT Trace, Unix, Modules;
+CONST 
+	BufferSize* = 512; 
+	USPosition* = 1; 
+	USSize* = 2; 
+	PPosition* = 4; 
+	PSize* = 8; 
+	PMinSize* = 16; 
+	PMaxSize* = 32; 
+	PResizeInc* = 64; 
+	PAspect* = 128; 
+	PBaseSize* = 256; 
+	PWinGravity* = 512; 
+	NET_WM_STATE_REMOVE* = 0; 
+	NET_WM_STATE_ADD* = 1; 
+	NET_WM_STATE_TOGGLE* = 2; 
+	False* = 0; 
+	True* = 1; 
+	None* = 0; 
+	LineSolid* = 0; 
+	LineOnOffDash* = 1; 
+	LineDoubleDash* = 2; 
+	CapNotLast* = 0; 
+	CapButt* = 1; 
+	CapRound* = 2; 
+	CapProjecting* = 3; 
+	JoinMiter* = 0; 
+	JoinRound* = 1; 
+	JoinBevel* = 2; 
+	FillSolid* = 0; 
+	FillTiled* = 1; 
+	FillStippled* = 2; 
+	FillOpaqueStippled* = 3; 
+	GXand* = 1; 
+	GXcopy* = 3; 
+	GXxor* = 6; 
+	GXor* = 7; 
+	GXequiv* = 9; 
+	DoRed* = 1; 
+	DoGreen* = 2; 
+	DoBlue* = 4; 
+	DoAll* = ((DoRed + DoGreen) + DoBlue); 
+	AllocNone* = 0; 
+	AllocAll* = 1; 
+	CursorShape* = 0; 
+	TileShape* = 1; 
+	StippleShape* = 2; 
+	StaticGray* = 0; 
+	GrayScale* = 1; 
+	StaticColor* = 2; 
+	PseudoColor* = 3; 
+	TrueColor* = 4; 
+	DirectColor* = 5; 
+	ArcChord* = 0; 
+	ArcPieSlice* = 1; 
+	Complex* = 0; 
+	Nonconvex* = 1; 
+	Convex* = 2; 
+	CoordModeOrigin* = 0; 
+	CoordModePrevious* = 1; 
+	Unsorted* = 0; 
+	YSorted* = 1; 
+	YXSorted* = 2; 
+	YXBanded* = 3; 
+	PropModeReplace* = 0; 
+	KeyPress* = 2; 
+	KeyRelease* = 3; 
+	ButtonPress* = 4; 
+	ButtonRelease* = 5; 
+	MotionNotify* = 6; 
+	FocusIn* = 9; 
+	FocusOut* = 10; 
+	Expose* = 12; 
+	GraphicsExpose* = 13; 
+	NoExpose* = 14; 
+	UnmapNotify* = 18; 
+	MapNotify* = 19; 
+	PropertyNotify* = 28; 
+	SelectionClear* = 29; 
+	SelectionRequest* = 30; 
+	SelectionNotify* = 31; 
+	ClientMessage* = 33; 
+	MappingNotify* = 34; 
+	NoEventMask* = 0; 
+	KeyPressMask* = 1; 
+	KeyReleaseMask* = 2; 
+	ButtonPressMask* = 4; 
+	ButtonReleaseMask* = 8; 
+	EnterWindowMask* = 16; 
+	LeaveWindowMask* = 32; 
+	PointerMotionMask* = 64; 
+	PointerMotionHintMask* = 128; 
+	Button1MotionMask* = 256; 
+	Button2MotionMask* = 512; 
+	Button3MotionMask* = 1024; 
+	Button4MotionMask* = 2048; 
+	Button5MotionMask* = 4096; 
+	ButtonMotionMask* = 8192; 
+	KeymapStateMask* = 16384; 
+	ExposureMask* = 32768; 
+	VisibilityChangeMask* = 65536; 
+	StructureNotifyMask* = 131072; 
+	ResizeRedirectMask* = 262144; 
+	SubstructureNotifyMask* = 524288; 
+	SubstructureRedirectMask* = 1048576; 
+	FocusChangeMask* = 2097152; 
+	PropertyChangeMask* = 4194304; 
+	ColormapChangeMask* = 8388608; 
+	OwnerGrabButtonMask* = 16777216; 
+	QueuedAlready* = 0; 
+	QueuedAfterReading* = 1; 
+	QueuedAfterFlush* = 2; 
+	RevertToParent* = 2; 
+	Button1* = 1; 
+	Button2* = 2; 
+	Button3* = 3; 
+	Button4* = 4; 
+	Button5* = 5; 
+	Button1Mask* = 8; 
+	Button2Mask* = 9; 
+	Button3Mask* = 10; 
+	Button4Mask* = 11; 
+	Button5Mask* = 12; 
+	XYBitmap* = 0; 
+	XYPixmap* = 1; 
+	ZPixmap* = 2; 
+	XCleftptr* = 132; 
+	XAPRIMARY* = 1; 
+	XASTRING* = 31; 
+	XK_Home* = 65360; 
+	XK_Left* = 65361; 
+	XK_Up* = 65362; 
+	XK_Right* = 65363; 
+	XK_Down* = 65364; 
+	XK_Prior* = 65365; 
+	XK_Page_Up* = 65365; 
+	XK_Next* = 65366; 
+	XK_Page_Down* = 65366; 
+	XK_End* = 65367; 
+	XK_Begin* = 65368; 
+	XK_Escape* = 65307; 
+	XK_F1* = 65470; 
+	ParentRelative* = 1; 
+	CopyFromParent* = 0; 
+	PointerWindow* = 0; 
+	InputFocus* = 1; 
+	PointerRoot* = 1; 
+	AnyPropertyType* = 0; 
+	AnyKey* = 0; 
+	AnyButton* = 0; 
+	AllTemporary* = 0; 
+	CurrentTime* = 0; 
+	NoSymbol* = 0; 
+	EnterNotify* = 7; 
+	LeaveNotify* = 8; 
+	KeymapNotify* = 11; 
+	VisibilityNotify* = 15; 
+	CreateNotify* = 16; 
+	DestroyNotify* = 17; 
+	MapRequest* = 20; 
+	ReparentNotify* = 21; 
+	ConfigureNotify* = 22; 
+	ConfigureRequest* = 23; 
+	GravityNotify* = 24; 
+	ResizeRequest* = 25; 
+	CirculateNotify* = 26; 
+	CirculateRequest* = 27; 
+	LASTEvent* = 36; 
+	ShiftMask* = 0; 
+	LockMask* = 1; 
+	ControlMask* = 2; 
+	Mod1Mask* = 3; 
+	Mod2Mask* = 4; 
+	Mod3Mask* = 5; 
+	Mod4Mask* = 6; 
+	Mod5Mask* = 7; 
+	ShiftMapIndex* = 0; 
+	LockMapIndex* = 1; 
+	ControlMapIndex* = 2; 
+	Mod1MapIndex* = 3; 
+	Mod2MapIndex* = 4; 
+	Mod3MapIndex* = 5; 
+	Mod4MapIndex* = 6; 
+	Mod5MapIndex* = 7; 
+	AnyModifier* = 15; 
+	NotifyNormal* = 0; 
+	NotifyGrab* = 1; 
+	NotifyUngrab* = 2; 
+	NotifyWhileGrabbed* = 3; 
+	NotifyHint* = 1; 
+	NotifyAncestor* = 0; 
+	NotifyVirtual* = 1; 
+	NotifyInferior* = 2; 
+	NotifyNonlinear* = 3; 
+	NotifyNonlinearVirtual* = 4; 
+	NotifyPointer* = 5; 
+	NotifyPointerRoot* = 6; 
+	NotifyDetailNone* = 7; 
+	VisibilityUnobscured* = 0; 
+	VisibilityPartiallyObscured* = 1; 
+	VisibilityFullyObscured* = 2; 
+	PlaceOnTop* = 0; 
+	PlaceOnBottom* = 1; 
+	FamilyInternet* = 0; 
+	FamilyDECnet* = 1; 
+	FamilyChaos* = 2; 
+	FamilyInternet6* = 6; 
+	FamilyServerInterpreted* = 5; 
+	PropertyNewValue* = 0; 
+	PropertyDelete* = 1; 
+	ColormapUninstalled* = 0; 
+	ColormapInstalled* = 1; 
+	GrabModeSync* = 0; 
+	GrabModeAsync* = 1; 
+	GrabSuccess* = 0; 
+	AlreadyGrabbed* = 1; 
+	GrabInvalidTime* = 2; 
+	GrabNotViewable* = 3; 
+	GrabFrozen* = 4; 
+	AsyncPointer* = 0; 
+	SyncPointer* = 1; 
+	ReplayPointer* = 2; 
+	AsyncKeyboard* = 3; 
+	SyncKeyboard* = 4; 
+	ReplayKeyboard* = 5; 
+	AsyncBoth* = 6; 
+	SyncBoth* = 7; 
+	RevertToNone* = None; 
+	RevertToPointerRoot* = PointerRoot; 
+	Success* = 0; 
+	BadRequest* = 1; 
+	BadValue* = 2; 
+	BadWindow* = 3; 
+	BadPixmap* = 4; 
+	BadAtom* = 5; 
+	BadCursor* = 6; 
+	BadFont* = 7; 
+	BadMatch* = 8; 
+	BadDrawable* = 9; 
+	BadAccess* = 10; 
+	BadAlloc* = 11; 
+	BadColor* = 12; 
+	BadGC* = 13; 
+	BadIDChoice* = 14; 
+	BadName* = 15; 
+	BadLength* = 16; 
+	BadImplementation* = 17; 
+	FirstExtensionError* = 128; 
+	LastExtensionError* = 255; 
+	InputOutput* = 1; 
+	InputOnly* = 2; 
+	CWBackPixmap* = 1; 
+	CWBackPixel* = 2; 
+	CWBorderPixmap* = 4; 
+	CWBorderPixel* = 8; 
+	CWBitGravity* = 16; 
+	CWWinGravity* = 32; 
+	CWBackingStore* = 64; 
+	CWBackingPlanes* = 80; 
+	CWBackingPixel* = 256; 
+	CWOverrideRedirect* = 512; 
+	CWSaveUnder* = 1024; 
+	CWEventMask* = 2048; 
+	CWDontPropagate* = 4096; 
+	CWColormap* = 8192; 
+	CWCursor* = 16384; 
+	CWX* = 1; 
+	CWY* = 2; 
+	CWWidth* = 4; 
+	CWHeight* = 8; 
+	CWBorderWidth* = 16; 
+	CWSibling* = 32; 
+	CWStackMode* = 64; 
+	ForgetGravity* = 0; 
+	NorthWestGravity* = 1; 
+	NorthGravity* = 2; 
+	NorthEastGravity* = 3; 
+	WestGravity* = 4; 
+	CenterGravity* = 5; 
+	EastGravity* = 6; 
+	SouthWestGravity* = 7; 
+	SouthGravity* = 8; 
+	SouthEastGravity* = 9; 
+	StaticGravity* = 10; 
+	UnmapGravity* = 0; 
+	NotUseful* = 0; 
+	WhenMapped* = 1; 
+	Always* = 2; 
+	IsUnmapped* = 0; 
+	IsUnviewable* = 1; 
+	IsViewable* = 2; 
+	SetModeInsert* = 0; 
+	SetModeDelete* = 1; 
+	DestroyAll* = 0; 
+	RetainPermanent* = 1; 
+	RetainTemporary* = 2; 
+	Above* = 0; 
+	Below* = 1; 
+	TopIf* = 2; 
+	BottomIf* = 3; 
+	Opposite* = 4; 
+	RaiseLowest* = 0; 
+	LowerHighest* = 1; 
+	PropModePrepend* = 1; 
+	PropModeAppend* = 2; 
+	FontLeftToRight* = 0; 
+	FontRightToLeft* = 1; 
+	FontChange* = 255; 
+	AutoRepeatModeOff* = 0; 
+	AutoRepeatModeOn* = 1; 
+	AutoRepeatModeDefault* = 2; 
+	LedModeOff* = 0; 
+	LedModeOn* = 1; 
+	KBKeyClickPercent* = 1; 
+	KBBellPercent* = 2; 
+	KBBellPitch* = 4; 
+	KBBellDuration* = 8; 
+	KBLed* = 16; 
+	KBLedMode* = 32; 
+	KBKey* = 64; 
+	KBAutoRepeatMode* = 80; 
+	MappingSuccess* = 0; 
+	MappingBusy* = 1; 
+	MappingFailed* = 2; 
+	MappingModifier* = 0; 
+	MappingKeyboard* = 1; 
+	MappingPointer* = 2; 
+	DontPreferBlanking* = 0; 
+	PreferBlanking* = 1; 
+	DefaultBlanking* = 2; 
+	DisableScreenSaver* = 0; 
+	DisableScreenInterval* = 0; 
+	DontAllowExposures* = 0; 
+	AllowExposures* = 1; 
+	DefaultExposures* = 2; 
+	ScreenSaverReset* = 0; 
+	ScreenSaverActive* = 1; 
+	HostInsert* = 0; 
+	HostDelete* = 1; 
+	EnableAccess* = 1; 
+	DisableAccess* = 0; 
+	LSBFirst* = 0; 
+	MSBFirst* = 1; 
+	XA_PRIMARY* = 1; 
+	XA_SECONDARY* = 2; 
+	XA_ARC* = 3; 
+	XA_ATOM* = 4; 
+	XA_BITMAP* = 5; 
+	XA_CARDINAL* = 6; 
+	XA_COLORMAP* = 7; 
+	XA_CURSOR* = 8; 
+	XA_CUT_BUFFER0* = 9; 
+	XA_CUT_BUFFER1* = 10; 
+	XA_CUT_BUFFER2* = 11; 
+	XA_CUT_BUFFER3* = 12; 
+	XA_CUT_BUFFER4* = 13; 
+	XA_CUT_BUFFER5* = 14; 
+	XA_CUT_BUFFER6* = 15; 
+	XA_CUT_BUFFER7* = 16; 
+	XA_DRAWABLE* = 17; 
+	XA_FONT* = 18; 
+	XA_INTEGER* = 19; 
+	XA_PIXMAP* = 20; 
+	XA_POINT* = 21; 
+	XA_RECTANGLE* = 22; 
+	XA_RESOURCE_MANAGER* = 23; 
+	XA_RGB_COLOR_MAP* = 24; 
+	XA_RGB_BEST_MAP* = 25; 
+	XA_RGB_BLUE_MAP* = 26; 
+	XA_RGB_DEFAULT_MAP* = 27; 
+	XA_RGB_GRAY_MAP* = 28; 
+	XA_RGB_GREEN_MAP* = 29; 
+	XA_RGB_RED_MAP* = 30; 
+	XA_STRING* = 31; 
+	XA_VISUALID* = 32; 
+	XA_WINDOW* = 33; 
+	XA_WM_COMMAND* = 34; 
+	XA_WM_HINTS* = 35; 
+	XA_WM_CLIENT_MACHINE* = 36; 
+	XA_WM_ICON_NAME* = 37; 
+	XA_WM_ICON_SIZE* = 38; 
+	XA_WM_NAME* = 39; 
+	XA_WM_NORMAL_HINTS* = 40; 
+	XA_WM_SIZE_HINTS* = 41; 
+	XA_WM_ZOOM_HINTS* = 42; 
+	XA_MIN_SPACE* = 43; 
+	XA_NORM_SPACE* = 44; 
+	XA_MAX_SPACE* = 45; 
+	XA_END_SPACE* = 46; 
+	XA_SUPERSCRIPT_X* = 47; 
+	XA_SUPERSCRIPT_Y* = 48; 
+	XA_SUBSCRIPT_X* = 49; 
+	XA_SUBSCRIPT_Y* = 50; 
+	XA_UNDERLINE_POSITION* = 51; 
+	XA_UNDERLINE_THICKNESS* = 52; 
+	XA_STRIKEOUT_ASCENT* = 53; 
+	XA_STRIKEOUT_DESCENT* = 54; 
+	XA_ITALIC_ANGLE* = 55; 
+	XA_X_HEIGHT* = 56; 
+	XA_QUAD_WIDTH* = 57; 
+	XA_WEIGHT* = 58; 
+	XA_POINT_SIZE* = 59; 
+	XA_RESOLUTION* = 60; 
+	XA_COPYRIGHT* = 61; 
+	XA_NOTICE* = 62; 
+	XA_FONT_NAME* = 63; 
+	XA_FAMILY_NAME* = 64; 
+	XA_FULL_NAME* = 65; 
+	XA_CAP_HEIGHT* = 66; 
+	XA_WM_CLASS* = 67; 
+	XA_WM_TRANSIENT_FOR* = 68; 
+	XA_LAST_PREDEFINED* = 68; 
+	XC_num_glyphs* = 154; 
+	XC_X_cursor* = 0; 
+	XC_arrow* = 2; 
+	XC_based_arrow_down* = 4; 
+	XC_based_arrow_up* = 6; 
+	XC_boat* = 8; 
+	XC_bogosity* = 10; 
+	XC_bottom_left_corner* = 12; 
+	XC_bottom_right_corner* = 14; 
+	XC_bottom_side* = 16; 
+	XC_bottom_tee* = 18; 
+	XC_box_spiral* = 20; 
+	XC_center_ptr* = 22; 
+	XC_circle* = 24; 
+	XC_clock* = 26; 
+	XC_coffee_mug* = 28; 
+	XC_cross* = 30; 
+	XC_cross_reverse* = 32; 
+	XC_crosshair* = 34; 
+	XC_diamond_cross* = 36; 
+	XC_dot* = 38; 
+	XC_dotbox* = 40; 
+	XC_double_arrow* = 42; 
+	XC_draft_large* = 44; 
+	XC_draft_small* = 46; 
+	XC_draped_box* = 48; 
+	XC_exchange* = 50; 
+	XC_fleur* = 52; 
+	XC_gobbler* = 54; 
+	XC_gumby* = 56; 
+	XC_hand1* = 58; 
+	XC_hand2* = 60; 
+	XC_heart* = 62; 
+	XC_icon* = 64; 
+	XC_iron_cross* = 66; 
+	XC_left_ptr* = 68; 
+	XC_left_side* = 70; 
+	XC_left_tee* = 72; 
+	XC_leftbutton* = 74; 
+	XC_ll_angle* = 76; 
+	XC_lr_angle* = 78; 
+	XC_man* = 80; 
+	XC_middlebutton* = 82; 
+	XC_mouse* = 84; 
+	XC_pencil* = 86; 
+	XC_pirate* = 88; 
+	XC_plus* = 90; 
+	XC_question_arrow* = 92; 
+	XC_right_ptr* = 94; 
+	XC_right_side* = 96; 
+	XC_right_tee* = 98; 
+	XC_rightbutton* = 100; 
+	XC_rtl_logo* = 102; 
+	XC_sailboat* = 104; 
+	XC_sb_down_arrow* = 106; 
+	XC_sb_h_double_arrow* = 108; 
+	XC_sb_left_arrow* = 110; 
+	XC_sb_right_arrow* = 112; 
+	XC_sb_up_arrow* = 114; 
+	XC_sb_v_double_arrow* = 116; 
+	XC_shuttle* = 118; 
+	XC_sizing* = 120; 
+	XC_spider* = 122; 
+	XC_spraycan* = 124; 
+	XC_star* = 126; 
+	XC_target* = 128; 
+	XC_tcross* = 130; 
+	XC_top_left_arrow* = 132; 
+	XC_top_left_corner* = 134; 
+	XC_top_right_corner* = 136; 
+	XC_top_side* = 138; 
+	XC_top_tee* = 140; 
+	XC_trek* = 142; 
+	XC_ul_angle* = 144; 
+	XC_umbrella* = 146; 
+	XC_ur_angle* = 148; 
+	XC_watch* = 150; 
+	XC_xterm* = 152; 
+TYPE 
+	Pixmap* = ADDRESS; 
+
+	Pattern* = ADDRESS; 
+
+	PatternPtr* = POINTER TO PatternDesc; 
+
+	PatternDesc* = RECORD 
+		x*, y*: SIGNED32; 
+		w*, h*: SIGNED16; 
+		pixmap*: Pixmap; 
+	END; 
+
+	MetricDesc* = RECORD 
+		dx*, x*, y*, filler: SIGNED16; 
+		p*: PatternDesc; 
+	END; 
+
+	Font* = POINTER TO Bytes; 
+
+	Bytes* = RECORD 
+		metrics*: ARRAY 256 OF MetricDesc; 
+		xid*: SIGNED32; 
+	END; 
+
+	XID* = ADDRESS; 
+
+	Buffer* = ARRAY BufferSize OF CHAR; 
+
+	ComposeStatus* = RECORD 
+		opaque: ARRAY 6 OF SIGNED32; 
+	END; 
+
+	Modifiers* = ARRAY 8 OF KeySym; 
+
+	DisplayPtr* = ADDRESS; 
+
+	Window* = ADDRESS; 
+
+	Drawable* = ADDRESS; 
+
+	GC* = ADDRESS; 
+
+	Bool* = INTEGER; 
+
+	Colormap* = ADDRESS; 
+
+	Time* = ADDRESS; 
+
+	Atom* = ADDRESS; 
+
+	VisualID* = ADDRESS; 
+
+	Visual* = RECORD 
+		extData*: ADDRESS; 
+		visualid*: VisualID; 
+		class*: INTEGER; 
+		redMask*, greenMask*, blueMask*: LONGINTEGER; 
+		bitsPerRgb*, mapEntries*: INTEGER; 
+	END; 
+
+	VisualPtr* = POINTER {UNSAFE, UNTRACED} TO Visual; 
+
+	VisualInfo* = RECORD 
+		visual*{UNTRACED} : VisualPtr; 
+		visualID*: VisualID; 
+		screen*, depth*, class*: INTEGER; 
+		redmask*, greenmask*, bluemask*: LONGINTEGER; 
+		colomapsize*, bitsperrgb*: INTEGER; 
+	END; 
+
+	Color* = RECORD 
+		pixel*: LONGINTEGER; 
+		red*, green*, blue*: SIGNED16; 
+		flags*, pad*: CHAR; 
+	END; 
+
+	Point* = RECORD 
+		x*, y*: SIGNED16; 
+	END; 
+
+	Rectangle* = RECORD 
+		x*, y*, w*, h*: SIGNED16; 
+	END; 
+
+	Cursor* = ADDRESS; 
+
+	KeySym* = ADDRESS; 
+
+	KeyCode* = CHAR; 
+
+	AnyEvent* = RECORD 
+		typ*: INTEGER; 
+		serial*: LONGINTEGER; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		window*: Window; 
+	END; 
+
+	Event* = RECORD (AnyEvent)
+		pad*: ARRAY (192 -  SIZE OF AnyEvent) OF CHAR; 
+	END; 
+
+	SelectionEvent* = RECORD 
+		typ*: INTEGER; 
+		serial*: LONGINTEGER; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		requestor*: Window; 
+		selection*, target*, property*: Atom; 
+		time*: Time; 
+	END; 
+
+	SelectionRequestEvent* = RECORD 
+		typ*: INTEGER; 
+		serial*: LONGINTEGER; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		owner*, requestor*: Window; 
+		selection*, target*, property*: Atom; 
+		time*: Time; 
+	END; 
+
+	ExposeEvent* = RECORD 
+		typ*: INTEGER; 
+		serial*: LONGINTEGER; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		window*: Window; 
+		x*, y*, width*, height*, count*: INTEGER; 
+	END; 
+
+	GraphicsExposeEvent* = RECORD 
+		typ*: INTEGER; 
+		serial*: LONGINTEGER; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		drawable*: Drawable; 
+		x*, y*, width*, height*, count*, majorCode*, minorCode*: INTEGER; 
+	END; 
+
+	ButtonEvent* = RECORD 
+		typ*: INTEGER; 
+		serial*: LONGINTEGER; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		window*, root*, subwindow*: Window; 
+		time*: Time; 
+		x*, y*, xRoot*, yRoot*, state*, button*: INTEGER; 
+		sameScreen: Bool; 
+	END; 
+
+	MotionEvent* = RECORD 
+		typ*: INTEGER; 
+		serial*: LONGINTEGER; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		window*, root*, subwindow*: Window; 
+		time*: Time; 
+		x*, y*, xRoot*, yRoot*, state*, button*: INTEGER; 
+		isHint*: CHAR; 
+		sameScreen*: Bool; 
+	END; 
+
+	KeyEvent* = RECORD 
+		typ*: INTEGER; 
+		serial*: LONGINTEGER; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		window*, root*, subwindow*: Window; 
+		time*: Time; 
+		x*, y*, xRoot*, yRoot*: INTEGER; 
+		state*: INTEGERSET; 
+		keycode*: INTEGER; 
+		sameScreen: Bool; 
+	END; 
+
+	Image* = ADDRESS; 
+
+	ImagePtr* = POINTER {UNSAFE, UNTRACED} TO ImageDesc; 
+
+	ImageDesc* = RECORD 
+		width*, height*: INTEGER; 
+		xoffset*, format*: INTEGER; 
+		data*: ADDRESS; 
+		byteOrder*, bitmapUnit*, bitmapBitOrder*: INTEGER; 
+		bitmapPad*, depth*, bytesPerLine*, bitsPerPixel*: INTEGER; 
+		redmask*, greenmask*, bluemask*: LONGINTEGER; 
+		obdata*, createImage*, destroyImage*, getPixel*, putPixel*, subImage*, addPixel*: ADDRESS; 
+	END; 
+
+	ErrorEvent* = RECORD 
+		typ*: INTEGER; 
+		display*: DisplayPtr; 
+		resourceid*: ADDRESS; 
+		serial*: LONGINTEGER; 
+		errorCode*, requestCode*, minorCode*: CHAR; 
+	END; 
+
+	Data40* = ARRAY 5 OF LONGINTEGER; 
+
+	Data40b* = ARRAY 20 OF CHAR; 
+
+	Data40s* = ARRAY 10 OF SIGNED16; 
+
+	Data40l* = ARRAY 5 OF SIGNED32; 
+
+	ClientMessageEvent* = RECORD 
+		typ*: INTEGER; 
+		serial*: LONGINTEGER; 
+		sendEvent*: BOOLEAN; 
+		display*: DisplayPtr; 
+		window*: Window; 
+		messageType*: Atom; 
+		format*: INTEGER; 
+		data*: Data40; 
+	END; 
+
+	ConfigureEvent* = RECORD 
+		typ*: INTEGER; 
+		serial*: LONGINTEGER; 
+		sendEvent*: BOOLEAN; 
+		display*: DisplayPtr; 
+		event*: Window; 
+		window*: Window; 
+		x*, y*: INTEGER; 
+		width*, height*: INTEGER; 
+		borderWidth*: INTEGER; 
+		above*: Window; 
+		overrideRedirect*: BOOLEAN; 
+	END; 
+
+	ErrorEventPtr* = POINTER {UNSAFE, UNTRACED} TO ErrorEvent; 
+
+	ErrorHandler* = PROCEDURE (d: DisplayPtr; err: ErrorEventPtr; p3, p4: SIGNED32):SIGNED32; 
+
+	IOErrorHandler = PROCEDURE (d: DisplayPtr; p2, p3, p4: SIGNED32):SIGNED32; 
+
+	PChar* = POINTER TO ARRAY OF CHAR; 
+
+	VisualInfoPtr* = POINTER {UNSAFE, UNTRACED} TO VisualInfo; 
+
+	XSetWindowAttributes* = RECORD 
+		backgroundPixmap*: Pixmap; 
+		backgroundPixel*: LONGINTEGER; 
+		borderPixmap*: Pixmap; 
+		borderPixel*: LONGINTEGER; 
+		bitGravity*: INTEGER; 
+		winGravity*: INTEGER; 
+		backingStore*: INTEGER; 
+		backingPlanes*: LONGINTEGER; 
+		backingPixel*: LONGINTEGER; 
+		saveUnder*: BOOLEAN; 
+		eventMask*: LONGINTEGER; 
+		doNotPropagateMask*: LONGINTEGER; 
+		overrideRedirect*: BOOLEAN; 
+		colormap*: Colormap; 
+		cursor*: Cursor; 
+	END; 
+
+	XWindowAttributes* = RECORD 
+		x*, y*: INTEGER; 
+		width*, height*: INTEGER; 
+		borderWidth*: INTEGER; 
+		depth*: INTEGER; 
+		visual*: VisualPtr; 
+		root*: Window; 
+		class*: INTEGER; 
+		bitGravity*: INTEGER; 
+		winGravity*: INTEGER; 
+		backingStore*: INTEGER; 
+		backingPlanes*: LONGINTEGER; 
+		backingPixel*: LONGINTEGER; 
+		saveUnder*: BOOLEAN; 
+		colormap*: Colormap; 
+		mapInstalled*: BOOLEAN; 
+		mapState*: INTEGER; 
+		allEventMasks*: LONGINTEGER; 
+		yourEventMask*: LONGINTEGER; 
+		doNotPropagateMask*: LONGINTEGER; 
+		overrideRedirect*: BOOLEAN; 
+		screen*: ADDRESS; 
+	END; 
+
+	XHostAddress* = RECORD 
+		family*: INTEGER; 
+		length*: INTEGER; 
+		address*: ADDRESS; 
+	END; 
+
+	XServerInterpretedAddress* = RECORD 
+		typelength*: INTEGER; 
+		valuelength*: INTEGER; 
+		type*: ADDRESS; 
+		value*: ADDRESS; 
+	END; 
+
+	XWindowChanges* = RECORD 
+		x*, y*: INTEGER; 
+		width*, height*: INTEGER; 
+		borderWidth*: INTEGER; 
+		sibling*: Window; 
+		stackMode*: INTEGER; 
+	END; 
+
+	DataAspect* = RECORD 
+		x*: INTEGER; 
+		y*: INTEGER; 
+	END; 
+
+	XSizeHints* = RECORD 
+		flags*: LONGINTEGER; 
+		x*, y*: INTEGER; 
+		width*, height*: INTEGER; 
+		minWidth*, minHeight*: INTEGER; 
+		maxWidth*, maxHeight*: INTEGER; 
+		widthInc*, heightInc*: INTEGER; 
+		maxAspect*, minAspect*: DataAspect; 
+		baseWidth*, baseHeight*: INTEGER; 
+		winGravity*: INTEGER; 
+	END; 
+
+	ExtData* = POINTER {UNTRACED, UNSAFE} TO ExtDataDesc; 
+
+	ExtDataDesc* = RECORD 
+		number*: INTEGER; 
+		next*: ExtData; 
+		free_private*: ADDRESS; 
+		extension*: ExtData; 
+		private_data*: ADDRESS; 
+	END; 
+
+	CharStruct* = RECORD 
+		lbearing*: SIGNED16; 
+		rbearing*: SIGNED16; 
+		width*: SIGNED16; 
+		ascent*: SIGNED16; 
+		descent*: SIGNED16; 
+		attributes*: SIGNED16; 
+	END; 
+
+	FontProp* = RECORD 
+		name*: Atom; 
+		card32*: LONGINTEGER; 
+	END; 
+
+	FontStruct* = POINTER {UNTRACED, UNSAFE} TO FontStructDesc; 
+
+	FontStructDesc* = RECORD 
+		ext_data*: ExtData; 
+		fid*: Font; 
+		direction*: INTEGER; 
+		min_char_or_byte2*: INTEGER; 
+		max_char_or_byte2*: INTEGER; 
+		min_byte1*: INTEGER; 
+		max_byte1*: INTEGER; 
+		all_chars_exist*: Bool; 
+		default_char*: INTEGER; 
+		n_properties*: INTEGER; 
+		properties*: ADDRESS; 
+		min_bounds*: CharStruct; 
+		max_bounds*: CharStruct; 
+		per_char*: ADDRESS; 
+		ascent*: INTEGER; 
+		descent*: INTEGER; 
+	END; 
+
+	XTextProperty* = RECORD 
+		value*: ADDRESS; 
+		encoding*: Atom; 
+		format*: INTEGER; 
+		nitems*: LONGINTEGER; 
+	END; 
+
+	Status* = INTEGER; 
+VAR 
+	ErrorText*: Buffer; 
+	ErrorFlag*: BOOLEAN; 
+	lastEventTime*: Time; 
+	ioErrors: SIGNED16; 
+	OpenDisplay-: PROCEDURE {C}(CONST name: ARRAY OF CHAR):DisplayPtr; 
+	DefaultScreen-: PROCEDURE {C}(d: DisplayPtr):INTEGER; 
+	DisplayWidth-: PROCEDURE {C}(d: DisplayPtr; screen: INTEGER):INTEGER; 
+	DisplayHeight-: PROCEDURE {C}(d: DisplayPtr; screen: INTEGER):INTEGER; 
+	DisplayHeightMM-: PROCEDURE {C}(d: DisplayPtr; screen: INTEGER):INTEGER; 
+	DefaultDepth-: PROCEDURE {C}(d: DisplayPtr; screen: INTEGER):INTEGER; 
+	DisplayCells-: PROCEDURE {C}(d: DisplayPtr; screen: INTEGER):INTEGER; 
+	DisplayPlanes-: PROCEDURE {C}(d: DisplayPtr; screen: INTEGER):INTEGER; 
+	BlackPixel-: PROCEDURE {C}(d: DisplayPtr; screen: INTEGER):LONGINTEGER; 
+	WhitePixel-: PROCEDURE {C}(d: DisplayPtr; screen: INTEGER):LONGINTEGER; 
+	DefaultVisual-: PROCEDURE {C}(d: DisplayPtr; screen: INTEGER):ADDRESS; 
+	DefaultColormap-: PROCEDURE {C}(d: DisplayPtr; screen: INTEGER):Colormap; 
+	DefaultRootWindow-: PROCEDURE {C}(d: DisplayPtr):Window; 
+	CreateSimpleWindow-: PROCEDURE {C}(d: DisplayPtr; parent: Window; x, y, width, height, borderWidth: INTEGER; border, background: LONGINTEGER):Window; 
+	TranslateCoordinates-: PROCEDURE {C}(d: DisplayPtr; sw, dw: Window; srcx, srcy: INTEGER; VAR dstx, dsty: INTEGER; VAR child: Window); 
+	MoveResizeWindow-: PROCEDURE {C}(d: DisplayPtr; w: Window; x, y, width, height: INTEGER); 
+	StoreName-, SetIconName-: PROCEDURE {C}(d: DisplayPtr; w: Window; name: ADDRESS); 
+	SetCommand-: PROCEDURE {C}(d: DisplayPtr; w: Window; argv: ADDRESS; argc: INTEGER); 
+	MapRaised-, LowerWindow-, ClearWindow-: PROCEDURE {C}(d: DisplayPtr; w: Window); 
+	Sync-: PROCEDURE {C}(d: DisplayPtr; discard: Bool); 
+	Flush-: PROCEDURE {C}(d: DisplayPtr); 
+	StoreColor-: PROCEDURE {C}(d: DisplayPtr; cmap: Colormap; color: ADDRESS); 
+	CreateBitmapFromData-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; data: ADDRESS; width, height: INTEGER):Pixmap; 
+	CopyArea-: PROCEDURE {C}(d: DisplayPtr; src, dest: Drawable; gc: GC; srcX, srcY, width, height, destX, destY: INTEGER); 
+	CopyPlane-: PROCEDURE {C}(d: DisplayPtr; src, dest: Drawable; gc: GC; srcX, srcY, width, height, destX, destY: INTEGER; plane: LONGINTEGER); 
+	SetStipple-: PROCEDURE {C}(d: DisplayPtr; gc: GC; stipple: Pixmap); 
+	SetTSOrigin-: PROCEDURE {C}(d: DisplayPtr; gc: GC; tsxorigin, tsyorigin: INTEGER); 
+	DrawPoint-: PROCEDURE {C}(d: DisplayPtr; w: Drawable; gc: GC; x, y: INTEGER); 
+	FillRectangle-: PROCEDURE {C}(d: DisplayPtr; w: Drawable; gc: GC; x, y, width, height: INTEGER); 
+	DrawString-: PROCEDURE {C}(d: DisplayPtr; w: Drawable; gc: GC; x, y: INTEGER; string: ADDRESS; length: INTEGER); 
+	CreateGC-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; valueMask: LONGINTEGER; values: ADDRESS):GC; 
+	SetForeground-: PROCEDURE {C}(d: DisplayPtr; gc: GC; foreground: LONGINTEGER); 
+	SetBackground-: PROCEDURE {C}(d: DisplayPtr; gc: GC; background: LONGINTEGER); 
+	SetFunction-: PROCEDURE {C}(d: DisplayPtr; gc: GC; function: INTEGER); 
+	SetFont-: PROCEDURE {C}(d: DisplayPtr; gc: GC; font: ADDRESS); 
+	SetFillStyle-: PROCEDURE {C}(d: DisplayPtr; gc: GC; fill_style: INTEGER); 
+	SetPlaneMask-: PROCEDURE {C}(d: DisplayPtr; gc: GC; mask: LONGINTEGER); 
+	SetGraphicsExposures-: PROCEDURE {C}(d: DisplayPtr; gc: GC; graphicsExposures: Bool); 
+	SetLineAttributes-: PROCEDURE {C}(d: DisplayPtr; gc: GC; lineWidth, lineStyle, capStyle, joinStyle: INTEGER); 
+	AllocColorCells-: PROCEDURE {C}(d: DisplayPtr; cmap: Colormap; contig: Bool; VAR planeMasks: LONGINTEGER; nplanes: INTEGER; VAR pixels: LONGINTEGER; ncolors: INTEGER):INTEGER; 
+	SetWindowBackground-: PROCEDURE {C}(d: DisplayPtr; w: Window; pixel: LONGINTEGER); 
+	CreateFontCursor-: PROCEDURE {C}(d: DisplayPtr; shape: INTEGER):Cursor; 
+	CreatePixmapCursor-: PROCEDURE {C}(d: DisplayPtr; csource, cmask: Pixmap; VAR cfore, cback: Color; xhot, yhot: INTEGER):Cursor; 
+	RecolorCursor-: PROCEDURE {C}(d: DisplayPtr; curs: Cursor; cfore, cback: ADDRESS); 
+	DefineCursor-: PROCEDURE {C}(d: DisplayPtr; w: Window; curs: Cursor); 
+	DrawLine-: PROCEDURE {C}(d: DisplayPtr; w: Window; gc: GC; x1, y1, x2, y2: INTEGER); 
+	SetArcMode-: PROCEDURE {C}(d: DisplayPtr; gc: GC; arcmode: INTEGER); 
+	DrawArc-, FillArc-: PROCEDURE {C}(d: DisplayPtr; w: Window; gc: GC; x, y, width, height, angle1, angle2: INTEGER); 
+	FillPolygon-: PROCEDURE {C}(d: DisplayPtr; w: Window; gc: GC; points: ADDRESS; npoints, shape, mode: INTEGER); 
+	SetClipMask-: PROCEDURE {C}(d: DisplayPtr; gc: GC; clipMask: Pixmap); 
+	SetClipRectangles-: PROCEDURE {C}(d: DisplayPtr; gc: GC; clipxorigin, clipyorigin: INTEGER; rectangles: ADDRESS; n, ordering: INTEGER); 
+	ListFonts-: PROCEDURE {C}(d: DisplayPtr; pattern: ADDRESS; maxnames: INTEGER; VAR count: INTEGER):ADDRESS; 
+	FreeFontNames-: PROCEDURE {C}(list: ADDRESS); 
+	LoadFont-: PROCEDURE {C}(d: DisplayPtr; name: ADDRESS):INTEGER; 
+	SelectInput-: PROCEDURE {C}(d: DisplayPtr; w: Window; eventMask: LONGINTEGER); 
+	NextEvent-: PROCEDURE {C}(d: DisplayPtr; VAR event: Event); 
+	EventsQueued-: PROCEDURE {C}(d: DisplayPtr; mode: INTEGER):INTEGER; 
+	SetInputFocus-: PROCEDURE {C}(d: DisplayPtr; focus: Window; revertTo: INTEGER; time: Time); 
+	LookupString-: PROCEDURE {C}(VAR event: KeyEvent; VAR buf: ARRAY OF CHAR; bufsize: INTEGER; VAR keysym: KeySym; VAR cstat: ComposeStatus):INTEGER; 
+	QueryPointer-: PROCEDURE {C}(d: DisplayPtr; w: Window; VAR rw, cw: Window; VAR xr, yr, xw, yw: INTEGER; VAR keysButtons: INTEGERSET); 
+	RefreshKeyboardMapping-: PROCEDURE {C}(event: ADDRESS); 
+	Bell-: PROCEDURE {C}(d: DisplayPtr; percent: INTEGER); 
+	RebindKeysym-: PROCEDURE {C}(d: DisplayPtr; reboundsym: KeySym; VAR modlist: Modifiers; modlength: INTEGER; newstring: ADDRESS; newlength: INTEGER); 
+	StringToKeysym-: PROCEDURE {C}(string: ADDRESS):KeySym; 
+	CopyColormapAndFree-: PROCEDURE {C}(d: DisplayPtr; cmap: Colormap):Colormap; 
+	CreateColormap-: PROCEDURE {C}(d: DisplayPtr; w: Window; vis: VisualPtr; alloc: INTEGER):Colormap; 
+	MatchVisualInfo-: PROCEDURE {C}(d: DisplayPtr; screen, depth, class: INTEGER; VAR vinfo: VisualInfo):INTEGER; 
+	SetWindowColormap-: PROCEDURE {C}(d: DisplayPtr; w: Window; cmap: Colormap); 
+	QueryBestSize-: PROCEDURE {C}(d: DisplayPtr; class: INTEGER; screen: Drawable; width, height: INTEGER; VAR w, h: INTEGER); 
+	CreatePixmap-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; width, height, depth: INTEGER):Pixmap; 
+	FreePixmap-: PROCEDURE {C}(d: DisplayPtr; pixmap: Pixmap); 
+	CreateImage-: PROCEDURE {C}(d: DisplayPtr; visual: VisualPtr; depth, format, offset: INTEGER; data: ADDRESS; width, height, bitmapPad, bytesPerLine: INTEGER):Image; 
+	DestroyImage-: PROCEDURE {C}(image: Image); 
+	SubImage-: PROCEDURE {C}(image: Image; x, y, width, height: INTEGER):Image; 
+	GetImage-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; x, y, width, height: INTEGER; planeMask: LONGINTEGER; format: INTEGER):Image; 
+	GetSubImage-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; x, y, width, height: INTEGER; planeMask: LONGINTEGER; format: INTEGER; dstImage: Image; dstX, dstY: INTEGER):Image; 
+	PutImage-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; gc: GC; image: Image; srcX, srcY, dstX, dstY, width, height: INTEGER); 
+	PutPixel-: PROCEDURE {C}(image: Image; x, y: INTEGER; pixel: LONGINTEGER):INTEGER; 
+	GetPixel-: PROCEDURE {C}(image: Image; x, y: INTEGER):LONGINTEGER; 
+	AddPixel-: PROCEDURE {C}(image: Image; value: LONGINTEGER); 
+	Free-: PROCEDURE {C}(data: ADDRESS); 
+	GetErrorText-: PROCEDURE {C}(d: DisplayPtr; errcode: INTEGER; VAR buf: ARRAY OF CHAR; length: INTEGER); 
+	StoreBytes-: PROCEDURE {C}(d: DisplayPtr; bytes: ADDRESS; nbytes: INTEGER); 
+	FetchBytes-: PROCEDURE {C}(d: DisplayPtr; VAR nbytes: INTEGER):ADDRESS; 
+	SetSelectionOwner-: PROCEDURE {C}(d: DisplayPtr; selection: Atom; owner: Window; time: Time); 
+	GetSelectionOwner-: PROCEDURE {C}(d: DisplayPtr; selection: Atom):Window; 
+	InternAtom-: PROCEDURE {C}(d: DisplayPtr; CONST name: ARRAY OF CHAR; onlyifexists: Bool):Atom; 
+	SendEvent-: PROCEDURE {C}(d: DisplayPtr; w: Window; propagate: Bool; eventmask: LONGINTEGER; event: ADDRESS); 
+	ConvertSelection-: PROCEDURE {C}(d: DisplayPtr; selection, target, property: Atom; requestor: Window; timestamp: Time); 
+	ChangeProperty-: PROCEDURE {C}(d: DisplayPtr; w: Window; property, typ: Atom; format, mode: INTEGER; data: ADDRESS; nelements: INTEGER); 
+	GetWindowProperty-: PROCEDURE {C}(d: DisplayPtr; w: Window; property: Atom; offset, length: LONGINTEGER; delete: Bool; reqtype: Atom; VAR typ: Atom; VAR format: INTEGER; VAR nitems, bytesafter: LONGINTEGER; VAR prop: ADDRESS); 
+	DeleteProperty-: PROCEDURE {C}(d: DisplayPtr; w: Window; property: Atom); 
+	WarpPointer-: PROCEDURE {C}(d: DisplayPtr; srcwin, dstwin: Window; srcx, srcy, srcw, srch, dstx, dsty: INTEGER); 
+	InstallColormap-: PROCEDURE {C}(d: DisplayPtr; cmap: Colormap); 
+	GetGeometry-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; VAR root, x, y, width, height, orderWidth, Depth: INTEGER); 
+	ResizeWindow-: PROCEDURE {C}(d: DisplayPtr; w: Window; x, y: INTEGER); 
+	Synchronize-: PROCEDURE {C}(d: DisplayPtr; onoff: Bool); 
+	AllocColor-: PROCEDURE {C}(d: DisplayPtr; cmap: Colormap; color: ADDRESS):INTEGER; 
+	InitXErrorHandlers-: PROCEDURE {C}(eh: ErrorHandler; ioeh: IOErrorHandler); 
+	CloseDisplay-: PROCEDURE {C}(display: DisplayPtr):INTEGER; 
+	CreateWindow-: PROCEDURE {C}(display: DisplayPtr; parent: Window; x, y: INTEGER; width, height, borderWidth, depth, class: INTEGER; visual: VisualPtr; valuemask: LONGINTEGER; VAR attributes: XSetWindowAttributes):Window; 
+	DestroyWindow-: PROCEDURE {C}(display: DisplayPtr; win: Window):INTEGER; 
+	DisplayWidthMM-: PROCEDURE {C}(d: DisplayPtr; screen: INTEGER):INTEGER; 
+	FreeColormap-: PROCEDURE {C}(display: DisplayPtr; colormap: Colormap); 
+	FreeCursor-: PROCEDURE {C}(display: DisplayPtr; cursor: Cursor); 
+	XGetAtomName-: PROCEDURE {C}(display: DisplayPtr; atom: Atom):ADDRESS; 
+	GetWindowAttributes-: PROCEDURE {C}(display: DisplayPtr; win: Window; VAR attr: XWindowAttributes):Status; 
+	GrabKeyboard-: PROCEDURE {C}(display: DisplayPtr; grabwindow: Window; ownerevents: Bool; pointermode, keyboardmode: INTEGER; time: Time):INTEGER; 
+	GrabPointer-: PROCEDURE {C}(display: DisplayPtr; grabwindow: Window; ownerevents: Bool; eventmask: INTEGER; pointermode, keyboardmode: INTEGER; confineto: Window; cursor: Cursor; time: Time):INTEGER; 
+	LookupKeysym-: PROCEDURE {C}(CONST event: KeyEvent; index: INTEGER):KeySym; 
+	MapWindow-: PROCEDURE {C}(display: DisplayPtr; win: Window); 
+	Pending-: PROCEDURE {C}(display: DisplayPtr):INTEGER; 
+	RaiseWindow-: PROCEDURE {C}(display: DisplayPtr; win: Window); 
+	RootWindow-: PROCEDURE {C}(display: DisplayPtr; screen: INTEGER):Window; 
+	SetNormalHints-: PROCEDURE {C}(d: DisplayPtr; w: Window; VAR hints: XSizeHints); 
+	GetNormalHints-: PROCEDURE {C}(d: DisplayPtr; w: Window; VAR hints: XSizeHints):Status; 
+	SetStandardProperties-: PROCEDURE {C}(display: DisplayPtr; w: Window; CONST winName: ARRAY OF CHAR; CONST iconName: ARRAY OF CHAR; iconpixmap: Pixmap; argv: ADDRESS; argc: INTEGER; VAR hints: XSizeHints); 
+	SetWMProtocols-: PROCEDURE {C}(display: DisplayPtr; win: Window; protocols: ADDRESS; count: INTEGER):Status; 
+	UnmapWindow-: PROCEDURE {C}(display: DisplayPtr; win: Window); 
+	SendSelection*: PROCEDURE {DELEGATE}(VAR event: SelectionRequestEvent); 
+	ReceiveSelection*: PROCEDURE {DELEGATE}(VAR event: SelectionEvent); 
+	ClearSelection*: PROCEDURE {DELEGATE}; 
+	CheckTypedEvent-: PROCEDURE {C}(display: DisplayPtr; eventType: INTEGER; VAR event: Event):Bool; 
+	CheckMaskEvent-: PROCEDURE {C}(display: DisplayPtr; eventMask: LONGINTEGER; VAR event: Event):Bool; 
+	CheckTypedWindowEvent-: PROCEDURE {C}(display: DisplayPtr; window: Window; eventType: INTEGER; VAR event: Event):Bool; 
+	CheckWindowEvent-: PROCEDURE {C}(display: DisplayPtr; window: Window; eventMask: LONGINTEGER; VAR event: Event):Bool; 
+	LoadQueryFont-: PROCEDURE {C}(display: DisplayPtr; name: ADDRESS):FontStruct; 
+	QueryFont-: PROCEDURE {C}(display: DisplayPtr; name: XID):FontStruct; 
+	KeycodeToKeysym-: PROCEDURE {C}(disp: DisplayPtr; keycode: INTEGER; index: INTEGER):KeySym; 
+	KeysymToKeycode-: PROCEDURE {C}(disp: DisplayPtr; keysym: KeySym):INTEGER; 
+	XKeysymToString-: PROCEDURE {C}(keysym: KeySym):ADDRESS; 
+
+	PROCEDURE ^ LinkToX; 
+	PROCEDURE ^ MyErrorHandler(d: DisplayPtr; err{UNTRACED} : ErrorEventPtr): SIGNED32; 
+	PROCEDURE ^ MyIOErrorHandler(d: DisplayPtr): SIGNED32; 
+BEGIN
+END X11.

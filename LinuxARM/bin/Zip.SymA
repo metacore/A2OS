@@ -1,0 +1,150 @@
+MODULE Zip;
+	IMPORT Strings, Streams, Files, Archives, Locks, Zlib, ZlibReaders, ZlibWriters;
+CONST 
+	Ok* = 0; 
+	FileError* =  -1; 
+	NotZipArchiveError* =  -2; 
+	EntryNotFound* =  -3; 
+	EntryAlreadyExists* =  -4; 
+	NotSupportedError* =  -5; 
+	DataError* =  -6; 
+	BadName* =  -7; 
+	ReaderError* =  -8; 
+	DefaultCompression* = ZlibWriters.DefaultCompression; 
+	NoCompression* = ZlibWriters.NoCompression; 
+	BestSpeed* = ZlibWriters.BestSpeed; 
+	BestCompression* = ZlibWriters.BestCompression; 
+	DefaultStrategy* = ZlibWriters.DefaultStrategy; 
+	Filtered* = ZlibWriters.Filtered; 
+	HuffmanOnly* = ZlibWriters.HuffmanOnly; 
+	EntryNameSize = 256; 
+	Supported = 0; 
+	IncompatibleVersion = 1; 
+	Encrypted = 2; 
+	UnsupCompMethod = 3; 
+	Stored = 0; 
+	Deflated = 8; 
+	SupportedCompMethods = {Stored, Deflated}; 
+	CompatibleVersions = 1; 
+	LocalFileHeaderSignature = 67324752; 
+	CentralFileHeaderSignature = 33639248; 
+	EndOfCentralDirSignature = 101010256; 
+TYPE 
+	Entry* = POINTER TO EntryDesc; 
+
+	EntryDesc* = RECORD 
+		name-: ARRAY EntryNameSize OF CHAR; 
+		method: SIGNED16; 
+		time-, date-: SIGNED32; 
+		crc32: SIGNED32; 
+		compSize-, uncompSize-: SIGNED32; 
+		intFileAttr: SIGNED16; 
+		extFileAttr: SIGNED32; 
+		extraField, comment-: POINTER TO ARRAY OF CHAR; 
+		genPurpBitFlag: SIGNED16; 
+		support: SIGNED8; 
+		dataDescriptor: BOOLEAN; 
+		offsetLocal: SIGNED32; 
+		offsetFileData: SIGNED32; 
+		offsetCentralDir: SIGNED32; 
+		next: Entry; 
+	END; 
+
+	Archive* = POINTER TO ArchiveDesc; 
+
+	ArchiveDesc* = RECORD 
+		nofEntries-: SIGNED16; 
+		comment-: POINTER TO ARRAY OF CHAR; 
+		file-: Files.File; 
+		offset: SIGNED32; 
+		firstEntry, lastEntry: Entry; 
+	END; 
+
+	Reader* = POINTER TO ReaderDesc; 
+
+	ReaderDesc* = RECORD 
+		res-: INTEGER; 
+		open: BOOLEAN; 
+		ent: Entry; 
+	END; 
+
+	UncompReader = POINTER TO UncompReaderDesc; 
+
+	UncompReaderDesc = RECORD (ReaderDesc)
+		fr: Files.Rider; 
+		crc32: SIGNED32; 
+	END; 
+
+	DefReader = POINTER TO DefReaderDesc; 
+
+	DefReaderDesc = RECORD (ReaderDesc)
+		zr: ZlibReaders.Reader; 
+	END; 
+
+	SizeReader = OBJECT 
+	VAR 
+		r: Reader; 
+		max: SIZE; 
+		arc: ArchiveObj; 
+
+		PROCEDURE ^  & Init*(r: Reader; size: SIGNED32; arc: ArchiveObj); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+	END SizeReader; 
+
+	EntryInfo* = OBJECT (Archives.EntryInfo)
+	VAR 
+		name: ARRAY EntryNameSize OF CHAR; 
+		size: SIGNED32; 
+
+		PROCEDURE ^  & Init*(CONST name: ARRAY OF CHAR; size: SIGNED32); 
+		PROCEDURE ^ GetName*(): Strings.String; 
+		PROCEDURE ^ GetSize*(): SIGNED32; 
+		PROCEDURE ^ GetInfoString*(): Strings.String; 
+	END EntryInfo; 
+
+	ArchiveObj* = OBJECT (Archives.Archive)
+	VAR 
+		arc: Archive; 
+		lock: Locks.RecursiveLock; 
+
+		PROCEDURE ^  & Init*(f: Files.File); 
+		PROCEDURE ^ Acquire*; 
+		PROCEDURE ^ Release*; 
+		PROCEDURE ^ GetIndex*(): Archives.Index; 
+		PROCEDURE ^ GetEntryInfo*(CONST name: ARRAY OF CHAR): Archives.EntryInfo; 
+		PROCEDURE ^ RemoveEntry*(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ RenameEntry*(CONST from, to: ARRAY OF CHAR): Archives.EntryInfo; 
+		PROCEDURE ^ OpenSender*(CONST name: ARRAY OF CHAR): Streams.Sender; 
+		PROCEDURE ^ OpenReceiver*(CONST name: ARRAY OF CHAR): Streams.Receiver; 
+		PROCEDURE ^ Copy*(CONST name: ARRAY OF CHAR): Archives.Archive; 
+	END ArchiveObj; 
+
+	PROCEDURE ^ ShowError*(errorCode: INTEGER; out: Streams.Writer); 
+	PROCEDURE ^ StringLength(CONST str: ARRAY OF CHAR): SIZE; 
+	PROCEDURE ^ OberonToDosTime(t: SIGNED32): SIGNED16; 
+	PROCEDURE ^ OberonToDosDate(d: SIGNED32): SIGNED16; 
+	PROCEDURE ^ DosToOberonTime(t: SIGNED16): SIGNED32; 
+	PROCEDURE ^ DosToOberonDate(d: SIGNED16): SIGNED32; 
+	PROCEDURE ^ Copy(VAR src, dst: Files.Rider; len: SIGNED32; compCRC32: BOOLEAN; VAR crc32: SIGNED32); 
+	PROCEDURE ^ ReadEntry(VAR r: Files.Rider): Entry; 
+	PROCEDURE ^ WriteLocalFileHeader(ent: Entry; VAR r: Files.Rider); 
+	PROCEDURE ^ WriteFileHeader(ent: Entry; VAR r: Files.Rider); 
+	PROCEDURE ^ WriteEndOfCentDir(arc: Archive; VAR r: Files.Rider); 
+	PROCEDURE ^ WriteCentralDirectory(arc: Archive; VAR r: Files.Rider); 
+	PROCEDURE ^ OpenArchive*(CONST name: ARRAY OF CHAR; VAR res: INTEGER): Archive; 
+	PROCEDURE ^ OpenArchiveFile(f: Files.File; VAR res: INTEGER): Archive; 
+	PROCEDURE ^ CreateArchive*(CONST name: ARRAY OF CHAR; VAR res: INTEGER): Archive; 
+	PROCEDURE ^ FirstEntry*(arc: Archive): Entry; 
+	PROCEDURE ^ NextEntry*(ent: Entry): Entry; 
+	PROCEDURE ^ GetEntry*(arc: Archive; CONST name: ARRAY OF CHAR; VAR res: INTEGER): Entry; 
+	PROCEDURE ^ ExtractEntry*(arc: Archive; ent: Entry; VAR dst: Files.Rider; VAR res: INTEGER); 
+	PROCEDURE ^ AddEntry*(arc: Archive; CONST name: ARRAY OF CHAR; VAR src: Files.Rider; len: SIGNED32; level, strategy: SIGNED8; VAR res: INTEGER); 
+	PROCEDURE ^ DeleteEntry*(arc: Archive; VAR ent: Entry; VAR res: INTEGER); 
+	PROCEDURE ^ OpenReader*(arc: Archive; ent: Entry): Reader; 
+	PROCEDURE ^ ReadBytes*(r: Reader; VAR buf: ARRAY OF CHAR; offset, len: SIZE; VAR read: SIZE); 
+	PROCEDURE ^ Read*(r: Reader; VAR ch: CHAR); 
+	PROCEDURE ^ Close*(r: Reader); 
+	PROCEDURE ^ Old*(name: Archives.StringObject): Archives.Archive; 
+	PROCEDURE ^ New*(name: Archives.StringObject): Archives.Archive; 
+BEGIN
+END Zip.

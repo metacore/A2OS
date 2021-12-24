@@ -1,0 +1,87 @@
+MODULE Sockets;
+	IMPORT S := SYSTEM, Unix, Trace, IP;
+CONST 
+	Backlog = 5; 
+TYPE 
+	SocketAdr* = POINTER TO RECORD 
+		family*: SIGNED16; 
+		port*: SIGNED16; 
+	END; 
+
+	SocketAdrV4* = POINTER TO RECORD (SocketAdr)
+		v4Adr*: SIGNED32; 
+		zero*: ARRAY 8 OF CHAR; 
+	END; 
+
+	SocketAdrV6* = POINTER TO RECORD (SocketAdr)
+		flowinfo*: SIGNED32; 
+		v6Adr*: ARRAY 16 OF CHAR; 
+		scopeId*: SIGNED32; 
+		srcId*: SIGNED32; 
+	END; 
+
+	NameBuf = POINTER TO RECORD 
+		buf: ARRAY 64 OF CHAR; 
+	END; 
+
+	SocketOption = RECORD 
+	END; 
+
+	Length = INTEGER; 
+
+	Linger = RECORD (SocketOption)
+		onoff: SIGNED32; 
+		linger: SIGNED32; 
+	END; 
+
+	Switch = RECORD (SocketOption)
+		onoff: SIGNED32; 
+	END; 
+VAR 
+	socket: PROCEDURE {C}(af, typ, protocol: INTEGER):INTEGER; 
+	setsockopt: PROCEDURE {C}(s: INTEGER; level, optname: INTEGER; VAR opt: SocketOption; optlen: Length):INTEGER; 
+	accept: PROCEDURE {C}(s: INTEGER; adrPtr: ADDRESS; VAR adrlen: Length):INTEGER; 
+	bind: PROCEDURE {C}(s: INTEGER; adr: SocketAdr; adrlen: Length):INTEGER; 
+	connect: PROCEDURE {C}(s: INTEGER; adr: SocketAdr; adrlen: Length):INTEGER; 
+	listen: PROCEDURE {C}(s: INTEGER; backlog: INTEGER):INTEGER; 
+	recv: PROCEDURE {C}(s: INTEGER; buf: ADDRESS; len: SIZE; flags: INTEGER):SIZE; 
+	send: PROCEDURE {C}(s: INTEGER; buf: ADDRESS; len: SIZE; flags: INTEGER):SIZE; 
+	recvfrom: PROCEDURE {C}(s: INTEGER; buf: ADDRESS; len: SIZE; flags: INTEGER; from: NameBuf; VAR flen: Length):SIZE; 
+	sendto: PROCEDURE {C}(s: INTEGER; buf: ADDRESS; len: SIZE; flags: INTEGER; to: SocketAdr; tolen: Length):SIZE; 
+	shutdown: PROCEDURE {C}(s: INTEGER; how: INTEGER):INTEGER; 
+	getpeername: PROCEDURE {C}(s: INTEGER; adr: NameBuf; VAR adrlen: Length):INTEGER; 
+	getsockname: PROCEDURE {C}(s: INTEGER; adr: NameBuf; VAR adrlen: Length):INTEGER; 
+	htonl: PROCEDURE {C}(hostlong: UNSIGNED32):UNSIGNED32; 
+	htons: PROCEDURE {C}(hostshort: UNSIGNED16):UNSIGNED16; 
+	ntohl: PROCEDURE {C}(netlong: UNSIGNED32):UNSIGNED32; 
+	ntohs: PROCEDURE {C}(netshort: UNSIGNED16):UNSIGNED16; 
+
+	PROCEDURE ^ NewSocketAdr*(ip: IP.Adr; port: SIGNED32): SocketAdr; 
+	PROCEDURE ^ SockAdrToIPAdr*(sadr: SocketAdr): IP.Adr; 
+	PROCEDURE ^ GetPortNumber*(sadr: SocketAdr): SIGNED32; 
+	PROCEDURE ^ BufToSocketAdr(CONST buf: ARRAY OF CHAR; len: INTEGER): SocketAdr; 
+	PROCEDURE ^ Accept*(s: INTEGER): INTEGER; 
+	PROCEDURE ^ Bind*(s: INTEGER; addr: SocketAdr): BOOLEAN; 
+	PROCEDURE ^ Close*(s: INTEGER); 
+	PROCEDURE ^ Connect*(s: INTEGER; addr: SocketAdr): BOOLEAN; 
+	PROCEDURE ^ GetSockName*(s: INTEGER): SocketAdr; 
+	PROCEDURE ^ GetPeerName*(s: INTEGER): SocketAdr; 
+	PROCEDURE ^ Listen*(s: INTEGER): BOOLEAN; 
+	PROCEDURE ^ Recv*(s: INTEGER; VAR buf: ARRAY OF CHAR; pos: SIZE; VAR len: SIZE; flags: INTEGER): BOOLEAN; 
+	PROCEDURE ^ Send*(s: INTEGER; CONST buf: ARRAY OF CHAR; pos: SIZE; VAR len: SIZE): BOOLEAN; 
+	PROCEDURE ^ RecvFrom*(s: INTEGER; VAR from: SocketAdr; VAR buf: ARRAY OF CHAR; pos: SIZE; VAR len: SIZE): BOOLEAN; 
+	PROCEDURE ^ SendTo*(s: INTEGER; dest: SocketAdr; CONST buf: ARRAY OF CHAR; pos, len: SIZE): BOOLEAN; 
+	PROCEDURE ^ Socket*(af, typ, protocol: INTEGER): INTEGER; 
+	PROCEDURE ^ Available*(s: INTEGER): SIGNED32; 
+	PROCEDURE ^ Requested*(s: INTEGER): BOOLEAN; 
+	PROCEDURE ^ AwaitPacket*(s: INTEGER; ms: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ SetLinger*(s: INTEGER): BOOLEAN; 
+	PROCEDURE ^ KeepAlive*(s: INTEGER; enable: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ NoDelay*(s: INTEGER; enable: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ NetToInt*(x: SIGNED16): SIGNED16; 
+	PROCEDURE ^ IntToNet*(x: SIGNED16): SIGNED16; 
+	PROCEDURE ^ NetToLInt*(x: SIGNED32): SIGNED32; 
+	PROCEDURE ^ LIntToNet*(x: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Init; 
+BEGIN
+END Sockets.

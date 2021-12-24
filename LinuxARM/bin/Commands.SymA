@@ -1,0 +1,61 @@
+MODULE Commands;
+	IMPORT Objects, Modules, Streams, KernelLog, Trace, Machine;
+CONST 
+	Wait* = 0; 
+	InheritContext* = 1; 
+	Silent* = 2; 
+	Ok* = 0; 
+	CommandNotFound* = 3901; 
+	CommandError* = 3902; 
+	CommandParseError* = 3903; 
+	CommandTrapped* = 3904; 
+	Delimiter* = \"."\; 
+	Started = 0; 
+	Loaded = 1; 
+	Finished = 2; 
+TYPE 
+	Context* = OBJECT 
+	VAR 
+		in-, arg-: Streams.Reader; 
+		out-, error-: Streams.Writer; 
+		caller-: OBJECT; 
+		result*: INTEGER; 
+
+		PROCEDURE ^  & Init*(in, arg: Streams.Reader; out, error: Streams.Writer; caller: OBJECT); 
+	END Context; 
+
+	CommandProc = PROCEDURE ; 
+
+	CommandContextProc = PROCEDURE (context: Context); 
+
+	Runner = OBJECT {EXCLUSIVE} 
+	VAR 
+		moduleName, commandName: Modules.Name; 
+		context: Context; 
+		proc: CommandProc; 
+		commandProc: CommandContextProc; 
+		msg: ARRAY 128 OF CHAR; 
+		res: INTEGER; 
+		module: Modules.Module; 
+		state: INTEGER; 
+		exception: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(CONST moduleName, commandName: Modules.Name; context: Context); 
+		PROCEDURE ^ Join(this: INTEGER; VAR res: INTEGER; VAR msg: ARRAY OF CHAR); 
+	BEGIN{ACTIVE, SAFE} 
+	END Runner; 
+VAR 
+	emptyString: ARRAY 1 OF CHAR; 
+	silentWriter: Streams.Writer; 
+	trace: BOOLEAN; 
+	defaultContext: Context; 
+
+	PROCEDURE ^ GetEmptyReader(): Streams.Reader; 
+	PROCEDURE ^ SendNothing(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ Split*(CONST cmdstr: ARRAY OF CHAR; VAR moduleName, procedureName: Modules.Name; VAR res: INTEGER; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ GetContext*(): Context; 
+	PROCEDURE ^ Activate*(CONST cmd: ARRAY OF CHAR; context: Context; flags: SET; VAR res: INTEGER; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Call*(cmds: ARRAY OF CHAR; flags: SET; VAR res: INTEGER; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Init; 
+BEGIN
+END Commands.

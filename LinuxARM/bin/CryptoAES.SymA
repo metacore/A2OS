@@ -1,0 +1,57 @@
+MODULE CryptoAES;
+	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils;
+CONST 
+	MaxRounds = 14; 
+	ECB = Ciphers.ECB; 
+	CBC = Ciphers.CBC; 
+	CTR = Ciphers.CTR; 
+	b0 = SET32(255); 
+	b1 = SET32(65280); 
+	b2 = SET32(16711680); 
+	b3 = SET32(4278190080); 
+TYPE 
+	RTable = ARRAY 256 OF SET32; 
+
+	RKeys = ARRAY (4 * (MaxRounds + 1)) OF SET32; 
+
+	Cipher* = OBJECT (Ciphers.Cipher)
+	TYPE 
+		Block = ARRAY 4 OF SET32; 
+
+		Ind4 = RECORD 
+			a, b, c, d: INTEGER; 
+		END; 
+	VAR 
+		rounds: SIGNED8; 
+		key, dkey: RKeys; 
+		iv: Block; 
+
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIZE); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
+		PROCEDURE ^ IncIV; 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ RoundE(VAR b: Block); 
+		PROCEDURE ^ RoundD(VAR b: Block); 
+		PROCEDURE  - split(s: SET32; VAR b: Ind4);
+		BEGIN
+			b.a := (INTEGER(s) MOD 256); 
+			b.b := ((INTEGER(s) DIV 256) MOD 256); 
+			b.c := ((INTEGER(s) DIV 65536) MOD 256); 
+			b.d := ((INTEGER(s) DIV 16777216) MOD 256)
+		END split; 
+		PROCEDURE ^ Init128(CONST src: ARRAY OF CHAR): SIGNED8; 
+		PROCEDURE ^ Init192(CONST src: ARRAY OF CHAR): SIGNED8; 
+		PROCEDURE ^ Init256(CONST src: ARRAY OF CHAR): SIGNED8; 
+		PROCEDURE ^ InvertKeys; 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+VAR 
+	e0, e1, e2, e3, e4: RTable; 
+	d0, d1, d2, d3, d4: RTable; 
+	rcon: ARRAY 10 OF SET32; 
+
+	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
+	PROCEDURE ^ Initialize; 
+BEGIN
+END CryptoAES.

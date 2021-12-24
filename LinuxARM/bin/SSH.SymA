@@ -1,0 +1,19 @@
+MODULE SSH;
+	IMPORT Streams, Files, Strings, Log := KernelLog, Commands, Beep, A := SSHAuthorize, SSHChannels, SSHTerminal;
+CONST 
+	CR = 0DX; 
+	NL = 0AX; 
+TYPE 
+	Channel = SSHChannels.Channel; 
+
+	PROCEDURE ^ Usage(send: BOOLEAN); 
+	PROCEDURE ^ Connect(arg: Streams.Reader; send: BOOLEAN; VAR uid, host: ARRAY OF CHAR): A.Connection; 
+	PROCEDURE ^ Terminal*; 
+	PROCEDURE ^ Sync(w: Streams.Writer); 
+	PROCEDURE ^ Send*(context: Commands.Context); 
+	PROCEDURE ^ SendFile(f: Files.File; chan: Channel; CONST remName: ARRAY OF CHAR); 
+	PROCEDURE ^ Receive*(context: Commands.Context); 
+	PROCEDURE ^ ReceiveFile(chan: Channel; CONST locName: ARRAY OF CHAR); 
+	PROCEDURE ^ CreateFile(CONST name: ARRAY OF CHAR): Files.File; 
+BEGIN
+END SSH.

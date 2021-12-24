@@ -1,0 +1,32 @@
+MODULE MD5;
+	IMPORT SYSTEM;
+TYPE 
+	Context* = POINTER TO ContextDesc; 
+
+	ContextDesc = RECORD 
+		buf: ARRAY 4 OF SIGNED32; 
+		bits: SIZE; 
+		in: ARRAY 64 OF CHAR; 
+	END; 
+
+	Digest* = ARRAY 16 OF CHAR; 
+
+	PROCEDURE ^ New*(): Context; 
+	PROCEDURE ^ Init*(cont: Context); 
+	PROCEDURE ^ ByteReverse(VAR in: ARRAY OF SYSTEM.BYTE; VAR out: ARRAY OF SIGNED32; longs: SIGNED32); 
+	PROCEDURE ^ F1(x, y, z: SIGNED32): SIGNED32; 
+	PROCEDURE ^ F2(x, y, z: SIGNED32): SIGNED32; 
+	PROCEDURE ^ F3(x, y, z: SIGNED32): SIGNED32; 
+	PROCEDURE ^ F4(x, y, z: SIGNED32): SIGNED32; 
+	PROCEDURE ^ STEP1(VAR w: SIGNED32; x, y, z, data: SIGNED32; add: SIGNED64; s: SIGNED32); 
+	PROCEDURE ^ STEP2(VAR w: SIGNED32; x, y, z, data: SIGNED32; add: SIGNED64; s: SIGNED32); 
+	PROCEDURE ^ STEP3(VAR w: SIGNED32; x, y, z, data: SIGNED32; add: SIGNED64; s: SIGNED32); 
+	PROCEDURE ^ STEP4(VAR w: SIGNED32; x, y, z, data: SIGNED32; add: SIGNED64; s: SIGNED32); 
+	PROCEDURE ^ Transform(VAR buf, in: ARRAY OF SIGNED32); 
+	PROCEDURE ^ Write*(context: Context; ch: CHAR); 
+	PROCEDURE ^ WriteBytes*(context: Context; CONST buf: ARRAY OF CHAR; len: SIZE); 
+	PROCEDURE ^ Close*(context: Context; VAR digest: Digest); 
+	PROCEDURE ^ HexDigit(i: SIGNED32): CHAR; 
+	PROCEDURE ^ ToString*(digest: Digest; VAR str: ARRAY OF CHAR); 
+BEGIN
+END MD5.

@@ -1,0 +1,78 @@
+MODULE WMTextTool;
+	IMPORT Modules, Streams, Commands, Texts, Strings, WMComponents, WMRestorable, WMEditors, WMPopups, WMRectangles, WMGraphics, WMMessages, WMStandardComponents, WM := WMWindowManager, XML;
+CONST 
+	WindowWidth = 160; 
+	WindowHeight = 240; 
+	ChangeFont = {0}; 
+	ChangeSize = {1}; 
+	ChangeStyle = {2}; 
+	ChangeFgColor = {3}; 
+	ChangeBgColor = {4}; 
+	Absolute = 0; 
+	IncrementBy = 1; 
+	DecrementBy = 2; 
+	LF = 0AX; 
+TYPE 
+	ChangeInfo = OBJECT (Texts.Attributes)
+	VAR 
+		name: ARRAY 128 OF CHAR; 
+		fgColor, bgColor: WMGraphics.Color; 
+		deltaSize: SIGNED32; 
+		deltaSizeMode: SIGNED32; 
+		style: SET; 
+		fields: SET; 
+	END ChangeInfo; 
+
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		leftPanel, rightPanel: WMStandardComponents.Panel; 
+		bold, lock, comment, stupid, assert, preferred, debug, normal, incSize, decSize, get, apply: WMStandardComponents.Button; 
+		famEdit, sizeEdit, styleEdit, colorEdit, bgColEdit: WMEditors.TextField; 
+		famCheck, sizeCheck, styleCheck, colorCheck, bgColCheck: WMStandardComponents.Checkbox; 
+		styleB, colB, bgColB: WMStandardComponents.Button; 
+		popup: WMPopups.Popup; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*(c: WMRestorable.Context); 
+		PROCEDURE ^ Resizing*(VAR width, height: SIZE); 
+		PROCEDURE ^ Resized*(width, height: SIZE); 
+		PROCEDURE ^ GetStyle(sender, data: ANY ); 
+		PROCEDURE ^ SetStyle(sender, data: ANY ); 
+		PROCEDURE ^ SetCustomStyle(sender, data: ANY ); 
+		PROCEDURE ^ StyleDrop(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ StylePopupHandler(sender, data: ANY ); 
+		PROCEDURE ^ ColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ColorPopupHandler(result: WMGraphics.Color); 
+		PROCEDURE ^ BGColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ BGColorPopupHandler(result: WMGraphics.Color); 
+		PROCEDURE ^ UpdateColors(sender, data: ANY ); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ LoadData(elem: XML.Element); 
+		PROCEDURE ^ StoreData(): XML.Element; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+VAR 
+	nofWindows: SIGNED32; 
+
+	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; mode, value: SIGNED32; currentSize: SIZE; VAR newSize: SIZE); 
+	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
+	PROCEDURE ^ ChangeAttribute(VAR attr: Texts.Attributes; userData: ANY ); 
+	PROCEDURE ^ ApplyChange(changeInfo: ChangeInfo); 
+	PROCEDURE ^ SetFontSize*(context: Commands.Context); 
+	PROCEDURE ^ SetFontStyle*(context: Commands.Context); 
+	PROCEDURE ^ SetFontColor*(context: Commands.Context); 
+	PROCEDURE ^ SetFontName*(context: Commands.Context); 
+	PROCEDURE ^ CountWords*(context: Commands.Context); 
+	PROCEDURE ^ CountLines*(context: Commands.Context); 
+	PROCEDURE ^ CountCharacters*(context: Commands.Context); 
+	PROCEDURE ^ CountAll*(context: Commands.Context); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMTextTool.

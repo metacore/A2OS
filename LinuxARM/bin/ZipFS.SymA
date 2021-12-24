@@ -1,0 +1,38 @@
+MODULE ZipFS;
+	IMPORT Modules, Streams, Files, Unzip, Dates;
+CONST 
+TYPE 
+	FileSystem = OBJECT {EXCLUSIVE} (Files.FileSystem)
+	VAR 
+		zip: Unzip.ZipFile; 
+
+		PROCEDURE ^  & Init*(zip: Unzip.ZipFile); 
+		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ Finalize*; 
+	END FileSystem; 
+
+	File = OBJECT (Files.File)
+	VAR 
+		F: Files.File; 
+		E: Unzip.Entry; 
+
+		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: Files.Position); 
+		PROCEDURE ^ Pos*(VAR r: Files.Rider): Files.Position; 
+		PROCEDURE ^ Read*(VAR r: Files.Rider; VAR x: CHAR); 
+		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Length*(): Files.Size; 
+		PROCEDURE ^ GetDate*(VAR t, d: SIGNED32); 
+		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ Update*; 
+	END File; 
+VAR 
+	localFS: Files.FileSystem; 
+
+	PROCEDURE ^ Match(pat, name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ NewFS*(context: Files.Parameters); 
+	PROCEDURE ^ Finalization; 
+	PROCEDURE ^ Init; 
+BEGIN
+END ZipFS.

@@ -1,0 +1,53 @@
+MODULE IPBandwidth;
+	IMPORT Commands, Diagnostics, Kernel, Options, Streams, DNS, IP, TCP, UDP;
+CONST 
+	DefaultPort = 5772; 
+	DefaultDuration = 10; 
+TYPE 
+	Link = OBJECT 
+	VAR 
+		context: Commands.Context; 
+		diagnostics: Diagnostics.StreamDiagnostics; 
+		hostname: DNS.Name; 
+		port, result: INTEGER; 
+		address: IP.Adr; 
+		buffer: ARRAY 65000 OF CHAR; 
+
+		PROCEDURE ^  & Initialize(context: Commands.Context); 
+		PROCEDURE ^ Send; 
+		PROCEDURE ^ Receive; 
+		PROCEDURE ^ Connect; 
+		PROCEDURE ^ Listen; 
+		PROCEDURE ^ SendBytes(): SIZE; 
+		PROCEDURE ^ ReceiveBytes(): SIZE; 
+		PROCEDURE ^ Close; 
+	END Link; 
+
+	TCPLink = OBJECT (Link)
+	VAR 
+		service, connection: TCP.Connection; 
+
+		PROCEDURE ^ Connect; 
+		PROCEDURE ^ Listen; 
+		PROCEDURE ^ SendBytes(): SIZE; 
+		PROCEDURE ^ ReceiveBytes(): SIZE; 
+		PROCEDURE ^ Close; 
+	END TCPLink; 
+
+	UDPLink = OBJECT (Link)
+	VAR 
+		socket: UDP.Socket; 
+
+		PROCEDURE ^ Connect; 
+		PROCEDURE ^ Listen; 
+		PROCEDURE ^ SendBytes(): SIZE; 
+		PROCEDURE ^ ReceiveBytes(): SIZE; 
+		PROCEDURE ^ Close; 
+	END UDPLink; 
+
+	PROCEDURE ^ SendTCP*(context: Commands.Context); 
+	PROCEDURE ^ ReceiveTCP*(context: Commands.Context); 
+	PROCEDURE ^ SendUDP*(context: Commands.Context); 
+	PROCEDURE ^ ReceiveUDP*(context: Commands.Context); 
+BEGIN
+END IPBandwidth.

@@ -1,0 +1,37 @@
+MODULE Dates;
+	IMPORT Clock, Strings;
+CONST 
+TYPE 
+	DateTime* = RECORD 
+		year*, month*, day*, hour*, minute*, second*: SIGNED32; 
+	END; 
+VAR 
+	Months-: ARRAY 12 OF ARRAY 10 OF CHAR; 
+	Days-: ARRAY 7 OF ARRAY 10 OF CHAR; 
+	NoDays: ARRAY 12 OF SIGNED16; 
+	ZeroDateUnix-, ZeroDateRFC868-, ZeroDateNTP-: DateTime; 
+	DateFormat*, TimeFormat*: ARRAY 32 OF CHAR; 
+
+	PROCEDURE ^ LeapYear*(year: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ NofDays*(year, month: SIGNED32): SIGNED32; 
+	PROCEDURE ^ ValidDateTime*(dt: DateTime): BOOLEAN; 
+	PROCEDURE ^ OberonToDateTime*(Date, Time: SIGNED32): DateTime; 
+	PROCEDURE ^ DateTimeToOberon*(dt: DateTime; VAR date, time: SIGNED32); 
+	PROCEDURE ^ Now*(): DateTime; 
+	PROCEDURE ^ WeekDate*(Date: DateTime; VAR year, week, weekday: SIGNED32); 
+	PROCEDURE ^ Equal*(t1, t2: DateTime): BOOLEAN; 
+	PROCEDURE ^ CompareDateTime*(t1, t2: DateTime): SIGNED32; 
+	PROCEDURE ^ TimeDifference*(t1, t2: DateTime; VAR days, hours, minutes, seconds: SIGNED32); 
+	PROCEDURE ^ AddYears*(VAR dt: DateTime; years: SIGNED32); 
+	PROCEDURE ^ AddMonths*(VAR dt: DateTime; months: SIGNED32); 
+	PROCEDURE ^ AddDays*(VAR dt: DateTime; days: SIGNED32); 
+	PROCEDURE ^ AddHours*(VAR dt: DateTime; hours: SIGNED32); 
+	PROCEDURE ^ AddMinutes*(VAR dt: DateTime; minutes: SIGNED32); 
+	PROCEDURE ^ AddSeconds*(VAR dt: DateTime; seconds: SIGNED32); 
+	PROCEDURE ^ TimeToStr*(time: DateTime; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ StrToTime*(CONST str: ARRAY OF CHAR; VAR dt: DateTime); 
+	PROCEDURE ^ DateToStr*(date: DateTime; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ StrToDate*(CONST str: ARRAY OF CHAR; VAR dt: DateTime); 
+	PROCEDURE ^ FormatDateTime*(CONST format: ARRAY OF CHAR; dt: DateTime; VAR result: ARRAY OF CHAR); 
+BEGIN
+END Dates.

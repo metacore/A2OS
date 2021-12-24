@@ -1,0 +1,146 @@
+MODULE WMGrids;
+	IMPORT Inputs, XML, WMComponents, WMStandardComponents, Strings, Graphics := WMGraphics, WMRectangles, WMProperties, WMEvents, WM := WMWindowManager;
+CONST 
+	CellHighlighted* = 0; 
+	CellSelected* = 1; 
+	CellFocused* = 2; 
+	CellFixed* = 3; 
+	GridSelectNone* = 0; 
+	GridSelectSingleCell* = 1; 
+	GridSelectSingleCol* = 2; 
+	GridSelectSingleRow* = 3; 
+	GridSelectHorizontal = 4; 
+	GridSelectVertical = 5; 
+	GridSelectCols* = 6; 
+	GridSelectRows* = 7; 
+	GridSelectBlock* = 8; 
+	PixelRange = 2; 
+	DragDist = 10; 
+TYPE 
+	String = Strings.String; 
+
+	MeasureCellProc* = PROCEDURE {DELEGATE}(x, y: SIZE; VAR width, height: SIZE); 
+
+	DrawCellProc* = PROCEDURE {DELEGATE}(canvas: Graphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
+
+	GetCellSpansProc* = PROCEDURE {DELEGATE}(x, y: SIZE; VAR spanx, spany: SIZE); 
+
+	GetCellStateProc* = PROCEDURE {DELEGATE}(x, y: SIZE):SET; 
+
+	Spacings* = POINTER TO ARRAY OF SIZE; 
+
+	CellPos* = RECORD 
+		col*, row*: SIZE; 
+	END; 
+
+	CellPositionInfo* = OBJECT 
+	VAR 
+		pos*: CellPos; 
+	END CellPositionInfo; 
+
+	GenericGrid* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		getCellSpans: GetCellSpansProc; 
+		drawCell: DrawCellProc; 
+		getCellState: GetCellStateProc; 
+		tableStart*: CellPos; 
+		state, tempState: Graphics.CanvasState; 
+		scrollx-, scrolly-: WMStandardComponents.Scrollbar; 
+		showScrollX-, showScrollY-: WMProperties.BooleanProperty; 
+		showScrollXC, showScrollYC: BOOLEAN; 
+		alwaysShowScrollX-, alwaysShowScrollY-: WMProperties.BooleanProperty; 
+		alwaysShowScrollXC, alwaysShowScrollYC: BOOLEAN; 
+		nofRows-, nofCols-, cellDist-: WMProperties.SizeProperty; 
+		nofRowsC, nofColsC, cellDistC: SIZE; 
+		rowHeights, colWidths: Spacings; 
+		fixedCols-, fixedRows-: WMProperties.SizeProperty; 
+		fixedColsC, fixedRowsC: SIZE; 
+		defaultColWidth-, defaultRowHeight-: WMProperties.SizeProperty; 
+		defaultColWidthC, defaultRowHeightC: SIZE; 
+		allowColResize-, allowRowResize-: WMProperties.BooleanProperty; 
+		adjustFocusPosition-: WMProperties.BooleanProperty; 
+		focus, focusCell, highlight: CellPos; 
+		selectionMode: INTEGER; 
+		selStart, selEnd: CellPos; 
+		selA: CellPos; 
+		selecting: BOOLEAN; 
+		drag: BOOLEAN; 
+		pointerInside: BOOLEAN; 
+		lastPointerX, lastPointerY: SIZE; 
+		wasSelected-: BOOLEAN; 
+		onSelect-: WMEvents.EventSource; 
+		onClick-: WMEvents.EventSource; 
+		onClickSelected-: WMEvents.EventSource; 
+		shiftDown: BOOLEAN; 
+		hasOldPointer: BOOLEAN; 
+		prevPointerInfo: WM.PointerInfo; 
+		dragCellSpacingNr: SIZE; 
+		dragCellSpacingPos: SIZE; 
+		dragCellSpacingWidth: BOOLEAN; 
+		dragCellSpacingHeight: BOOLEAN; 
+		downX, downY: SIZE; 
+		dragPossible: BOOLEAN; 
+		selectOnPointerOver: BOOLEAN; 
+		lastkeys: SET; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY ); 
+		PROCEDURE ^ GetColWidth*(i: SIZE): SIZE; 
+		PROCEDURE ^ SetColSpacings*(colWidths: Spacings); 
+		PROCEDURE ^ GetColSpacings*(): Spacings; 
+		PROCEDURE ^ SetRowSpacings*(rowHeights: Spacings); 
+		PROCEDURE ^ GetRowSpacings*(): Spacings; 
+		PROCEDURE ^ SetSelectOnPointerOver*(select: BOOLEAN); 
+		PROCEDURE ^ GetRowHeight*(i: SIZE): SIZE; 
+		PROCEDURE ^ SetSelectionMode*(mode: INTEGER); 
+		PROCEDURE ^ GetSelectionMode*(): INTEGER; 
+		PROCEDURE ^ SetDrawCellProc*(dcp: DrawCellProc); 
+		PROCEDURE ^ GetFixedPixels*(VAR w, h: SIZE); 
+		PROCEDURE ^ SetCellSpansProc*(gcsp: GetCellSpansProc); 
+		PROCEDURE ^ GetCellSpans(x, y: SIZE; VAR spanx, spany: SIZE); 
+		PROCEDURE ^ IsSkipCell*(x, y: SIZE): BOOLEAN; 
+		PROCEDURE ^ GetCellDimensions*(x, y: SIZE; VAR width, height: SIZE); 
+		PROCEDURE ^ GetCellData*(col, row: SIZE): ANY ; 
+		PROCEDURE ^ GetCellState(x, y: SIZE): SET; 
+		PROCEDURE ^ FindMasterCell*(x, y: SIZE; VAR col, row, xpos, ypos: SIZE); 
+		PROCEDURE ^ FindCellXY*(x, y: SIZE; VAR col, row: SIZE); 
+		PROCEDURE ^ CheckScrollbarsNeeded; 
+		PROCEDURE ^ GetVisibleCellRect*(col, row: SIZE): WMRectangles.Rectangle; 
+		PROCEDURE ^ DrawBackground*(canvas: Graphics.Canvas); 
+		PROCEDURE ^ InvalidateCell*(col, row: SIZE); 
+		PROCEDURE ^ SetTopPosition*(col, row: SIZE; updateScrollbar: BOOLEAN); 
+		PROCEDURE ^ GetTopPosition*(VAR col, row: SIZE); 
+		PROCEDURE ^ ScrollCellVisible(col, row: SIZE); 
+		PROCEDURE ^ SetFocusPos(col, row: SIZE); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keysym: SIZE); 
+		PROCEDURE ^ Scrolled(sender, data: ANY ); 
+		PROCEDURE ^ SetHighlight(col, row: SIZE); 
+		PROCEDURE ^ GetVisibleColRect(col: SIZE): WMRectangles.Rectangle; 
+		PROCEDURE ^ GetVisibleRowRect(row: SIZE): WMRectangles.Rectangle; 
+		PROCEDURE ^ SetSelection*(scol, srow, ecol, erow: SIZE); 
+		PROCEDURE ^ GetSelection*(VAR scol, srow, ecol, erow: SIZE); 
+		PROCEDURE ^ OnFixedXGridLine(x, y: SIZE; VAR xCell, pos: SIZE): BOOLEAN; 
+		PROCEDURE ^ OnFixedYGridLine(x, y: SIZE; VAR yCell, pos: SIZE): BOOLEAN; 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerLeave*; 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ CellClicked*(col, row: SIZE); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+	END GenericGrid; 
+VAR 
+	GSonSelect, GSonClick, GSonClickSelected, GSonSelectInfo, GSonClickInfo, GSonClickSelectedInfo: String; 
+	GSGenericGrid: String; 
+	fixedColsProto, fixedRowsProto: WMProperties.SizeProperty; 
+	defaultColWidthProto, defaultRowHeightProto: WMProperties.SizeProperty; 
+	allowColResizeProto, allowRowResizeProto, adjustFocusPositionProto: WMProperties.BooleanProperty; 
+	nofColsProto, nofRowsProto, cellDistProto: WMProperties.SizeProperty; 
+	showScrollXProto, showScrollYProto, alwaysShowScrollXProto, alwaysShowScrollYProto: WMProperties.BooleanProperty; 
+
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ InitProto; 
+	PROCEDURE ^ GenGrid*(): XML.Element; 
+	PROCEDURE ^ NewString*(CONST x: ARRAY OF CHAR): String; 
+BEGIN
+END WMGrids.

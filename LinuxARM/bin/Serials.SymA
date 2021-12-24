@@ -1,0 +1,79 @@
+MODULE Serials;
+	IMPORT Streams, Modules, KernelLog, Commands, Machine, Trace;
+CONST 
+	Verbose = TRUE; 
+	MaxPorts* = 64; 
+	ParNo* = 0; 
+	ParOdd* = 1; 
+	ParEven* = 2; 
+	ParMark* = 3; 
+	ParSpace* = 4; 
+	Stop1* = 1; 
+	Stop2* = 2; 
+	Stop1dot5* = 3; 
+	DefaultBPS = 115200; 
+	DefaultDataBits = 8; 
+	DefaultParity = ParNo; 
+	DefaultStop = Stop1; 
+	DTR* = 0; 
+	RTS* = 1; 
+	Break* = 2; 
+	DSR* = 3; 
+	CTS* = 4; 
+	RI* = 5; 
+	DCD* = 6; 
+	OverrunError* = 10; 
+	ParityError* = 11; 
+	FramingError* = 12; 
+	BreakInterrupt* = 13; 
+	Ok* = 0; 
+	Closed* =  -1; 
+	TransportError* =  -2; 
+	TimeoutExpired* =  -3; 
+	PortInUse* = 1; 
+	NoSuchPort* = 2; 
+	WrongBPS* = 3; 
+	WrongData* = 4; 
+	WrongParity* = 5; 
+	WrongStop* = 6; 
+TYPE 
+	Port* = OBJECT (Streams.Connection)
+	VAR 
+		name-: ARRAY 6 OF CHAR; 
+		description-: ARRAY 128 OF CHAR; 
+		charactersSent*, charactersReceived*: Streams.Position; 
+
+		PROCEDURE ^ Open*(bps, data, parity, stop: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ Available*(): SIZE; 
+		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: SIGNED32); 
+		PROCEDURE ^ ClearMC*(s: SET); 
+		PROCEDURE ^ SetMC*(s: SET); 
+		PROCEDURE ^ GetMC*(VAR s: SET); 
+		PROCEDURE ^ SetReceiveTimeout*(timeout: SIGNED32); 
+		PROCEDURE ^ Show*; 
+	END Port; 
+VAR 
+	ports: ARRAY MaxPorts OF Port; 
+	tracePort: Port; 
+	traceChar0: Trace.CharProc; 
+
+	PROCEDURE ^ RegisterPort*(port: Port; CONST description: ARRAY OF CHAR); 
+	PROCEDURE ^ UnRegisterPort*(port: Port); 
+	PROCEDURE ^ RegisterOnboardPort*(portNumber: SIGNED32; port: Port; CONST name, description: ARRAY OF CHAR); 
+	PROCEDURE ^ GetPort*(portNumber: SIGNED32): Port; 
+	PROCEDURE ^ TraceChar(ch: CHAR); 
+	PROCEDURE ^ SetTracePort*(portNumber: SIGNED32; bps, data, parity, stop: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ IsTracePort*(port: Port): BOOLEAN; 
+	PROCEDURE ^ GetPortParameters*(r: Streams.Reader; VAR portNumber, bps, data, parity, stop: SIGNED32; VAR params: SET; VAR res: INTEGER); 
+	PROCEDURE ^ SetTrace*(context: Commands.Context); 
+	PROCEDURE ^ Show*(context: Commands.Context); 
+	PROCEDURE ^ Test*(context: Commands.Context); 
+	PROCEDURE ^ CloseAllPorts*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END Serials.

@@ -1,0 +1,158 @@
+MODULE MPEGUtilities;
+	IMPORT SYSTEM, Machine, MPEGTables, Streams, KernelLog, Raster, Codecs;
+CONST 
+	W1 = 2841; 
+	W2 = 2676; 
+	W3 = 2408; 
+	W5 = 1609; 
+	W6 = 1108; 
+	W7 = 565; 
+	EnableMMX = FALSE; 
+TYPE 
+	PointerToArrayOfCHAR* = POINTER TO ARRAY OF CHAR; 
+
+	PointerToArrayOfLONGINT* = POINTER TO ARRAY OF SIGNED32; 
+
+	Dequantizer* = OBJECT 
+
+		PROCEDURE ^ DequantizeNonintraCoeffs*(coeffs: PointerToArrayOfLONGINT; nonintraQM: PointerToArrayOfLONGINT; qScale: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ DequantizeIntraCoeffs*(coeffs: PointerToArrayOfLONGINT; intraQM: PointerToArrayOfLONGINT; qScale: SIGNED32; VAR prediction: SIGNED32; first: BOOLEAN; mbSkipped: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ DequantizeNonintraCoeffs2*(coeffs: PointerToArrayOfLONGINT; nonintraQM: PointerToArrayOfLONGINT; qScale: SIGNED32); 
+		PROCEDURE ^ DequantizeIntraCoeffs2*(coeffs: PointerToArrayOfLONGINT; intraQM: PointerToArrayOfLONGINT; qScale: SIGNED32; dcPrecision: SIGNED32); 
+		PROCEDURE ^ MismatchControl(VAR coeffs63: SIGNED32; sum: SIGNED32); 
+	END Dequantizer; 
+
+	Frame* = OBJECT 
+	VAR 
+		buffer*: PointerToArrayOfCHAR; 
+		cbOffset*, crOffset*: SIGNED32; 
+		frameNr*: SIGNED32; 
+		picType*: SIGNED32; 
+	END Frame; 
+
+	PicCodingExt* = OBJECT 
+	VAR 
+		dcPrecision*: SIGNED32; 
+		picStructure*: SIGNED32; 
+		topFieldFirst*: BOOLEAN; 
+		framePredFrameDct*: BOOLEAN; 
+		concealmentMV*: BOOLEAN; 
+		qScaleType*: BOOLEAN; 
+		intraVlcFormat*: BOOLEAN; 
+		alternateScan*: BOOLEAN; 
+		repeatFirstField*: BOOLEAN; 
+		chroma420Type*: BOOLEAN; 
+		progressiveFrame*: BOOLEAN; 
+
+		PROCEDURE ^ Dump*; 
+	END PicCodingExt; 
+
+	MotionVectorInfos* = OBJECT 
+	VAR 
+		fullPel*: ARRAY 2 OF ARRAY 2 OF BOOLEAN; 
+		fCode*: ARRAY 2 OF ARRAY 2 OF SIGNED32; 
+		f*: ARRAY 2 OF ARRAY 2 OF SIGNED32; 
+		rSize*: ARRAY 2 OF ARRAY 2 OF SIGNED32; 
+		motionVerticalFieldSelect*: ARRAY 2 OF ARRAY 2 OF BOOLEAN; 
+		motionCode*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF SIGNED32; 
+		motionResidual*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF SIGNED32; 
+		dmVector*: ARRAY 2 OF SIGNED32; 
+		mv*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF SIGNED32; 
+		pmv*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF SIGNED32; 
+
+		PROCEDURE ^ Dump*(r, s, t: SIGNED32); 
+	END MotionVectorInfos; 
+
+	IDCT* = OBJECT 
+
+		PROCEDURE ^ PerformIDCT*(block: PointerToArrayOfLONGINT); 
+		PROCEDURE ^ IDCTRow(blk: PointerToArrayOfLONGINT; baseIndex: SIGNED32); 
+		PROCEDURE ^ IDCTCol(blk: PointerToArrayOfLONGINT; baseIndex: SIGNED32); 
+	END IDCT; 
+
+	BitStream* = OBJECT 
+	VAR 
+		first: SIGNED32; 
+		last: SIGNED32; 
+		bitIndex: SIGNED32; 
+		buffer: ARRAY 8 OF CHAR; 
+		bufAdr: ADDRESS; 
+		input: Codecs.DemuxStream; 
+		eof: BOOLEAN; 
+		bitsLeft: SIZE; 
+		len: SIGNED32; 
+		i: SIGNED32; 
+
+		PROCEDURE ^  & Init*(r: Codecs.DemuxStream); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ ReadLongintFromStream; 
+		PROCEDURE ^ ByteAlign*; 
+		PROCEDURE ^ IsAligned*(): BOOLEAN; 
+		PROCEDURE ^ ShowBits*(n: SIGNED32): SIGNED32; 
+		PROCEDURE ^ ShowBuffer*; 
+		PROCEDURE ^ GetBits*(n: SIGNED32): SIGNED32; 
+		PROCEDURE ^ SkipBits*(n: SIGNED32); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
+		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
+	END BitStream; 
+
+	StreamReader* = OBJECT 
+	VAR 
+		stream: BitStream; 
+		eof*: BOOLEAN; 
+
+		PROCEDURE ^  & init*(s: BitStream); 
+		PROCEDURE ^ ReadMotionCode*(): SIGNED32; 
+		PROCEDURE ^ ReadRunLevelCode*(c: PointerToArrayOfLONGINT; VAR cur: SIGNED32; MPEG2: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ ReadRunLevelCode2*(c: PointerToArrayOfLONGINT; VAR cur: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ ReadAddressIncrement*(): SIGNED32; 
+		PROCEDURE ^ ReadMacroBlockType*(type: SIGNED32; VAR intra, pattern, back, forw, quant: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ ReadSequenceExtension*(VAR MainProfile: BOOLEAN; VAR LevelID: SIGNED32; VAR ChromaFormat: SIGNED32; VAR videoWidth, videoHeight: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ ReadSequenceDisplayExtension*(): BOOLEAN; 
+		PROCEDURE ^ ReadQuantMatrixExtension*(): BOOLEAN; 
+		PROCEDURE ^ ReadCopyrightExtension*(): BOOLEAN; 
+		PROCEDURE ^ ReadPictureDisplayExtension*(): BOOLEAN; 
+		PROCEDURE ^ ReadPictureCodingExtension*(VAR pce: PicCodingExt; VAR mvi: MotionVectorInfos): BOOLEAN; 
+		PROCEDURE ^ ReadQuantizerMatrix*(matrix: PointerToArrayOfLONGINT); 
+		PROCEDURE ^ ReadMotionVectors*(s: SIGNED32; VAR mvi: MotionVectorInfos; frameMotionType: SIGNED32); 
+		PROCEDURE ^ ReadMotionVectorsHelper(r, s: SIGNED32; VAR mvi: MotionVectorInfos); 
+	END StreamReader; 
+
+	MMXConsts = POINTER TO MMXConstsDesc; 
+
+	MMXConstsDesc = RECORD 
+		mmwMultY, mmwMultUG, mmwMultUB, mmwMultVR, mmwMultVG: SIGNED64; 
+		mmb10, mmw0080, mmw00ff, mmwCutRed, mmwCutGreen, mmwCutBlue: SIGNED64; 
+		mask5, mask6, maskBlue: SIGNED64; 
+	END; 
+
+	ColorSpace* = OBJECT 
+	VAR 
+		mmxConsts: MMXConsts; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Convert*(src: PointerToArrayOfCHAR; srcYBaseOffset: SIGNED32; yStride: SIGNED32; srcUBaseOffset, srcVBaseOffset, uvStride: SIGNED32; img: Raster.Image; width, height, dstStride: SIGNED32); 
+		PROCEDURE ^ ConvertYUVToRGB565(puc: PointerToArrayOfCHAR; pucYBaseOffset, pucUBaseOffset, pucVBaseOffset: ADDRESS; strideY: SIZE; strideUV: SIZE; pucOut: Raster.Image; widthY, heightY, strideOut: SIGNED32); 
+		PROCEDURE ^ ConvertYUVToRGB888(puc: PointerToArrayOfCHAR; pucYBaseOffset, pucUBaseOffset, pucVBaseOffset: ADDRESS; strideY, strideUV: SIZE; pucOut: Raster.Image; widthY, heightY, strideOut: SIGNED32); 
+	END ColorSpace; 
+
+	BlockActions* = OBJECT 
+
+		PROCEDURE ^ ClearBlock*(dest: PointerToArrayOfCHAR; destOffs, incr: SIZE); 
+		PROCEDURE ^ ClearBlockLongint*(block: PointerToArrayOfLONGINT); 
+		PROCEDURE ^ ClearBlockGeneric(block: PointerToArrayOfLONGINT); 
+		PROCEDURE ^ CopyBlock*(src, dest: PointerToArrayOfCHAR; srcOffs, destOffs, srcIncr, destIncr, lines: SIZE); 
+		PROCEDURE ^ MoveBlockOverwrite*(src, dest: PointerToArrayOfCHAR; destOffs, mvX, mvY, srcIncr, destIncr, lines: SIGNED32); 
+		PROCEDURE ^ MoveBlockInterp*(src, dest: PointerToArrayOfCHAR; destOffs, mvX, mvY, srcIncr, destIncr, lines: SIGNED32); 
+		PROCEDURE ^ TransferIDCTAdd*(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+		PROCEDURE ^ TransferIDCTCopy*(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+		PROCEDURE ^ TransferIDCTAddGeneric(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+		PROCEDURE ^ TransferIDCTCopyGeneric(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+	END BlockActions; 
+VAR 
+	IdctBorder*: POINTER TO ARRAY OF SIGNED32; 
+	ii: SIGNED32; 
+
+BEGIN
+END MPEGUtilities.

@@ -1,0 +1,88 @@
+MODULE SoundDevices;
+	IMPORT Plugins, Modules;
+CONST 
+	ResOK* = 0; 
+	ResQualityReduced* = 1; 
+	ResNoMoreChannels* = 10; 
+	ResUnsupportedFrequency* = 20; 
+	ResUnsupportedSubChannels* = 30; 
+	ResUnsupportedSamplingRes* = 40; 
+	ResUnsupportedFormat* = 50; 
+	ChannelPlay* = 0; 
+	ChannelRecord* = 1; 
+	FormatPCM* = 0; 
+TYPE 
+	Buffer* = OBJECT 
+	VAR 
+		len*: SIZE; 
+		data*: POINTER TO ARRAY OF CHAR; 
+	END Buffer; 
+
+	BufferPool* = OBJECT {EXCLUSIVE} 
+	VAR 
+		head, num: SIZE; 
+		buffer: POINTER TO ARRAY OF Buffer; 
+
+		PROCEDURE ^  & Init*(n: SIGNED32); 
+		PROCEDURE ^ Add*(x: Buffer); 
+		PROCEDURE ^ Remove*(): Buffer; 
+		PROCEDURE ^ NofBuffers*(): SIZE; 
+	END BufferPool; 
+
+	BufferListener* = PROCEDURE {DELEGATE}(buffer: Buffer); 
+
+	MixerChannel* = OBJECT 
+
+		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ GetDesc*(VAR desc: ARRAY OF CHAR); 
+		PROCEDURE ^ SetVolume*(volume: INTEGER); 
+		PROCEDURE ^ GetVolume*(): INTEGER; 
+		PROCEDURE ^ SetMute*(mute: BOOLEAN); 
+		PROCEDURE ^ GetIsMute*(): BOOLEAN; 
+	END MixerChannel; 
+
+	MixerChangedProc* = PROCEDURE {DELEGATE}(channel: MixerChannel); 
+
+	Channel* = OBJECT 
+
+		PROCEDURE ^ GetChannelKind*(): SIGNED32; 
+		PROCEDURE ^ SetVolume*(volume: SIGNED32); 
+		PROCEDURE ^ GetVolume*(): SIGNED32; 
+		PROCEDURE ^ GetPosition*(): SIGNED32; 
+		PROCEDURE ^ RegisterBufferListener*(bufferListener: BufferListener); 
+		PROCEDURE ^ Start*; 
+		PROCEDURE ^ QueueBuffer*(x: Buffer); 
+		PROCEDURE ^ Pause*; 
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ Close*; 
+	END Channel; 
+
+	Driver* = OBJECT (Plugins.Plugin)
+	VAR 
+		masterIn*, masterOut*: MixerChannel; 
+
+		PROCEDURE ^ Init*; 
+		PROCEDURE ^ Enable*; 
+		PROCEDURE ^ Disable*; 
+		PROCEDURE ^ NofNativeFrequencies*(): SIGNED32; 
+		PROCEDURE ^ GetNativeFrequency*(nr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ NofSamplingResolutions*(): SIGNED32; 
+		PROCEDURE ^ GetSamplingResolution*(nr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ NofSubChannelSettings*(): SIGNED32; 
+		PROCEDURE ^ GetSubChannelSetting*(nr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ NofWaveFormats*(): SIGNED32; 
+		PROCEDURE ^ GetWaveFormat*(nr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ OpenPlayChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ OpenRecordChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ RegisterMixerChangeListener*(mixChangedProc: MixerChangedProc); 
+		PROCEDURE ^ UnregisterMixerChangeListener*(mixChangedProc: MixerChangedProc); 
+		PROCEDURE ^ GetMixerChannel*(channelNr: SIGNED32; VAR channel: MixerChannel); 
+		PROCEDURE ^ GetNofMixerChannels*(): SIGNED32; 
+	END Driver; 
+VAR 
+	devices*: Plugins.Registry; 
+
+	PROCEDURE ^ GetDefaultDevice*(): Driver; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END SoundDevices.

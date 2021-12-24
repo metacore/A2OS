@@ -1,0 +1,235 @@
+MODULE IMAPClient;
+	IMPORT Configuration, Streams, Strings, KernelLog, Classes := TFClasses, Kernel, IMAP, IMAPUtilities, XML, XMLObjects;
+CONST 
+	DEBUG = FALSE; 
+	KEEPALIVE = ((20 * 1000) * 1); 
+	Port = 143; 
+	OK* = 0; 
+	ERROR* = 1; 
+	DEAD* =  -1; 
+	ONLINE* = 0; 
+	OFFLINE* = 1; 
+	DISCONNECTED* = 2; 
+	CONNECTIONERROR* = 3; 
+	AUTHENTICATIONERROR* = 4; 
+	CWFINISHED* = 0; 
+	CWCONNECTING* = 1; 
+	CWLOADING* = 2; 
+	CWCREATING* = 3; 
+	CWRENAMING* = 4; 
+	CWDELETINGFOLDER* = 5; 
+	CWSEARCHING* = 6; 
+	CWCOPYING* = 7; 
+	CWDELETINGMESSAGE* = 8; 
+	CWAPPENDING* = 9; 
+	CWCLOSING* = 10; 
+	CWSAVINGACCOUNT* = 11; 
+	CWLOADINGACCOUNT* = 12; 
+	CWPOLLING* = 13; 
+	CWEXPUNGING* = 14; 
+	CWRESTORING* = 15; 
+	TNothing* = 0; 
+	TLoadAllMessages* = 1; 
+TYPE 
+	String = Strings.String; 
+
+	EventListener* = PROCEDURE {DELEGATE}; 
+
+	ErrorListener* = PROCEDURE {DELEGATE}(CONST s: ARRAY OF CHAR); 
+
+	Message* = OBJECT 
+	VAR 
+		header*: HeaderElement; 
+		message*: String; 
+		bodystructure*: Bodystructure; 
+		internalDate*: String; 
+		size*: SIGNED32; 
+		flags*: Flags; 
+		uID*: SIGNED32; 
+
+		PROCEDURE ^ ToString*(): String; 
+	END Message; 
+
+	Client* = OBJECT {EXCLUSIVE} 
+	VAR 
+		status-: SIGNED32; 
+		currentWork-: SIGNED32; 
+		abort*, userAbort*: BOOLEAN; 
+		c: IMAP.Connection; 
+		currentFolder-: Folder; 
+		mailboxContent-: Folder; 
+		getSubFoldersContext: Folder; 
+		FolderIsSynchronized: BOOLEAN; 
+		FolderComplete: BOOLEAN; 
+		Task*: SIGNED32; 
+		searchResult-: POINTER TO ARRAY OF SIZE; 
+		timer*: Kernel.Timer; 
+		observer: EventListener; 
+		errorHandler: ErrorListener; 
+		applySearchFilter*: BOOLEAN; 
+		ret: Classes.List; 
+		numberOfMessages: SIZE; 
+		preferences*: AccountPreferences; 
+
+		PROCEDURE ^  & Init*(obs: EventListener; error: ErrorListener); 
+		PROCEDURE ^ SetObserverMethod*(m: EventListener); 
+		PROCEDURE ^ CallObserverMethod; 
+		PROCEDURE ^ SetErrorHandler*(m: ErrorListener); 
+		PROCEDURE ^ CallErrorHandler(CONST string: ARRAY OF CHAR); 
+		PROCEDURE ^ Connect*(CONST host, user, pass: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ ConnectUnlocked(host, user, pass: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ Disconnect*; 
+		PROCEDURE ^ SwitchToOffline*; 
+		PROCEDURE ^ SwitchToOnline*(CONST password: ARRAY OF CHAR); 
+		PROCEDURE ^ CheckAnswer(ret: Classes.List); 
+		PROCEDURE ^ CheckExists(answer: IMAP.Entry); 
+		PROCEDURE ^ CheckRecent(answer: IMAP.Entry); 
+		PROCEDURE ^ CheckExpunge(answer: IMAP.Entry); 
+		PROCEDURE ^ CheckSearch(answer: IMAP.Entry); 
+		PROCEDURE ^ CheckStatus(answer: IMAP.Entry); 
+		PROCEDURE ^ CheckList(answer: IMAP.Entry); 
+		PROCEDURE ^ CheckFetch(answer: IMAP.Entry); 
+		PROCEDURE ^ Synchronize(): SIGNED32; 
+		PROCEDURE ^ DownloadAllMessages(): SIGNED32; 
+		PROCEDURE ^ FetchSomeHeaders(idx, len: SIZE): SIGNED32; 
+		PROCEDURE ^ FetchSomeUIDs(idx, len: SIZE): SIGNED32; 
+		PROCEDURE ^ FetchSomeMessages(idx, len: SIZE): SIGNED32; 
+		PROCEDURE ^ FetchMessage*(message: Message): SIGNED32; 
+		PROCEDURE ^ DeleteMessage*(message: Message; expunge: BOOLEAN): SIGNED32; 
+		PROCEDURE ^ MoveMessageToTrashBin*(message: Message): SIGNED32; 
+		PROCEDURE ^ RestoreMessage*(message: Message): SIGNED32; 
+		PROCEDURE ^ CopyMessage*(message: Message; path: String): SIGNED32; 
+		PROCEDURE ^ CopyMessageUnlocked*(message: Message; path: String): SIGNED32; 
+		PROCEDURE ^ AppendMessage*(message: Message; path: String): SIGNED32; 
+		PROCEDURE ^ SetAnsweredFlag*(message: Message): SIGNED32; 
+		PROCEDURE ^ SaveSentMessage*(message: Message): SIGNED32; 
+		PROCEDURE ^ Expunge*(): SIGNED32; 
+		PROCEDURE ^ ExpungeUnlocked(): SIGNED32; 
+		PROCEDURE ^ SelectFolder*(folder: Folder): SIGNED32; 
+		PROCEDURE ^ SelectFolderUnlocked(folder: Folder): SIGNED32; 
+		PROCEDURE ^ GetSubFolders(VAR folder: Folder): SIGNED32; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Update(): SIGNED32; 
+		PROCEDURE ^ Rename*(folder: Folder; VAR name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ Delete*(folder: Folder): SIGNED32; 
+		PROCEDURE ^ Create*(folder: Folder; name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ Search*(CONST string: ARRAY OF CHAR): SIZE; 
+		PROCEDURE ^ OfflineSearch(CONST string: ARRAY OF CHAR): SIZE; 
+		PROCEDURE ^ Save*(VAR doc: XML.Document): SIGNED32; 
+		PROCEDURE ^ SavePreferences(element: XML.Element); 
+		PROCEDURE ^ ExtractMailboxContent(folder: Folder; element: XML.Element); 
+		PROCEDURE ^ Load*(document: XML.Document): SIGNED32; 
+		PROCEDURE ^ LoadPreferences(element: XML.Element): SIGNED32; 
+		PROCEDURE ^ InsertMailboxContent(folder: Folder; element: XML.Element): SIGNED32; 
+	BEGIN{ACTIVE} 
+	END Client; 
+
+	Folder* = OBJECT 
+	VAR 
+		name*: String; 
+		path*: String; 
+		hierarchyDelimiter*: CHAR; 
+		parent*: Folder; 
+		children*: Classes.List; 
+		Noinferiors*: BOOLEAN; 
+		Noselect*: BOOLEAN; 
+		Marked*: BOOLEAN; 
+		Unmarked*: BOOLEAN; 
+		messages*: Classes.List; 
+		alive: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(n: ARRAY OF CHAR); 
+		PROCEDURE ^ FindSubFolder(CONST n: ARRAY OF CHAR): Folder; 
+		PROCEDURE ^ GetPath*(): String; 
+	END Folder; 
+
+	HeaderElement* = POINTER TO RECORD 
+		date*: String; 
+		subject*: String; 
+		from*: Classes.List; 
+		sender*: Classes.List; 
+		replyTo*: Classes.List; 
+		to*: Classes.List; 
+		cc*: Classes.List; 
+		bcc*: Classes.List; 
+		inReplyTo*: String; 
+		messageID*: String; 
+	END; 
+
+	Flags* = OBJECT 
+	VAR 
+		answered*: BOOLEAN; 
+		flagged*: BOOLEAN; 
+		deleted*: BOOLEAN; 
+		seen*: BOOLEAN; 
+		recent*: BOOLEAN; 
+		draft*: BOOLEAN; 
+
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ ParseList*(list: Classes.List); 
+		PROCEDURE ^ ToString*(VAR string: ARRAY OF CHAR); 
+	END Flags; 
+
+	Bodystructure* = POINTER TO RECORD 
+		type*: ARRAY 32 OF CHAR; 
+		subtype*: ARRAY 32 OF CHAR; 
+		encoding*: ARRAY 32 OF CHAR; 
+		charset*: ARRAY 32 OF CHAR; 
+		subpart*: Classes.List; 
+	END; 
+
+	AccountPreferences* = OBJECT 
+	VAR 
+		IMAPServer*: String; 
+		UserName*: String; 
+		SMTPServer*: String; 
+		SMTPThisHost*: String; 
+		ExpungeOnFolderChange*: BOOLEAN; 
+		ExpungeOnDelete*: BOOLEAN; 
+		UseDragNDropAsMove*: BOOLEAN; 
+		ExpungeOnMove*: BOOLEAN; 
+		UseATrashBin*: BOOLEAN; 
+		SentFolder*: String; 
+		DraftFolder*: String; 
+		TrashBin*: String; 
+		From*: String; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ LoadStandardConfig; 
+	END AccountPreferences; 
+
+	Date* = OBJECT 
+	VAR 
+		day, month, year: SIGNED32; 
+
+		PROCEDURE ^ Equal*(otherDate: Date): BOOLEAN; 
+		PROCEDURE ^ Before*(otherDate: Date): BOOLEAN; 
+		PROCEDURE ^ FromInternalDate(string: String); 
+	END Date; 
+
+	Time* = OBJECT 
+	VAR 
+		hour, minute, second: SIGNED32; 
+
+		PROCEDURE ^ Equal*(otherTime: Time): BOOLEAN; 
+		PROCEDURE ^ Before*(otherTime: Time): BOOLEAN; 
+		PROCEDURE ^ FromInternalDate(string: String); 
+	END Time; 
+
+	DateTime* = OBJECT 
+	VAR 
+		time: Time; 
+		date: Date; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Equal*(otherDateTime: DateTime): BOOLEAN; 
+		PROCEDURE ^ Before*(otherDateTime: DateTime): BOOLEAN; 
+		PROCEDURE ^ FromInternalDate*(string: String); 
+	END DateTime; 
+VAR 
+	globalR: SIGNED32; 
+
+	PROCEDURE ^ OldestFirst*(x, y: ANY ): SIGNED32; 
+	PROCEDURE ^ BiggestUIDFirst*(x, y: ANY ): SIGNED32; 
+BEGIN
+END IMAPClient.

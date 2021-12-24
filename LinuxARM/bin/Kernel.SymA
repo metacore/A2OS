@@ -1,0 +1,54 @@
+MODULE Kernel;
+	IMPORT Trace, Machine, Heaps, Objects;
+CONST 
+	TimerFree = 0; 
+	TimerSleeping = 1; 
+	TimerWoken = 2; 
+	TimerExpired = 3; 
+	Second* = Machine.Second; 
+TYPE 
+	Finalizer* = Heaps.Finalizer; 
+
+	Enumerator* = PROCEDURE {DELEGATE}(obj: ANY ; VAR cont: BOOLEAN); 
+
+	FinalizerNode = POINTER TO RECORD (Heaps.FinalizerNode)
+		nextObj{UNTRACED} : FinalizerNode; 
+	END; 
+
+	MilliTimer* = RECORD 
+		start, target: SIGNED32; 
+	END; 
+
+	Timer* = OBJECT {EXCLUSIVE} 
+	VAR 
+		timer: Objects.Timer; 
+		state: SIGNED8; 
+
+		PROCEDURE ^ HandleTimeout; 
+		PROCEDURE ^ Sleep*(ms: SIGNED32); 
+		PROCEDURE ^ Wakeup*; 
+		PROCEDURE ^  & Init*; 
+	END Timer; 
+
+	FinalizedCollection* = OBJECT {EXCLUSIVE} (Heaps.FinalizedCollection)
+	VAR 
+		root: FinalizerNode; 
+
+		PROCEDURE ^ Add*(obj: ANY ; fin: Finalizer); 
+		PROCEDURE ^ Remove*(obj: ANY ); 
+		PROCEDURE ^ RemoveAll*(obj: ANY ); 
+		PROCEDURE ^ Enumerate*(enum: Enumerator); 
+		PROCEDURE ^ EnumerateN*(enum: Enumerator); 
+		PROCEDURE ^  & Clear*; 
+	END FinalizedCollection; 
+VAR 
+	second*: SIGNED32; 
+
+	PROCEDURE ^ GC*; 
+	PROCEDURE ^ GetTicks*(): SIGNED32; 
+	PROCEDURE ^ SetTimer*(VAR t: MilliTimer; ms: SIGNED32); 
+	PROCEDURE ^ Expired*(CONST t: MilliTimer): BOOLEAN; 
+	PROCEDURE ^ Elapsed*(CONST t: MilliTimer): SIGNED32; 
+	PROCEDURE ^ Left*(CONST t: MilliTimer): SIGNED32; 
+BEGIN
+END Kernel.

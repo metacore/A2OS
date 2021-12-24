@@ -1,0 +1,39 @@
+MODULE FPE64;
+	IMPORT SYSTEM;
+CONST 
+	B = 1023; 
+	M = 1073741824; 
+	C = 1048576; 
+	E = 2048; 
+	K = 1024; 
+TYPE 
+	Float64* = RECORD 
+		low*, high*: SIGNED32; 
+	END; 
+
+	Float32* = SIGNED32; 
+
+	PROCEDURE ^ Addd(VAR x1, x0: SIGNED32; y1, y0: SIGNED32); 
+	PROCEDURE ^ Subd(VAR x1, x0: SIGNED32; y1, y0: SIGNED32); 
+	PROCEDURE ^ Muld(x0, y0: SIGNED32; VAR z1, z0: SIGNED32); 
+	PROCEDURE ^ AddFloat64Sigs(CONST a, b: Float64; VAR z: Float64); 
+	PROCEDURE ^ SubFloat64Sigs(CONST a, b: Float64; VAR z: Float64); 
+	PROCEDURE ^ Neg*(CONST a: Float64; VAR z: Float64); 
+	PROCEDURE ^ Abs*(CONST a: Float64; VAR z: Float64); 
+	PROCEDURE ^ Add*(CONST a, b: Float64; VAR z: Float64); 
+	PROCEDURE ^ Sub*(CONST a, b: Float64; VAR z: Float64); 
+	PROCEDURE ^ Addd0(x1, x0, y1, y0: SIGNED32; VAR z1, z0: SIGNED32); 
+	PROCEDURE ^ Mul64To128(a1, a0, b1, b0: SIGNED32; VAR z3, z2, z1, z0: SIGNED32); 
+	PROCEDURE ^ Mul*(CONST x, y: Float64; VAR z: Float64); 
+	PROCEDURE ^ LessThanUL(CONST x, y: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ LessThanUH(CONST x1, x0, y1, y0: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ LessThan*(CONST x, y: Float64): BOOLEAN; 
+	PROCEDURE ^ Div*(CONST x, y: Float64; VAR z: Float64); 
+	PROCEDURE ^ FloatInt64*(i: SIGNED64; VAR z: Float64); 
+	PROCEDURE ^ Float*(i: SIGNED32; VAR z: Float64); 
+	PROCEDURE ^ FixInt64*(CONST a: Float64): SIGNED64; 
+	PROCEDURE ^ Fix*(CONST a: Float64): SIGNED32; 
+	PROCEDURE ^ Single*(VAR a: Float64): Float32; 
+	PROCEDURE ^ Double*(x: FLOAT32; VAR z: Float64); 
+BEGIN
+END FPE64.

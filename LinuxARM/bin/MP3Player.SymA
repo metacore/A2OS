@@ -1,0 +1,36 @@
+MODULE MP3Player;
+	IMPORT SoundDevices, Codecs, WMDialogs, KernelLog, Streams, Files, Commands;
+CONST 
+	Title = \"MP3 Player"\; 
+TYPE 
+	Player* = OBJECT {EXCLUSIVE} 
+	VAR 
+		decoder: Codecs.AudioDecoder; 
+		soundDevice: SoundDevices.Driver; 
+		playChannel: SoundDevices.Channel; 
+		bufferPool: SoundDevices.BufferPool; 
+		buffer: SoundDevices.Buffer; 
+		in: Streams.Reader; 
+		channels, rate, bits: SIGNED32; 
+		ready, paused, finished: BOOLEAN; 
+		pos, oldPos: SIGNED32; 
+		setup*: PROCEDURE {DELEGATE}(canSeek: BOOLEAN; totTime, totSamp: SIGNED32); 
+		update*: PROCEDURE {DELEGATE}(status: BOOLEAN; pos, displayTime: SIGNED32); 
+		eof*: PROCEDURE {DELEGATE}(sender, data: ANY ); 
+
+		PROCEDURE ^  & Init*(in: Streams.Reader; length: SIGNED32); 
+		PROCEDURE ^ Play*; 
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ Pause*; 
+		PROCEDURE ^ SetPos*(pos: SIGNED32); 
+		PROCEDURE ^ GetPos*(): SIGNED32; 
+		PROCEDURE ^ Close*; 
+	BEGIN{ACTIVE} 
+	END Player; 
+VAR 
+	player: Player; 
+
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Stop*; 
+BEGIN
+END MP3Player.

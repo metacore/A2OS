@@ -1,0 +1,107 @@
+MODULE TaskScheduler;
+	IMPORT Streams, Modules, Kernel, Locks, Dates, Strings, Files, Commands;
+CONST 
+	Unknown* =  -1; 
+	Once* = 0; 
+	EverySecond* = 1; 
+	EveryMinute* = 2; 
+	Hourly* = 3; 
+	Daily* = 4; 
+	Weekly* = 5; 
+	Monthly* = 6; 
+	Yearly* = 7; 
+	NameLength* = 64; 
+	DescriptionLength* = 256; 
+	CommandLength* = 256; 
+	ImageNameLength* = 256; 
+TYPE 
+	TaskInfo* = RECORD 
+		name*: ARRAY NameLength OF CHAR; 
+		description*: ARRAY DescriptionLength OF CHAR; 
+		command*: ARRAY CommandLength OF CHAR; 
+		image*: ARRAY ImageNameLength OF CHAR; 
+		repeatType*: SIGNED32; 
+		trigger*: Dates.DateTime; 
+	END; 
+
+	Task* = OBJECT {EXCLUSIVE} 
+	VAR 
+		id-: SIGNED32; 
+		timestamp-: SIGNED32; 
+		info: TaskInfo; 
+		user*: ANY ; 
+		handled: BOOLEAN; 
+		week, weekDay: SIGNED32; 
+		list-: TaskList; 
+		next: Task; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetInfo*(CONST info: TaskInfo); 
+		PROCEDURE ^ GetInfo*(): TaskInfo; 
+		PROCEDURE ^ ToStream(out: Streams.Writer); 
+		PROCEDURE ^ FromStream(in: Streams.Reader): BOOLEAN; 
+		PROCEDURE ^ Confirm*; 
+		PROCEDURE ^ Left*(VAR days, hours, minutes, seconds: SIGNED32); 
+		PROCEDURE ^ LeftFrom*(CONST dt: Dates.DateTime; VAR days, hours, minutes, seconds: SIGNED32); 
+		PROCEDURE ^ SetTrigger*(dt: Dates.DateTime; type: SIGNED32); 
+		PROCEDURE ^ SetTriggerX(dt: Dates.DateTime; repeatType: SIGNED32); 
+		PROCEDURE ^ GetTrigger*(): Dates.DateTime; 
+		PROCEDURE ^ TriggerNow*; 
+		PROCEDURE ^ Check(time: Dates.DateTime; VAR left: SIGNED32); 
+	END Task; 
+
+	TaskArray* = POINTER TO ARRAY OF Task; 
+
+	SelectorProcedure* = PROCEDURE {DELEGATE}(time: Dates.DateTime; task: Task):BOOLEAN; 
+
+	EnumeratorProcedure* = PROCEDURE {DELEGATE}(time: Dates.DateTime; task: Task); 
+
+	TaskList* = OBJECT 
+	VAR 
+		head: Task; 
+		nofTasks: SIGNED32; 
+		lock: Locks.RWLock; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Load*(CONST filename: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Store*(CONST filename: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ ConfirmTask*(task: Task); 
+		PROCEDURE ^ FindById*(id: SIGNED32): Task; 
+		PROCEDURE ^ Select*(selector: SelectorProcedure; CONST dt: Dates.DateTime; VAR tasks: TaskArray; VAR nofSelectedTasks, nofTasks: SIGNED32); 
+		PROCEDURE ^ Enumerate*(time: Dates.DateTime; proc: EnumeratorProcedure); 
+		PROCEDURE ^ Add*(task: Task); 
+		PROCEDURE ^ Remove*(task: Task); 
+		PROCEDURE ^ GetNofTasks*(): SIGNED32; 
+	END TaskList; 
+
+	Scheduler = OBJECT {EXCLUSIVE} 
+	VAR 
+		sleepHint: SIGNED32; 
+		alive, dead: BOOLEAN; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Stop; 
+		PROCEDURE ^ Update; 
+		PROCEDURE ^ CheckTask(time: Dates.DateTime; task: Task); 
+	BEGIN{ACTIVE} 
+	END Scheduler; 
+VAR 
+	taskList: TaskList; 
+	scheduler: Scheduler; 
+	id: SIGNED32; 
+	StrNoName-, StrNoDescription-, StrNoCommand-, StrNoImage-: Strings.String; 
+
+	PROCEDURE ^ TypeToStream(out: Streams.Writer; repeatType: SIGNED32); 
+	PROCEDURE ^ TypeFromStream(in: Streams.Reader): SIGNED32; 
+	PROCEDURE ^ GetId(): SIGNED32; 
+	PROCEDURE ^ GetTaskList*(): TaskList; 
+	PROCEDURE ^ GetRepeatTypeString*(repeatType: SIGNED32; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ IsEqual*(tasks1, tasks2: TaskArray): BOOLEAN; 
+	PROCEDURE ^ Copy*(from: TaskArray; VAR to: TaskArray); 
+	PROCEDURE ^ Clear*(tasks: TaskArray); 
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END TaskScheduler.

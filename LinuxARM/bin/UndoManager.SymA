@@ -1,0 +1,107 @@
+MODULE UndoManager;
+	IMPORT Texts;
+CONST 
+	None = 99; 
+	CStyle = 100; 
+	PStyle = 101; 
+	Attribute = 102; 
+	SpecialPiece = 103; 
+	AdvancedUndoStrategy = TRUE; 
+TYPE 
+	ListenerProc* = PROCEDURE {DELEGATE}(nrUndos, nrRedos: SIZE); 
+
+	UndoManager* = OBJECT (Texts.UndoManager)
+	VAR 
+		text: Texts.Text; 
+		undoQu, redoQu: Buffer; 
+		objUpdate: StyleUpdateInfo; 
+		nrUndoUpdates-, nrRedoUpdates-: SIZE; 
+		nrUpdatesListener*: ListenerProc; 
+		redo: BOOLEAN; 
+		actualPos-: SIZE; 
+
+		PROCEDURE ^  & New*(memorySize: SIZE; redo: BOOLEAN); 
+		PROCEDURE ^ ResetRedo; 
+		PROCEDURE ^ NextOperation(u: UpdateInfo); 
+		PROCEDURE ^ SaveOperation(u: UpdateInfo); 
+		PROCEDURE ^ InsertText*(pos: SIZE; text: Texts.Text); 
+		PROCEDURE ^ DeleteText*(pos: SIZE; text: Texts.Text); 
+		PROCEDURE ^ BeginObjectChange*(pos: SIZE); 
+		PROCEDURE ^ ObjectChanged*(pos, len: SIZE; type: INTEGER; obj: ANY ); 
+		PROCEDURE ^ EndObjectChange*(len: SIZE; type: INTEGER; to: ANY ); 
+		PROCEDURE ^ SetText*(text: Texts.Text); 
+		PROCEDURE ^ Undo*; 
+		PROCEDURE ^ Redo*; 
+		PROCEDURE ^ InformListeners*; 
+	END UndoManager; 
+
+	Buffer = OBJECT 
+	VAR 
+		head, num: SIZE; 
+		buffer: POINTER TO ARRAY OF UpdateInfo; 
+
+		PROCEDURE ^ Push*(x: UpdateInfo); 
+		PROCEDURE ^ RemoveOldest*(): UpdateInfo; 
+		PROCEDURE ^ Peek*(): UpdateInfo; 
+		PROCEDURE ^ Pop*(): UpdateInfo; 
+		PROCEDURE ^ IsFull*(): BOOLEAN; 
+		PROCEDURE ^ IsEmpty*(): BOOLEAN; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^  & Init*(n: SIZE); 
+	END Buffer; 
+
+	UpdateInfo = OBJECT 
+	VAR 
+		pos: SIZE; 
+		sealed*: BOOLEAN; 
+
+		PROCEDURE ^ Undo(text: Texts.Text); 
+		PROCEDURE ^ Redo(text: Texts.Text); 
+	END UpdateInfo; 
+
+	InsertUpdateInfo = OBJECT (UpdateInfo)
+	VAR 
+		len: SIZE; 
+		t: Texts.Text; 
+
+		PROCEDURE ^  & New*(pos: SIZE; text: Texts.Text); 
+		PROCEDURE ^ Undo(text: Texts.Text); 
+		PROCEDURE ^ Redo(text: Texts.Text); 
+	END InsertUpdateInfo; 
+
+	DeleteUpdateInfo = OBJECT (UpdateInfo)
+	VAR 
+		len: SIZE; 
+		t: Texts.Text; 
+
+		PROCEDURE ^  & New*(pos: SIZE; text: Texts.Text); 
+		PROCEDURE ^ Undo(text: Texts.Text); 
+		PROCEDURE ^ Redo(text: Texts.Text); 
+	END DeleteUpdateInfo; 
+
+	StyleInfo = POINTER TO RECORD 
+		next: StyleInfo; 
+		pos, len: SIZE; 
+		style: ANY ; 
+		type: INTEGER; 
+	END; 
+
+	StyleUpdateInfo = OBJECT (UpdateInfo)
+	VAR 
+		len: SIZE; 
+		type: INTEGER; 
+		new: ANY ; 
+		old: StyleInfo; 
+
+		PROCEDURE ^  & New*(pos: SIZE); 
+		PROCEDURE ^ Append(pos, len: SIZE; style: ANY ; type: INTEGER); 
+		PROCEDURE ^ SetObject(new: ANY ); 
+		PROCEDURE ^ SetLen(len: SIZE); 
+		PROCEDURE ^ SetStyle*(textpos, len: SIZE; style: ANY ); 
+		PROCEDURE ^ Undo(text: Texts.Text); 
+		PROCEDURE ^ Redo(text: Texts.Text); 
+	END StyleUpdateInfo; 
+
+	PROCEDURE ^ IsSeparator(uc: Texts.Char32): BOOLEAN; 
+BEGIN
+END UndoManager.

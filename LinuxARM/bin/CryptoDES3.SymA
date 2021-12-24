@@ -1,0 +1,33 @@
+MODULE CryptoDES3;
+	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils, D := CryptoDES;
+CONST 
+TYPE 
+	Ind4 = RECORD 
+		a, b, c, d: SIGNED32; 
+	END; 
+
+	Cipher* = OBJECT (Ciphers.Cipher)
+	VAR 
+		ske, skd: ARRAY 96 OF SET32; 
+		ski: SIGNED32; 
+		ivx, ivy: SET32; 
+
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIZE); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ RoundE*(VAR x, y: SET32); 
+		PROCEDURE ^ RoundD*(VAR x, y: SET32); 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+
+	PROCEDURE  - Split(x: SET32; VAR i4: Ind4);
+	BEGIN
+		i4.a := (SIGNED32(x) MOD 64); 
+		i4.b := ((SIGNED32(x) DIV 256) MOD 64); 
+		i4.c := ((SIGNED32(x) DIV 65536) MOD 64); 
+		i4.d := ((SIGNED32(x) DIV 16777216) MOD 64)
+	END Split; 
+	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
+BEGIN
+END CryptoDES3.

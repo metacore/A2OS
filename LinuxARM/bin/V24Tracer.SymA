@@ -1,0 +1,28 @@
+MODULE V24Tracer;
+	IMPORT Commands, Streams, Modules, KernelLog, Serials;
+CONST 
+TYPE 
+	SerialPortTracer = OBJECT {EXCLUSIVE} 
+	VAR 
+		port: Serials.Port; 
+		seq: SIGNED32; 
+		ch: CHAR; 
+		V24writer: Streams.Writer; 
+		alive: BOOLEAN; 
+		res: INTEGER; 
+
+		PROCEDURE ^  & Init*(seqNo, portNo, bps: SIGNED32); 
+		PROCEDURE ^ Close; 
+	BEGIN{ACTIVE} 
+	END SerialPortTracer; 
+VAR 
+	running, fine: BOOLEAN; 
+	tracingport: ARRAY 2 OF SerialPortTracer; 
+	activeseq: SIGNED32; 
+
+	PROCEDURE ^ SetMode*(context: Commands.Context); 
+	PROCEDURE ^ Enable*(context: Commands.Context); 
+	PROCEDURE ^ Finalize; 
+	PROCEDURE ^ Disable*; 
+BEGIN
+END V24Tracer.

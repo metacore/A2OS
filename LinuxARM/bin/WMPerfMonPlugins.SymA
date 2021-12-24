@@ -1,0 +1,154 @@
+MODULE WMPerfMonPlugins;
+	IMPORT KernelLog, Machine, Objects, Kernel, Modules, Heaps, Commands, Plugins, Configuration, Strings, WMDiagramComponents, WMGraphics, Events, XML, XMLObjects;
+CONST 
+	EventPluginsChanged* = 0; 
+	EventPerfUpdate* = 1; 
+	EventParametersChanged* = 2; 
+	EventSampleLoopDone* = 3; 
+	DefaultSampleBufferSize = 10; 
+	DefaultSampleInterval = 50; 
+	DefaultScreenRefresh = 500; 
+	Hidden* = WMDiagramComponents.Hidden; 
+	Sum* = WMDiagramComponents.Sum; 
+	Maximum* = WMDiagramComponents.Maximum; 
+	Standalone* = WMDiagramComponents.Standalone; 
+	Verbose = FALSE; 
+TYPE 
+	Name* = ARRAY 32 OF CHAR; 
+
+	Description* = ARRAY 128 OF CHAR; 
+
+	DeviceName* = ARRAY 128 OF CHAR; 
+
+	Dataset* = WMDiagramComponents.Dataset; 
+
+	DatasetDescriptor* = WMDiagramComponents.DatasetDescriptor; 
+
+	PluginLoader = PROCEDURE ; 
+
+	Parameter* = POINTER TO RECORD 
+		name*: Name; 
+		description*: Description; 
+		devicename*: DeviceName; 
+		modulename*: ARRAY 128 OF CHAR; 
+		datasetDescriptor*: WMDiagramComponents.DatasetDescriptor; 
+		noSuperSampling*: BOOLEAN; 
+		min*, max*: SIGNED32; 
+		autoMin*, autoMax*: BOOLEAN; 
+		unit*: ARRAY 16 OF CHAR; 
+		perSecond*: BOOLEAN; 
+		scale*: FLOAT32; 
+		minDigits*, fraction*: SIGNED32; 
+		statsUnit*: ARRAY 16 OF CHAR; 
+		showPercent*: BOOLEAN; 
+		showSum*: BOOLEAN; 
+		hide*: BOOLEAN; 
+		helper*: Helper; 
+	END; 
+
+	Plugin* = OBJECT {EXCLUSIVE} 
+	VAR 
+		dataset-: Dataset; 
+		p-: Parameter; 
+		datamodel-: WMDiagramComponents.MultiPointModel; 
+		active: BOOLEAN; 
+		nbrOfClients: SIGNED32; 
+		currentDataset: Dataset; 
+		sample, nbrOfSamples, nbrOfValidSamples: SIGNED32; 
+		samples: POINTER TO ARRAY OF Dataset; 
+		milliTimer: Kernel.MilliTimer; 
+		lastDataset, temp: Dataset; 
+		isFirstUpdate: BOOLEAN; 
+		dimensions: SIZE; 
+		link: Plugin; 
+
+		PROCEDURE ^ UpdateDataset*; 
+		PROCEDURE ^ Init*(p: Parameter); 
+		PROCEDURE ^ IncNbrOfClients*; 
+		PROCEDURE ^ DecNbrOfClients*; 
+		PROCEDURE ^ SetActive*(active: BOOLEAN); 
+		PROCEDURE ^ IsActive*(): BOOLEAN; 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ SetSampleBufferSize*(size: SIGNED32); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ Update; 
+		PROCEDURE ^ UpdateScreen; 
+		PROCEDURE ^ CopyDataset(source: Dataset; VAR target: Dataset); 
+		PROCEDURE ^ Show; 
+		PROCEDURE ^ EvaluateParameter(p: Parameter); 
+		PROCEDURE ^  & New*(p: Parameter); 
+	END Plugin; 
+
+	Helper* = OBJECT 
+	VAR 
+		next: Helper; 
+		updated: BOOLEAN; 
+
+		PROCEDURE ^ Update*; 
+	END Helper; 
+
+	Notifier = PROCEDURE {DELEGATE}(events: SET; perf: FLOAT32); 
+
+	Notifiers = POINTER TO RECORD 
+		events: SET; 
+		proc: Notifier; 
+		next: Notifiers; 
+	END; 
+
+	PluginArray* = POINTER TO ARRAY OF Plugin; 
+
+	Updater = OBJECT {EXCLUSIVE} 
+	VAR 
+		sampleInterval-: SIGNED32; 
+		sampleBufferSize-: SIGNED32; 
+		screenInterval-: SIGNED32; 
+		plugins: Plugin; 
+		notifiers: Notifiers; 
+		lastCycles, lastTimestamp: SIGNED64; 
+		sample: SIGNED32; 
+		sampleBuffer: POINTER TO ARRAY OF FLOAT32; 
+		me: Objects.Process; 
+		milliTimer: Kernel.MilliTimer; 
+		left, samplingLeft: SIGNED32; 
+		screenTimer: Kernel.MilliTimer; 
+		alive, dead: BOOLEAN; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^ AddListener*(events: SET; proc: Notifier); 
+		PROCEDURE ^ RemoveListener*(proc: Notifier); 
+		PROCEDURE ^ NotifyListeners*(events: SET; perf: FLOAT32); 
+		PROCEDURE ^ GetByFullname*(CONST fullname: ARRAY OF CHAR; VAR index: SIGNED32; VAR msg: ARRAY OF CHAR): Plugin; 
+		PROCEDURE ^ GetByName*(CONST name: Name; CONST devicename: DeviceName): Plugin; 
+		PROCEDURE ^ GetByNameX(CONST name: Name; CONST devicename: DeviceName): Plugin; 
+		PROCEDURE ^ RemoveByName*(CONST name: Name; CONST devicename: DeviceName); 
+		PROCEDURE ^ RemoveByModuleName*(CONST modulename: ARRAY OF CHAR); 
+		PROCEDURE ^ RemovePlugin*(p: Plugin); 
+		PROCEDURE ^ RemovePluginIntern(p: Plugin); 
+		PROCEDURE ^ GetPlugins*(): PluginArray; 
+		PROCEDURE ^ ClearAll*; 
+		PROCEDURE ^ Show; 
+		PROCEDURE ^ SetIntervals*(VAR sampleInterval, sampleBufferSize, screenInterval: SIGNED32); 
+		PROCEDURE ^ AddPlugin(plugin: Plugin); 
+		PROCEDURE ^ UpdatePlugin(p: Plugin); 
+		PROCEDURE ^ UpdatePlugins(screen: BOOLEAN); 
+		PROCEDURE ^ UpdateHelpers(h: Helper); 
+		PROCEDURE ^ ResetHelpers; 
+		PROCEDURE ^ UpdatePerf; 
+		PROCEDURE ^ Terminate; 
+		PROCEDURE ^  & New*; 
+	BEGIN{ACTIVE, PRIORITY(Objects.High)} 
+	END Updater; 
+VAR 
+	updater-: Updater; 
+	NnofPlugins-, NnofValues-: SIZE; 
+
+	PROCEDURE ^ EstimateCpuClockrate*(VAR clockrate: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ CyclesToMs*(cycles: SIGNED64; mhz: SIGNED32): SIGNED32; 
+	PROCEDURE ^ MsToString*(ms: SIGNED32; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ GetNameDesc*(plugin: Plugins.Plugin; VAR devicename: DeviceName); 
+	PROCEDURE ^ Show*(context: Commands.Context); 
+	PROCEDURE ^ LoadPlugin(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ LoadConfiguration; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPerfMonPlugins.

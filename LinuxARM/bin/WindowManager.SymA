@@ -1,0 +1,183 @@
+MODULE WindowManager;
+	IMPORT KernelLog, Kernel, Strings, Plugins, Inputs, Modules, Displays, Graphics := WMGraphics, Messages := WMMessages, DW := WMDefaultWindows, WM := WMWindowManager, Rect := WMRectangles, Raster, WMFontManager, Commands, Options;
+CONST 
+	DirtyBufSize = 128; 
+	CombineLookahead = 64; 
+	XYResizeHandleSize = 15; 
+	ZF = 9.E-1; 
+	ZD = 1.E-1; 
+TYPE 
+	Window = WM.Window; 
+
+	Rectangle = Rect.Rectangle; 
+
+	ViewPort* = OBJECT (WM.ViewPort)
+	VAR 
+		backbuffer: Graphics.Image; 
+		deviceRect: Rect.Rectangle; 
+		canvas: Graphics.BufferCanvas; 
+		state: Graphics.CanvasState; 
+		display: Displays.Display; 
+		internnavig, navig: BOOLEAN; 
+		lastx, lasty: SIZE; 
+		lastKeys: SET; 
+		modifierKeys: SET; 
+		meta: BOOLEAN; 
+		fx, fy, inffx, inffy, factor, intfactor: FLOAT32; 
+
+		PROCEDURE ^  & New*(disp: Displays.Display); 
+		PROCEDURE ^ GetKeyState*(VAR state: SET); 
+		PROCEDURE ^ KeyEvent(ucs: SIGNED32; flags: SET; keysym: SIGNED32); 
+		PROCEDURE ^ PointerEvent(x, y, z, dx, dy, dz: SIZE; keys: SET); 
+		PROCEDURE ^ ZoomToWindow(w: Window); 
+		PROCEDURE ^ SetInitialWindowBounds(w: Window); 
+		PROCEDURE ^ SetRange*(x, y, w, h: FLOAT32; showTransition: BOOLEAN); 
+		PROCEDURE ^ Update*(r: Rectangle; top: Window); 
+		PROCEDURE ^ Refresh*(top: Window); 
+		PROCEDURE ^ GetWMCoordinates*(CONST r: Rect.Rectangle): Rect.Rectangle; 
+		PROCEDURE ^ Draw(r: Rectangle; top: Window); 
+	END ViewPort; 
+
+	DirtyQ = OBJECT {EXCLUSIVE} 
+	VAR 
+		dirtyHead, dirtyTail: SIGNED32; 
+		dirtyBuf: ARRAY DirtyBufSize OF Rectangle; 
+		overflow: BOOLEAN; 
+
+		PROCEDURE ^ Has(): BOOLEAN; 
+		PROCEDURE ^ Get(VAR r: Rectangle); 
+		PROCEDURE ^ Add(VAR r: Rectangle); 
+	END DirtyQ; 
+
+	UnhitableWindow = OBJECT {EXCLUSIVE} (WM.BufferWindow)
+
+		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
+	END UnhitableWindow; 
+
+	WindowManager* = OBJECT {EXCLUSIVE} (WM.WindowManager)
+	VAR 
+		top, bottom: Window; 
+		dirtyQ: DirtyQ; 
+		patches: ARRAY CombineLookahead OF Rectangle; 
+		running: BOOLEAN; 
+		views: WM.ViewPort; 
+		kdprev: SIGNED32; 
+		pointerKeys: SET; 
+		pointerOwner: Window; 
+		pointerX, pointerY: SIZE; 
+		pointerInfo: WM.PointerInfo; 
+		focusOwner: Window; 
+		fifi: Fifi; 
+		dragging: BOOLEAN; 
+		dragImage: Graphics.Image; 
+		dragCursor: UnhitableWindow; 
+		dragInfo: WM.DragInfo; 
+		dragSender: Window; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ ShutDown*; 
+		PROCEDURE ^ CheckChain*(details: BOOLEAN); 
+		PROCEDURE ^ InsertAfter(old, new: Window); 
+		PROCEDURE ^ FindTopWindow(stayontop: BOOLEAN): Window; 
+		PROCEDURE ^ FindBottomWindow(stayOnBottom: BOOLEAN): Window; 
+		PROCEDURE ^ Broadcast*(VAR m: Messages.Message); 
+		PROCEDURE ^ Add*(left, top: SIZE; w: Window; flags: SET); 
+		PROCEDURE ^ InternalRemove(w: Window); 
+		PROCEDURE ^ Remove*(w: Window); 
+		PROCEDURE ^ ToFront*(x: Window); 
+		PROCEDURE ^ ToBack*(x: Window); 
+		PROCEDURE ^ SetWindowFlag*(w: Window; flag: SIGNED32; include: BOOLEAN); 
+		PROCEDURE ^ SetWindowPos*(w: Window; x, y: SIZE); 
+		PROCEDURE ^ SetWindowSize*(w: Window; VAR width, height: SIZE); 
+		PROCEDURE ^ AddView*(v: WM.ViewPort); 
+		PROCEDURE ^ RefreshView*(v: WM.ViewPort); 
+		PROCEDURE ^ RefreshViews; 
+		PROCEDURE ^ RemoveView*(v: WM.ViewPort); 
+		PROCEDURE ^ ReplaceBackground*(w: Window): Window; 
+		PROCEDURE ^ GetPopulatedArea*(VAR r: Rectangle); 
+		PROCEDURE ^ GetFirst*(): Window; 
+		PROCEDURE ^ GetNext*(cur: Window): Window; 
+		PROCEDURE ^ GetPrev*(cur: Window): Window; 
+		PROCEDURE ^ SetFocus*(w: Window); 
+		PROCEDURE ^ GetPositionOwnerIntern(x, y: SIZE; owner: WM.ViewPort): Window; 
+		PROCEDURE ^ GetPositionOwner*(x, y: SIZE): Window; 
+		PROCEDURE ^ CheckPointerImage*; 
+		PROCEDURE ^ GetFocusOwner*(): Window; 
+		PROCEDURE ^ PointerEvent(VAR msg: Messages.Message); 
+		PROCEDURE ^ KeyEvent*(VAR m: Messages.Message); 
+		PROCEDURE ^ HandleInternal*(VAR msg: Messages.Message); 
+		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY ; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
+		PROCEDURE ^ TransferPointer*(to: Window): BOOLEAN; 
+		PROCEDURE ^ AddDirty*(VAR rect: Rectangle); 
+		PROCEDURE ^ AddVisibleDirty*(w: Window; rect: Rectangle); 
+		PROCEDURE ^ RedrawDirty; 
+		PROCEDURE ^ DefaultDecorator(w: Window); 
+		PROCEDURE ^ Touch; 
+	BEGIN{ACTIVE, SAFE} 
+	END WindowManager; 
+
+	MouseObj = OBJECT {EXCLUSIVE} (Inputs.Sink)
+	VAR 
+		view: ViewPort; 
+		x, y, z: SIZE; 
+		threshold, speedup: SIGNED32; 
+		enableMMEmulation: BOOLEAN; 
+		lastTime: SIGNED32; 
+		lastX, lastY: SIZE; 
+		prevKeys: SET; 
+		inDoubleClick: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(t, s: SIGNED32; m: BOOLEAN); 
+		PROCEDURE ^ Handle*(VAR msg: Inputs.Message); 
+	END MouseObj; 
+
+	KeyboardObj = OBJECT {EXCLUSIVE} (Inputs.Sink)
+	VAR 
+		view: ViewPort; 
+		ch: SIGNED32; 
+
+		PROCEDURE ^ Handle*(VAR msg: Inputs.Message); 
+		PROCEDURE ^ MapChars(VAR ch: SIGNED32); 
+		PROCEDURE ^  & Init*; 
+	END KeyboardObj; 
+
+	Toucher = OBJECT {EXCLUSIVE} 
+	VAR 
+		timer: Kernel.Timer; 
+		alive: BOOLEAN; 
+
+	BEGIN{ACTIVE} 
+	END Toucher; 
+
+	Fifi = OBJECT {EXCLUSIVE} 
+	VAR 
+		timer: Kernel.Timer; 
+		delay: SIGNED32; 
+		time: Kernel.MilliTimer; 
+		alive, done: BOOLEAN; 
+
+		PROCEDURE ^ Cleanup; 
+		PROCEDURE ^ Done; 
+		PROCEDURE ^ Reset; 
+		PROCEDURE ^  & Init*(delay: SIGNED32); 
+	BEGIN{ACTIVE} 
+	END Fifi; 
+VAR 
+	DoubleClick: SIGNED32; 
+	session: WindowManager; 
+	toucher: Toucher; 
+	defaultKeyboard: KeyboardObj; 
+	defaultMouse: MouseObj; 
+	CharToUnicode: ARRAY 256 OF SIGNED32; 
+
+	PROCEDURE ^ Bound(VAR x: SIZE; min, max: SIZE); 
+	PROCEDURE ^ ClipAtImage(VAR x: Rectangle; img: Raster.Image); 
+	PROCEDURE ^ FillSession(wm: WindowManager; bgColor: SIGNED32; noPointer: BOOLEAN); 
+	PROCEDURE ^ Replace*(color: SIGNED32; noPointer, enableMMEmulation: BOOLEAN); 
+	PROCEDURE ^ InitCharMaps; 
+	PROCEDURE ^ CleanUp; 
+	PROCEDURE ^ Install*(context: Commands.Context); 
+	PROCEDURE ^ TraceChain*; 
+	PROCEDURE ^ SetDoubleClick*(context: Commands.Context); 
+BEGIN
+END WindowManager.

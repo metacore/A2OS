@@ -1,0 +1,165 @@
+MODULE JPEG2000DecoderUtil;
+	IMPORT SYSTEM, KernelLog;
+CONST 
+	LONGINT_BITS* = SIGNED32((SIZEOF(SIGNED32) * 8)); 
+	LONGINT_SIGN_BIT* = {(LONGINT_BITS - 1)}; 
+	SWAP_MASK* = SIGNED32( -1); 
+	SUB_LL* = 0; 
+	SUB_HL* = 1; 
+	SUB_LH* = 2; 
+	SUB_HH* = 3; 
+	DEFAULT_READER_SIZE = 65536; 
+	WRITE_ERROR = 2907; 
+TYPE 
+	LongIntArrayPtr* = POINTER TO ARRAY OF SIGNED32; 
+
+	LongInt2DArrayPtr* = POINTER TO ARRAY OF LongIntArrayPtr; 
+
+	LongInt3DArrayPtr* = POINTER TO ARRAY OF LongInt2DArrayPtr; 
+
+	LongInt4DArrayPtr* = POINTER TO ARRAY OF LongInt3DArrayPtr; 
+
+	ByteArrayPtr* = POINTER TO ARRAY OF CHAR; 
+
+	RealArrayPtr* = POINTER TO ARRAY OF FLOAT32; 
+
+	SetArrayPtr* = POINTER TO ARRAY OF SET; 
+
+	ByteArrayReader* = OBJECT 
+	VAR 
+		arr: ByteArrayPtr; 
+		arrPos, dataLen: SIGNED32; 
+
+		PROCEDURE ^  & InitNew*(arr: ByteArrayPtr; offset, len: SIGNED32); 
+		PROCEDURE ^ ReInit*(arr: ByteArrayPtr; offset, len: SIGNED32); 
+		PROCEDURE ^ SetArray*(arr: ByteArrayPtr; offset, len: SIGNED32); 
+		PROCEDURE ^ Read*(): SIGNED32; 
+	END ByteArrayReader; 
+
+	BitSource* = OBJECT 
+
+		PROCEDURE ^ NextBit*(): SIGNED32; 
+	END BitSource; 
+
+	DataBitReader* = OBJECT (BitSource)
+	VAR 
+		br: ByteArrayReader; 
+		curByte: SIGNED32; 
+		curBytePos: SIGNED32; 
+
+		PROCEDURE ^  & InitNew*(br: ByteArrayReader); 
+		PROCEDURE ^ ReInit*(br: ByteArrayReader); 
+		PROCEDURE ^ NextBit*(): SIGNED32; 
+		PROCEDURE ^ NextSegment*(data: ByteArrayPtr; offset, len: SIGNED32); 
+		PROCEDURE ^ CheckBytePadding*(): BOOLEAN; 
+	END DataBitReader; 
+
+	CodedCblk* = RECORD 
+		cpasses*: SIGNED32; 
+		nseg*: SIGNED32; 
+		segLen*: LongIntArrayPtr; 
+		dataOffset*: SIGNED32; 
+		dataLen*: SIGNED32; 
+		data*: ByteArrayPtr; 
+	END; 
+
+	BlkInfo* = OBJECT 
+	VAR 
+		ulx*, uly*: SIGNED32; 
+		height*, width*: SIGNED32; 
+	END BlkInfo; 
+
+	CblkInfo* = OBJECT (BlkInfo)
+	VAR 
+		ulsx*, ulsy*: SIGNED32; 
+		truncpt*: SIGNED32; 
+		cpasseslyr*: LongIntArrayPtr; 
+		zerobp*: SIGNED32; 
+		curbp*: SIGNED32; 
+		datalenlyr*: LongIntArrayPtr; 
+		subbinfo*: SubbandInfo; 
+		index*: SIGNED32; 
+	END CblkInfo; 
+
+	SubbandInfo* = OBJECT 
+	VAR 
+		type*: SIGNED32; 
+		index*: SIGNED32; 
+		ulcx*, ulcy*: SIGNED32; 
+		ulsx*, ulsy*: SIGNED32; 
+		width*, height*: SIGNED32; 
+		nblocksx*, nblocksy*: SIGNED32; 
+		magbits*: SIGNED32; 
+		component*: SIGNED32; 
+		reslevel*: SIGNED32; 
+		declevel*: SIGNED32; 
+	END SubbandInfo; 
+
+	TreeNode = RECORD 
+		value: SIGNED32; 
+		valid: BOOLEAN; 
+	END; 
+
+	TagTree* = OBJECT 
+	VAR 
+		maxLevel: SIGNED32; 
+		maxX: SIGNED32; 
+		maxY: SIGNED32; 
+		nodes: POINTER TO ARRAY OF POINTER TO ARRAY OF TreeNode; 
+		src: BitSource; 
+
+		PROCEDURE ^  & InitNew*(ncblx, ncbly: SIGNED32; src: BitSource); 
+		PROCEDURE ^ Update*(x, y: SIGNED32; threshold: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ IsValid*(x, y: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ CurrentVal*(x, y: SIGNED32): SIGNED32; 
+	END TagTree; 
+
+	DecoderOptions* = OBJECT 
+	VAR 
+		crOpt*: CodestreamReaderOptions; 
+		edOpt*: EntropyDecoderOptions; 
+		roiOpt*: ROIDescalerOptions; 
+		deqOpt*: DequantizerOptions; 
+		invDWTOpt*: InverseDWTOptions; 
+		invMCTOpt*: InverseMCTOptions; 
+	END DecoderOptions; 
+
+	ComponentOptions* = OBJECT 
+	VAR 
+		component*: SIGNED32; 
+	END ComponentOptions; 
+
+	CodestreamReaderOptions* = OBJECT (ComponentOptions)
+	VAR 
+		printComments*: BOOLEAN; 
+	END CodestreamReaderOptions; 
+
+	EntropyDecoderOptions* = OBJECT (ComponentOptions)
+	VAR 
+		concealError*: BOOLEAN; 
+	END EntropyDecoderOptions; 
+
+	ROIDescalerOptions* = OBJECT (ComponentOptions)
+	VAR 
+		noROI*: BOOLEAN; 
+	END ROIDescalerOptions; 
+
+	DequantizerOptions* = OBJECT (ComponentOptions)
+	END DequantizerOptions; 
+
+	InverseDWTOptions* = OBJECT (ComponentOptions)
+	VAR 
+		filterRev*: SIGNED32; 
+		filterIrrev*: SIGNED32; 
+	END InverseDWTOptions; 
+
+	InverseMCTOptions* = OBJECT (ComponentOptions)
+	VAR 
+		nonRebuildBuffer*: BOOLEAN; 
+	END InverseMCTOptions; 
+
+	PROCEDURE ^ Log2Floor*(x: SIGNED32): SIGNED32; 
+	PROCEDURE ^ SubbandToSubbandIndex*(subband: SIGNED32): SIGNED32; 
+	PROCEDURE ^ SubbandIndexToSubband*(reslevel, subbIndex: SIGNED32): SIGNED32; 
+BEGIN
+END JPEG2000DecoderUtil.

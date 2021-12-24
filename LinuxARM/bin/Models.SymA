@@ -1,0 +1,199 @@
+MODULE Models;
+	IMPORT Streams, Locks, Types, Strings, XML, Texts, TextUtilities, Repositories, XMLObjects;
+CONST 
+	Ok* = Types.Ok; 
+	NoNotifications* = 0; 
+	OnChanged* = 1; 
+	InitialStringSize = 128; 
+	AttributeName = \"name"\; 
+TYPE 
+	Model* = OBJECT {EXCLUSIVE} (Repositories.Component)
+	VAR 
+		changed: BOOLEAN; 
+		notificationMode: SIGNED8; 
+		lock: Locks.RWLock; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ AcquireRead*; 
+		PROCEDURE ^ ReleaseRead*; 
+		PROCEDURE ^ HasReadLock*(): BOOLEAN; 
+		PROCEDURE ^ AcquireWrite*; 
+		PROCEDURE ^ ReleaseWrite*; 
+		PROCEDURE ^ HasWriteLock*(): BOOLEAN; 
+		PROCEDURE ^ SetNotificationMode*(mode: SIGNED8); 
+		PROCEDURE ^ Changed*; 
+		PROCEDURE ^ AddContent*(content: XML.Content); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
+		PROCEDURE ^ Write*(w: Streams.Writer; context: ANY ; level: SIGNED32); 
+	END Model; 
+
+	Boolean* = OBJECT {EXCLUSIVE} (Model)
+	VAR 
+		value: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Set*(value: BOOLEAN); 
+		PROCEDURE ^ Get*(): BOOLEAN; 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
+	END Boolean; 
+
+	Integer* = OBJECT {EXCLUSIVE} (Model)
+	VAR 
+		value: SIGNED32; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Set*(value: SIGNED32); 
+		PROCEDURE ^ Get*(): SIGNED32; 
+		PROCEDURE ^ Add*(value: SIGNED32); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
+	END Integer; 
+
+	Hugeint* = OBJECT {EXCLUSIVE} (Model)
+	VAR 
+		value: SIGNED64; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Set*(value: SIGNED64); 
+		PROCEDURE ^ Get*(): SIGNED64; 
+		PROCEDURE ^ Add*(value: SIGNED64); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
+	END Hugeint; 
+
+	Size* = OBJECT {EXCLUSIVE} (Model)
+	VAR 
+		value: SIZE; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Set*(value: SIZE); 
+		PROCEDURE ^ Get*(): SIZE; 
+		PROCEDURE ^ Add*(value: SIZE); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
+	END Size; 
+
+	Real* = OBJECT {EXCLUSIVE} (Model)
+	VAR 
+		value: FLOAT32; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Set*(value: FLOAT32); 
+		PROCEDURE ^ Get*(): FLOAT32; 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
+	END Real; 
+
+	Longreal* = OBJECT {EXCLUSIVE} (Model)
+	VAR 
+		value: FLOAT64; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Set*(value: FLOAT64); 
+		PROCEDURE ^ Get*(): FLOAT64; 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
+	END Longreal; 
+
+	Char* = OBJECT {EXCLUSIVE} (Model)
+	VAR 
+		value: CHAR; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Set*(value: CHAR); 
+		PROCEDURE ^ Get*(): CHAR; 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
+	END Char; 
+
+	String* = OBJECT {EXCLUSIVE} (Model)
+	VAR 
+		value: Strings.String; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Set*(value: Strings.String); 
+		PROCEDURE ^ Get*(): Strings.String; 
+		PROCEDURE ^ SetAOC*(CONST value: ARRAY OF CHAR); 
+		PROCEDURE ^ GetAOC*(VAR value: ARRAY OF CHAR); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
+	END String; 
+
+	Set* = OBJECT {EXCLUSIVE} (Model)
+	VAR 
+		value: SET; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Set*(value: SET); 
+		PROCEDURE ^ Get*(): SET; 
+		PROCEDURE ^ Include*(element: SIGNED32); 
+		PROCEDURE ^ Exclude*(element: SIGNED32); 
+		PROCEDURE ^ Contains*(element: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
+	END Set; 
+
+	Text* = OBJECT {EXCLUSIVE} (Model)
+	VAR 
+		value: Texts.Text; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AcquireRead*; 
+		PROCEDURE ^ ReleaseRead*; 
+		PROCEDURE ^ HasReadLock*(): BOOLEAN; 
+		PROCEDURE ^ AcquireWrite*; 
+		PROCEDURE ^ ReleaseWrite*; 
+		PROCEDURE ^ HasWriteLock*(): BOOLEAN; 
+		PROCEDURE ^ Set*(value: Texts.Text); 
+		PROCEDURE ^ SetReference*(value: Texts.Text); 
+		PROCEDURE ^ Get*(): Texts.Text; 
+		PROCEDURE ^ OnTextChanged(sender, data: ANY ); 
+		PROCEDURE ^ SetAsString*(CONST string: ARRAY OF CHAR); 
+		PROCEDURE ^ GetAsString*(VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: SIGNED32); 
+	END Text; 
+
+	Container* = OBJECT {EXCLUSIVE} (Model)
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ FindModel(CONST name: ARRAY OF CHAR): Model; 
+		PROCEDURE ^ FindModelByName(CONST fullname: ARRAY OF CHAR): Model; 
+		PROCEDURE ^ SetField*(CONST name: ARRAY OF CHAR; CONST value: Types.Any; VAR res: INTEGER); 
+		PROCEDURE ^ GetField*(CONST name: ARRAY OF CHAR; VAR value: Types.Any; VAR res: INTEGER); 
+	END Container; 
+VAR 
+	StrBoolean, StrInteger, StrHugeint, StrSize, StrReal, StrLongreal, StrChar, StrString, StrSet, StrText, StrContainer: Strings.String; 
+
+	PROCEDURE ^ NewLine*(w: Streams.Writer; level: SIGNED32); 
+	PROCEDURE ^ IsPrintableCharacter(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ GetReal*(m: Model; VAR r: FLOAT64): BOOLEAN; 
+	PROCEDURE ^ GetInteger*(m: Model; VAR i: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ SetReal*(m: Model; r: FLOAT64); 
+	PROCEDURE ^ GenBoolean*(): XML.Element; 
+	PROCEDURE ^ GenInteger*(): XML.Element; 
+	PROCEDURE ^ GenHugeint*(): XML.Element; 
+	PROCEDURE ^ GenSize*(): XML.Element; 
+	PROCEDURE ^ GenReal*(): XML.Element; 
+	PROCEDURE ^ GenLongreal*(): XML.Element; 
+	PROCEDURE ^ GenChar*(): XML.Element; 
+	PROCEDURE ^ GenString*(): XML.Element; 
+	PROCEDURE ^ GenSet*(): XML.Element; 
+	PROCEDURE ^ GenText*(): XML.Element; 
+	PROCEDURE ^ GenContainer*(): XML.Element; 
+	PROCEDURE ^ InitStrings; 
+BEGIN
+END Models.

@@ -1,0 +1,54 @@
+MODULE W3dVectors;
+	IMPORT Math := MathL;
+CONST 
+	TooSmall* = 1.E-11; 
+TYPE 
+	TVector2d* = RECORD 
+		x*, y*: FLOAT64; 
+	END; 
+
+	TVector3d* = RECORD 
+		x*, y*, z*: FLOAT64; 
+	END; 
+
+	TLineSegment2d* = RECORD 
+		A*, B*: TVector2d; 
+	END; 
+
+	TRectangle* = RECORD 
+		A*, B*: TVector2d; 
+	END; 
+
+	TBoundingSphere* = RECORD 
+		P*: TVector3d; 
+		r*: FLOAT64; 
+	END; 
+
+	PROCEDURE ^ Sqr(x: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Vector2d*(x: FLOAT64; y: FLOAT64): TVector2d; 
+	PROCEDURE ^ Vector3d*(x: FLOAT64; y: FLOAT64; z: FLOAT64): TVector3d; 
+	PROCEDURE ^ VAdd2*(a, b: TVector2d): TVector2d; 
+	PROCEDURE ^ VAdd3*(a, b: TVector3d): TVector3d; 
+	PROCEDURE ^ VSub2*(a, b: TVector2d): TVector2d; 
+	PROCEDURE ^ VSub3*(a, b: TVector3d): TVector3d; 
+	PROCEDURE ^ VNeg2*(a: TVector2d): TVector2d; 
+	PROCEDURE ^ VNeg3*(a: TVector3d): TVector3d; 
+	PROCEDURE ^ VLength2*(a: TVector2d): FLOAT64; 
+	PROCEDURE ^ VLength2VV*(a, b: TVector2d): FLOAT64; 
+	PROCEDURE ^ VLength3VV*(a, b: TVector3d): FLOAT64; 
+	PROCEDURE ^ VLength3*(a: TVector3d): FLOAT64; 
+	PROCEDURE ^ VLength2Sq*(a: TVector2d): FLOAT64; 
+	PROCEDURE ^ VLength2VVSq*(a, b: TVector2d): FLOAT64; 
+	PROCEDURE ^ VLength3VVSq*(a, b: TVector3d): FLOAT64; 
+	PROCEDURE ^ VLength3Sq*(a: TVector3d): FLOAT64; 
+	PROCEDURE ^ VScaled2*(a: TVector2d; factor: FLOAT64): TVector2d; 
+	PROCEDURE ^ VScaled3*(a: TVector3d; factor: FLOAT64): TVector3d; 
+	PROCEDURE ^ VRot90*(a: TVector2d): TVector2d; 
+	PROCEDURE ^ VNormed2*(a: TVector2d): TVector2d; 
+	PROCEDURE ^ VNormed3*(a: TVector3d): TVector3d; 
+	PROCEDURE ^ Scalar2*(a, b: TVector2d): FLOAT64; 
+	PROCEDURE ^ Scalar3*(a, b: TVector3d): FLOAT64; 
+	PROCEDURE ^ Cross*(a, b: TVector3d): TVector3d; 
+	PROCEDURE ^ CCW*(a, b, c: TVector2d): BOOLEAN; 
+BEGIN
+END W3dVectors.

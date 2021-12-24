@@ -1,0 +1,67 @@
+MODULE SSHPackets;
+	IMPORT Strings, Log := KernelLog, B := CryptoBigNumbers, U := CryptoUtils;
+CONST 
+	Disconn* = 1X; 
+	Ignore* = 2X; 
+	Unimpl* = 3X; 
+	Debug* = 4X; 
+	ServiceRequest* = 5X; 
+	ServiceAccept* = 6X; 
+	KEXInit* = 14X; 
+	NewKeys* = 15X; 
+	DHInit* = 1EX; 
+	DHReply* = 1FX; 
+	GEXInit* = 20X; 
+	GEXReply* = 21X; 
+	GEXRequest* = 22X; 
+	GEXGroup* = 1FX; 
+	UserauthRequest* = 32X; 
+	UserauthFailure* = 33X; 
+	UserauthSuccess* = 34X; 
+	UserauthBanner* = 35X; 
+	UserauthPkOk* = 3CX; 
+	GlobalRequest* = 50X; 
+	RequestSuccess* = 51X; 
+	RequestFailure* = 52X; 
+	ChannelOpen* = 5AX; 
+	OpenConfirm* = 5BX; 
+	OpenFailure* = 5CX; 
+	WindAdjust* = 5DX; 
+	Data* = 5EX; 
+	ExtData* = 5FX; 
+	ChannelEOF* = 60X; 
+	ChannelClose* = 61X; 
+	ChannelRequest* = 62X; 
+	ChannelSuccess* = 63X; 
+	ChannelFailure* = 64X; 
+TYPE 
+	Packet* = OBJECT 
+	VAR 
+		buf-: POINTER TO ARRAY OF CHAR; 
+		type-: CHAR; 
+		len-: SIZE; 
+		pos-: SIZE; 
+		sent: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(ptype: CHAR; bufsize: SIZE); 
+		PROCEDURE ^ AppInteger*(v: SIZE); 
+		PROCEDURE ^ AppChar*(c: CHAR); 
+		PROCEDURE ^ AppString*(CONST str: ARRAY OF CHAR); 
+		PROCEDURE ^ AppArray*(CONST arr: ARRAY OF CHAR; pos, arlen: SIZE); 
+		PROCEDURE ^ AppBigNumber*(b: B.BigNumber); 
+		PROCEDURE ^ SetPos*(p: SIZE); 
+		PROCEDURE ^ IncPos*(i: INTEGER); 
+		PROCEDURE ^ GetInteger*(): SIGNED32; 
+		PROCEDURE ^ GetChar*(): CHAR; 
+		PROCEDURE ^ GetBlobInfo*(VAR start, size: SIZE); 
+		PROCEDURE ^ GetString*(VAR str: ARRAY OF CHAR); 
+		PROCEDURE ^ GetArray*(VAR arr: ARRAY OF CHAR; VAR arlen: SIZE); 
+		PROCEDURE ^ GetBigNumber*(): B.BigNumber; 
+		PROCEDURE ^ Show*; 
+	END Packet; 
+VAR 
+	emptyPacket-: Packet; 
+
+	PROCEDURE ^ MakeReceivedPacket*(CONST trbuf: ARRAY OF CHAR; len: SIZE): Packet; 
+BEGIN
+END SSHPackets.

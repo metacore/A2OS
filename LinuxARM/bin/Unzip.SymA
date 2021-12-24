@@ -1,0 +1,49 @@
+MODULE Unzip;
+	IMPORT Streams, Inflate, CRC, Files, Dates, Strings, Commands;
+CONST 
+	EndOfCentralDirSig = 101010256; 
+	CentralFileHeadSig = 33639248; 
+	LocalFileHeadSig = 67324752; 
+TYPE 
+	Entry* = POINTER TO RECORD 
+		method, pos: SIGNED32; 
+		crc*, csize*, size*: SIGNED32; 
+		td*: Dates.DateTime; 
+		name*: Strings.String; 
+		next: Entry; 
+	END; 
+
+	SizeReader = OBJECT 
+	VAR 
+		input: Streams.Reader; 
+		max: SIZE; 
+
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^  & Init*(input: Streams.Reader; size: SIZE); 
+	END SizeReader; 
+
+	ZipFile* = OBJECT 
+	VAR 
+		F: Files.File; 
+		root: Entry; 
+		entries: SIGNED32; 
+
+		PROCEDURE ^ FindEntry*(CONST name: ARRAY OF CHAR): Entry; 
+		PROCEDURE ^ GetFirst*(): Entry; 
+		PROCEDURE ^ GetNext*(e: Entry): Entry; 
+		PROCEDURE ^ NoOfEntries*(): SIGNED32; 
+		PROCEDURE ^ OpenReceiver*(VAR R: Streams.Receiver; entry: Entry; VAR res: INTEGER); 
+		PROCEDURE ^ Extract*(entry: Entry; dest: Streams.Writer; VAR res: INTEGER); 
+		PROCEDURE ^  & New*(F: Files.File; VAR res: INTEGER); 
+	END ZipFile; 
+
+	PROCEDURE ^ DosToOberonTime(t: SIGNED32): SIGNED32; 
+	PROCEDURE ^ DosToOberonDate(d: SIGNED32): SIGNED32; 
+	PROCEDURE ^ ReadEntry(R: Streams.Reader; entry: Entry; local: BOOLEAN); 
+	PROCEDURE ^ StripPrefix(CONST long: ARRAY OF CHAR; VAR short: ARRAY OF CHAR); 
+	PROCEDURE ^ ExtractEntry(w: Streams.Writer; zip: ZipFile; entry: Entry; name: ARRAY OF CHAR; backup, path: BOOLEAN); 
+	PROCEDURE ^ Extract*(context: Commands.Context); 
+	PROCEDURE ^ ExtractAll*(context: Commands.Context); 
+	PROCEDURE ^ Directory*(context: Commands.Context); 
+BEGIN
+END Unzip.

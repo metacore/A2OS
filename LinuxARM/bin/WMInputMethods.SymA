@@ -1,0 +1,45 @@
+MODULE WMInputMethods;
+	IMPORT Streams, Strings, Configuration, Texts, TextUtilities, Commands, Modules;
+CONST 
+	CR = 0DX; 
+	LF = 0AX; 
+TYPE 
+	IMEInterface* = RECORD 
+		AcquireText*, ReleaseText*: PROCEDURE {DELEGATE}; 
+		InsertUCS32*: PROCEDURE {DELEGATE}(atPosition: SIZE; CONST string: Texts.UCS32String); 
+		GetCursorPosition*: PROCEDURE {DELEGATE}():SIZE; 
+		GetCursorScreenPosition*: PROCEDURE {DELEGATE}(VAR x, y: SIZE); 
+		SetCursorInfo*: PROCEDURE {DELEGATE}(position: SIZE); 
+	END; 
+
+	IME* = OBJECT {EXCLUSIVE} 
+	VAR 
+		interface: IMEInterface; 
+		valid: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetName*(): Strings.String; 
+		PROCEDURE ^ SetInterface*(i: IMEInterface); 
+		PROCEDURE ^ InsertChar*(ucs: SIZE); 
+		PROCEDURE ^ InsertMultiChar*(CONST ucs: ARRAY OF SIGNED32); 
+		PROCEDURE ^ InsertUTF8String*(CONST string: ARRAY OF CHAR); 
+		PROCEDURE ^ GetCursorScreenPosition*(VAR x, y: SIZE); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
+		PROCEDURE ^ Hide*; 
+		PROCEDURE ^ Finalize*; 
+	END IME; 
+
+	IMEInstaller* = PROCEDURE ; 
+
+	IMToolSwitchCallback* = PROCEDURE ; 
+VAR 
+	defaultIME-: IME; 
+	activeIME-: IME; 
+	toolSwitch*: IMToolSwitchCallback; 
+	None-: IMEInterface; 
+
+	PROCEDURE ^ GetIME*(CONST name: ARRAY OF CHAR; VAR res: INTEGER): IMEInstaller; 
+	PROCEDURE ^ SwitchIME*(): IME; 
+	PROCEDURE ^ InstallIME*(newIME: IME); 
+BEGIN
+END WMInputMethods.

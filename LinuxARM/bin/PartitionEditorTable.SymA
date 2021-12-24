@@ -1,0 +1,54 @@
+MODULE PartitionEditorTable;
+	IMPORT KernelLog, Plugins, Disks;
+CONST 
+	Ok* = Disks.Ok; 
+	DeviceNotFound* = 98; 
+	BlocksizeNotSupported* = 99; 
+	NoSignature* = 100; 
+	PartitionTableOffset = 446; 
+	EntrySize = 16; 
+	BlockSize = 512; 
+	SizeChanged* = 1; 
+	StartLbaChanged* = 2; 
+	StartChsChanged* = 3; 
+	EndLbaChanged* = 4; 
+	EndChsChanged* = 5; 
+TYPE 
+	Buffer* = ARRAY BlockSize OF CHAR; 
+
+	Block* = RECORD 
+		lba*: SIGNED32; 
+		cylinder*, head*, sector*: SIGNED32; 
+	END; 
+
+	Partition* = RECORD 
+		flag*: CHAR; 
+		type*: SIGNED32; 
+		start*, end*: Block; 
+		size*: SIGNED32; 
+	END; 
+
+	PartitionTable* = ARRAY 4 OF Partition; 
+
+	DiskGeometry = RECORD 
+		cylinders, headsPerCylinder, sectorsPerTrack: SIGNED32; 
+	END; 
+
+	PROCEDURE ^ GetDevice(CONST devicename: ARRAY OF CHAR): Disks.Device; 
+	PROCEDURE ^ GetDiskGeometry(CONST devicename: ARRAY OF CHAR; VAR diskGeometry: DiskGeometry; VAR res: INTEGER); 
+	PROCEDURE ^ ReadBlock*(CONST devicename: ARRAY OF CHAR; block: SIGNED32; VAR buffer: Buffer; VAR res: INTEGER); 
+	PROCEDURE ^ WriteBlock*(CONST devicename: ARRAY OF CHAR; block: SIGNED32; VAR buffer: Buffer; VAR res: INTEGER); 
+	PROCEDURE ^ HasSignature*(CONST buffer: Buffer): BOOLEAN; 
+	PROCEDURE ^ WriteSignature(VAR buffer: Buffer); 
+	PROCEDURE ^ Get4(CONST buffer: ARRAY OF CHAR; offset: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Put4(VAR buffer: ARRAY OF CHAR; value, offset: SIGNED32); 
+	PROCEDURE ^ LoadPartitionTable*(CONST devicename: ARRAY OF CHAR; block: SIGNED32; VAR res: INTEGER): PartitionTable; 
+	PROCEDURE ^ ParseBuffer*(CONST buffer: Buffer; VAR res: INTEGER): PartitionTable; 
+	PROCEDURE ^ StorePartitionTable*(CONST devicename: ARRAY OF CHAR; block: SIGNED32; CONST pt: PartitionTable; VAR res: INTEGER); 
+	PROCEDURE ^ WriteToBuffer*(CONST pt: PartitionTable; VAR buffer: Buffer); 
+	PROCEDURE ^ Lba2Chs(lba: SIGNED32; VAR c, h, s: SIGNED32; geometry: DiskGeometry); 
+	PROCEDURE ^ Chs2Lba(c, h, s: SIGNED32; VAR lba: SIGNED32; geometry: DiskGeometry); 
+	PROCEDURE ^ Changed*(changeType: SIGNED32; VAR partition: Partition; CONST devicename: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ Clear*(VAR partitionTable: PartitionTable); 
+BEGIN
+END PartitionEditorTable.

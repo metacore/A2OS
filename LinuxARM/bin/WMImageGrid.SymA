@@ -1,0 +1,31 @@
+MODULE WMImageGrid;
+	IMPORT WMWindowManager, Graphics := WMGraphics, Raster, Messages := WMMessages, Rectangles := WMRectangles;
+TYPE 
+	Message = Messages.Message; 
+
+	Rectangle = Rectangles.Rectangle; 
+
+	Grid = ARRAY OF ARRAY OF Graphics.Image; 
+
+	GridWindow* = OBJECT {EXCLUSIVE} (WMWindowManager.Window)
+	VAR 
+		imgs*: POINTER TO Grid; 
+		background*: Graphics.Image; 
+		canvas*: Graphics.BufferCanvas; 
+		canvasGen-: Graphics.CanvasGenerator; 
+		pointerThreshold*, maxInterpolation*: INTEGER; 
+		hs, ws: POINTER TO ARRAY OF SIZE; 
+		totalW, totalH: SIZE; 
+		gap: SIZE; 
+
+		PROCEDURE ^  & Init1*(CONST Ws, Hs: ARRAY OF SIZE; alpha: BOOLEAN); 
+		PROCEDURE ^ SetCanvasGenerator*(canvasGen: Graphics.CanvasGenerator); 
+		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: INTEGER); 
+		PROCEDURE ^ Invalidate*(rect: Rectangle); 
+		PROCEDURE ^ Handle*(VAR m: Message); 
+	END GridWindow; 
+
+	PROCEDURE ^ Test*; 
+BEGIN
+END WMImageGrid.

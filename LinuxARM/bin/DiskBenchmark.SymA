@@ -1,0 +1,34 @@
+MODULE DiskBenchmark;
+	IMPORT Streams, Commands, Random, Kernel, Disks, Partitions, Lib := PartitionsLib, Strings;
+CONST 
+	AllowWrite = TRUE; 
+TYPE 
+	DiskBench* = OBJECT {EXCLUSIVE} (Lib.Operation)
+	VAR 
+		doRandom: BOOLEAN; 
+		doSequential: BOOLEAN; 
+		doRead: BOOLEAN; 
+		doWrite: BOOLEAN; 
+		nbrOfBlocks: SIGNED32; 
+		blocksizes: SET; 
+		cur: SIGNED64; 
+		max: SIGNED64; 
+		start: SIGNED32; 
+		size: SIGNED32; 
+		buffer: POINTER TO ARRAY OF CHAR; 
+		random: Random.Generator; 
+
+		PROCEDURE ^ SetParameters*(doRandom, doSequential, doRead, doWrite: BOOLEAN; nbrOfBlocks: SIGNED32; blocksizes: SET); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ GetNbrOfSectors(blocksize: SIGNED32): SIGNED32; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^ PerformRandomBench(mode, nbrOfBlocks, blocksize: SIGNED32); 
+		PROCEDURE ^ PerformSequentialBench(mode, blocksize: SIGNED32); 
+		PROCEDURE ^ WriteB*(k: SIGNED32; VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^ WriteK*(k: SIGNED32; VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^  & Init*(disk: Lib.Disk; partition: SIGNED32; out: Streams.Writer); 
+	END DiskBench; 
+
+	PROCEDURE ^ Bench*(context: Commands.Context); 
+BEGIN
+END DiskBenchmark.

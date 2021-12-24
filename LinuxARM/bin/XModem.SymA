@@ -1,0 +1,85 @@
+MODULE XModem;
+	IMPORT SYSTEM, Kernel, Streams, KernelLog;
+CONST 
+	DebugS = FALSE; 
+	DebugR = FALSE; 
+	Ok* = 0; 
+	Timeout* = 1; 
+	Error* = 2; 
+	SInit = 0X; 
+	SData = 1X; 
+	SEOT = 2X; 
+	RInitCRC = 3X; 
+	RInitChksum = 4X; 
+	RData = 5X; 
+	Abort = 6X; 
+	Exit = 7X; 
+	SenderInitialTimeout = 60000; 
+	SenderACKTimeout = 60000; 
+	ReceiverInitTimeout = 3000; 
+	ReceiverDataTimeout = 1000; 
+	PurgeTimeout = 1000; 
+	MaxRetries = 10; 
+	MaxCRCThreshold = 3; 
+	HeaderSize = 3; 
+	BlockSize = 128; 
+	ChksumSize = 1; 
+	CRCSize = 2; 
+	PacketSizeChksum = ((HeaderSize + BlockSize) + ChksumSize); 
+	PacketSizeCRC = ((HeaderSize + BlockSize) + CRCSize); 
+	MaxPacketSize = PacketSizeCRC; 
+	SOH = 1X; 
+	EOT = 4X; 
+	ACK = 6X; 
+	NAK = 15X; 
+TYPE 
+	XModem* = OBJECT 
+	VAR 
+		state: CHAR; 
+		rx: Streams.Reader; 
+		tx: Streams.Writer; 
+		crc: BOOLEAN; 
+		packetSize: SIGNED32; 
+		retries: SIGNED32; 
+		blockIndex: SIGNED32; 
+		msg: ARRAY 256 OF CHAR; 
+
+		PROCEDURE ^  & InitXModem*(rx: Streams.Reader; tx: Streams.Writer); 
+		PROCEDURE ^ Get(r: Streams.Reader; timeout: SIGNED32; VAR ch: CHAR): SIGNED32; 
+		PROCEDURE ^ Peek(r: Streams.Reader; timeout: SIGNED32; VAR ch: CHAR): SIGNED32; 
+		PROCEDURE ^ Purge(r: Streams.Reader); 
+		PROCEDURE ^ CalcCheckSum(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32): CHAR; 
+		PROCEDURE ^ CalcCRC(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetErrorMessage*(VAR string: ARRAY OF CHAR); 
+	END XModem; 
+
+	XMSender* = OBJECT (XModem)
+	VAR 
+		data: Streams.Reader; 
+		buffer: ARRAY MaxPacketSize OF CHAR; 
+		resend: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(data, rx: Streams.Reader; tx: Streams.Writer); 
+		PROCEDURE ^ GetData(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32); 
+		PROCEDURE ^ SetHeader(VAR buf: ARRAY OF CHAR; index: SIGNED32); 
+		PROCEDURE ^ SendInit; 
+		PROCEDURE ^ SendData; 
+		PROCEDURE ^ SendEOT; 
+		PROCEDURE ^ Send*(): SIGNED32; 
+	END XMSender; 
+
+	XMReceiver* = OBJECT (XModem)
+	VAR 
+		data: Streams.Writer; 
+		crcThreshold: SIGNED32; 
+
+		PROCEDURE ^  & Init*(data: Streams.Writer; rx: Streams.Reader; tx: Streams.Writer); 
+		PROCEDURE ^ PutData(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32); 
+		PROCEDURE ^ GetHeader(VAR buf: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ ReceiveInitCRC; 
+		PROCEDURE ^ ReceiveInitChecksum; 
+		PROCEDURE ^ ReceiveData; 
+		PROCEDURE ^ Receive*(): SIGNED32; 
+	END XMReceiver; 
+BEGIN
+END XModem.

@@ -1,0 +1,169 @@
+MODULE ObjectFile;
+	IMPORT Streams, BitSets, StringPool, Strings;
+CONST 
+	Version* = 8; 
+	Absolute* = 0; 
+	Relative* = 1; 
+	EntryCode* = 0; 
+	InitCode* = 1; 
+	ExitCode* = 2; 
+	BodyCode* = 3; 
+	Code* = 4; 
+	Data* = 5; 
+	Const* = 6; 
+	Aligned = 0; 
+	Fixed = 1; 
+	DefaultExtension* = \".Gof"\; 
+TYPE 
+	Unit* = SIZE; 
+
+	Bits* = SIZE; 
+
+	Fingerprint* = SIGNED64; 
+
+	SegmentedName* = ARRAY 8 OF StringPool.Index; 
+
+	SectionName* = ARRAY 128 OF CHAR; 
+
+	FixupPattern* = RECORD 
+		offset*, bits*: Bits; 
+	END; 
+
+	FixupPatterns* = POINTER TO ARRAY OF FixupPattern; 
+
+	Identifier* = RECORD 
+		name*: SegmentedName; 
+		fingerprint*: Fingerprint; 
+	END; 
+
+	Pattern* = POINTER TO RECORD 
+		mode-: INTEGER; 
+		scale-: Bits; 
+		patterns-: SIZE; 
+		pattern-: FixupPatterns; 
+	END; 
+
+	Patch* = RECORD 
+		offset-, displacement-: Unit; 
+	END; 
+
+	Patches* = POINTER TO ARRAY OF Patch; 
+
+	Fixup* = RECORD 
+		identifier*: Identifier; 
+		pattern-: Pattern; 
+		index*: SIZE; 
+		patches*: SIZE; 
+		patch*: Patches; 
+	END; 
+
+	Alias* = RECORD 
+		identifier*: Identifier; 
+		offset-: Unit; 
+	END; 
+
+	Fixups* = POINTER TO ARRAY OF Fixup; 
+
+	Aliases* = POINTER TO ARRAY OF Alias; 
+
+	Section* = RECORD 
+		type*: INTEGER; 
+		identifier*: Identifier; 
+		unit*: Bits; 
+		fixed*: BOOLEAN; 
+		alignment*: Unit; 
+		fixups-: SIZE; 
+		fixup-: Fixups; 
+		aliases-: SIZE; 
+		alias-: Aliases; 
+		bits*: BitSets.BitSet; 
+	END; 
+
+	PoolMap* = OBJECT 
+	TYPE 
+		Table = POINTER TO ARRAY OF RECORD 
+			key, value: SIZE; 
+		END; 
+
+		; 
+	VAR 
+		table: Table; 
+		size: SIZE; 
+		used: SIZE; 
+		maxLoadFactor: FLOAT32; 
+		writer: Streams.Writer; 
+
+		PROCEDURE ^  & Init*(initialSize: SIZE); 
+		PROCEDURE ^ Put(key, value: SIZE); 
+		PROCEDURE ^ Get*(key: SIZE): SIZE; 
+		PROCEDURE ^ Has*(key: SIZE): BOOLEAN; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ HashValue(key: SIZE): SIZE; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ Read*(reader: Streams.Reader); 
+		PROCEDURE ^ PutGlobal*(key: SIZE); 
+		PROCEDURE ^ PutSegmentedName*(CONST name: SegmentedName); 
+		PROCEDURE ^ BeginWriting*(w: Streams.Writer); 
+		PROCEDURE ^ EndWriting*; 
+	END PoolMap; 
+
+	NameList* = POINTER TO ARRAY OF SegmentedName; 
+VAR 
+	categories: ARRAY 8 OF ARRAY 10 OF CHAR; 
+	modes: ARRAY 2 OF ARRAY 4 OF CHAR; 
+	relocatabilities: ARRAY 2 OF ARRAY 8 OF CHAR; 
+	statHeaders, statHeadersSize: SIZE; 
+	statFixups, statFixupsSize, statFixupPatterns, statFixupPatches: SIZE; 
+	statAliases, statAliasesSize: SIZE; 
+	statSegments, statSegmentsSize: SIZE; 
+	statCodeSections, statCodeSectionsSize: SIZE; 
+	statDataSections, statDataSectionsSize: SIZE; 
+	statConstSections, statConstSectionsSize: SIZE; 
+	statInitSections, statInitSectionsSize: SIZE; 
+	statBodySections, statBodySectionsSize: SIZE; 
+	statSections, statSectionsTotalSize: SIZE; 
+
+	PROCEDURE ^ IsCode*(type: INTEGER): BOOLEAN; 
+	PROCEDURE ^ Matches*(CONST this, that: Identifier): BOOLEAN; 
+	PROCEDURE ^ CopyIdentifier(CONST source: Identifier; VAR dest: Identifier); 
+	PROCEDURE ^ CopyPattern(source: Pattern; VAR dest: Pattern); 
+	PROCEDURE ^ CopyPatches(sourcePatches: SIZE; source: Patches; VAR destPatches: SIZE; VAR dest: Patches); 
+	PROCEDURE ^ CopyFixup*(source: Fixup; VAR dest: Fixup); 
+	PROCEDURE ^ CopyAlias*(CONST source: Alias; VAR dest: Alias); 
+	PROCEDURE ^ CopySection*(CONST source: Section; VAR dest: Section); 
+	PROCEDURE ^ InitSection*(VAR dest: Section); 
+	PROCEDURE ^ NibbleToCharacter*(value: INTEGER): CHAR; 
+	PROCEDURE ^ CharacterToNibble*(char: CHAR): INTEGER; 
+	PROCEDURE ^ WriteSectionTextual(writer: Streams.Writer; CONST section: Section); 
+	PROCEDURE ^ ReadSectionTextual(reader: Streams.Reader; VAR section: Section); 
+	PROCEDURE ^ ReadNameList*(reader: Streams.Reader; VAR nameList: NameList; binary: BOOLEAN; poolMap: PoolMap); 
+	PROCEDURE ^ WriteNameList*(writer: Streams.Writer; nameList: NameList; binary: BOOLEAN; poolMap: PoolMap); 
+	PROCEDURE ^ WriteSectionBinary(writer: Streams.Writer; CONST section: Section; poolMap: PoolMap); 
+	PROCEDURE ^ ReadSectionBinary(reader: Streams.Reader; VAR section: Section; poolMap: PoolMap); 
+	PROCEDURE ^ ReadSection*(reader: Streams.Reader; VAR section: Section; binary: BOOLEAN; poolMap: PoolMap); 
+	PROCEDURE ^ WriteSection*(writer: Streams.Writer; CONST section: Section; binary: BOOLEAN; poolMap: PoolMap); 
+	PROCEDURE ^ SetFixups*(VAR section: Section; fixups: SIZE; fixup: Fixups); 
+	PROCEDURE ^ SetAliases*(VAR section: Section; aliases: SIZE; alias: Aliases); 
+	PROCEDURE ^ AddPatch*(VAR patches: SIZE; VAR patch: Patches; disp, ofs: Unit); 
+	PROCEDURE ^ SameFixupPattern(patterns: SIZE; left, right: FixupPatterns): BOOLEAN; 
+	PROCEDURE ^ HasPattern(pat: Pattern; mode: INTEGER; scale: Bits; patterns: SIZE; pattern: FixupPatterns): BOOLEAN; 
+	PROCEDURE ^ AddFixup*(VAR fixups: SIZE; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: INTEGER; scale: Bits; patterns: SIZE; pattern: FixupPatterns): SIZE; 
+	PROCEDURE ^ AddAlias*(VAR aliases: SIZE; VAR alias: Aliases; CONST name: SegmentedName; fingerprint: Fingerprint; offset: Unit): SIZE; 
+	PROCEDURE ^ StringToSegmentedName*(CONST name: ARRAY OF CHAR; VAR segmentedName: SegmentedName); 
+	PROCEDURE ^ SegmentedNameToString*(CONST segmentedName: SegmentedName; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ CompareSegmentedNames*(CONST s1, s2: SegmentedName): INTEGER; 
+	PROCEDURE ^ IsPrefix*(CONST prefix, of: SegmentedName): BOOLEAN; 
+	OPERATOR ^ "="-(CONST l, r: SegmentedName): BOOLEAN; 
+	OPERATOR ^ "="-(CONST l, r: Identifier): BOOLEAN; 
+	OPERATOR ^ "#"-(CONST l, r: Identifier): BOOLEAN; 
+	OPERATOR ^ ":="-(VAR l: SegmentedName; CONST r: ARRAY OF CHAR); 
+	OPERATOR ^ ":="-(VAR l: ARRAY OF CHAR; CONST r: SegmentedName); 
+	OPERATOR ^ "="-(CONST l: SegmentedName; CONST r: ARRAY OF CHAR): BOOLEAN; 
+	OPERATOR ^ "="-(CONST l: ARRAY OF CHAR; r: SegmentedName): BOOLEAN; 
+	OPERATOR ^ "#"-(CONST l: SegmentedName; CONST r: ARRAY OF CHAR): BOOLEAN; 
+	OPERATOR ^ "#"-(CONST l: ARRAY OF CHAR; r: SegmentedName): BOOLEAN; 
+	OPERATOR ^ "#"-(CONST l, r: SegmentedName): BOOLEAN; 
+	PROCEDURE ^ Statistics*; 
+	PROCEDURE ^ ResetStatistics*; 
+BEGIN
+END ObjectFile.

@@ -1,0 +1,23 @@
+MODULE SSHAuthorize;
+	IMPORT U := CryptoUtils, B := CryptoBigNumbers, RSA := CryptoRSA, SHA1 := CryptoSHA1, G := SSHGlobals, P := SSHPackets, SSHTransport, Strings, Log := KernelLog, Files, WMDialogs, Beep;
+CONST 
+	Connected = SSHTransport.Connected; 
+TYPE 
+	Connection* = SSHTransport.Connection; 
+
+	Packet = P.Packet; 
+VAR 
+	privKey, pubKey: RSA.Key; 
+
+	PROCEDURE ^ RequestService(VAR ssh: Connection; CONST service: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ RequestAuthorizeNone(ssh: Connection; CONST user: ARRAY OF CHAR; VAR allowed: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ RequestPWAuthorizing(ssh: Connection; CONST user, host: ARRAY OF CHAR); 
+	PROCEDURE ^ AuthorizePassword(ssh: Connection; CONST host, user: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ MakePubKeyBlob(VAR buf: ARRAY OF CHAR; VAR len: SIZE); 
+	PROCEDURE ^ MakeSignatureBlob(VAR buf: ARRAY OF CHAR; VAR len: SIZE; sign: B.BigNumber); 
+	PROCEDURE ^ AuthorizePublicKey(ssh: Connection; CONST user: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetPublicKey(msg: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ GetKeys(msg: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ OpenConnection*(CONST host, user: ARRAY OF CHAR): Connection; 
+BEGIN
+END SSHAuthorize.

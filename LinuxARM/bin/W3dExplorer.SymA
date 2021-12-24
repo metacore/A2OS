@@ -1,0 +1,29 @@
+MODULE W3dExplorer;
+	IMPORT MathL, Vectors := W3dVectors, Matrix := W3dMatrix, AbstractWorld := W3dAbstractWorld, World := W3dWorld, WM := WMWindowManager, Random, Raster, Kernel, KernelLog, Strings, ObjectGenerator := W3dObjectGenerator, WMGraphics, WMRectangles;
+CONST 
+TYPE 
+	Explorer = OBJECT {EXCLUSIVE} (WM.BufferWindow)
+	VAR 
+		lookat: Vectors.TVector3d; 
+		radius, angle, height: FLOAT64; 
+		quality: SIGNED32; 
+		mouseKeys: SET; 
+		world: World.World; 
+		oldX, oldY: SIZE; 
+		random: Random.Generator; 
+		message: Raster.Image; 
+
+		PROCEDURE ^ FillIn; 
+		PROCEDURE ^  & Init*(w, h: SIZE; alpha: BOOLEAN); 
+		PROCEDURE ^ SpeedCheck; 
+		PROCEDURE ^ Render; 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
+		PROCEDURE ^ Close*; 
+	END Explorer; 
+
+	PROCEDURE ^ Open*; 
+BEGIN
+END W3dExplorer.

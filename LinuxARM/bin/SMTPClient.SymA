@@ -1,0 +1,33 @@
+MODULE SMTPClient;
+	IMPORT Mail, IP, DNS, TCP, Streams, KernelLog;
+CONST 
+	Trace = FALSE; 
+	MaxRecipients* = 20; 
+	Ok* = 0; 
+	NotConnected* = 1; 
+	SendFailed* = 101; 
+	TooManyRecipients* = 5001; 
+TYPE 
+	SMTPSession* = OBJECT {EXCLUSIVE} (Mail.Sender)
+	VAR 
+		connection: TCP.Connection; 
+		sendReady, open: BOOLEAN; 
+		r: Streams.Reader; 
+		w*: Streams.Writer; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetSendReady*(): BOOLEAN; 
+		PROCEDURE ^ GetReplyCode*(VAR code: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ SendCommand*(CONST cmd, arg: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Open*(CONST server, thisHost: ARRAY OF CHAR; port: SIGNED32; VAR result: INTEGER); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ StartMailFrom*(CONST fromAddr: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ SendTo*(CONST toAddr: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ StartData*(): BOOLEAN; 
+		PROCEDURE ^ PrepareToSend*(m: Mail.Message; VAR result: SIGNED32); 
+		PROCEDURE ^ SendRawLine*(CONST s: ARRAY OF CHAR); 
+		PROCEDURE ^ FinishSendRaw*(): BOOLEAN; 
+		PROCEDURE ^ SendComplete*(m: Mail.Message; VAR result: SIGNED32); 
+	END SMTPSession; 
+BEGIN
+END SMTPClient.

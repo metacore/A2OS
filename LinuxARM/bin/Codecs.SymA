@@ -1,0 +1,224 @@
+MODULE Codecs;
+	IMPORT Streams, Commands, Files, SoundDevices, Raster, Modules, Strings, Configuration, Texts, Archives;
+CONST 
+	ResFailed* =  -1; 
+	ResOk* = 0; 
+	ResSeekInexact* = 1; 
+	ImgFmtBW* = 0; 
+	ImgFmtGrey* = 1; 
+	ImgFmtRGB* = 2; 
+	ImgFmtRGBA* = 3; 
+	STError* =  -1; 
+	STUnknown* = 0; 
+	STAudio* = 1; 
+	STVideo* = 2; 
+	STImage* = 3; 
+	SeekByte* = 0; 
+	SeekSample* = 1; 
+	SeekKeySample* = 2; 
+	SeekFrame* = 3; 
+	SeekKeyFrame* = 4; 
+	Unspecified* = 0; 
+	DoNotDispose* = 1; 
+	RestoreToBackground* = 2; 
+	RestoreToPrevious* = 3; 
+	WaitForUserInput* = 0; 
+TYPE 
+	AVStreamInfo* = RECORD 
+		streamType*: SIGNED32; 
+		seekability*: SET; 
+		contentType*: ARRAY 16 OF CHAR; 
+		length*: SIGNED32; 
+		frames*: SIGNED32; 
+		rate*: SIGNED32; 
+	END; 
+
+	FileInputStream* = OBJECT (Streams.Reader)
+	VAR 
+		r: Files.Rider; 
+		f*: Files.File; 
+		streamInfo*: AVStreamInfo; 
+
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^  & InitFileReader*(f: Files.File; pos: SIGNED32); 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
+	END FileInputStream; 
+
+	AVDemultiplexer* = OBJECT 
+
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetNumberOfStreams*(): SIGNED32; 
+		PROCEDURE ^ GetStreamType*(streamNr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetStreamInfo*(streamNr: SIGNED32): AVStreamInfo; 
+		PROCEDURE ^ GetStream*(streamNr: SIGNED32): DemuxStream; 
+		PROCEDURE ^ GetData*(streamNr: SIGNED32; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ SetStreamPos*(streamNr: SIGNED32; seekType: SIGNED32; pos: SIGNED32; VAR itemSize: SIGNED32; VAR res: INTEGER); 
+	END AVDemultiplexer; 
+
+	DemuxStream* = OBJECT (Streams.Reader)
+	VAR 
+		demultiplexer*: AVDemultiplexer; 
+		streamNr*: SIGNED32; 
+		streamInfo*: AVStreamInfo; 
+
+		PROCEDURE ^  & Open*(demultiplexer: AVDemultiplexer; streamNr: SIGNED32); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
+		PROCEDURE ^ SetPosX*(seekType: SIGNED32; pos: SIGNED32; VAR itemSize: SIGNED32; VAR res: INTEGER); 
+	END DemuxStream; 
+
+	AudioDecoder* = OBJECT 
+
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
+		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: SIGNED32); 
+		PROCEDURE ^ SetAudioInfo*(nofChannels, samplesPerSecond, bitsPerSample: SIGNED32); 
+		PROCEDURE ^ CanSeek*(): BOOLEAN; 
+		PROCEDURE ^ GetCurrentSample*(): SIGNED32; 
+		PROCEDURE ^ GetTotalSamples*(): SIGNED32; 
+		PROCEDURE ^ GetCurrentTime*(): SIGNED32; 
+		PROCEDURE ^ SetStreamLength*(length: SIGNED32); 
+		PROCEDURE ^ SeekSample*(sample: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Next*; 
+		PROCEDURE ^ FillBuffer*(buffer: SoundDevices.Buffer); 
+	END AudioDecoder; 
+
+	AudioEncoder* = OBJECT 
+
+		PROCEDURE ^ Open*(out: Streams.Writer; sRate, sRes, nofCh: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Write*(buffer: SoundDevices.Buffer; VAR res: INTEGER); 
+		PROCEDURE ^ Close*(VAR res: INTEGER); 
+	END AudioEncoder; 
+
+	VideoDecoder* = OBJECT 
+
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
+		PROCEDURE ^ GetVideoInfo*(VAR width, height, millisecondsPerFrame: SIGNED32); 
+		PROCEDURE ^ CanSeek*(): BOOLEAN; 
+		PROCEDURE ^ GetCurrentFrame*(): SIGNED32; 
+		PROCEDURE ^ GetCurrentTime*(): SIGNED32; 
+		PROCEDURE ^ SeekFrame*(frame: SIGNED32; goKeyFrame: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: SIGNED32; goKeyFrame: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Next*; 
+		PROCEDURE ^ Render*(img: Raster.Image); 
+	END VideoDecoder; 
+
+	VideoEncoder* = OBJECT 
+
+		PROCEDURE ^ Open*(out: Streams.Writer; VAR res: INTEGER); 
+		PROCEDURE ^ Write*(img: Raster.Image); 
+		PROCEDURE ^ Close*(VAR res: INTEGER); 
+	END VideoEncoder; 
+
+	ImageDecoder* = OBJECT 
+
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: SIGNED32); 
+		PROCEDURE ^ SetProgressionLevel*(progressionLevel: SIGNED32); 
+		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
+		PROCEDURE ^ Render*(img: Raster.Image); 
+	END ImageDecoder; 
+
+	ImageEncoder* = OBJECT 
+
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ SetQuality*(quality: SIGNED32); 
+		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: INTEGER); 
+	END ImageEncoder; 
+
+	TextDecoder* = OBJECT 
+
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetText*(): Texts.Text; 
+	END TextDecoder; 
+
+	TextEncoder* = OBJECT 
+
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
+	END TextEncoder; 
+
+	CryptoDecoder* = OBJECT 
+
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetReader*(): Streams.Reader; 
+	END CryptoDecoder; 
+
+	CryptoEncoder* = OBJECT 
+
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ GetWriter*(): Streams.Writer; 
+	END CryptoEncoder; 
+
+	ImageDescriptor* = OBJECT 
+	VAR 
+		left*, top*, width*, height*: SIZE; 
+		image*: Raster.Image; 
+		delayTime*: SIGNED32; 
+		disposeMode*: SIGNED32; 
+		flags*: SET; 
+		previous*, next*: ImageDescriptor; 
+
+		PROCEDURE ^  & Init*; 
+	END ImageDescriptor; 
+
+	ImageSequence* = RECORD 
+		width*, height*: SIZE; 
+		bgColor*: SIGNED32; 
+		images*: ImageDescriptor; 
+	END; 
+
+	AnimationDecoder* = OBJECT 
+
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetImageSequence*(VAR sequence: ImageSequence; VAR res: INTEGER); 
+	END AnimationDecoder; 
+
+	DemuxFactory = PROCEDURE ():AVDemultiplexer; 
+
+	AudioDecoderFactory = PROCEDURE ():AudioDecoder; 
+
+	AudioEncoderFactory = PROCEDURE ():AudioEncoder; 
+
+	VideoDecoderFactory = PROCEDURE ():VideoDecoder; 
+
+	VideoEncoderFactory = PROCEDURE ():VideoEncoder; 
+
+	ImageDecoderFactory = PROCEDURE ():ImageDecoder; 
+
+	ImageEncoderFactory = PROCEDURE ():ImageEncoder; 
+
+	TextDecoderFactory = PROCEDURE ():TextDecoder; 
+
+	TextEncoderFactory = PROCEDURE ():TextEncoder; 
+
+	CryptoDecoderFactory = PROCEDURE ():CryptoDecoder; 
+
+	CryptoEncoderFactory = PROCEDURE ():CryptoEncoder; 
+
+	AnimationDecoderFactory = PROCEDURE ():AnimationDecoder; 
+
+	PROCEDURE ^ GetDemuxFactoryName(CONST name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: INTEGER); 
+	PROCEDURE ^ GetDecoderFactoryName(CONST type, name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: INTEGER); 
+	PROCEDURE ^ GetEncoderFactoryName(CONST type, name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: INTEGER); 
+	PROCEDURE ^ GetDemultiplexer*(CONST name: ARRAY OF CHAR): AVDemultiplexer; 
+	PROCEDURE ^ GetImageDecoder*(CONST name: ARRAY OF CHAR): ImageDecoder; 
+	PROCEDURE ^ GetImageEncoder*(CONST name: ARRAY OF CHAR): ImageEncoder; 
+	PROCEDURE ^ GetVideoDecoder*(CONST name: ARRAY OF CHAR): VideoDecoder; 
+	PROCEDURE ^ GetVideoEncoder*(CONST name: ARRAY OF CHAR): VideoEncoder; 
+	PROCEDURE ^ GetAudioDecoder*(CONST name: ARRAY OF CHAR): AudioDecoder; 
+	PROCEDURE ^ GetAudioEncoder*(CONST name: ARRAY OF CHAR): AudioEncoder; 
+	PROCEDURE ^ GetTextDecoder*(CONST name: ARRAY OF CHAR): TextDecoder; 
+	PROCEDURE ^ GetTextEncoder*(CONST name: ARRAY OF CHAR): TextEncoder; 
+	PROCEDURE ^ GetCryptoDecoder*(CONST name: ARRAY OF CHAR): CryptoDecoder; 
+	PROCEDURE ^ GetCryptoEncoder*(CONST name: ARRAY OF CHAR): CryptoEncoder; 
+	PROCEDURE ^ GetAnimationDecoder*(CONST name: ARRAY OF CHAR): AnimationDecoder; 
+	PROCEDURE ^ SplitName*(CONST name: ARRAY OF CHAR; VAR protocol, filename: ARRAY OF CHAR); 
+	PROCEDURE ^ JoinName*(CONST protocol, filename: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ OpenInputStream*(CONST name: ARRAY OF CHAR): Streams.Reader; 
+	PROCEDURE ^ OpenOutputStream*(CONST name: ARRAY OF CHAR): Streams.Writer; 
+BEGIN
+END Codecs.

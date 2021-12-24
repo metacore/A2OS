@@ -1,0 +1,63 @@
+MODULE DiskTests;
+	IMPORT Streams, Random, Kernel, Commands, Disks, Partitions, Lib := PartitionsLib, Strings;
+CONST 
+TYPE 
+	TestDataBase = OBJECT {EXCLUSIVE} (Lib.Operation)
+	VAR 
+		buffer: POINTER TO ARRAY OF CHAR; 
+		sectorsPerTransfer: SIGNED32; 
+
+		PROCEDURE ^ SetParameters*(sectorsPerTransfer: SIGNED32); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+	END TestDataBase; 
+
+	TestDataWriter* = OBJECT {EXCLUSIVE} (TestDataBase)
+
+		PROCEDURE ^ FillWithTestData*(VAR buffer: ARRAY OF CHAR); 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Lib.Disk; partition: SIGNED32; out: Streams.Writer); 
+	END TestDataWriter; 
+
+	TestDataChecker* = OBJECT {EXCLUSIVE} (TestDataBase)
+
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Lib.Disk; partition: SIGNED32; out: Streams.Writer); 
+	END TestDataChecker; 
+
+	ZeroWriter* = OBJECT {EXCLUSIVE} (TestDataWriter)
+
+		PROCEDURE ^ FillWithTestData*(VAR buffer: ARRAY OF CHAR); 
+		PROCEDURE ^  & Init*(disk: Lib.Disk; partition: SIGNED32; out: Streams.Writer); 
+	END ZeroWriter; 
+
+	DiskTest* = OBJECT {EXCLUSIVE} (Lib.Operation)
+	VAR 
+		doRead, doWrite, testData: BOOLEAN; 
+		nbrOfTests, maxNbrOfSectors, maxOffset: SIGNED32; 
+		start, size: SIGNED32; 
+		offset: SIGNED32; 
+		testCount: SIGNED32; 
+		testedOffsets: POINTER TO ARRAY OF BOOLEAN; 
+		testedSectors: POINTER TO ARRAY OF BOOLEAN; 
+		blocksRead: SIGNED64; 
+		buffer: POINTER TO ARRAY OF CHAR; 
+		random: Random.Generator; 
+
+		PROCEDURE ^ SetParameters*(doRead, doWrite, testData: BOOLEAN; nbrOfTests, maxNbrOfSectors, maxOffset: SIGNED32); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ WriteTestSettings; 
+		PROCEDURE ^ WriteSummary; 
+		PROCEDURE ^ PerformStep; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Lib.Disk; partition: SIGNED32; out: Streams.Writer); 
+	END DiskTest; 
+
+	PROCEDURE ^ TestDataIsCorrect*(offset, numblocks, blocksize: SIGNED32; CONST buffer: ARRAY OF CHAR; VAR expected, found, foundAt: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ WriteTestData*(context: Commands.Context); 
+	PROCEDURE ^ VerifyTestData*(context: Commands.Context); 
+	PROCEDURE ^ WriteZeros*(context: Commands.Context); 
+	PROCEDURE ^ Test*(context: Commands.Context); 
+	PROCEDURE ^ TransferBlocks*(context: Commands.Context); 
+	PROCEDURE ^ ShowDiskres(res: INTEGER; out: Streams.Writer); 
+BEGIN
+END DiskTests.

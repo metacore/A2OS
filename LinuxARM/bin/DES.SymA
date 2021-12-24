@@ -1,0 +1,26 @@
+MODULE DES;
+	IMPORT BIT;
+TYPE 
+	DES* = OBJECT 
+	VAR 
+		encryptKeys, decryptKeys: ARRAY 32 OF SIGNED32; 
+
+		PROCEDURE ^ RotateRight*(L: SIGNED32; n: SIGNED8): SIGNED32; 
+		PROCEDURE ^ SetKey*(key: ARRAY OF CHAR); 
+		PROCEDURE ^ squashBytesToInts(inBytes: ARRAY OF CHAR; inOffset: SIGNED16; VAR outInts: ARRAY OF SIGNED32; outOffset: SIGNED16; Length: SIGNED16); 
+		PROCEDURE ^ spreadIntsToBytes(inInts: ARRAY OF SIGNED32; inOffset: SIGNED16; VAR outBytes: ARRAY OF CHAR; outOffset: SIGNED16; Length: SIGNED16); 
+		PROCEDURE ^ des(inInts: ARRAY OF SIGNED32; VAR outInts: ARRAY OF SIGNED32; keys: ARRAY OF SIGNED32); 
+		PROCEDURE ^ Encrypt*(clearText: ARRAY OF CHAR; clearOff: SIGNED16; VAR cipherText: ARRAY OF CHAR; cipherOff: SIGNED16); 
+		PROCEDURE ^ Decrypt*(cipherText: ARRAY OF CHAR; cipherOff: SIGNED16; VAR clearText: ARRAY OF CHAR; clearOff: SIGNED16); 
+	END DES; 
+VAR 
+	tempints: ARRAY 2 OF SIGNED32; 
+	byteBit: ARRAY 8 OF SIGNED32; 
+	bigByte: ARRAY 24 OF SIGNED32; 
+	pc1: ARRAY 56 OF SIGNED32; 
+	totrot: ARRAY 16 OF SIGNED32; 
+	pc2: ARRAY 48 OF SIGNED32; 
+	SP1, SP2, SP3, SP4, SP5, SP6, SP7, SP8: ARRAY 64 OF SIGNED32; 
+
+BEGIN
+END DES.

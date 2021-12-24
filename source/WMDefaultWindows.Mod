@@ -294,7 +294,7 @@ TYPE
 	VAR
 		closeInactive*, closeActive*, closeSelected*, closeHover*,
 		minimizeInactive*, minimizeActive*, minimizeHover*,  titleImg : Graphics.Image;
-		minimizeOffset : SIGNED32;
+		minimizeOffset, spaceBetweenButtons : SIGNED32;
 		titleCanvas : Graphics.BufferCanvas;
 		down, hover : SIGNED32;
 		tac, tic, tax, tix, tay, tiy : SIGNED32;
@@ -318,7 +318,7 @@ TYPE
 			IF (master # NIL) & (WM.FlagMinimize IN master.flags) & (button = NoButton) THEN
 				IF hasFocus THEN img := minimizeActive; ELSE img := minimizeInactive; END;
 				IF (img # NIL) THEN
-					IF Graphics.IsBitmapHit(x - (GetWidth() - closeImageWidth + minimizeOffset - img.width), y, 64, img) THEN button := MinimizeButton; END;
+					IF Graphics.IsBitmapHit(x - (GetWidth() - closeImageWidth + minimizeOffset - img.width - spaceBetweenButtons), y, 64, img) THEN button := MinimizeButton; END;
 				END;
 			END;
 		END CheckButtons;
@@ -422,7 +422,7 @@ TYPE
 
 				IF img # NIL THEN
 					canvas.ScaleImage(img, WMRectangles.MakeRect(0, 0, img.width, img.height),
-						WMRectangles.MakeRect(w - ENTIER((img.width + closeImageWidth - minimizeOffset) * fw), 0, w - ENTIER((closeImageWidth - minimizeOffset) * fw), ENTIER(img.height * fh)), Graphics.ModeSrcOverDst, q)
+						WMRectangles.MakeRect(w - ENTIER((img.width + closeImageWidth - minimizeOffset + spaceBetweenButtons) * fw), 0, w - ENTIER((closeImageWidth - minimizeOffset + spaceBetweenButtons) * fw), ENTIER(img.height * fh)), Graphics.ModeSrcOverDst, q)
 				ELSE
 				(*	canvas.Fill(WMRectangles.MakeRect(w - ENTIER(20 * fw), ENTIER(2 * fh), w, h), SIGNED32(0FF0000C0H), Graphics.ModeSrcOverDst);  *)
 				END;
@@ -492,6 +492,7 @@ TYPE
 			closeActive := s.ca; closeInactive := s.ci; closeHover := s.closeHover;
 			minimizeActive := s.ma; minimizeInactive := s.mi; minimizeHover := s.minimizeHover;
 			minimizeOffset := s.minimizeOffset;
+			spaceBetweenButtons := s.spaceBetweenButtons;
 			manager.lock.AcquireWrite;
 			r := bounds;
 			bounds := WMRectangles.MakeRect(master.bounds.l - s.lw, master.bounds.t - s.th, master.bounds.r + s.rw, master.bounds.t);

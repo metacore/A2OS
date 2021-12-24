@@ -72,6 +72,7 @@ TYPE
 		ca*, ci*, closeHover*,
 		ma*, mi*, minimizeHover* : Graphics.Image;
 
+		spaceBetweenButtons*,
 		minimizeOffset* : SIGNED32; (** offset correction for minimize button *)
 
 		(** Window title position and color (a = active, i = inactive) *)
@@ -100,6 +101,7 @@ TYPE
 			closeHover := NIL;
 			ma := NIL; mi := NIL; minimizeHover := NIL;
 			minimizeOffset := 0;
+			spaceBetweenButtons := 0;
 
 			(* window caption *)
 			atextX := 5; atextY := 15; atextColor := SIGNED32(0FFFF00FFH);

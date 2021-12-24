@@ -156,6 +156,9 @@ BEGIN
 						ELSIF ss^ = "MinimizeOffset" THEN
 							ts := GetCharContent(y);
 							IF (ts = NIL) THEN desc.minimizeOffset := 0; ELSE Strings.StrToInt(ts^, desc.minimizeOffset); END;
+						ELSIF ss^ = "SpaceBetweenButtons" THEN
+							ts := GetCharContent(y);
+							IF (ts = NIL) THEN desc.spaceBetweenButtons:= 0; ELSE Strings.StrToInt(ts^, desc.spaceBetweenButtons); END;
 						END;
 					END
 				END

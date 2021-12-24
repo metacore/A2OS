@@ -18,7 +18,7 @@
 <config>
 	<component name="title">
 		<property name="activeLeftMargin" type="int32" mandatory="false"/>
-		<property name="activeTopMargin" type="int32" mandatory="false" />
+				<property name="activeTopMargin" type="int32" mandatory="false" />
 		<property name="activeColor" type="color" mandatory="false" />
 		<property name="activeCloseBitmap" type="resource" mandatory="false" />
 		<property name="activeMinimizeBitmap" type="resource" mandatory="false" />
@@ -30,6 +30,7 @@
 		<property name="hoverCloseBitmap" type="resource" mandatory ="false"/>
 		<property name="hoverMinimizeBitmap" type="resource" mandatory="false"/>
 		<property name="minimizeOffset" type="int32" mandatory="false"/>
+		<property name="spaceBetweenButtons" type="int32" mandatory="false"/>
 	</component>
 	<component name="top">
 		<property name="activeLeft" type="resource" mandatory="false"/>

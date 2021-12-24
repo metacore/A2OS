@@ -2431,65 +2431,65 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		MUL R9, R3, R6 ; src0[b]*src[a]
 		LSR R9, R9, #8 ; src[b] := (src0[b]*src[a]) DIV 256
 		; compute dst[b]
-		AND R11, R8, #0FFH ; dst[b]
-		MUL R11, R11, R7 ; dst[b]*fd
-		ADD R11, R11, R9, LSL #8 ; dst[b]*fd + src[b]*256
-		LSR R11, R11, #8 ; (dst[b]*fd + src[b]*256) DIV 256
-		CMP R11, #255
+		AND R10, R8, #0FFH ; dst[b]
+		MUL R10, R10, R7 ; dst[b]*fd
+		ADD R10, R10, R9, LSL #8 ; dst[b]*fd + src[b]*256
+		LSR R10, R10, #8 ; (dst[b]*fd + src[b]*256) DIV 256
+		CMP R10, #255
 		BLT put_b
-		MOV R11, #255
+		MOV R10, #255
 
 	put_b:
 		BIC R8, R8, #0FFH ; clear dst[b]
-		ORR R8, R8, R11
+		ORR R8, R8, R10
 
 		; compute src[g]
 		MUL R9, R4, R6 ; src0[g]*src[a]
 		LSR R9, R9, #8 ; src[g] := (src0[g]*src[a]) DIV 256
 		; compute dst[g]
-		AND R11, R8, #0FF00H ; dst[g]*256
-		LSR R11, R11, #8 ; dst[g]
-		MUL R11, R11, R7 ; dst[g]*fd
-		ADD R11, R11, R9, LSL #8 ; dst[g]*fd + src[g]*256
-		LSR R11, R11, #8 ; (dst[g]*fd + src[g]*256) DIV 256
-		CMP R11, #255
+		AND R10, R8, #0FF00H ; dst[g]*256
+		LSR R10, R10, #8 ; dst[g]
+		MUL R10, R10, R7 ; dst[g]*fd
+		ADD R10, R10, R9, LSL #8 ; dst[g]*fd + src[g]*256
+		LSR R10, R10, #8 ; (dst[g]*fd + src[g]*256) DIV 256
+		CMP R10, #255
 		BLT put_g
-		MOV R11, #255
+		MOV R10, #255
 
 	put_g:
 		BIC R8, R8, #0FF00H ; clear dst[g]
-		ORR R8, R8, R11, LSL #8
+		ORR R8, R8, R10, LSL #8
 
 		; compute src[r]
 		MUL R9, R5, R6 ; src0[r]*src[a]
 		LSR R9, R9, #8 ; src[r] := (src0[r]*src[a]) DIV 256
 		; compute dst[r]
-		AND R11, R8, #0FF0000H ; dst[r]*65536
-		LSR R11, R11, #16 ; dst[r]
-		MUL R11, R11, R7 ; dst[r]*fd
-		ADD R11, R11, R9, LSL #8 ; dst[r]*fd + src[r]*256
-		LSR R11, R11, #8 ; (dst[r]*fd + src[r]*256) DIV 256
-		CMP R11, #255
+		AND R10, R8, #0FF0000H ; dst[r]*65536
+		LSR R10, R10, #16 ; dst[r]
+		MUL R10, R10, R7 ; dst[r]*fd
+		ADD R10, R10, R9, LSL #8 ; dst[r]*fd + src[r]*256
+		LSR R10, R10, #8 ; (dst[r]*fd + src[r]*256) DIV 256
+		CMP R10, #255
 		BLT put_r
-		MOV R11, #255
+		MOV R10, #255
 
 	put_r:
 		BIC R8, R8, #0FF0000H ; clear dst[r]
-		ORR R8, R8, R11, LSL #16
+		ORR R8, R8, R10, LSL #16
 
 		; compute dst[a]
-		AND R11, R8, #0FF000000H ; dst[a]*16777216
-		LSR R11, R11, #24 ; dst[a]
-		MUL R11, R11, R7 ; dst[a]*fd
-		ADD R11, R11, R6, LSL #8 ; dst[a]*fd + src[a]*256
-		LSR R11, R11, #8 ; (dstfdc[a] + src[a]*256) DIV 256
-		CMP R11, #255
+		AND R10, R8, #0FF000000H ; dst[a]*16777216
+		LSR R10, R10, #24 ; dst[a]
+		MUL R10, R10, R7 ; dst[a]*fd
+		ADD R10, R10, R6, LSL #8 ; dst[a]*fd + src[a]*256
+		LSR R10, R10, #8 ; (dstfdc[a] + src[a]*256) DIV 256
+		CMP R10, #255
 		BLT put_a
-		MOV R11, #255
+		MOV R10, #255
 
 	put_a:
 		BIC R8, R8, #0FF000000H ; clear dst[a]
-		ORR R8, R8, R11, LSL #24
+		ORR R8, R8, R10, LSL #24
 
 	store:
 		STR R8, [R1, #0]
@@ -2583,59 +2583,59 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		LDR R8, [R1, #0] ; R8 := dst
 
 		; compute dst[b]
-		AND R11, R8, #0FFH ; dst[b]
-		MUL R11, R11, R7 ; dst[b]*fd
-		ADD R11, R11, R3, LSL #8 ; dst[b]*fd + src[b]*256
-		LSR R11, R11, #8 ; (dst[b]*fd + src[b]*256) DIV 256
-		CMP R11, #255
+		AND R10, R8, #0FFH ; dst[b]
+		MUL R10, R10, R7 ; dst[b]*fd
+		ADD R10, R10, R3, LSL #8 ; dst[b]*fd + src[b]*256
+		LSR R10, R10, #8 ; (dst[b]*fd + src[b]*256) DIV 256
+		CMP R10, #255
 		BLT put_b
-		MOV R11, #255
+		MOV R10, #255
 
 	put_b:
 		BIC R8, R8, #0FFH ; clear dst[b]
-		ORR R8, R8, R11
+		ORR R8, R8, R10
 
 		; compute dst[g]
-		AND R11, R8, #0FF00H ; dst[g]*256
-		LSR R11, R11, #8 ; dst[g]
-		MUL R11, R11, R7 ; dst[g]*fd
-		ADD R11, R11, R4, LSL #8 ; dst[g]*fd + src[g]*256
-		LSR R11, R11, #8 ; (dst[g]*fd + src[g]*256) DIV 256
-		CMP R11, #255
+		AND R10, R8, #0FF00H ; dst[g]*256
+		LSR R10, R10, #8 ; dst[g]
+		MUL R10, R10, R7 ; dst[g]*fd
+		ADD R10, R10, R4, LSL #8 ; dst[g]*fd + src[g]*256
+		LSR R10, R10, #8 ; (dst[g]*fd + src[g]*256) DIV 256
+		CMP R10, #255
 		BLT put_g
-		MOV R11, #255
+		MOV R10, #255
 
 	put_g:
 		BIC R8, R8, #0FF00H ; clear dst[g]
-		ORR R8, R8, R11, LSL #8
+		ORR R8, R8, R10, LSL #8
 
 		; compute dst[r]
-		AND R11, R8, #0FF0000H ; dst[r]*65536
-		LSR R11, R11, #16 ; dst[r]
-		MUL R11, R11, R7 ; dst[r]*fd
-		ADD R11, R11, R5, LSL #8 ; dst[r]*fd + src[r]*256
-		LSR R11, R11, #8 ; (dst[r]*fd + src[r]*256) DIV 256
-		CMP R11, #255
+		AND R10, R8, #0FF0000H ; dst[r]*65536
+		LSR R10, R10, #16 ; dst[r]
+		MUL R10, R10, R7 ; dst[r]*fd
+		ADD R10, R10, R5, LSL #8 ; dst[r]*fd + src[r]*256
+		LSR R10, R10, #8 ; (dst[r]*fd + src[r]*256) DIV 256
+		CMP R10, #255
 		BLT put_r
-		MOV R11, #255
+		MOV R10, #255
 
 	put_r:
 		BIC R8, R8, #0FF0000H ; clear dst[r]
-		ORR R8, R8, R11, LSL #16
+		ORR R8, R8, R10, LSL #16
 
 		; compute dst[a]
-		AND R11, R8, #0FF000000H ; dst[a]*16777216
-		LSR R11, R11, #24 ; dst[a]
-		MUL R11, R11, R7 ; dst[a]*fd
-		ADD R11, R11, R6, LSL #8 ; dst[a]*fd + src[a]*256
-		LSR R11, R11, #8 ; (dstfdc[a] + src[a]*256) DIV 256
-		CMP R11, #255
+		AND R10, R8, #0FF000000H ; dst[a]*16777216
+		LSR R10, R10, #24 ; dst[a]
+		MUL R10, R10, R7 ; dst[a]*fd
+		ADD R10, R10, R6, LSL #8 ; dst[a]*fd + src[a]*256
+		LSR R10, R10, #8 ; (dstfdc[a] + src[a]*256) DIV 256
+		CMP R10, #255
 		BLT put_a
-		MOV R11, #255
+		MOV R10, #255
 
 	put_a:
 		BIC R8, R8, #0FF000000H ; clear dst[a]
-		ORR R8, R8, R11, LSL #24
+		ORR R8, R8, R10, LSL #24
 
 	store:
 		STR R8, [R1, #0]

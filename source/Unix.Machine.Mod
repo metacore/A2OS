@@ -12,7 +12,7 @@ CONST
 		Version = "A2 Gen. 64-bit, ";
 		DefaultObjectFileExtension* = ".GofUu";
 	#ELSIF ARM THEN
-		Version = "A2 Gen. 64-bit, ARM";
+		Version = "A2 Gen. ARM, ";
 		DefaultObjectFileExtension* = ".GofA";	
 	#END
 

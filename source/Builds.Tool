@@ -232,31 +232,13 @@ WIN64 -- 64-bit windows a2
 		FSTools.CopyFiles -o oberon.exe => ../../Win64/oberon.exe ~
 
 		FSTools.DeleteFiles -s NewAos/* ~
-		~ 
-		
-~ ARM ~ 
-		
-System.DoCommands 
-
-	FSTools.CreateFile -c -r TestTrapX.Mod 
-		MODULE TestTrap;
-		
-			PROCEDURE Test*;
-			BEGIN
-				HALT(32);
-			END Test;
-
-		END TestTrap.				
-	~
-	
-	Compiler.Compile -p=UnixARM ARM.FPE64.Mod ARM.Builtins.Mod Trace.Mod Linux.Glue.Mod Linux.Unix.Mod Unix.Machine.Mod Heaps.Mod Modules.Mod Unix.Objects.Mod Unix.Kernel.Mod RealConversions.Mod Strings.Mod KernelLog.Mod 
-		Streams.Mod Commands.Mod Pipes.Mod Unix.StdIO.Mod TrapWriters.Mod Reflection.Mod Unix.Traps.Mod Files.Mod Unix.UnixFiles.Mod Clock.Mod Dates.Mod ARM.Reals.Mod Diagnostics.Mod BitSets.Mod StringPool.Mod
-		ObjectFile.Mod GenericLinker.Mod Loader.Mod Options.Mod ProcessInfo0.Mod ProcessInfo.Mod Plugins.Mod CRC.Mod SystemVersion.Mod System.Mod StdIOShell.Mod Shell.Mod Locks.Mod 
-		Debugging.Mod TestTrapX.Mod 
-	~
-
-	Linker.Link --fileFormat=Raw --fileName=simple_elf_arm --extension=.GofA --displacement=010000H
-
-		Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel Strings KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Diagnostics BitSets StringPool ObjectFile GenericLinker Loader System StdIOShell
-				Shell ~ 
+		Release.Build --build --path=NewAos/ LinuxARM ~
+		Linker.Link -p=LinuxARM --path=NewAos/
+			Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel Strings KernelLog Streams Commands Pipes StdIO
+			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Diagnostics BitSets StringPool ObjectFile GenericLinker Loader System StdIOShell
+			Shell ~
+			
+		FSTools.CopyFiles -oq NewAos/*.* => ../../LinuxARM/bin/*.* ~
+		FSTools.CopyFiles -o oberon => ../../LinuxARM/oberon ~
 	~ 
+

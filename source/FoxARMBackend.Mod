@@ -469,25 +469,39 @@ TYPE
 				ASSERT(type.sizeInBits <= 32); (* integers of larger size have already been split *)
 
 				(* allocate a regular general purpose ARM register *)
-				FOR i := InstructionSet.R2 TO InstructionSet.R15 DO
+				FOR i := InstructionSet.R4 TO InstructionSet.R15 DO
+					IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END
+				END;
+				FOR i := InstructionSet.R3 TO InstructionSet.R0 BY -1 DO
 					IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END
 				END
 
 			ELSIF type.form = IntermediateCode.Float THEN
 				IF (type.sizeInBits = 32) & useFPU32 THEN
 					(* allocate a single precision VFP register *)
-					FOR i := InstructionSet.SR2 TO InstructionSet.SR31 DO
+					FOR i := InstructionSet.SR16 TO InstructionSet.SR31 DO
+						IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i; END;
+					END;
+					FOR i := InstructionSet.SR15 TO InstructionSet.SR0 BY -1 DO
 						IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i; END;
 					END;
 				ELSIF (type.sizeInBits = 64) & (useFPU64)  THEN
-					FOR i := InstructionSet.DR2 TO InstructionSet.DR31 DO
+					FOR i := InstructionSet.DR8 TO InstructionSet.DR31 DO
 						IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END;
 					END;
+					FOR i := InstructionSet.DR7 TO InstructionSet.DR0 BY -1 DO
+						IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END;
+					END;
+
 				ELSE
 						(* allocate a regular general purpose ARM register *)
-						FOR i := InstructionSet.R2 TO InstructionSet.R15 DO
+						FOR i := InstructionSet.R4 TO InstructionSet.R15 DO
+							IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END
+						END;
+						FOR i := InstructionSet.R3 TO InstructionSet.R0 BY -1 DO
 							IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END
 						END
+
 				END
 
 			ELSE
@@ -3498,8 +3512,8 @@ TYPE
 		useFPU32: BOOLEAN;
 		useFPU64: BOOLEAN;
 		initLocals: BOOLEAN;
-		cRegisters: ARRAY 4 OF SIGNED32;
-		intParameterIndex, floatParameterIndex: SIZE;
+		
+		intParameterIndex, floatParameterIndex, doubleParameterIndex: SIZE;
 
 		PROCEDURE & InitBackendARM;
 		BEGIN
@@ -3510,10 +3524,6 @@ TYPE
 			initLocals := TRUE;
 			SetHasLinkRegister;
 			SetName("ARM");
-			cRegisters[0] := InstructionSet.R0;
-			cRegisters[1] := InstructionSet.R1;
-			cRegisters[2] := InstructionSet.R2;
-			cRegisters[3] := InstructionSet.R3;
 		END InitBackendARM;
 
 		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
@@ -3690,23 +3700,31 @@ TYPE
 		END ResetParameterRegisters;
 		
 		PROCEDURE GetParameterRegister*(callingConvention: SyntaxTree.CallingConvention;  type: IntermediateCode.Type; VAR register: INTEGER): BOOLEAN;
-		VAR index: INTEGER;
 		BEGIN
 			IF type.form IN IntermediateCode.Integer THEN
 				CASE callingConvention OF
 				SyntaxTree.CCallingConvention:
 					IF intParameterIndex >= 4 THEN register := -1; RETURN FALSE END;
-					index := cRegisters[intParameterIndex];
+					register := INTEGER(InstructionSet.R0  + intParameterIndex);
 				ELSE
 					register := -1; RETURN FALSE;
 				END;
 				INC (intParameterIndex);
-				register :=  index;
 				RETURN TRUE;
 			ELSIF type.form = IntermediateCode.Float THEN
 				CASE callingConvention OF
-					|SyntaxTree.CCallingConvention:
-						HALT(200);
+				|SyntaxTree.CCallingConvention:
+					IF type.sizeInBits = 32 THEN
+						IF (floatParameterIndex >= 16) OR ~ useFPU32 THEN register := -1; RETURN FALSE END;
+						register := INTEGER(InstructionSet.SR0 + floatParameterIndex);
+						INC(floatParameterIndex);
+					ELSE								
+						IF ODD(floatParameterIndex) THEN INC(floatParameterIndex) END; 
+						IF (floatParameterIndex >= 16) OR ~useFPU64 THEN register := -1; RETURN FALSE END;
+						register := INTEGER(InstructionSet.DR0 + floatParameterIndex DIV 2);
+						INC(floatParameterIndex,2);
+					END;
+					RETURN TRUE;
 				ELSE
 					register := -1; RETURN FALSE;
 				END;

@@ -231,6 +231,14 @@ BUILDS
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
+	LinuxARM {
+		INCLUDE "LINUX UNIX ARM"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=UnixARM"
+		PATH "./NewAos/"
+		EXCLUDEPACKAGES "EFI Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
+		DISABLED "FALSE"
+	}
 	Linux64C {
 		INCLUDE "LINUX UNIX AMD64 COOP"
 		COMPILER "Compiler.Compile"
@@ -296,13 +304,13 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	RPI & COOP { RPI.CPU.Mod }
 	ZYNQ & COOP { Zynq.CPU.Mod }
 
-	ARM & ~COOP { ARM.Initializer.Mod }
+	NATIVE & ARM & ~COOP { ARM.Initializer.Mod }
 	ZYNQ & ~COOP { Zynq.ARM.Platform.Mod }
 
 	# Low-level trace output
 	Trace.Mod
 
-	ARM & ~COOP { ARM.BootConfig.Mod }
+	NATIVE & ARM & ~COOP { ARM.BootConfig.Mod }
 
 	WIN & ~COOP { Windows.Kernel32.Mod }
 
@@ -329,7 +337,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	BIOS & AMD64 & ~COOP { BIOS.AMD64.Machine.Mod }
 	WIN & ~COOP { Windows.Machine.Mod }
 	COOP & ~ARM { Mutexes.Mod Coop.Machine.Mod }
-	COOP & ARM { Mutexes.Mod Coop.ARM.Machine.Mod }
+  COOP & ARM { Mutexes.Mod Coop.ARM.Machine.Mod }
 	UNIX & ~COOP { Unix.Machine.Mod }
 	ZYNQ & ~COOP { Zynq.PsUartMin.Mod Zynq.TraceDevice.Mod Zynq.PrivateWatchdog.Mod ARM.Machine.Mod }
 
@@ -342,7 +350,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WIN & ~COOP { Windows.Objects.Mod Windows.Kernel.Mod }
 	UNIX & ~COOP { Unix.Objects.Mod Unix.Kernel.Mod }
 	COOP { Coop.Objects.Mod Coop.Kernel.Mod }
-	ARM & ~COOP { ARM.Objects.Mod ARM.Kernel.Mod }
+	NATIVE & ARM & ~COOP { ARM.Objects.Mod ARM.Kernel.Mod }
 
 END
 
@@ -370,7 +378,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	UNIX { Unix.StdIO.Mod }
 	BIOS & I386 & ~COOP { BIOS.I386.Traps.Mod }
 	BIOS & AMD64 & ~COOP { BIOS.AMD64.Traps.Mod }
-	ARM & ~COOP { ARM.Traps.Mod }
+	NATIVE & ARM & ~COOP { ARM.Traps.Mod }
 	WIN & ~COOP { Windows.Traps.Mod }
 	UNIX & ~COOP { Unix.Traps.Mod }
 	COOP { Coop.Traps.Mod }
@@ -1486,16 +1494,20 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	# SMB client & server
 	SambaClient.Mod SambaServer.Mod
 
+	~ARM {
 	srRenderTools.Text srReadMe.Text	# Realtime Fractal-Voxel Raytracer (Soren Renner)
 	srBase.Mod srRayEngine.Mod srMath.Mod
+	}
 	I386, AMD64 { srE.Mod }
+	~ARM {
 	srGL.Mod srHex.Mod srImage.Mod
 	srVoxel.Mod srVoxel2.Mod srVoxel3.Mod srVolShader.Mod srVoxel4.Mod srVoxel5.Mod
 	srM2Space.Mod srM3Space.Mod srM5Space.Mod srM6Space.Mod srRastermovie.Mod
 	srTexVox.Mod srThermoCell.Mod srTree.Mod sr3DTexture.Mod srLifeVox.Mod
 	srRotaVox.Mod srvoxels.Mod srRender.Mod
 	recticle.png
-
+	} 
+	
 	MenuPages.Mod # generate MenuPageXX.XML files
 
 	# Video for Windows

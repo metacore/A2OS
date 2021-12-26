@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone='yes'?>
+<?xml-stylesheet type="text/xsl" href="DriverDatabase.XSL"?>
 <!--
 	If a client requests the installation of a device-specific or class-specific device driver, the driver database software will
 	look for a matching (vendor id, device id, revision), respectively (class, subclass, protocol, revision)-tuple.
@@ -69,7 +70,7 @@
 			<device id="1036"	name="Unknown"		revision="all"	flags=""> Intel8255x.Install;InitNetwork.Init </device>
 			<device id="1037"	name="Unknown"		revision="all"	flags=""> Intel8255x.Install;InitNetwork.Init </device>
 			<device id="1038"	name="Unknown"		revision="all"	flags=""> Intel8255x.Install;InitNetwork.Init </device>
-			<device id="103D"name="Unknown"		revision="all"	flags=""> Intel8255x.Install;InitNetwork.Init</device>
+			<device id="103D"	name="Unknown"		revision="all"	flags=""> Intel8255x.Install;InitNetwork.Init</device>
 			<device id="1064" name="82562ET/EZ/GT/GZ - Pro/100 VE" revision="all" flags=""> Intel8255x.Install;InitNetwork.Init </device>
 			<device id="1209"	name="82559ER Ethernet Controller"		revision="all"	flags=""> Intel8255x.Install;InitNetwork.Init </device>
 			<device id="1229"	name="Ethernet Pro 100"					revision="all"	flags=""> Intel8255x.Install;InitNetwork.Init </device>

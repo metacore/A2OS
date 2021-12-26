@@ -28,6 +28,7 @@ process Darwin32 &
 process Darwin64 &
 process Linux32 &
 process Linux64 &
+process LinuxARM &
 process Solaris32 &
 process Solaris64 &
 process Win32 &

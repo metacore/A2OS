@@ -6,7 +6,7 @@ MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 .SUFFIXES: # delete the default suffixes
 
 tool = $(if $(wildcard oberon), ./oberon, ./original)
-platforms = Bios32 Bios64 Zynq Win32 Win64 Linux32 Linux64 Darwin32 Darwin64 Solaris32 Solaris64 \
+platforms = Bios32 Bios64 Zynq Win32 Win64 Linux32 Linux64 LinuxARM Darwin32 Darwin64 Solaris32 Solaris64 \
 	Bios32C RPiC ZynqC Win32C Linux32C Linux64C
 
 target = Linux64

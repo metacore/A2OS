@@ -647,6 +647,7 @@ TYPE
 			END;
 
 			IF scope.body # NIL THEN
+				VAR allocSize := SIGNED32(0);
 
 				IF implementationEmitter.emitLabels THEN ir.Emit(LabelInstruction(scope.body.position)) END;
 
@@ -663,7 +664,6 @@ TYPE
 					Basic.Align(stackSize,system.AlignmentOf(system.parameterAlignment,system.byteType));  (* round up to parameter alignment *)
 
 					IF (callingConvention # SyntaxTree.OberonCallingConvention) & (~(callingConvention IN SysvABI) OR (system.addressSize # 64)) THEN
-						VAR allocSize := SIZE(0);
 						backend.ResetParameterRegisters();
 						(* assumption: registers are passed left to right and left parameters are in registers *)
 						formalParameter := procedureType.firstParameter;
@@ -682,6 +682,7 @@ TYPE
 						END;
 						IF allocSize > 0 THEN
 							allocSize := ToMemoryUnits(system,allocSize);
+							parametersSize := allocSize;
 							ir.Emit(Sub(Basic.invalidPosition,implementationEmitter.sp,implementationEmitter.sp,IntermediateCode.Immediate(addressType,allocSize)));
 						END;
 						backend.ResetParameterRegisters();
@@ -782,6 +783,8 @@ TYPE
 
 					IF callingConvention = SyntaxTree.WinAPICallingConvention THEN
 						parametersSize := ProcedureParametersSize(backend.system,x);
+					ELSIF allocSize > 0 THEN 
+						parametersSize := allocSize;
 					ELSE
 						parametersSize := 0;
 					END;

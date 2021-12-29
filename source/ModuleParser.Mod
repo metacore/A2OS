@@ -36,6 +36,8 @@ CONST
 	NoPAFStr = "NOPAF"; FixedStr = "FIXED"; AlignedStr = "FIXED";
 	DynamicStr = "DYNAMIC"; InterruptStr = "INTERRUPT"; PCOffsetStr = "PCOFFSET";
 
+VAR
+	invalidIdentifier*: Strings.String;
 
 TYPE
 	InfoItem* = OBJECT
@@ -1560,15 +1562,15 @@ TYPE
 
 		PROCEDURE IdentDefP(identDef: IdentDef);
 		BEGIN
+			NEW(identDef.ident);
 			IF (token.symbol = FoxScanner.Identifier) OR (token.symbol = FoxScanner.Number) & (token.numberType = FoxScanner.Character)  THEN
-				NEW(identDef.ident);
 				identDef.ident.name := Strings.NewString(token.identifierString);
-				identDef.ident.pos := token.position.start;
 			ELSIF (token.symbol = FoxScanner.String) THEN
-				NEW(identDef.ident);
 				identDef.ident.name := Strings.NewString(token.string^);
-				identDef.ident.pos := token.position.start;
+			ELSE
+				identDef.ident.name := invalidIdentifier;
 			END;
+			identDef.ident.pos := token.position.start;
 			NextToken;
 			IF token.symbol = FoxScanner.Times THEN
 				identDef.vis := Public;
@@ -1930,6 +1932,8 @@ BEGIN
 	parser.ModuleP(module);
 END Parse;
 
+BEGIN
+	invalidIdentifier := Strings.NewString("<?>");
 END ModuleParser.
 
 PC.Compile \s ModuleParser.Mod ~

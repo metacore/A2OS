@@ -44,23 +44,27 @@ VAR
 		#END
 		DD 01
 		DD entry + base; program entry point
-		DD elfheadersize
+		DD elfheadersize ; poffset
+		DD 0 ; soffset
+		#IF ARM THEN
+		DD 0x5000400 ; flags: SYS 5 ABI + Hardware Float Support 0x400
+		#ELSE
 		DD 0
-		DD 0
+		#END;
 		DW elfheadersize
 		DW 20H
 		DW 3 ; #program header table entries
-		DW 0
-		DW 0
-		DW 0
+		DW 0 ; section header table entry size
+		DW 0 ; section header number of entries
+		DW 0 ; section header names offset
 
 		elfheadersize:
 
 		; program header
 		DD 1
 		DD 0
-		DD base
-		DD base
+		DD base ; vadr
+		DD base ; padr
 		#IF ARM THEN
 		DD last - base; segment size (file)
 		DD last - base; segment size (memory)
@@ -70,7 +74,7 @@ VAR
 		#END
 		DD 07
 		DD 1000H; alignment
-
+		
 		; interpreter header
 		DD 3
 		DD interpretername; interpreter name offset

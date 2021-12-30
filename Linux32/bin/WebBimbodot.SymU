@@ -85,7 +85,7 @@ TYPE
 		nofLoadedArticles: SIGNED32; 
 		aList, path, title: ARRAY 256 OF CHAR; 
 		id: ARRAY 32 OF CHAR; 
-		frontPage: Strings.Buffer; 
+		frontPage: Streams.Buffer; 
 		first, last: ArticleList; 
 		needUpdate: BOOLEAN; 
 		alive: BOOLEAN; 

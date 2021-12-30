@@ -127,6 +127,7 @@ TYPE
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Wait(): BOOLEAN; 
 		PROCEDURE ^ Activate; 
+		PROCEDURE ^ Exit; 
 	BEGIN{ACTIVE, SAFE, PRIORITY(High)} 
 	END FinalizerCaller; 
 VAR 

@@ -1,31 +1,11 @@
 MODULE Strings;
-	IMPORT Streams, Dates, RC := RealConversions;
+	IMPORT RC := RealConversions;
 CONST 
 	Ok* = 0; 
 TYPE 
 	String* = POINTER TO ARRAY OF CHAR; 
 
 	StringArray* = POINTER TO ARRAY OF String; 
-
-	Buffer* = OBJECT 
-	VAR 
-		length: SIZE; 
-		data: String; 
-		w: Streams.Writer; 
-
-		PROCEDURE ^  & Init*(initialSize: SIZE); 
-		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
-		PROCEDURE ^ Shorten*(n: SIZE); 
-		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ GetWriter*(): Streams.Writer; 
-		PROCEDURE ^ GetReader*(): Streams.StringReader; 
-		PROCEDURE ^ GetLength*(): SIZE; 
-		PROCEDURE ^ GetString*(): String; 
-		PROCEDURE ^ GetStringCopy*(): String; 
-		PROCEDURE ^ Write*(out: Streams.Writer); 
-	END Buffer; 
-VAR 
-	DateFormat*, TimeFormat*: ARRAY 32 OF CHAR; 
 
 	OPERATOR ^ "+"-(a: String; CONST b: ARRAY OF CHAR): String; 
 	OPERATOR ^ "+"-(a: String; b: CHAR): String; 
@@ -77,12 +57,6 @@ VAR
 	PROCEDURE ^ StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: FLOAT64); 
 	PROCEDURE ^ SetToStr*(set: SET; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ StrToSet*(CONST str: ARRAY OF CHAR; VAR set: SET); 
-	PROCEDURE ^ TimeToStr*(time: Dates.DateTime; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ StrToTime*(CONST str: ARRAY OF CHAR; VAR dt: Dates.DateTime); 
-	PROCEDURE ^ DateToStr*(date: Dates.DateTime; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ StrToDate*(CONST str: ARRAY OF CHAR; VAR dt: Dates.DateTime); 
-	PROCEDURE ^ FormatDateTime*(CONST format: ARRAY OF CHAR; dt: Dates.DateTime; VAR result: ARRAY OF CHAR); 
-	PROCEDURE ^ ShowTimeDifference*(t1, t2: Dates.DateTime; out: Streams.Writer); 
 	PROCEDURE ^ NewString*(CONST str: ARRAY OF CHAR): String; 
 	PROCEDURE ^ SetAOC*(CONST str: ARRAY OF CHAR; VAR s: String); 
 	PROCEDURE ^ GetExtension*(CONST name: ARRAY OF CHAR; VAR file, ext: ARRAY OF CHAR); 

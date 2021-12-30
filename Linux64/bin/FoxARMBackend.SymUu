@@ -381,8 +381,7 @@ TYPE
 		useFPU32: BOOLEAN; 
 		useFPU64: BOOLEAN; 
 		initLocals: BOOLEAN; 
-		cRegisters: ARRAY 4 OF SIGNED32; 
-		intParameterIndex, floatParameterIndex: SIZE; 
+		intParameterIndex, floatParameterIndex, doubleParameterIndex: SIZE; 
 
 		PROCEDURE ^  & InitBackendARM; 
 		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System); 

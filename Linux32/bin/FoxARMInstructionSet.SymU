@@ -208,7 +208,8 @@ CONST
 	opWFE* = 178; 
 	opWFI* = 179; 
 	opMOVW* = 180; 
-	NumberMnemonics* = 181; 
+	opUDF* = 181; 
+	NumberMnemonics* = 182; 
 	MaxOperands* = 6; 
 	flagB* = 0; 
 	flagBT* = 1; 
@@ -421,7 +422,8 @@ CONST
 	PC* = R15; 
 	LR* = R14; 
 	SP* = R13; 
-	FP* = R12; 
+	FP* = R11; 
+	AP* = R12; 
 	RESHI* = R1; 
 	RES* = R0; 
 	RESFS* = SR0; 

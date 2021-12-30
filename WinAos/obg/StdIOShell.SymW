@@ -1,5 +1,5 @@
 MODULE StdIOShell;
-	IMPORT StdIO, Commands, Modules, Trace;
+	IMPORT StdIO, Commands, Modules, Trace, Options, Streams;
 CONST 
 	Verbose = FALSE; 
 TYPE 

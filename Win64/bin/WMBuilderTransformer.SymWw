@@ -72,15 +72,15 @@ TYPE
 		names: Names; 
 		declarations: VariableDeclarations; 
 		importList: ImportList; 
-		variableDecl: Strings.Buffer; 
+		variableDecl: Streams.Buffer; 
 		variableDeclWriter: Streams.Writer; 
-		createForm: Strings.Buffer; 
+		createForm: Streams.Buffer; 
 		createFormWriter: Streams.Writer; 
-		handlersWiring: Strings.Buffer; 
+		handlersWiring: Streams.Buffer; 
 		handlersWiringWriter: Streams.Writer; 
-		handlers: Strings.Buffer; 
+		handlers: Streams.Buffer; 
 		handlersWriter: Streams.Writer; 
-		imports: Strings.Buffer; 
+		imports: Streams.Buffer; 
 		importsWriter: Streams.Writer; 
 		createFormReturnIdent: Identifier; 
 
@@ -92,7 +92,7 @@ TYPE
 	END Transformer; 
 
 	PROCEDURE ^ GetUCS32String(string: Strings.String): Texts.PUCS32String; 
-	PROCEDURE ^ Replace(CONST pattern: ARRAY OF CHAR; by: Strings.Buffer; text: Texts.Text; VAR error: BOOLEAN); 
+	PROCEDURE ^ Replace(CONST pattern: ARRAY OF CHAR; by: Streams.Buffer; text: Texts.Text; VAR error: BOOLEAN); 
 	PROCEDURE ^ ReplaceString(CONST string, by: ARRAY OF CHAR; text: Texts.Text; VAR error: BOOLEAN); 
 	PROCEDURE ^ AlignmentToStream(alignment: SIGNED32; w: Streams.Writer); 
 	PROCEDURE ^ GetPropertyNameAsString(property: WMProperties.Property; VAR value: ARRAY OF CHAR); 

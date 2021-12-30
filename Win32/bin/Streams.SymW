@@ -173,6 +173,26 @@ TYPE
 	Bytes4 = ARRAY 4 OF CHAR; 
 
 	Bytes8 = ARRAY 8 OF CHAR; 
+
+	String = POINTER TO ARRAY OF CHAR; 
+
+	Buffer* = OBJECT 
+	VAR 
+		length: SIZE; 
+		data: String; 
+		w: Writer; 
+
+		PROCEDURE ^  & Init*(initialSize: SIZE); 
+		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Shorten*(n: SIZE); 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ GetWriter*(): Writer; 
+		PROCEDURE ^ GetReader*(): StringReader; 
+		PROCEDURE ^ GetLength*(): SIZE; 
+		PROCEDURE ^ GetString*(): String; 
+		PROCEDURE ^ GetStringCopy*(): String; 
+		PROCEDURE ^ Write*(out: Writer); 
+	END Buffer; 
 VAR 
 	months: ARRAY ((12 * 4) + 1) OF CHAR; 
 

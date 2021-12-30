@@ -1,5 +1,5 @@
 MODULE Release;
-	IMPORT Modules, Streams, Commands, Options, Files, Dates, Strings, Texts, TextUtilities, ReleaseThreadPool, Diagnostics, WMGraphics, Zip, CompilerInterface, Compiler, SyntaxTree := FoxSyntaxTree, UTF8Strings;
+	IMPORT System, Modules, Streams, Commands, Options, Files, Dates, Strings, Texts, TextUtilities, ReleaseThreadPool, Diagnostics, WMGraphics, Zip, CompilerInterface, Compiler, SyntaxTree := FoxSyntaxTree, UTF8Strings;
 CONST 
 	VersionMajor = 1; 
 	VersionMinor = 0; 

@@ -1,5 +1,5 @@
 MODULE UDPChatBase;
-	IMPORT Kernel, Strings, IO := Streams, IP, FS := Files;
+	IMPORT Kernel, Strings, Streams, IP, FS := Files;
 CONST 
 	serverPort* = 14000; 
 	UserFile = \"Sage.UDPChatUsers.dat"\; 
@@ -95,7 +95,7 @@ TYPE
 		PROCEDURE ^ PasswordCorrect*(uin: SIGNED32; password: String): BOOLEAN; 
 	END Users; 
 
-	Buffer* = OBJECT (Strings.Buffer)
+	Buffer* = OBJECT (Streams.Buffer)
 
 		PROCEDURE ^ AddInt*(n, len: SIZE); 
 	END Buffer; 

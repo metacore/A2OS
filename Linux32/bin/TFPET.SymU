@@ -1,5 +1,5 @@
 MODULE TFPET;
-	IMPORT KernelLog, Modules, Commands, Options, Streams, Inputs, Files, WMRestorable, XML, XMLScanner, XMLParser, XMLObjects, WMStandardComponents, WMGraphics, CompilerInterface, WMComponents, WMRectangles, WMMessages, WMDialogs, WMTextView, WMEditors, Strings, TextUtilities, Texts, WMWindowManager, WMGrids, WMMacros, WMPopups, WMDropTarget, WMDiagnostics, PETTrees, Configuration, Codecs, WMTabComponents, UndoManager, WMSearchComponents, WhitespaceRemover, TFModuleTrees;
+	IMPORT KernelLog, Modules, Commands, Options, Streams, Inputs, Files, WMRestorable, XML, XMLScanner, XMLParser, XMLObjects, WMStandardComponents, WMGraphics, CompilerInterface, WhitespaceRemover, WMComponents, WMRectangles, WMMessages, WMDialogs, WMDiagnostics, WMTextView, WMEditors, Strings, TextUtilities, Texts, WMWindowManager, WMGrids, WMMacros, WMPopups, WMDropTarget, PETTrees, Configuration, Codecs, WMTabComponents, UndoManager, WMSearchComponents, Kernel, TFModuleTrees;
 CONST 
 	WindowWidth = 800; 
 	WindowHeight = 600; 
@@ -14,6 +14,7 @@ CONST
 	DefaultShowLineNumbers = FALSE; 
 	DefaultIndicateTabs = FALSE; 
 	DefaultCurrentLineColor = 0; 
+	DefaultBackgroundColor = WMGraphics.White; 
 	DefaultCompilerName = \"Fox"\; 
 	DefaultCompilerCaption = \"Compile"\; 
 	DefaultCompilerOptions = \"-b=AMD --warnings"\; 
@@ -66,6 +67,7 @@ TYPE
 		showLineNumbers: BOOLEAN; 
 		indicateTabs: BOOLEAN; 
 		currentLineColor: SIGNED32; 
+		backgroundColor: SIGNED32; 
 		defaultCompilerOptions: CompilerOptions; 
 		defaultCompilerSettings: CompilerSettings; 
 		compilers: ARRAY MaxNbrOfCompilers OF CompilerSettings; 
@@ -114,7 +116,6 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetText(text: Texts.Text); 
-		PROCEDURE ^ Finalize*; 
 	END ScratchPanel; 
 
 	URLDropTarget = OBJECT (WMDropTarget.DropTarget)
@@ -133,6 +134,13 @@ TYPE
 		PROCEDURE ^ URL*(CONST url: ARRAY OF CHAR; VAR res: INTEGER); 
 	END DropURL; 
 
+	TextWriter = OBJECT (TextUtilities.TextWriter)
+	VAR 
+		update: PROCEDURE {DELEGATE}; 
+
+		PROCEDURE ^ Update*; 
+	END TextWriter; 
+
 	PETPanel = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		editor, splitEditor: WMEditors.Editor; 
@@ -141,6 +149,7 @@ TYPE
 		scratch: ScratchPanel; 
 		sidePanel: WMStandardComponents.Panel; 
 		logPanel, editPanel: WMStandardComponents.Panel; 
+		logWriter, errorWriter: TextWriter; 
 		searchPanel: WMSearchComponents.SearchPanel; 
 		errorGrid: WMDiagnostics.DiagnosticsView; 
 		diagnostics: WMDiagnostics.Model; 
@@ -156,6 +165,7 @@ TYPE
 		showErrorMarkers: BOOLEAN; 
 		positions: Positions; 
 		owner: Window; 
+		settings: Settings; 
 
 		PROCEDURE ^  & InitPanel*(window: Window); 
 		PROCEDURE ^ CreateSidePanel(settings: CompilerSettings); 
@@ -171,8 +181,10 @@ TYPE
 		PROCEDURE ^ SplitEditorFocusHandler(hasFocus: BOOLEAN); 
 		PROCEDURE ^ ToggleLabels; 
 		PROCEDURE ^ ToggleWrap; 
+		PROCEDURE ^ ToggleExtInterface; 
 		PROCEDURE ^ TextChanged(sender, data: ANY ); 
 		PROCEDURE ^ CursorChanged; 
+		PROCEDURE ^ OpenLogEditor; 
 		PROCEDURE ^ HandleShortcut(ucs: SIZE; flags: SET; keysym: SIZE): BOOLEAN; 
 		PROCEDURE ^ Finalize*; 
 	END PETPanel; 
@@ -190,7 +202,7 @@ TYPE
 	VAR 
 		filenameEdit, optionsEdit, positionEdit: WMEditors.Editor; 
 		loadBtn, storeBtn, closeBtn, compileBtn, findPCBtn, undoBtn, redoBtn: WMStandardComponents.Button; 
-		splitBtn, formatBtn, searchBtn, labelsBtn, wrapBtn, forwardBtn, backBtn: WMStandardComponents.Button; 
+		splitBtn, formatBtn, searchBtn, labelsBtn, wrapBtn, errListBtn, findBtn, logBtn, forwardBtn, backBtn: WMStandardComponents.Button; 
 		popup: WMPopups.Popup; 
 		tabs: WMTabComponents.Tabs; 
 		pages: ARRAY MaxNbrOfTabs OF PETPanel; 
@@ -210,6 +222,7 @@ TYPE
 		iconIdle, iconWorking: WMGraphics.Image; 
 		modifierFlags: SET; 
 		browseBase, browseTOS: BrowseEntry; 
+		settings: Settings; 
 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
@@ -269,8 +282,9 @@ VAR
 	nofWindows: SIGNED32; 
 	scratchText: Texts.Text; 
 	scratchModified: BOOLEAN; 
-	settings: Settings; 
+	gsettings: Settings; 
 	StrScratchPanel, StrPETPanel: Strings.String; 
+	timeout: BOOLEAN; 
 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ OpenState*(context: Commands.Context); 
@@ -288,8 +302,10 @@ VAR
 	PROCEDURE ^ LoadScratchText; 
 	PROCEDURE ^ StoreText(CONST filename: ARRAY OF CHAR; text: Texts.Text); 
 	PROCEDURE ^ LoadText(CONST filename: ARRAY OF CHAR): Texts.Text; 
+	PROCEDURE ^ GetSettings(): Settings; 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Timeout; 
 	PROCEDURE ^ Cleanup; 
 	PROCEDURE ^ LoadModule(CONST moduleName: ARRAY OF CHAR); 
 	PROCEDURE ^ InitStrings; 

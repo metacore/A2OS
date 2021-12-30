@@ -114,12 +114,12 @@ TYPE
 		errors: BOOLEAN; 
 		in: Streams.Reader; 
 		text: Texts.Text; 
-		buffer: Strings.Buffer; 
+		buffer: Streams.Buffer; 
 		string: Strings.String; 
 		reader, sreader: Streams.StringReader; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ LoadLibrary(buf: Strings.Buffer; pos: SIZE; VARflen: SIGNED32); 
+		PROCEDURE ^ LoadLibrary(buf: Streams.Buffer; pos: SIZE; VARflen: SIGNED32); 
 		PROCEDURE ^ IndexToColor(index: SIGNED32): SIGNED32; 
 		PROCEDURE ^ InsertPiece(ofs, len: SIZE; attr: Texts.Attributes); 
 		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
@@ -132,7 +132,7 @@ TYPE
 		out, w: Streams.Writer; 
 		w2: Streams.StringWriter; 
 		string: Strings.String; 
-		buffer: Strings.Buffer; 
+		buffer: Streams.Buffer; 
 		oberonColors: ARRAY 16 OF SIGNED32; 
 		fonts: ARRAY 256 OF Texts.FontInfo; 
 		font: Texts.FontInfo; 

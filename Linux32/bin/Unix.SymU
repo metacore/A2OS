@@ -279,7 +279,7 @@ TYPE
 		gmtoff*, tmzone*: SIGNED32; 
 	END; 
 
-	Tms* = POINTER TO RECORD 
+	Tms* = RECORD 
 		utime*, stime*, cutime*, cstime*: SIGNED32; 
 	END; 
 
@@ -472,6 +472,7 @@ VAR
 	getitimer-: PROCEDURE {C}(which: SIGNED32; VAR value: Itimerval):SIGNED32; 
 	clock_gettime-: PROCEDURE {C}(clk_id: INTEGER; tp: ADDRESS):INTEGER; 
 	clock_getres-: PROCEDURE {C}(clk_id: INTEGER; res: ADDRESS):INTEGER; 
+	clock-: PROCEDURE {C}():INTEGER; 
 	gettimeofday-: PROCEDURE {C}(VAR tv: Timeval; VAR tz: Timezone):SIGNED32; 
 	mktime-: PROCEDURE {C}(VAR tm: Tm):SIGNED32; 
 	localtime-: PROCEDURE {C}(CONST tv: Timeval):TmPtr; 

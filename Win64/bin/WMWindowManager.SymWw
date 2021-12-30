@@ -46,7 +46,7 @@ TYPE
 		th*, bh*, lw*, rw*: SIZE; 
 		taa*, tab*, tac*, tia*, tib*, tic*, laa*, lab*, lac*, lia*, lib*, lic*, raa*, rab*, rac*, ria*, rib*, ric*, baa*, bab*, bac*, bia*, bib*, bic*: Graphics.Image; 
 		ca*, ci*, closeHover*, ma*, mi*, minimizeHover*: Graphics.Image; 
-		minimizeOffset*: SIGNED32; 
+		spaceBetweenButtons*, minimizeOffset*: SIGNED32; 
 		atextX*, atextY*, atextColor*, itextX*, itextY*, itextColor*: SIGNED32; 
 		bgColor*, fgColor*, selectCol*, desktopColor*: Graphics.Color; 
 		topFocusThreshold*, topThreshold*, bottomFocusThreshold*, bottomThreshold*, leftFocusThreshold*, leftThreshold*, rightFocusThreshold*, rightThreshold*: SIGNED32; 

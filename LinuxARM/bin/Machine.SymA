@@ -54,7 +54,7 @@ VAR
 	ticks-: SIGNED32; 
 	prioLow-, prioHigh-: INTEGER; 
 	fcr-: SET; 
-	mhz-: SIGNED64; 
+	timerFrequency-: SIGNED64; 
 	gcThreshold-: SIZE; 
 	memBlockHead-{UNTRACED} , memBlockTail-{UNTRACED} : MemoryBlock; 
 	config: ARRAY 2048 OF CHAR; 
@@ -172,14 +172,7 @@ exit:
 
 	END SpinHint; 
 	PROCEDURE ^ CurrentPC*(): ADDRESS; 
-	PROCEDURE {Fingerprint(6112430532310118778)}  - GetTimer*(): SIGNED64;
-	CODE
-
-	MOV R0, #0
-	MOV R1, #0
-
-
-	END GetTimer; 
+	PROCEDURE ^ GetTimer*(): SIGNED64; 
 	PROCEDURE ^ GetConfig*(CONST name: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
 	PROCEDURE ^ StrToInt*(VAR i: SIZE; CONST s: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ NumberOfProcessors*(): SIZE; 

@@ -1,5 +1,5 @@
 MODULE TestDates;
-	IMPORT Modules, Streams, Commands, Dates, Strings, Random;
+	IMPORT System, Modules, Streams, Commands, Dates, Strings, Random;
 CONST 
 VAR 
 	stop: BOOLEAN; 

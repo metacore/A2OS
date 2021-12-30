@@ -80,7 +80,7 @@ VAR
 	prioLow-, prioHigh-: INTEGER;	(* permitted thread priorities *)
 
 	fcr-: SET;	(** default floating-point control register value (default rounding mode is towards -infinity, for ENTIER) *)
-	mhz-: SIGNED64;	(** clock rate of GetTimer in MHz, or 0 if not known *)
+	timerFrequency-: SIGNED64;	(** clock rate of GetTimer in Hz *)
 
 	gcThreshold-: SIZE;
 	memBlockHead-{UNTRACED}, memBlockTail-{UNTRACED}: MemoryBlock; (* head and tail of sorted list of memory blocks *)
@@ -550,22 +550,32 @@ CODE
 #END
 END CurrentPC;
 
+#IF I386 THEN
 PROCEDURE -GetTimer* (): SIGNED64;
 CODE
-#IF I386 THEN
 	RDTSC	; set EDX:EAX
+END GetTimer;
 #ELSIF AMD64 THEN
+PROCEDURE -GetTimer* (): SIGNED64;
+CODE
 	XOR RAX, RAX
 	RDTSC	; set EDX:EAX
 	SHL RDX, 32
 	OR RAX, RDX
+END GetTimer;
 #ELSIF ARM THEN
-	MOV R0, #0
-	MOV R1, #0
+PROCEDURE GetTimer* (): SIGNED64;
+VAR t: Unix.Timespec;
+BEGIN
+	IF Unix.clock_gettime(Unix.CLOCK_MONOTONIC, ADDRESS OF t) = 0 THEN
+		RETURN SIGNED64(t.tv_sec)*1000000000 + SIGNED64(t.tv_nsec);
+	ELSE
+		RETURN 0;
+	END;
+END GetTimer;
 #ELSE
 	unimplemented
 #END
-END GetTimer;
 
 
 	(** -- Configuration and bootstrapping -- *)
@@ -951,8 +961,8 @@ END GetTimer;
 
 	PROCEDURE UpdateTicks*;
 	BEGIN
-		IF mhz # 0 THEN
-			ticks := SHORT( (GetTimer() - timer0) DIV (mhz * 1000) );
+		IF timerFrequency # 0 THEN 
+			ticks := SHORT( (GetTimer() - timer0) *1000 DIV (timerFrequency) );
 		END;
 	END UpdateTicks;
 
@@ -976,9 +986,9 @@ END GetTimer;
 	VAR t0, t1: SIGNED64;
 	BEGIN
 		t0 := GetTimer();  Unix.ThrSleep( 100 );  t1 := GetTimer();
-		mhz := (t1 - t0) DIV 100000;
+		timerFrequency := (t1 - t0) * 10;	
 		IF Glue.debug # {} THEN
-			Trace.String( "CPU speed: ~" );  Trace.Int( SHORT( mhz ), 0);  Trace.String( " MHz" );  Trace.Ln
+			Trace.String( "Timer Frequency: ~" );  Trace.Int( SHORT( timerFrequency ), 0);  Trace.String( " Hz" );  Trace.Ln
 		END
 	END CPUSpeed;
 

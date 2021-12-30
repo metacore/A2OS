@@ -907,7 +907,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 	PROCEDURE TimerFrequency*(): SIGNED64;
 	BEGIN
-		RETURN Machine.mhz * 1000000
+		RETURN Machine.timerFrequency;
 	END TimerFrequency;
 
 	(* Leave A2 is called when a process leaves A2 by a call to the underlying OS API *)

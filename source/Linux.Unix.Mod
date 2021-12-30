@@ -336,7 +336,7 @@ TYPE
 				gmtoff*, tmzone*: SIGNED32;
 			END;
 
-	Tms* = POINTER TO RECORD
+	Tms* = RECORD
 				utime*, stime*, cutime*, cstime*: SIGNED32
 			END;
 
@@ -586,6 +586,7 @@ VAR
 	getitimer-		: PROCEDURE {C} ( which: SIGNED32;  VAR value: Itimerval ): SIGNED32;
 	clock_gettime-	: PROCEDURE {C} (clk_id: INTEGER; tp: ADDRESS): INTEGER;
 	clock_getres-	: PROCEDURE {C} (clk_id: INTEGER; res: ADDRESS): INTEGER;
+	clock-: PROCEDURE {C} (): INTEGER;
 
 	gettimeofday-	: PROCEDURE {C} ( VAR tv: Timeval;  VAR tz: Timezone ): SIGNED32;
 	mktime-			: PROCEDURE {C} ( VAR tm: Tm ): SIGNED32;
@@ -1273,6 +1274,7 @@ VAR
 		Dlsym( libc, "getitimer",	ADDRESSOF( getitimer ) );
 		Dlsym( libc, "clock_gettime", ADDRESSOF(clock_gettime) );
 		Dlsym( libc, "clock_getres", ADDRESSOF(clock_getres) );
+		Dlsym( libc, "clock", ADDRESSOF(clock) );
 
 		Dlsym( libc, "gettimeofday", ADDRESSOF( gettimeofday ) );
 		Dlsym( libc, "mktime",		ADDRESSOF( mktime ) );

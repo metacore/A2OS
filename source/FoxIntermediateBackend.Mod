@@ -664,26 +664,28 @@ TYPE
 					Basic.Align(stackSize,system.AlignmentOf(system.parameterAlignment,system.byteType));  (* round up to parameter alignment *)
 
 					IF (callingConvention # SyntaxTree.OberonCallingConvention) & (~(callingConvention IN SysvABI) OR (system.addressSize # 64)) THEN
-						backend.ResetParameterRegisters();
-						(* assumption: registers are passed left to right and left parameters are in registers *)
-						formalParameter := procedureType.firstParameter;
-						WHILE (formalParameter # NIL)  DO
-							IF PassInRegister(formalParameter, callingConvention) THEN
-								IF formalParameter.type.IsRecordType() THEN
-									type := addressType;
-								ELSE
-									type := GetType(system, formalParameter.type);
+						IF callingConvention # SyntaxTree.WinAPICallingConvention THEN
+							backend.ResetParameterRegisters();
+							(* assumption: registers are passed left to right and left parameters are in registers *)
+							formalParameter := procedureType.firstParameter;
+							WHILE (formalParameter # NIL)  DO
+								IF PassInRegister(formalParameter, callingConvention) THEN
+									IF formalParameter.type.IsRecordType() THEN
+										type := addressType;
+									ELSE
+										type := GetType(system, formalParameter.type);
+									END;
+									IF backend.GetParameterRegister(callingConvention, type, register) THEN
+										INC(allocSize, type.sizeInBits); 
+									END;
 								END;
-								IF backend.GetParameterRegister(callingConvention, type, register) THEN
-									INC(allocSize, type.sizeInBits); 
-								END;
+								formalParameter := formalParameter.nextParameter;
 							END;
-							formalParameter := formalParameter.nextParameter;
-						END;
-						IF allocSize > 0 THEN
-							allocSize := ToMemoryUnits(system,allocSize);
-							parametersSize := allocSize;
-							ir.Emit(Sub(Basic.invalidPosition,implementationEmitter.sp,implementationEmitter.sp,IntermediateCode.Immediate(addressType,allocSize)));
+							IF allocSize > 0 THEN
+								allocSize := ToMemoryUnits(system,allocSize);
+								parametersSize := allocSize;
+								ir.Emit(Sub(Basic.invalidPosition,implementationEmitter.sp,implementationEmitter.sp,IntermediateCode.Immediate(addressType,allocSize)));
+							END;
 						END;
 						backend.ResetParameterRegisters();
 						(* assumption: registers are passed left to right and left parameters are in registers *)
@@ -698,7 +700,11 @@ TYPE
 								IF backend.GetParameterRegister(callingConvention, type, register) THEN
 									IntermediateCode.InitParameterRegisterClass(registerClass, register);
 									src := IntermediateCode.Register(type, registerClass, implementationEmitter.AcquireRegister(type, registerClass));
-									IntermediateCode.InitMemory(dest,type,implementationEmitter.sp,ToMemoryUnits(system,formalParameter.offsetInBits - 2*system.addressSize));
+									IF callingConvention # SyntaxTree.WinAPICallingConvention THEN
+										IntermediateCode.InitMemory(dest,type,implementationEmitter.sp,ToMemoryUnits(system,formalParameter.offsetInBits - 2*system.addressSize));
+									ELSE
+										IntermediateCode.InitMemory(dest,type,implementationEmitter.sp,ToMemoryUnits(system,formalParameter.offsetInBits - system.addressSize));
+									END;									
 									ir.Emit(Mov(Basic.invalidPosition,dest, src));
 									implementationEmitter.ReleaseIntermediateOperand(src);
 								END;

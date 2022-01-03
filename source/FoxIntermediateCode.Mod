@@ -1203,7 +1203,7 @@ TYPE
 	PROCEDURE GetType*(system: Global.System; type: SyntaxTree.Type): Type;
 	VAR t: Type; length: INTEGER;
 	BEGIN
-		type := type.resolved;
+		type := type.resolvedType;
 		IF type IS SyntaxTree.CharacterType THEN
 			RETURN UnsignedIntegerType(system.SizeOf(type))
 		ELSIF type IS SyntaxTree.IntegerType THEN

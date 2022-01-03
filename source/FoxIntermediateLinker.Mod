@@ -478,7 +478,7 @@ TYPE
 				HALT(100)
 			END;
 
-			IntermediateCode.InitImmediate(dataOperand, IntermediateCode.GetType(backend.GetSystem(), syntaxTreeValue.type.resolved), hugeintValue);
+			IntermediateCode.InitImmediate(dataOperand, IntermediateCode.GetType(backend.GetSystem(), syntaxTreeValue.type.resolvedType), hugeintValue);
 			IntermediateCode.InitOperand(emptyOperand);
 			IntermediateCode.InitInstruction(dataInstruction, Basic.invalidPosition, IntermediateCode.data, dataOperand, emptyOperand, emptyOperand);
 

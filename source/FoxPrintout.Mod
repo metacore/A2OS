@@ -150,14 +150,14 @@ TYPE
 
 		PROCEDURE VisitQualifiedType*(x: SyntaxTree.QualifiedType);
 		BEGIN
-			IF x.resolved = SyntaxTree.invalidType THEN
+			IF x.resolvedType = SyntaxTree.invalidType THEN
 				AlertString("(*unresolved*)");
 			END;
 			IF x.qualifiedIdentifier # NIL THEN
 				(* Problem: how to distinguish betwteen type aliases, e.g. Status = SIGNED32 and actual use of SIGNED32?
 					This tries to use scope level: if the type is declared in the global scope, it should be a basic type use. *)
-				IF x.resolved # NIL THEN
-					useCase := (x.resolved IS SyntaxTree.BasicType) & (x.scope # NIL) & (x.scope.Level() = 0);
+				IF x.resolvedType # NIL THEN
+					useCase := (x.resolvedType IS SyntaxTree.BasicType) & (x.scope # NIL) & (x.scope.Level() = 0);
 				END;
 				QualifiedIdentifier(x.qualifiedIdentifier);
 				useCase := FALSE;
@@ -974,8 +974,8 @@ TYPE
 					w.String("@ofs="); w.Int(x.offsetInBits DIV 8,1);
 				ELSE
 					IF x.type # NIL THEN
-						IF x.type.resolved.alignmentInBits #0 THEN
-							w.String("@align="); w.Int(x.type.resolved.alignmentInBits DIV 8,1);
+						IF x.type.resolvedType.alignmentInBits #0 THEN
+							w.String("@align="); w.Int(x.type.resolvedType.alignmentInBits DIV 8,1);
 						END;
 					END;
 				END;

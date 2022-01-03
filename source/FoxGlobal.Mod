@@ -320,13 +320,13 @@ TYPE
 			variable := x.recordScope.firstVariable;
 			WHILE (variable # NIL) DO
 				IF ~variable.fixed THEN
-					size := SizeOf(variable.type.resolved);
+					size := SizeOf(variable.type.resolvedType);
 					IF size < 0 THEN RETURN FALSE END;
 
 					IF variable.alignment > 0 THEN
 						thisAlignment := variable.alignment*dataUnit;
 					ELSE
-						thisAlignment := AlignmentOf(SELF.variableAlignment, variable.type.resolved);
+						thisAlignment := AlignmentOf(SELF.variableAlignment, variable.type.resolvedType);
 					END;
 					Basic.Align(offset, thisAlignment);
 					IF thisAlignment  > alignment THEN alignment := thisAlignment END;
@@ -350,9 +350,9 @@ TYPE
 		BEGIN
 			baseType := x.baseType;
 			IF (baseType # NIL) THEN
-				baseType := baseType.resolved;
+				baseType := baseType.resolvedType;
 				IF baseType IS SyntaxTree.PointerType THEN
-					baseType := baseType(SyntaxTree.PointerType).pointerBase.resolved
+					baseType := baseType(SyntaxTree.PointerType).pointerBase.resolvedType
 				END;
 				IF (baseType IS SyntaxTree.CellType) THEN
 					IF~ GenerateCellOffsets(baseType(SyntaxTree.CellType)) THEN RETURN FALSE END;
@@ -373,13 +373,13 @@ TYPE
 				(* ports *)
 				parameter := x.cellScope.ownerCell.firstParameter;
 				WHILE (parameter # NIL) DO
-					size := SizeOf(parameter.type.resolved);
+					size := SizeOf(parameter.type.resolvedType);
 					IF size < 0 THEN RETURN FALSE END;
 
 					IF parameter.alignment > 0 THEN
 						thisAlignment := parameter.alignment*dataUnit;
 					ELSE
-						thisAlignment := AlignmentOf(SELF.variableAlignment, parameter.type.resolved);
+						thisAlignment := AlignmentOf(SELF.variableAlignment, parameter.type.resolvedType);
 					END;
 					Basic.Align(offset, thisAlignment);
 					IF thisAlignment  > alignment THEN alignment := thisAlignment END;
@@ -390,13 +390,13 @@ TYPE
 				(* properties *)
 				property := x.cellScope.ownerCell.firstProperty;
 				WHILE (property # NIL) DO
-					size := SizeOf(property.type.resolved);
+					size := SizeOf(property.type.resolvedType);
 					IF size < 0 THEN RETURN FALSE END;
 
 					IF property.alignment > 0 THEN
 						thisAlignment := property.alignment*dataUnit;
 					ELSE
-						thisAlignment := AlignmentOf(SELF.variableAlignment, property.type.resolved);
+						thisAlignment := AlignmentOf(SELF.variableAlignment, property.type.resolvedType);
 					END;
 					Basic.Align(offset, thisAlignment);
 					IF thisAlignment  > alignment THEN alignment := thisAlignment END;
@@ -410,13 +410,13 @@ TYPE
 			variable := x.cellScope.firstVariable;
 			WHILE (variable # NIL) DO
 				IF ~variable.fixed THEN
-					size := SizeOf(variable.type.resolved);
+					size := SizeOf(variable.type.resolvedType);
 					IF size < 0 THEN RETURN FALSE END;
 
 					IF variable.alignment > 0 THEN
 						thisAlignment := variable.alignment*dataUnit;
 					ELSE
-						thisAlignment := AlignmentOf(SELF.variableAlignment, variable.type.resolved);
+						thisAlignment := AlignmentOf(SELF.variableAlignment, variable.type.resolvedType);
 					END;
 					Basic.Align(offset, thisAlignment);
 					IF thisAlignment  > alignment THEN alignment := thisAlignment END;
@@ -468,7 +468,7 @@ TYPE
 							IF variable.alignment > 0 THEN
 								Basic.Align(offset, -variable.alignment*dataUnit);
 							ELSE
-								alignment := AlignmentOf(SELF.variableAlignment,variable.type.resolved);
+								alignment := AlignmentOf(SELF.variableAlignment,variable.type.resolvedType);
 								Basic.Align(offset,-alignment);
 							END;
 							variable.SetOffset(offset);
@@ -549,7 +549,7 @@ TYPE
 		VAR size: SIZE; base: SyntaxTree.Type;
 		BEGIN
 			IF type = NIL THEN RETURN -1 END;
-			type := type.resolved;
+			type := type.resolvedType;
 			WITH type: SyntaxTree.AnyType DO
 				size := addressSize
 			| SyntaxTree.ObjectType DO
@@ -590,12 +590,12 @@ TYPE
 				ELSIF type.sizeInBits >= 0 THEN
 					size := type.sizeInBits
 				ELSIF type(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
-					size := AlignedSizeOf(type(SyntaxTree.ArrayType).arrayBase.resolved)*type(SyntaxTree.ArrayType).staticLength;
+					size := AlignedSizeOf(type(SyntaxTree.ArrayType).arrayBase.resolvedType)*type(SyntaxTree.ArrayType).staticLength;
 					type.SetSize(size);
 				ELSE
 					size := 0; base := type;
 					WHILE(base IS SyntaxTree.ArrayType) DO
-						base := base(SyntaxTree.ArrayType).arrayBase.resolved;
+						base := base(SyntaxTree.ArrayType).arrayBase.resolvedType;
 						INC(size); (* length field *)
 					END;
 					size := size*addressSize+addressSize;
@@ -605,7 +605,7 @@ TYPE
 				IF ~(SyntaxTree.Resolved IN type.state) THEN
 					size := -1
 				ELSIF type(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
-					size := SizeOf(type(SyntaxTree.MathArrayType).arrayBase.resolved)*type(SyntaxTree.MathArrayType).staticLength;
+					size := SizeOf(type(SyntaxTree.MathArrayType).arrayBase.resolvedType)*type(SyntaxTree.MathArrayType).staticLength;
 					type.SetSize(size);
 				ELSIF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 					size := addressSize (* pointer to geometry descriptor *)
@@ -614,7 +614,7 @@ TYPE
 					base := type;
 					WHILE(base # NIL) & (base IS SyntaxTree.MathArrayType) DO
 						base := base(SyntaxTree.MathArrayType).arrayBase;
-						IF base # NIL THEN base := base.resolved END;
+						IF base # NIL THEN base := base.resolvedType END;
 						INC(size);
 					END;
 					size := size*2*addressSize (* length and increments *) +5*addressSize (* data ptr, adr ptr, flags, dim and elementsize *);
@@ -640,28 +640,28 @@ TYPE
 
 		PROCEDURE SizeOfParameter*(par: SyntaxTree.Parameter):SIZE;
 		BEGIN
-			IF (par.type.resolved IS SyntaxTree.ArrayType) OR (par.type.resolved IS SyntaxTree.MathArrayType) THEN
-				IF (par.type.resolved IS SyntaxTree.ArrayType) & (par.type.resolved(SyntaxTree.ArrayType).form = SyntaxTree.Static) &
+			IF (par.type.resolvedType IS SyntaxTree.ArrayType) OR (par.type.resolvedType IS SyntaxTree.MathArrayType) THEN
+				IF (par.type.resolvedType IS SyntaxTree.ArrayType) & (par.type.resolvedType(SyntaxTree.ArrayType).form = SyntaxTree.Static) &
 					(par.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter})
 					OR
-					(par.type.resolved IS SyntaxTree.MathArrayType) & (par.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static) &
+					(par.type.resolvedType IS SyntaxTree.MathArrayType) & (par.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Static) &
 					(par.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter})
-					OR (par.type.resolved IS SyntaxTree.MathArrayType) & (par.kind = SyntaxTree.VarParameter)
+					OR (par.type.resolvedType IS SyntaxTree.MathArrayType) & (par.kind = SyntaxTree.VarParameter)
 				THEN
 					RETURN addressSize
 				ELSIF IsOberonProcedure(par.ownerType) THEN
 					RETURN SizeOf(par.type);
 				ELSE RETURN addressSize
 				END
-			ELSIF par.type.resolved IS SyntaxTree.RangeType THEN
+			ELSIF par.type.resolvedType IS SyntaxTree.RangeType THEN
 				IF par.kind = SyntaxTree.VarParameter THEN
 					RETURN addressSize
 				ELSE
 					RETURN SizeOf(rangeType) (* array range components are materialized on stack for both value and const parameters *)
 				END
-			ELSIF par.type.resolved IS SyntaxTree.RecordType THEN
+			ELSIF par.type.resolvedType IS SyntaxTree.RecordType THEN
 				IF (par.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) OR (par.assignmentOperator # NIL)THEN
-					IF IsOberonProcedure(par.ownerType) & ~par.type.resolved(SyntaxTree.RecordType).isFinal & (par.assignmentOperator = NIL) 
+					IF IsOberonProcedure(par.ownerType) & ~par.type.resolvedType(SyntaxTree.RecordType).isFinal & (par.assignmentOperator = NIL) 
 						& ~par.returnByReference THEN
 						RETURN 2*addressSize
 					ELSE
@@ -670,7 +670,7 @@ TYPE
 				ELSE
 					RETURN SizeOf(par.type);
 				END;
-			ELSIF par.type.resolved IS SyntaxTree.AnyRecordType THEN
+			ELSIF par.type.resolvedType IS SyntaxTree.AnyRecordType THEN
 				IF (par.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) THEN
 					RETURN 2*addressSize
 				ELSE
@@ -687,15 +687,15 @@ TYPE
 
 		PROCEDURE SizeOfVariable*(var: SyntaxTree.Variable):SIZE;
 		BEGIN
-			IF (var.type.resolved IS SyntaxTree.MathArrayType) OR (var.type.resolved IS SyntaxTree.ArrayType) THEN
+			IF (var.type.resolvedType IS SyntaxTree.MathArrayType) OR (var.type.resolvedType IS SyntaxTree.ArrayType) THEN
 				RETURN SizeOf(var.type)
-			ELSIF var.type.resolved IS SyntaxTree.RangeType THEN
+			ELSIF var.type.resolvedType IS SyntaxTree.RangeType THEN
 				IF var.kind = SyntaxTree.VarParameter THEN
 					RETURN addressSize
 				ELSE
 					RETURN SizeOf(rangeType) (* array range components are materialized on stack for both value and const parameters *)
 				END
-			ELSIF var.type.resolved IS SyntaxTree.RecordType THEN
+			ELSIF var.type.resolvedType IS SyntaxTree.RecordType THEN
 				IF (var.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) THEN
 					RETURN 2*addressSize
 				ELSE
@@ -714,7 +714,7 @@ TYPE
 		PROCEDURE AlignmentOf*(CONST alignment: Alignment;type: SyntaxTree.Type): SIZE;
 		VAR result: SIZE;
 		BEGIN
-			type := type.resolved;
+			type := type.resolvedType;
 			IF type IS SyntaxTree.RecordType THEN
 				IF type.alignmentInBits <= 0 THEN
 					IF GenerateRecordOffsets(type(SyntaxTree.RecordType)) THEN
@@ -726,7 +726,7 @@ TYPE
 			ELSIF type IS SyntaxTree.ArrayType THEN
 				IF type.alignmentInBits <= 0 THEN
 					IF type(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
-						result := AlignmentOf(alignment,type(SyntaxTree.ArrayType).arrayBase.resolved);
+						result := AlignmentOf(alignment,type(SyntaxTree.ArrayType).arrayBase.resolvedType);
 					ELSE
 						result := alignment.max
 					END;
@@ -1287,7 +1287,7 @@ TYPE
 			ELSIF symbol IS SyntaxTree.Procedure THEN
 				scope := symbol(SyntaxTree.Procedure).procedureScope
 			ELSIF symbol IS SyntaxTree.TypeDeclaration THEN
-				type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
+				type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolvedType;
 				IF type IS SyntaxTree.RecordType THEN
 					scope := type(SyntaxTree.RecordType).recordScope
 				END;

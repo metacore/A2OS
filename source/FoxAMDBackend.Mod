@@ -3620,8 +3620,8 @@ TYPE
 			(baseType.sizeInBits <= 32) & (length = 4);
 			b := b OR SemanticChecker.IsStaticMathArray(type, length, baseType) & (baseType IS SyntaxTree.CharacterType) &
 			(baseType.sizeInBits = 8) & (length = 4);
-			b := b OR SemanticChecker.IsStaticArray(type, baseType, length) & (baseType.resolved IS SyntaxTree.CharacterType) &
-			(baseType.resolved.sizeInBits = 8) & (length = 4);
+			b := b OR SemanticChecker.IsStaticArray(type, baseType, length) & (baseType.resolvedType IS SyntaxTree.CharacterType) &
+			(baseType.resolvedType.sizeInBits = 8) & (length = 4);
 			RETURN b
 		END CanPassInRegister;
 

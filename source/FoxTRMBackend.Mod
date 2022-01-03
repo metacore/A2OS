@@ -2153,7 +2153,7 @@ TYPE
 
 		PROCEDURE SizeOf*(type: SyntaxTree.Type): SIZE;
 		BEGIN
-			type := type.resolved;
+			type := type.resolvedType;
 			IF type IS SyntaxTree.BasicType THEN
 				IF (type.sizeInBits=64) THEN
 					RETURN 64

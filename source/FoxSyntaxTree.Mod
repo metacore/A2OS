@@ -552,7 +552,7 @@ TYPE
 		VAR
 			typeDeclaration-: TypeDeclaration; (* link to declaration (if any), needed for printing, debugging and symbol lookup *)
 			scope-: Scope; (* scope where the type has been declared *)
-			resolved-: Type; (* indirection to resolved type to preserve qualified types *)
+			resolvedType-: Type; (* indirection to resolved type to preserve qualified types, INVARIANT: resolved # NIL *)
 			position-,end-: Position;
 			state-: SET;
 			hasPointers-: BOOLEAN;
@@ -571,7 +571,7 @@ TYPE
 			end := invalidPosition;
 			typeDeclaration := NIL;
 			scope := NIL;
-			resolved := SELF;
+			resolvedType := SELF;
 			sizeInBits := MIN(SIZE);
 			alignmentInBits := 0;
 			isRealtime := FALSE;
@@ -850,11 +850,11 @@ TYPE
 		END InitBooleanType;
 
 		PROCEDURE SameType*(this: Type): BOOLEAN;
-		BEGIN RETURN this IS BooleanType
+		BEGIN RETURN (this # NIL) & (this IS BooleanType)
 		END SameType;
 
 		PROCEDURE CompatibleTo*(to: Type): BOOLEAN;
-		BEGIN RETURN (to IS BooleanType)
+		BEGIN RETURN to IS BooleanType
 		END CompatibleTo;
 
 	END BooleanType;
@@ -1025,36 +1025,36 @@ TYPE
 			InitType( position);
 			SELF.scope := scope;
 			SELF.qualifiedIdentifier := qualifiedIdentifier;
-			resolved := NIL;
+			resolvedType := invalidType;
 		END InitQualifiedType;
 
 		PROCEDURE SetResolved*(resolved: Type);
-		BEGIN SELF.resolved := resolved; IF resolved # NIL THEN hasPointers := resolved.hasPointers END;
+		BEGIN ASSERT(resolved # NIL); SELF.resolvedType := resolved; hasPointers := resolved.hasPointers;
 		END SetResolved;
 
 		PROCEDURE SameType*(this: Type): BOOLEAN;
-		BEGIN RETURN (this = SELF) OR (resolved # NIL) & (this.resolved # NIL) & resolved.SameType(this.resolved)
+		BEGIN RETURN (this # NIL) & ((this = SELF) OR resolvedType.SameType(this.resolvedType))
 		END SameType;
 
 		PROCEDURE CompatibleTo*(to: Type): BOOLEAN;
-		BEGIN RETURN (resolved # NIL) & resolved.CompatibleTo(to)
+		BEGIN RETURN resolvedType.CompatibleTo(to)
 		END CompatibleTo;
 
 		PROCEDURE IsPointer*(): BOOLEAN;
-		BEGIN RETURN (resolved # NIL) & resolved.IsPointer()
+		BEGIN RETURN resolvedType.IsPointer()
 		END IsPointer;
 
 		PROCEDURE IsComposite*(): BOOLEAN;
-		BEGIN RETURN (resolved # NIL) & resolved.IsComposite()
+		BEGIN RETURN resolvedType.IsComposite()
 		END IsComposite;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
-		BEGIN RETURN (resolved # NIL) & (resolved.NeedsTrace());
+		BEGIN RETURN resolvedType.NeedsTrace();
 		END NeedsTrace;
 
 		PROCEDURE IsRecordType*(): BOOLEAN;
 		BEGIN
-			RETURN (resolved # NIL) & (resolved.IsRecordType());
+			RETURN resolvedType.IsRecordType();
 		END IsRecordType;
 
 	END QualifiedType;
@@ -1085,7 +1085,7 @@ TYPE
 		BEGIN
 			IF to IS ArrayType THEN
 				WITH to: ArrayType DO
-					RETURN to.arrayBase.SameType(baseType.resolved) & ((to.form = Open) OR (to.staticLength >= length))
+					RETURN to.arrayBase.SameType(baseType.resolvedType) & ((to.form = Open) OR (to.staticLength >= length))
 				END;
 			ELSIF to IS CharacterType THEN
 				RETURN (length=2) & baseType.CompatibleTo(to)
@@ -1126,7 +1126,7 @@ TYPE
 		END SetRange;
 
 		PROCEDURE Extends*(this: EnumerationType): BOOLEAN;
-		BEGIN	RETURN (SELF = this) OR (enumerationBase # NIL) & (enumerationBase.resolved(EnumerationType).Extends(this));
+		BEGIN	RETURN (SELF = this) OR (enumerationBase # NIL) & (enumerationBase.resolvedType(EnumerationType).Extends(this));
 		END Extends;
 
 		PROCEDURE SameType*(this: Type): BOOLEAN;
@@ -1173,8 +1173,8 @@ TYPE
 		PROCEDURE Child*(nr: SIGNED32):Type;
 		BEGIN
 			IF nr = 0 THEN RETURN SELF;
-			ELSIF nr = 1 THEN RETURN arrayBase.resolved;
-			ELSE RETURN arrayBase.resolved(ArrayType).Child(nr-1);
+			ELSIF nr = 1 THEN RETURN arrayBase.resolvedType;
+			ELSE RETURN arrayBase.resolvedType(ArrayType).Child(nr-1);
 			END;
 		END Child;
 
@@ -1193,7 +1193,7 @@ TYPE
 			ELSIF this IS ArrayType THEN
 				recursion := TRUE;
 				WITH this: ArrayType DO
-					result := (this.form = form) & (this.staticLength = staticLength) & arrayBase.SameType(this.arrayBase.resolved);
+					result := (this.form = form) & (this.staticLength = staticLength) & arrayBase.SameType(this.arrayBase.resolvedType);
 				END;
 			END;
 			recursion := FALSE;
@@ -1210,7 +1210,7 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE NeedsTrace*(): BOOLEAN;
-		BEGIN RETURN arrayBase.resolved.NeedsTrace ();
+		BEGIN RETURN arrayBase.resolvedType.NeedsTrace ();
 		END NeedsTrace;
 
 	END ArrayType;
@@ -1288,7 +1288,7 @@ TYPE
 				WITH this: MathArrayType DO
 					result := (this.form = form) & (this.staticLength = staticLength) &
 					((arrayBase = NIL) & (this.arrayBase = NIL) OR (arrayBase # NIL) & (this.arrayBase # NIL) &
-					arrayBase.SameType(this.arrayBase.resolved));
+					arrayBase.SameType(this.arrayBase.resolvedType));
 				END;
 			END;
 			recursion := FALSE;
@@ -1308,7 +1308,7 @@ TYPE
 		BEGIN
 			type := SELF;
 			WHILE type IS MathArrayType DO
-				type := type(MathArrayType).arrayBase.resolved
+				type := type(MathArrayType).arrayBase.resolvedType
 			END;
 			RETURN type
 		END ElementType;
@@ -1327,7 +1327,7 @@ TYPE
 				WHILE type IS MathArrayType DO
 					ASSERT(type(MathArrayType).form # Tensor);
 					INC(dim);
-					type := type(MathArrayType).arrayBase.resolved
+					type := type(MathArrayType).arrayBase.resolvedType
 				END
 			END;
 			RETURN dim
@@ -1346,14 +1346,14 @@ TYPE
 				type := SELF;
 				WHILE type IS MathArrayType DO
 					IF type(MathArrayType).form # Open THEN result := FALSE END;
-					type := type(MathArrayType).arrayBase.resolved
+					type := type(MathArrayType).arrayBase.resolvedType
 				END
 			END;
 			RETURN result
 		END IsFullyDynamic;
 
 		PROCEDURE NeedsTrace*(): BOOLEAN;
-		BEGIN RETURN hasPointers OR (arrayBase # NIL) & (arrayBase.resolved.NeedsTrace());
+		BEGIN RETURN hasPointers OR (arrayBase # NIL) & (arrayBase.resolvedType.NeedsTrace());
 		END NeedsTrace;
 
 		PROCEDURE IsComposite*(): BOOLEAN;
@@ -1425,11 +1425,11 @@ TYPE
 		VAR result: BOOLEAN; extension, base: Type;
 		BEGIN
 			result := FALSE;
-			IF ((this IS ObjectType) OR (this IS AnyType)) & (pointerBase.resolved IS RecordType) THEN result := TRUE
+			IF ((this IS ObjectType) OR (this IS AnyType)) & (pointerBase.resolvedType IS RecordType) THEN result := TRUE
 			ELSE
-				extension := pointerBase.resolved;
+				extension := pointerBase.resolvedType;
 				IF this IS PointerType THEN
-					base := this(PointerType).pointerBase.resolved;
+					base := this(PointerType).pointerBase.resolvedType;
 				ELSIF this IS RecordType THEN
 					base := this
 				ELSE base := NIL
@@ -1442,7 +1442,7 @@ TYPE
 		END Extends;
 
 		PROCEDURE SameType*(this: Type): BOOLEAN;
-		BEGIN	RETURN (SELF = this) OR (this IS PointerType) & (this(PointerType).pointerBase.SameType(pointerBase.resolved) & (this(PointerType).isUnsafe = isUnsafe))
+		BEGIN	RETURN (SELF = this) OR (this IS PointerType) & (this(PointerType).pointerBase.SameType(pointerBase.resolvedType) & (this(PointerType).isUnsafe = isUnsafe))
 		END SameType;
 
 		PROCEDURE CompatibleTo*(to: Type): BOOLEAN;
@@ -1592,12 +1592,12 @@ TYPE
 
 		PROCEDURE GetBaseRecord*():RecordType;
 		BEGIN
-			IF (baseType = NIL) OR (baseType.resolved = NIL) THEN RETURN NIL; END;
-			IF baseType.resolved IS RecordType THEN
-				RETURN baseType.resolved(RecordType);
-			ELSIF baseType.resolved IS PointerType THEN
-				IF baseType.resolved(PointerType).pointerBase.resolved # NIL THEN
-					RETURN baseType.resolved(PointerType).pointerBase.resolved(RecordType);
+			IF (baseType = NIL) THEN RETURN NIL; END;
+			IF baseType.resolvedType IS RecordType THEN
+				RETURN baseType.resolvedType(RecordType);
+			ELSIF baseType.resolvedType IS PointerType THEN
+				IF baseType.resolvedType(PointerType).pointerBase.resolvedType # NIL THEN
+					RETURN baseType.resolvedType(PointerType).pointerBase.resolvedType(RecordType);
 				END;
 			END;
 			RETURN NIL;
@@ -1612,7 +1612,7 @@ TYPE
 				result := TRUE;
 			ELSIF this IS RecordType THEN
 				IF (baseType # NIL) THEN
-					extension := baseType.resolved;
+					extension := baseType.resolvedType;
 					IF extension IS PointerType THEN
 						result := extension(PointerType).Extends(this)
 					ELSIF extension IS RecordType THEN
@@ -1679,23 +1679,23 @@ TYPE
 		BEGIN
 			IF baseType = NIL THEN
 				RETURN NIL
-			ELSIF baseType.resolved IS PointerType THEN
-				RETURN baseType.resolved(PointerType).pointerBase.resolved
+			ELSIF baseType.resolvedType IS PointerType THEN
+				RETURN baseType.resolvedType(PointerType).pointerBase.resolvedType
 			ELSE
-				RETURN baseType.resolved;
+				RETURN baseType.resolvedType;
 			END;
 		END GetBaseValueType;
 
 		PROCEDURE GetBaseRecord*():RecordType;
 		BEGIN
 			IF baseType = NIL THEN RETURN NIL; END;
-			IF baseType.resolved IS CellType THEN
-				RETURN baseType.resolved(CellType).GetBaseRecord();
-			ELSIF baseType.resolved IS RecordType THEN
-				RETURN baseType.resolved(RecordType);
-			ELSIF baseType.resolved IS PointerType THEN
-				IF baseType.resolved(PointerType).pointerBase.resolved # NIL THEN
-					RETURN baseType.resolved(PointerType).pointerBase.resolved(RecordType);
+			IF baseType.resolvedType IS CellType THEN
+				RETURN baseType.resolvedType(CellType).GetBaseRecord();
+			ELSIF baseType.resolvedType IS RecordType THEN
+				RETURN baseType.resolvedType(RecordType);
+			ELSIF baseType.resolvedType IS PointerType THEN
+				IF baseType.resolvedType(PointerType).pointerBase.resolvedType # NIL THEN
+					RETURN baseType.resolvedType(PointerType).pointerBase.resolvedType(RecordType);
 				END;
 			END;
 			RETURN NIL;
@@ -1721,8 +1721,8 @@ TYPE
 		VAR p: Parameter;
 		BEGIN
 			p := NIL;
-			IF (baseType # NIL) & (baseType.resolved IS CellType) THEN
-				p := baseType.resolved(CellType).FindParameter(identifier);
+			IF (baseType # NIL) & (baseType.resolvedType IS CellType) THEN
+				p := baseType.resolvedType(CellType).FindParameter(identifier);
 			END;
 			IF p = NIL THEN
 				p := firstParameter;
@@ -1737,8 +1737,8 @@ TYPE
 			p := firstProperty;
 			WHILE(p#NIL) & (p.name # identifier) DO p := p.nextProperty END;
 			IF p = NIL THEN
-				IF (baseType # NIL) & (baseType.resolved IS CellType) THEN
-					p := baseType.resolved(CellType).FindProperty(identifier);
+				IF (baseType # NIL) & (baseType.resolvedType IS CellType) THEN
+					p := baseType.resolvedType(CellType).FindProperty(identifier);
 				END;
 			END;
 			RETURN p;
@@ -1923,7 +1923,7 @@ TYPE
 			ELSIF this IS ProcedureType THEN
 				recursion := TRUE;
 				WITH this: ProcedureType DO
-					result := (returnType = NIL) & (this.returnType = NIL) OR (returnType # NIL) & (this.returnType # NIL) & returnType.SameType(this.returnType.resolved);
+					result := (returnType = NIL) & (this.returnType = NIL) OR (returnType # NIL) & (this.returnType # NIL) & returnType.SameType(this.returnType.resolvedType);
 					result := result & (callingConvention = this.callingConvention);
 					result := result & (noReturn = this.noReturn);
 					result :=  result & (isInterrupt = this.isInterrupt);
@@ -1936,7 +1936,7 @@ TYPE
 						END;
 
 						p1 := firstParameter; p2 := this.firstParameter;
-						WHILE (p1 # NIL) & (p2 # NIL) & (p1.access # Hidden) & (p2.access # Hidden) & (p1.kind = p2.kind) & (p1.type.SameType(p2.type) OR (p2.type.resolved # NIL) & p1.type.SameType(p2.type.resolved) OR (p1.type.resolved IS AddressType) & (p2.type.resolved IS PointerType) & p2.type.resolved(PointerType).isUnsafe) DO
+						WHILE (p1 # NIL) & (p2 # NIL) & (p1.access # Hidden) & (p2.access # Hidden) & (p1.kind = p2.kind) & (p1.type # NIL) & (p2.type # NIL) & (p1.type.SameType(p2.type) OR p1.type.SameType(p2.type.resolvedType) OR (p1.type.resolvedType IS AddressType) & (p2.type.resolvedType IS PointerType) & p2.type.resolvedType(PointerType).isUnsafe) DO
 							p1 := p1.nextParameter; p2 := p2.nextParameter
 						END;
 						result := ((p1=NIL) OR (p1.access = Hidden)) & ((p2=NIL)  OR (p2.access= Hidden));
@@ -2697,8 +2697,8 @@ TYPE
 
 		PROCEDURE UpdateSubtype*;
 		BEGIN
-			ASSERT((type # NIL) & (type.resolved # NIL) & (type.resolved IS ComplexType) & (type.resolved(ComplexType).componentType IS FloatType));
-			CASE type.resolved(ComplexType).componentType(FloatType).sizeInBits OF
+			ASSERT((type # NIL) & (type.resolvedType # NIL) & (type.resolvedType IS ComplexType) & (type.resolvedType(ComplexType).componentType IS FloatType));
+			CASE type.resolvedType(ComplexType).componentType(FloatType).sizeInBits OF
 			| 32: subtype := Scanner.Real
 			| 64: subtype := Scanner.Longreal
 			END
@@ -4681,7 +4681,7 @@ TYPE
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		VAR parameter: Parameter;
 		BEGIN
-			parameter := ownerProcedure.type.resolved(ProcedureType).firstParameter;
+			parameter := ownerProcedure.type.resolvedType(ProcedureType).firstParameter;
 			WHILE parameter # NIL DO
 				IF parameter.NeedsTrace () THEN RETURN TRUE END;
 				parameter := parameter.nextParameter;
@@ -4705,8 +4705,8 @@ TYPE
 			p := FindSymbol^(identifier);
 			IF p = NIL THEN
 				base := ownerEnumeration.enumerationBase;
-				IF (base # NIL) & (base.resolved IS EnumerationType) THEN
-					p := base.resolved(EnumerationType).enumerationScope.FindSymbol(identifier)
+				IF (base # NIL) & (base.resolvedType IS EnumerationType) THEN
+					p := base.resolvedType(EnumerationType).enumerationScope.FindSymbol(identifier)
 				END;
 			END;
 			RETURN p;
@@ -4960,9 +4960,9 @@ TYPE
 			IF p = NIL THEN
 				base := ownerCell.baseType;
 				IF (base # NIL) THEN
-					base := base.resolved;
+					base := base.resolvedType;
 					IF base IS PointerType THEN
-						base := base(PointerType).pointerBase.resolved;
+						base := base(PointerType).pointerBase.resolvedType;
 					END;
 					WITH base:
 					CellType DO

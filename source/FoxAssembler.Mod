@@ -341,15 +341,15 @@ TYPE
 
 		PROCEDURE ConstantSymbol(pos: Position; constant: SyntaxTree.Constant; VAR result: Result): BOOLEAN;
 		BEGIN
-			IF constant.type.resolved IS SyntaxTree.CharacterType THEN
+			IF constant.type.resolvedType IS SyntaxTree.CharacterType THEN
 				result.value := ORD(constant.value.resolved(SyntaxTree.CharacterValue).value);
 				result.valueR := result.value;
 				result.type := ConstantInteger;
-			ELSIF constant.type.resolved IS SyntaxTree.IntegerType THEN
+			ELSIF constant.type.resolvedType IS SyntaxTree.IntegerType THEN
 				result.value := constant.value.resolved(SyntaxTree.IntegerValue).value;
 				result.valueR := result.value;
 				result.type := ConstantInteger;
-			ELSIF constant.type.resolved IS SyntaxTree.FloatType THEN
+			ELSIF constant.type.resolvedType IS SyntaxTree.FloatType THEN
 				result.valueR := constant.value.resolved(SyntaxTree.RealValue).value;
 				result.type := ConstantFloat;
 			ELSE

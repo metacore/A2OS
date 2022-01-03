@@ -326,7 +326,7 @@ TYPE
 
 		PROCEDURE VisitQualifiedType*(x: SyntaxTree.QualifiedType);
 		BEGIN
-			VType(x.resolved);
+			VType(x.resolvedType);
 		END VisitQualifiedType;
 
 		(*
@@ -355,7 +355,7 @@ TYPE
 				TypeName(fp,x);
 				fingerprint.shallow := fp;
 				x.SetFingerprint(fingerprint);
-				FPType(fp,x.arrayBase.resolved);
+				FPType(fp,x.arrayBase.resolvedType);
 
 				IF x.form = SyntaxTree.Static THEN FPNumber(fp,x.staticLength) END;
 				fingerprint.shallow := fp;
@@ -403,7 +403,7 @@ TYPE
 				END;
 				TypeName(fp,x);
 				IF x.arrayBase # NIL THEN
-					FPType(fp,x.arrayBase.resolved);
+					FPType(fp,x.arrayBase.resolvedType);
 				END;
 				IF x.form = SyntaxTree.Static THEN FPNumber(fp,x.staticLength) END;
 				fingerprint.shallow := fp;
@@ -452,7 +452,7 @@ TYPE
 				typeDeclaration := x.typeDeclaration;
 				IF(typeDeclaration # NIL) & (typeDeclaration.access # SyntaxTree.Hidden) THEN
 					FPName(fp,x.scope.ownerModule.name);
-					IF (typeDeclaration.declaredType.resolved # x) THEN
+					IF (typeDeclaration.declaredType.resolvedType # x) THEN
 						(* in record type: pointer to type declaration of a pointer *)
 						typeDeclaration := NIL
 					END;
@@ -678,7 +678,7 @@ TYPE
 				(* now compute base record finger prints *)
 				baseType := x.GetBaseRecord();
 				IF  (baseType # NIL) THEN
-					IF baseType IS SyntaxTree.PointerType THEN baseType := baseType(SyntaxTree.PointerType).pointerBase.resolved END;
+					IF baseType IS SyntaxTree.PointerType THEN baseType := baseType(SyntaxTree.PointerType).pointerBase.resolvedType END;
 					baseFingerprint := TypeFP(baseType); (* deep finger print *)
 					FPNumber(fingerprint.private,baseFingerprint.private);
 					FPNumber(fingerprint.public,baseFingerprint.public);
@@ -911,12 +911,12 @@ TYPE
 				FPType(fp,par.type);
 				SELF.deep := deep;
 
-				IF isOperator & ~(par.type.resolved IS SyntaxTree.BasicType) & (par.type.resolved.typeDeclaration # NIL) THEN
-					FPName(fp,par.type.resolved.typeDeclaration.name);
-					(* D.Str("fp "); D.Str0(par.type.resolved.typeDeclaration.name.name); D.Ln;*)
-				ELSIF isOperator & (par.type.resolved IS SyntaxTree.BasicType) THEN
-					FPName(fp,par.type.resolved(SyntaxTree.BasicType).name);
-					(* D.Str("fpb "); D.Str0(par.type.resolved(SyntaxTree.BasicType).name.name);*)
+				IF isOperator & ~(par.type.resolvedType IS SyntaxTree.BasicType) & (par.type.resolvedType.typeDeclaration # NIL) THEN
+					FPName(fp,par.type.resolvedType.typeDeclaration.name);
+					(* D.Str("fp "); D.Str0(par.type.resolvedType.typeDeclaration.name.name); D.Ln;*)
+				ELSIF isOperator & (par.type.resolvedType IS SyntaxTree.BasicType) THEN
+					FPName(fp,par.type.resolvedType(SyntaxTree.BasicType).name);
+					(* D.Str("fpb "); D.Str0(par.type.resolvedType(SyntaxTree.BasicType).name.name);*)
 				END;
 			END FPPar;
 
@@ -1005,8 +1005,8 @@ TYPE
 			IF deep & ~fingerprint.deepAvailable THEN
 				fingerprint := x.fingerprint;
 				typeFP := TypeFP(x.declaredType);
-				IF x.declaredType.resolved IS SyntaxTree.PointerType THEN
-					typeFP := TypeFP(x.declaredType.resolved(SyntaxTree.PointerType).pointerBase);
+				IF x.declaredType.resolvedType IS SyntaxTree.PointerType THEN
+					typeFP := TypeFP(x.declaredType.resolvedType(SyntaxTree.PointerType).pointerBase);
 				END;
 				FPNumber(fingerprint.public, typeFP.public);
 				FPNumber(fingerprint.private, typeFP.private);

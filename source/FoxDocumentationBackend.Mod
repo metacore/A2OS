@@ -768,8 +768,8 @@ TYPE
 				END;
 			END;
 			IF x IS SyntaxTree.TypeDeclaration THEN
-				declaredType := x(SyntaxTree.TypeDeclaration).declaredType.resolved;
-				IF declaredType IS SyntaxTree.PointerType THEN declaredType := declaredType(SyntaxTree.PointerType).pointerBase.resolved END;
+				declaredType := x(SyntaxTree.TypeDeclaration).declaredType.resolvedType;
+				IF declaredType IS SyntaxTree.PointerType THEN declaredType := declaredType(SyntaxTree.PointerType).pointerBase.resolvedType END;
 				RETURN (declaredType IS SyntaxTree.RecordType) OR (declaredType IS SyntaxTree.EnumerationType)
 			END;
 			RETURN FALSE

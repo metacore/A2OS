@@ -80,7 +80,7 @@ TYPE
 				PrintIndent; writer.String ("extern ");
 				PrintVariable (FALSE, name, variable.type); writer.Char (Semicolon);
 				writer.Ln;
-				IF IsDelegate (variable.type.resolved) THEN
+				IF IsDelegate (variable.type.resolvedType) THEN
 					PrintIndent; writer.String ("extern "); writer.String (BaseObjectName); writer.Char ('*');
 					writer.Char (' '); writer.String (name); writer.String (DelegateTag); writer.Char (Semicolon); writer.Ln;
 				END;
@@ -195,8 +195,8 @@ TYPE
 					writer.Char (Space); writer.String (name); writer.Char (Semicolon); writer.Ln;
 				ELSIF (type IS SyntaxTree.PointerType) THEN
 					writer.String ("typedef struct ");
-					IF type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType THEN
-						GetSymbolName (type(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType).typeDeclaration, name, backend.style);
+					IF type(SyntaxTree.PointerType).pointerBase.resolvedType IS SyntaxTree.RecordType THEN
+						GetSymbolName (type(SyntaxTree.PointerType).pointerBase.resolvedType(SyntaxTree.RecordType).typeDeclaration, name, backend.style);
 						writer.String (name);
 					ELSE
 						writer.String ("Array");
@@ -215,15 +215,15 @@ TYPE
 				types[count] := type; INC (count);
 				IF type.typeDeclaration # NIL THEN GetSymbolName (type.typeDeclaration, name, backend.style) END;
 				IF type IS SyntaxTree.ArrayType THEN
-					DefineType (type(SyntaxTree.ArrayType).arrayBase.resolved, FALSE);
+					DefineType (type(SyntaxTree.ArrayType).arrayBase.resolvedType, FALSE);
 				ELSIF type IS SyntaxTree.PointerType THEN
-					DefineType (type(SyntaxTree.PointerType).pointerBase.resolved, TRUE);
+					DefineType (type(SyntaxTree.PointerType).pointerBase.resolvedType, TRUE);
 				ELSIF type IS SyntaxTree.RecordType THEN
 					IF type(SyntaxTree.RecordType).baseType # NIL THEN DefineType (type(SyntaxTree.RecordType).GetBaseRecord (), FALSE) END;
 					DefineTypes (type(SyntaxTree.RecordType).recordScope);
 					variable := type(SyntaxTree.RecordType).recordScope.firstVariable;
 					WHILE variable # NIL DO
-						DefineType (variable.type.resolved, FALSE);
+						DefineType (variable.type.resolvedType, FALSE);
 						variable := variable.nextVariable;
 					END;
 				END;
@@ -250,7 +250,7 @@ TYPE
 					DEC (indent); writer.Char (RightBrace); writer.Char (Semicolon); writer.Ln;
 				ELSIF type IS SyntaxTree.EnumerationType THEN
 					writer.String ("typedef int "); PrintType (FALSE, type, ""); writer.Char (Semicolon); writer.Ln;
-				ELSIF ~(type IS SyntaxTree.PointerType) OR IsStaticArray (type(SyntaxTree.PointerType).pointerBase.resolved) THEN
+				ELSIF ~(type IS SyntaxTree.PointerType) OR IsStaticArray (type(SyntaxTree.PointerType).pointerBase.resolvedType) THEN
 					writer.String ("typedef "); PrintType (FALSE, type, name); writer.Char (Semicolon); writer.Ln;
 				END;
 			END DefineType;
@@ -281,7 +281,7 @@ TYPE
 			WHILE variable # NIL DO
 				GetSymbolName (variable, name, backend.style); PrintIndent;
 				PrintVariable (FALSE, name, variable.type); writer.Char (Semicolon); writer.Ln;
-				IF IsDelegate (variable.type.resolved) THEN
+				IF IsDelegate (variable.type.resolvedType) THEN
 					PrintIndent; writer.String (BaseObjectName); writer.Char ('*'); writer.Char (' ');
 					writer.String (name); writer.String (DelegateTag); writer.Char (Semicolon); writer.Ln;
 				END;
@@ -376,20 +376,20 @@ TYPE
 			writer.Char (' '); writer.Char ('"'); writer.Char (','); writer.Char (' ');
 			writer.Int (writer.Pos () - pos - 3, 0); EndRuntimeCall;
 
-			IF (expression.type.resolved IS SyntaxTree.IntegerType) OR (expression.type.resolved IS SyntaxTree.SizeType) THEN
+			IF (expression.type.resolvedType IS SyntaxTree.IntegerType) OR (expression.type.resolvedType IS SyntaxTree.SizeType) THEN
 				BeginRuntimeCall (backend.traceModule, "Int");
 				PrintExpression (expression); writer.String (", 0"); EndRuntimeCall;
-			ELSIF expression.type.resolved IS SyntaxTree.BooleanType THEN
+			ELSIF expression.type.resolvedType IS SyntaxTree.BooleanType THEN
 				BeginRuntimeCall (backend.traceModule, "Boolean");
 				PrintExpression (expression); EndRuntimeCall;
-			ELSIF expression.type.resolved IS SyntaxTree.SetType THEN
+			ELSIF expression.type.resolvedType IS SyntaxTree.SetType THEN
 				BeginRuntimeCall (backend.traceModule, "Bits");
 				PrintExpression (expression); writer.String (", 0, ");
-				writer.Int (expression.type.resolved.sizeInBits, 0); EndRuntimeCall;
-			ELSIF expression.type.resolved IS SyntaxTree.CharacterType THEN
+				writer.Int (expression.type.resolvedType.sizeInBits, 0); EndRuntimeCall;
+			ELSIF expression.type.resolvedType IS SyntaxTree.CharacterType THEN
 				BeginRuntimeCall (backend.traceModule, "Char");
 				PrintExpression (expression); EndRuntimeCall;
-			ELSIF (expression.type.resolved IS SyntaxTree.AddressType) OR (expression.type.resolved IS SyntaxTree.PointerType) THEN
+			ELSIF (expression.type.resolvedType IS SyntaxTree.AddressType) OR (expression.type.resolvedType IS SyntaxTree.PointerType) THEN
 				BeginRuntimeCall (backend.traceModule, "Address");
 				PrintExpression (expression); EndRuntimeCall;
 			ELSE
@@ -401,8 +401,8 @@ TYPE
 
 		PROCEDURE Convert (expression: SyntaxTree.Expression; type: SyntaxTree.Type);
 		BEGIN
-				IF (expression.type.resolved # type.resolved) & (type.resolved IS SyntaxTree.PointerType) & (type.resolved(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType) & (expression.type.resolved IS SyntaxTree.PointerType) THEN
-					writer.Char ('('); PrintType (FALSE, expression.type.resolved, ""); writer.Char (')'); writer.Char (Space);
+				IF (expression.type.resolvedType # type.resolvedType) & (type.resolvedType IS SyntaxTree.PointerType) & (type.resolvedType(SyntaxTree.PointerType).pointerBase.resolvedType IS SyntaxTree.RecordType) & (expression.type.resolvedType IS SyntaxTree.PointerType) THEN
+					writer.Char ('('); PrintType (FALSE, expression.type.resolvedType, ""); writer.Char (')'); writer.Char (Space);
 				END;
 				PrintExpression (expression);
 		END Convert;
@@ -437,24 +437,24 @@ TYPE
 		VAR name: Identifier;
 		BEGIN
 			writer.String ("IsBase (");
-			IF expression.type.resolved IS SyntaxTree.PointerType THEN
+			IF expression.type.resolvedType IS SyntaxTree.PointerType THEN
 				PrintExpression (expression); writer.String ("->"); writer.String (TypeDescriptorTag);
-				IF ~type.resolved(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType).isObject THEN
-					type := type.resolved(SyntaxTree.PointerType).pointerBase.resolved;
+				IF ~type.resolvedType(SyntaxTree.PointerType).pointerBase.resolvedType(SyntaxTree.RecordType).isObject THEN
+					type := type.resolvedType(SyntaxTree.PointerType).pointerBase.resolvedType;
 				END;
-			ELSIF (expression.type.resolved IS SyntaxTree.AnyType) THEN
+			ELSIF (expression.type.resolvedType IS SyntaxTree.AnyType) THEN
 				writer.String ("(*(void**) "); PrintExpression (expression); writer.Char (')');
-			ELSIF expression.type.resolved IS SyntaxTree.RecordType THEN
+			ELSIF expression.type.resolvedType IS SyntaxTree.RecordType THEN
 				IF (expression IS SyntaxTree.SymbolDesignator) & (expression(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Parameter) THEN
 					GetSymbolName (expression(SyntaxTree.SymbolDesignator).symbol, name, backend.style); writer.String (name);
 				ELSE
 					PrintType (FALSE, expression.type, "");
 				END;
 				writer.String (TypeDescriptorTag);
-			ELSIF expression.type.resolved IS SyntaxTree.ObjectType THEN
+			ELSIF expression.type.resolvedType IS SyntaxTree.ObjectType THEN
 				PrintExpression (expression); writer.String ("->"); writer.String (TypeDescriptorTag);
 			END;
-			writer.String (", &"); GetSymbolName (type.resolved.typeDeclaration, name, backend.style);
+			writer.String (", &"); GetSymbolName (type.resolvedType.typeDeclaration, name, backend.style);
 			writer.String (name); writer.String (TypeDescriptorTag); writer.String (')');
 		END CompareTypeDescriptor;
 
@@ -502,7 +502,7 @@ TYPE
 			GetSymbolName (procedure, name, backend.style); procedureType := procedure.type(SyntaxTree.ProcedureType);
 			PrintType (FALSE, procedureType.returnType, name);
 			PrintParameters (procedureType, procedure.scope);
-			ASSERT ((procedureType.returnType = NIL) OR (~IsDelegate (procedureType.returnType.resolved)));
+			ASSERT ((procedureType.returnType = NIL) OR (~IsDelegate (procedureType.returnType.resolvedType)));
 		END PrintProcedure;
 
 		PROCEDURE PrintParameter (symbol: SyntaxTree.Symbol; nested: BOOLEAN);
@@ -510,7 +510,7 @@ TYPE
 		BEGIN
 			GetSymbolName (symbol, name, backend.style); type := symbol.type;
 			PrintVariable (IsVarParameter (symbol) & ~IsOpenArray (type) OR nested, name, type);
-			IF type.resolved IS SyntaxTree.RecordType THEN
+			IF type.resolvedType IS SyntaxTree.RecordType THEN
 				writer.String (", void* "); writer.String (name); writer.String (TypeDescriptorTag);
 			END;
 			index := 0;
@@ -518,7 +518,7 @@ TYPE
 				writer.String (", int "); writer.String (name); writer.String (LenTag);
 				writer.Int (index, 0); type := type(SyntaxTree.ArrayType).arrayBase; INC (index);
 			END;
-			IF IsDelegate (type.resolved) THEN
+			IF IsDelegate (type.resolvedType) THEN
 				writer.Char (Comma); writer.Char (Space); writer.String (BaseObjectName); writer.Char ('*');
 				writer.Char (' '); writer.String (name); writer.String (DelegateTag);
 			END;
@@ -551,7 +551,7 @@ TYPE
 				END;
 				outerScope := outerScope.outerScope;
 			END;
-			IF IsDelegate (procedureType.resolved) & (scope = NIL) THEN
+			IF IsDelegate (procedureType.resolvedType) & (scope = NIL) THEN
 					IF first THEN first := FALSE ELSE writer.Char (Comma); writer.Char (Space); END;
 					writer.String (BaseObjectName); writer.Char ('*'); writer.Char (' ');
 					writer.String (name); writer.String (DelegateTag);
@@ -571,20 +571,20 @@ TYPE
 		VAR argumentType, parameterType: SyntaxTree.Type; index: SIZE; name: Identifier; isEmptyRecord: BOOLEAN;
 		BEGIN
 			parameterType := parameter.type; index := 0;
-			IF argument = NIL THEN argumentType := parameterType.resolved ELSE argumentType := argument.type.resolved END;
-			isEmptyRecord := (parameterType.resolved IS SyntaxTree.RecordType) & IsEmptyRecord (parameterType.resolved(SyntaxTree.RecordType));
-			IF IsVarParameter (parameter) & ~IsOpenArray(parameterType) & ~(argumentType.resolved IS SyntaxTree.StringType) OR nested THEN
+			IF argument = NIL THEN argumentType := parameterType.resolvedType ELSE argumentType := argument.type.resolvedType END;
+			isEmptyRecord := (parameterType.resolvedType IS SyntaxTree.RecordType) & IsEmptyRecord (parameterType.resolvedType(SyntaxTree.RecordType));
+			IF IsVarParameter (parameter) & ~IsOpenArray(parameterType) & ~(argumentType.resolvedType IS SyntaxTree.StringType) OR nested THEN
 				IF isEmptyRecord THEN writer.Char ('0'); ELSE writer.Char ('&');
 				END;
-			ELSIF IsOpenArray (parameterType) & (parameterType(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType) THEN
+			ELSIF IsOpenArray (parameterType) & (parameterType(SyntaxTree.ArrayType).arrayBase.resolvedType IS SyntaxTree.ByteType) THEN
 				writer.String ("*("); PrintType (TRUE, argumentType, ""); writer.String (") &");
 			END;
 			IF ~isEmptyRecord THEN
 				IF argument = NIL THEN GetSymbolName (parameter, name, backend.style); writer.String (name) ELSE PrintExpression (argument) END;
 			END;
-			IF parameterType.resolved IS SyntaxTree.RecordType THEN
+			IF parameterType.resolvedType IS SyntaxTree.RecordType THEN
 				IF ~isEmptyRecord THEN
-					AccessBase (argumentType(SyntaxTree.RecordType), parameterType.resolved(SyntaxTree.RecordType));
+					AccessBase (argumentType(SyntaxTree.RecordType), parameterType.resolvedType(SyntaxTree.RecordType));
 				END;
 				writer.Char (Comma); writer.Char (Space);
 				IF (argument # NIL) & (argument IS SyntaxTree.SymbolDesignator) & (argument(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Parameter) THEN
@@ -601,13 +601,13 @@ TYPE
 					writer.String (LenTag); writer.Int (index, 0);
 				ELSIF argumentType IS SyntaxTree.StringType THEN
 					writer.Int (argumentType(SyntaxTree.StringType).length, 0);
-				ELSIF parameterType(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType THEN
+				ELSIF parameterType(SyntaxTree.ArrayType).arrayBase.resolvedType IS SyntaxTree.ByteType THEN
 					writer.String ("sizeof ("); PrintType (FALSE, argumentType, ""); writer.Char (')');
 				ELSIF ~IsOpenArray (argumentType) THEN
 					writer.Int (argumentType(SyntaxTree.ArrayType).staticLength, 0);
 					ASSERT (argumentType IS SyntaxTree.ArrayType);
 					ASSERT (argumentType(SyntaxTree.ArrayType).arrayBase # NIL);
-					argumentType := argumentType(SyntaxTree.ArrayType).arrayBase.resolved;
+					argumentType := argumentType(SyntaxTree.ArrayType).arrayBase.resolvedType;
 				ELSIF (argument IS SyntaxTree.SymbolDesignator) & (argument(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Parameter) THEN
 					PrintExpression (argument); writer.String (LenTag); writer.Int (index, 0);
 				ELSIF argument IS SyntaxTree.DereferenceDesignator THEN
@@ -616,7 +616,7 @@ TYPE
 				END;
 				parameterType := parameterType(SyntaxTree.ArrayType).arrayBase; INC (index);
 			END;
-			IF IsDelegate (parameterType.resolved) THEN
+			IF IsDelegate (parameterType.resolvedType) THEN
 				writer.Char (Comma); writer.Char (Space); PrintDelegate (argument);
 			END;
 		END PrintArgument;
@@ -658,7 +658,7 @@ TYPE
 		PROCEDURE PrintDelegate (expression: SyntaxTree.Expression);
 		VAR designator: SyntaxTree.SymbolDesignator;
 		BEGIN
-			IF IsDelegate (expression.type.resolved) & (expression IS SyntaxTree.SymbolDesignator) THEN
+			IF IsDelegate (expression.type.resolvedType) & (expression IS SyntaxTree.SymbolDesignator) THEN
 				designator := expression(SyntaxTree.SymbolDesignator);
 				IF (designator.left # NIL) & (designator.symbol IS SyntaxTree.Procedure) THEN
 					PrintExpression (designator.left(SyntaxTree.DereferenceDesignator).left);
@@ -678,16 +678,16 @@ TYPE
 				GetSymbolName (variable, name, backend.style);
 				PrintIndent; PrintVariable (FALSE, name, variable.type);
 				IF initializeLocalData THEN
-					IF variable.type.resolved IS SyntaxTree.ArrayType THEN
+					IF variable.type.resolvedType IS SyntaxTree.ArrayType THEN
 						writer.String (" = {0}");
-					ELSIF variable.type.resolved IS SyntaxTree.RecordType THEN
-						IF ~IsEmptyRecord (variable.type.resolved(SyntaxTree.RecordType)) THEN writer.String (" = {0}") END;
+					ELSIF variable.type.resolvedType IS SyntaxTree.RecordType THEN
+						IF ~IsEmptyRecord (variable.type.resolvedType(SyntaxTree.RecordType)) THEN writer.String (" = {0}") END;
 					ELSE
 						writer.String (" = 0");
 					END;
 				END;
 				writer.Char (Semicolon); writer.Ln;
-				IF IsDelegate (variable.type.resolved) THEN
+				IF IsDelegate (variable.type.resolvedType) THEN
 					PrintIndent; writer.String (BaseObjectName); writer.Char ('*'); writer.Char (' ');
 					writer.String (name); writer.String (DelegateTag);
 					IF initializeLocalData THEN writer.String (" = 0") END;
@@ -722,17 +722,17 @@ TYPE
 				ELSIF type IS SyntaxTree.ArrayType THEN Prefix (type(SyntaxTree.ArrayType).arrayBase);
 				ELSIF type IS SyntaxTree.PointerType THEN
 					writer.String ("struct ");
-					IF type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.ArrayType THEN
+					IF type(SyntaxTree.PointerType).pointerBase.resolvedType IS SyntaxTree.ArrayType THEN
 						writer.String ("Array");
 					ELSE
-						GetSymbolName (type(SyntaxTree.PointerType).pointerBase.resolved.typeDeclaration, temp, backend.style);
+						GetSymbolName (type(SyntaxTree.PointerType).pointerBase.resolvedType.typeDeclaration, temp, backend.style);
 						writer.String (temp);
 					END;
 					writer.String (PointerTag); writer.String (" (*");
 				ELSIF type IS SyntaxTree.ProcedureType THEN Prefix (type(SyntaxTree.ProcedureType).returnType);
-				ELSIF type.resolved.typeDeclaration # NIL THEN GetSymbolName (type.resolved.typeDeclaration, temp, backend.style); writer.String (temp);
-				ELSIF type.resolved IS SyntaxTree.ObjectType THEN writer.String ("ObjectType");
-				ELSE PrintBasicType (type.resolved(SyntaxTree.BasicType)); END;
+				ELSIF type.resolvedType.typeDeclaration # NIL THEN GetSymbolName (type.resolvedType.typeDeclaration, temp, backend.style); writer.String (temp);
+				ELSIF type.resolvedType IS SyntaxTree.ObjectType THEN writer.String ("ObjectType");
+				ELSE PrintBasicType (type.resolvedType(SyntaxTree.BasicType)); END;
 				IF name # "" THEN writer.Char (Space) END;
 			END Prefix;
 
@@ -750,7 +750,7 @@ TYPE
 			BEGIN
 				IF type = NIL THEN
 				ELSIF type IS SyntaxTree.ArrayType THEN
-					ASSERT (~IsDelegate (type(SyntaxTree.ArrayType).arrayBase.resolved));
+					ASSERT (~IsDelegate (type(SyntaxTree.ArrayType).arrayBase.resolvedType));
 					writer.Char ('['); IF type(SyntaxTree.ArrayType).staticLength # 0 THEN writer.Int (type(SyntaxTree.ArrayType).staticLength, 0); END; writer.Char (']');
 					Postfix (type(SyntaxTree.ArrayType).arrayBase);
 				ELSIF type IS SyntaxTree.PointerType THEN writer.Char (')');
@@ -839,7 +839,7 @@ TYPE
 		VAR procedure: SyntaxTree.Procedure; recordType: SyntaxTree.RecordType; first: BOOLEAN;
 		BEGIN
 			designator := arguments.GetExpression (0);
-			type := designator.type.resolved(SyntaxTree.PointerType).pointerBase.resolved;
+			type := designator.type.resolvedType(SyntaxTree.PointerType).pointerBase.resolvedType;
 			IF (type IS SyntaxTree.ArrayType) & (arguments.Length () > 1) THEN
 				ASSERT (arguments.Length () = 2);
 				ASSERT (type(SyntaxTree.ArrayType).staticLength = 0);
@@ -943,17 +943,17 @@ TYPE
 			IF IsEmptyString (statement.right.type) THEN
 				PrintExpression (statement.left); writer.String ("[0] = 0");
 			ELSIF IsStructuredType (statement.left.type) THEN
-				ASSERT (~IsOpenArray (statement.left.type.resolved));
+				ASSERT (~IsOpenArray (statement.left.type.resolvedType));
 				writer.String ("memcpy (");
-				IF ~(statement.left.type.resolved IS SyntaxTree.ArrayType) THEN writer.Char ('&'); END;
+				IF ~(statement.left.type.resolvedType IS SyntaxTree.ArrayType) THEN writer.Char ('&'); END;
 				PrintExpression (statement.left); writer.String (", ");
-				IF ~(statement.right.type.resolved IS SyntaxTree.StringType) & ~(statement.right.type.resolved IS SyntaxTree.ArrayType) THEN writer.Char ('&'); END;
+				IF ~(statement.right.type.resolvedType IS SyntaxTree.StringType) & ~(statement.right.type.resolvedType IS SyntaxTree.ArrayType) THEN writer.Char ('&'); END;
 				PrintExpression (statement.right); writer.String (", sizeof ("); PrintType (FALSE, statement.left.type, ""); writer.String ("))");
 			ELSE
 				PrintExpression (statement.left); writer.Char (Space); writer.Char ('='); writer.Char (Space); Convert (statement.right, statement.left.type);
 			END;
 			writer.Char (Semicolon); writer.Ln;
-			IF IsDelegate (statement.left.type.resolved) THEN
+			IF IsDelegate (statement.left.type.resolvedType) THEN
 				PrintIndent; PrintExpression (statement.left); writer.String (DelegateTag);
 				writer.String (" = "); PrintDelegate (statement.right); writer.Char (Semicolon); writer.Ln;
 			END;
@@ -1021,7 +1021,7 @@ TYPE
 			locked := IsInExclusiveBlock (statement);
 			IF statement.returnValue # NIL THEN
 				IF locked THEN
-					BeginBlock; PrintIndent; PrintVariable (FALSE, ResultVariable, statement.returnValue.type.resolved); writer.Char (Semicolon); writer.Ln;
+					BeginBlock; PrintIndent; PrintVariable (FALSE, ResultVariable, statement.returnValue.type.resolvedType); writer.Char (Semicolon); writer.Ln;
 					PrintIndent; writer.String (ResultVariable); writer.String (" = "); PrintExpression (statement.returnValue);
 					writer.Char (Semicolon); writer.Ln; UnlockScope (scope.outerScope);
 					PrintIndent; writer.String ("return "); writer.String (ResultVariable); writer.Char (Semicolon); writer.Ln; EndBlock;
@@ -1108,9 +1108,9 @@ TYPE
 		VAR name: Identifier; recordType: SyntaxTree.RecordType;
 		BEGIN
 			recordType := NIL;
-			IF (expression.left # NIL) & (expression.left.type.resolved # SyntaxTree.importType) THEN
-				IF expression.left.type.resolved IS SyntaxTree.RecordType THEN
-					recordType := expression.left.type.resolved(SyntaxTree.RecordType);
+			IF (expression.left # NIL) & (expression.left.type.resolvedType # SyntaxTree.importType) THEN
+				IF expression.left.type.resolvedType IS SyntaxTree.RecordType THEN
+					recordType := expression.left.type.resolvedType(SyntaxTree.RecordType);
 					IF expression.symbol IS SyntaxTree.Procedure THEN
 						writer.String ("(("); GetSymbolName (recordType.typeDeclaration, name, backend.style); writer.String (name);  writer.String (TypeTag); writer.String ("*) ");
 						PrintExpression (expression.left(SyntaxTree.DereferenceDesignator).left); writer.String ("->"); writer.String (TypeDescriptorTag); writer.String (")->");
@@ -1158,7 +1158,7 @@ TYPE
 			| Global.Cap: writer.String ("Capitalize ("); PrintExpression (argument[0]); writer.Char (')');
 			| Global.Odd: writer.Char ('('); PrintExpression (argument[0]); writer.String (" & 1)");
 			| Global.Ash: writer.Char ('('); PrintExpression (argument[0]); IF IsNegative (argument[1]) THEN writer.String (" >> - ") ELSE writer.String (" << ") END; PrintExpression (argument[1]); writer.Char (')');
-			| Global.Abs: IF (expression.type.resolved IS SyntaxTree.FloatType) THEN writer.Char ('f') END;
+			| Global.Abs: IF (expression.type.resolvedType IS SyntaxTree.FloatType) THEN writer.Char ('f') END;
 				writer.String ("abs ("); PrintExpression (argument[0]); writer.Char (')');
 			| Global.Min, Global.Max: PrintExpression (expression.resolved);
 			| Global.New: PrintNew (expression.parameters);
@@ -1185,8 +1185,8 @@ TYPE
 				PrintExpression (argument[0]); writer.String (" >> (sizeof ("); PrintType (FALSE, expression.type, ""); writer.String (") * 8 - "); PrintExpression (argument[1]); writer.String (")))");
 			| Global.systemSize: writer.String ("sizeof ("); PrintType (FALSE, GetDeclaredType (argument[0]), ""); writer.Char (')');
 			| Global.systemTypeCode: typeDeclaration := argument[0](SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration);
-				IF typeDeclaration.declaredType.resolved IS SyntaxTree.PointerType THEN
-					typeDeclaration := typeDeclaration.declaredType.resolved(SyntaxTree.PointerType).pointerBase.resolved.typeDeclaration;
+				IF typeDeclaration.declaredType.resolvedType IS SyntaxTree.PointerType THEN
+					typeDeclaration := typeDeclaration.declaredType.resolvedType(SyntaxTree.PointerType).pointerBase.resolvedType.typeDeclaration;
 				END;
 				GetSymbolName (typeDeclaration, name, backend.style); writer.Char ('&'); writer.String (name); writer.String (TypeDescriptorTag);
 			| Global.GetProcedure: PrintExpression (argument[2]); writer.String (" = 0");
@@ -1206,7 +1206,7 @@ TYPE
 			ELSE
 				symbolDesignator := NIL; scope := NIL;
 			END;
-			procedureType := expression.left.type.resolved(SyntaxTree.ProcedureType);
+			procedureType := expression.left.type.resolvedType(SyntaxTree.ProcedureType);
 			PrintExpression (expression.left); writer.Char (Space); writer.Char ('(');
 			first := PrintArguments (expression.parameters, 0, expression.parameters.Length (), procedureType.firstParameter, scope);
 			IF (symbolDesignator # NIL) & IsMethod (symbolDesignator) THEN
@@ -1274,7 +1274,7 @@ TYPE
 		BEGIN
 			CASE expression.operator OF
 			| Scanner.Plus:
-			| Scanner.Minus: IF expression.type.resolved IS SyntaxTree.SetType THEN writer.Char ('~') ELSE writer.Char ('-') END;
+			| Scanner.Minus: IF expression.type.resolvedType IS SyntaxTree.SetType THEN writer.Char ('~') ELSE writer.Char ('-') END;
 			| Scanner.Not: writer.Char ('!');
 			END;
 			PrintExpression (expression.left);
@@ -1283,7 +1283,7 @@ TYPE
 		PROCEDURE VisitTypeGuardDesignator* (expression: SyntaxTree.TypeGuardDesignator);
 		VAR isRecord: BOOLEAN;
 		BEGIN
-			isRecord := expression.type.resolved IS SyntaxTree.RecordType;
+			isRecord := expression.type.resolvedType IS SyntaxTree.RecordType;
 			IF isRecord THEN writer.String ("(*") END;
 			writer.String ("(ASSERT ("); CompareTypeDescriptor (expression.left, expression.type); writer.String ("), (");
 			PrintType (isRecord, expression.type, ""); writer.String (") ");
@@ -1324,10 +1324,10 @@ TYPE
 			| Scanner.GreaterEqual: writer.String (">=");
 			| Scanner.And: writer.String ("&&");
 			| Scanner.Or: writer.String ("||");
-			| Scanner.Plus: IF expression.type.resolved IS SyntaxTree.SetType THEN writer.Char ('|') ELSE writer.Char ('+') END;
-			| Scanner.Minus: IF expression.type.resolved IS SyntaxTree.SetType THEN writer.Char ('&'); writer.Char ('~') ELSE writer.Char ('-') END;
-			| Scanner.Times: IF expression.type.resolved IS SyntaxTree.SetType THEN writer.Char ('&') ELSE writer.Char ('*') END;
-			| Scanner.Slash, Scanner.Div:  IF expression.type.resolved IS SyntaxTree.SetType THEN writer.Char ('^') ELSE writer.Char ('/') END;
+			| Scanner.Plus: IF expression.type.resolvedType IS SyntaxTree.SetType THEN writer.Char ('|') ELSE writer.Char ('+') END;
+			| Scanner.Minus: IF expression.type.resolvedType IS SyntaxTree.SetType THEN writer.Char ('&'); writer.Char ('~') ELSE writer.Char ('-') END;
+			| Scanner.Times: IF expression.type.resolvedType IS SyntaxTree.SetType THEN writer.Char ('&') ELSE writer.Char ('*') END;
+			| Scanner.Slash, Scanner.Div:  IF expression.type.resolvedType IS SyntaxTree.SetType THEN writer.Char ('^') ELSE writer.Char ('/') END;
 			| Scanner.Mod: writer.Char ('%');
 			END;
 			writer.Char (Space);
@@ -1514,11 +1514,11 @@ TYPE
 			IF constructor # NIL THEN RETURN constructor END;
 			base := recordType.baseType;
 			IF base = NIL THEN RETURN NIL END;
-			IF base.resolved IS SyntaxTree.PointerType THEN
-				base := base.resolved(SyntaxTree.PointerType).pointerBase;
+			IF base.resolvedType IS SyntaxTree.PointerType THEN
+				base := base.resolvedType(SyntaxTree.PointerType).pointerBase;
 			END;
-			IF ~(base.resolved IS SyntaxTree.RecordType) THEN RETURN NIL END;
-			recordType := base.resolved(SyntaxTree.RecordType);
+			IF ~(base.resolvedType IS SyntaxTree.RecordType) THEN RETURN NIL END;
+			recordType := base.resolvedType(SyntaxTree.RecordType);
 		END;
 	END GetConstructor;
 
@@ -1540,7 +1540,7 @@ TYPE
 	END IsMethod;
 
 	PROCEDURE IsVarParameter (symbol: SyntaxTree.Symbol): BOOLEAN;
-	BEGIN RETURN (symbol IS SyntaxTree.Parameter) & ((symbol(SyntaxTree.Parameter).kind = SyntaxTree.VarParameter) OR (symbol(SyntaxTree.Parameter).kind = SyntaxTree.ConstParameter) & ~(symbol.type.resolved IS SyntaxTree.BasicType));
+	BEGIN RETURN (symbol IS SyntaxTree.Parameter) & ((symbol(SyntaxTree.Parameter).kind = SyntaxTree.VarParameter) OR (symbol(SyntaxTree.Parameter).kind = SyntaxTree.ConstParameter) & ~(symbol.type.resolvedType IS SyntaxTree.BasicType));
 	END IsVarParameter;
 
 	PROCEDURE IsInExclusiveBlock (statement: SyntaxTree.Statement): BOOLEAN;
@@ -1565,15 +1565,15 @@ TYPE
 	END IsDelegate;
 
 	PROCEDURE IsStructuredType (type: SyntaxTree.Type): BOOLEAN;
-	BEGIN RETURN (type.resolved IS SyntaxTree.ArrayType) OR (type.resolved IS SyntaxTree.RecordType);
+	BEGIN RETURN (type.resolvedType IS SyntaxTree.ArrayType) OR (type.resolvedType IS SyntaxTree.RecordType);
 	END IsStructuredType;
 
 	PROCEDURE IsString (type: SyntaxTree.Type): BOOLEAN;
-	BEGIN RETURN (type.resolved IS SyntaxTree.StringType) OR (type.resolved IS SyntaxTree.ArrayType) & (type.resolved(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.CharacterType);
+	BEGIN RETURN (type.resolvedType IS SyntaxTree.StringType) OR (type.resolvedType IS SyntaxTree.ArrayType) & (type.resolvedType(SyntaxTree.ArrayType).arrayBase.resolvedType IS SyntaxTree.CharacterType);
 	END IsString;
 
 	PROCEDURE IsEmptyString (type: SyntaxTree.Type): BOOLEAN;
-	BEGIN RETURN (type.resolved IS SyntaxTree.StringType) & (type.resolved(SyntaxTree.StringType).length = 1);
+	BEGIN RETURN (type.resolvedType IS SyntaxTree.StringType) & (type.resolvedType(SyntaxTree.StringType).length = 1);
 	END IsEmptyString;
 
 	PROCEDURE IsNegative (expression: SyntaxTree.Expression): BOOLEAN;
@@ -1604,7 +1604,7 @@ TYPE
 	BEGIN
 		IF type IS SyntaxTree.RecordType THEN RETURN type(SyntaxTree.RecordType)
 		ELSIF type IS SyntaxTree.PointerType THEN
-			type := type(SyntaxTree.PointerType).pointerBase.resolved;
+			type := type(SyntaxTree.PointerType).pointerBase.resolvedType;
 			IF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType # NIL) THEN RETURN type(SyntaxTree.RecordType) END;
 		END;
 		RETURN NIL;

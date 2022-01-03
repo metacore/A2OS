@@ -1645,9 +1645,9 @@ TYPE
 				IF scopeSymbol = NIL THEN RETURN FALSE
 				ELSIF ~(scopeSymbol IS SyntaxTree.Constant) THEN RETURN FALSE
 				ELSE
-					IF (scopeSymbol.type.resolved IS SyntaxTree.CharacterType) & (scopeSymbol.type.resolved.sizeInBits=8)  THEN
+					IF (scopeSymbol.type.resolvedType IS SyntaxTree.CharacterType) & (scopeSymbol.type.resolvedType.sizeInBits=8)  THEN
 						x := ORD(scopeSymbol(SyntaxTree.Constant).value.resolved(SyntaxTree.CharacterValue).value)
-					ELSIF scopeSymbol.type.resolved IS SyntaxTree.IntegerType THEN
+					ELSIF scopeSymbol.type.resolvedType IS SyntaxTree.IntegerType THEN
 						x := scopeSymbol(SyntaxTree.Constant).value.resolved(SyntaxTree.IntegerValue).value
 					ELSE
 						Error("number expected");

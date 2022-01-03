@@ -266,13 +266,13 @@ TYPE
 			PROCEDURE TypeNeedsSection(type: SyntaxTree.TypeDeclaration): BOOLEAN;
 			VAR t: SyntaxTree.Type;
 			BEGIN
-				t := type.declaredType.resolved;
+				t := type.declaredType.resolvedType;
 				IF type # t.typeDeclaration THEN RETURN FALSE END;
 				WITH t:
 				| SyntaxTree.RecordType DO RETURN TRUE
 				| SyntaxTree.PointerType DO
-					RETURN (t.pointerBase.resolved IS SyntaxTree.RecordType) &
-						(t.pointerBase.resolved(SyntaxTree.RecordType).pointerType = t);
+					RETURN (t.pointerBase.resolvedType IS SyntaxTree.RecordType) &
+						(t.pointerBase.resolvedType(SyntaxTree.RecordType).pointerType = t);
 				ELSE
 					RETURN FALSE;
 				END;

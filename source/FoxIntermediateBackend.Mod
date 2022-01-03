@@ -207,8 +207,8 @@ TYPE
 
 		PROCEDURE QualifiedType(x: SyntaxTree.QualifiedType);
 		VAR type: SyntaxTree.Type;
-		BEGIN (* no further traversal to x.resolved necessary since type descriptor and code will be inserted at "original" position ? *)
-			type := x.resolved;
+		BEGIN (* no further traversal to x.resolvedType necessary since type descriptor and code will be inserted at "original" position ? *)
+			type := x.resolvedType;
 			IF (type.typeDeclaration # NIL) & ~InThisModule(type.typeDeclaration.scope, module.module) THEN
 				meta.CheckTypeDeclaration(type);
 			END;
@@ -254,7 +254,7 @@ TYPE
 
 			PROCEDURE TypeNeedsInitialization(type: SyntaxTree.Type): BOOLEAN;
 			BEGIN
-				type := type.resolved;
+				type := type.resolvedType;
 				IF type IS SyntaxTree.RecordType THEN
 					IF ScopeNeedsInitialization(type(SyntaxTree.RecordType).recordScope) THEN RETURN TRUE END;
 				ELSIF (type IS SyntaxTree.ArrayType) THEN
@@ -299,12 +299,12 @@ TYPE
 			PROCEDURE Initialize(type: SyntaxTree.Type; initializer: SyntaxTree.Expression; offset:SIZE);
 			VAR op: Operand; baseType: SyntaxTree.Type; variable: SyntaxTree.Variable; i: SIZE; size:SIZE;
 			BEGIN
-				IF type = NIL THEN RETURN ELSE type := type.resolved END;
+				IF type = NIL THEN RETURN ELSE type := type.resolvedType END;
 				WITH type:
 				SyntaxTree.RecordType DO
 					baseType := type.baseType;
 					IF baseType # NIL THEN
-						baseType := baseType.resolved;
+						baseType := baseType.resolvedType;
 						IF baseType IS SyntaxTree.PointerType THEN
 							baseType := baseType(SyntaxTree.PointerType).pointerBase
 						END;
@@ -428,8 +428,8 @@ TYPE
 		PROCEDURE TypeDeclaration(x: SyntaxTree.TypeDeclaration);
 		BEGIN
 			Type(x.declaredType); (* => code in objects *)
-			IF ~(x.declaredType IS SyntaxTree.QualifiedType) & (x.declaredType.resolved IS SyntaxTree.PointerType) THEN
-				Type(x.declaredType.resolved(SyntaxTree.PointerType).pointerBase);
+			IF ~(x.declaredType IS SyntaxTree.QualifiedType) & (x.declaredType.resolvedType IS SyntaxTree.PointerType) THEN
+				Type(x.declaredType.resolvedType(SyntaxTree.PointerType).pointerBase);
 			END;
 		END TypeDeclaration;
 
@@ -933,7 +933,7 @@ TYPE
 
 			PROCEDURE TypeNeedsInitialization(type: SyntaxTree.Type): BOOLEAN;
 			BEGIN
-				type := type.resolved;
+				type := type.resolvedType;
 				IF type IS SyntaxTree.RecordType THEN
 					IF ScopeNeedsInitialization(type(SyntaxTree.RecordType).recordScope) THEN RETURN TRUE END;
 				ELSIF (type IS SyntaxTree.ArrayType) THEN
@@ -1192,8 +1192,8 @@ TYPE
 
 		PROCEDURE CompatibleType(t1, t2: SyntaxTree.Type): BOOLEAN;
 		BEGIN
-			t1 := t1.resolved;
-			t2 := t2.resolved;
+			t1 := t1.resolvedType;
+			t2 := t2.resolvedType;
 			(*RETURN t1.SameType(t2); *)
 			RETURN
 				(t1.SameType(t2))
@@ -1686,7 +1686,7 @@ TYPE
 			firstOp, lastOp, stepOp: IntermediateCode.Operand;
 			componentType: SyntaxTree.Type;
 		BEGIN
-			type := type.resolved;
+			type := type.resolvedType;
 			IF operand.mode = ModeReference THEN
 				IF type IS SyntaxTree.RangeType THEN
 					MakeMemory(firstOp, operand.op, sizeType, 0);
@@ -1869,7 +1869,7 @@ TYPE
 		BEGIN
 			Designate(x, result);
 			IF x.type # NIL THEN
-				LoadValue(result, x.type.resolved);
+				LoadValue(result, x.type.resolvedType);
 			END;
 		END DesignateAndLoad;
 
@@ -1891,8 +1891,8 @@ TYPE
 				ELSE
 				END;
 			| SyntaxTree.BinaryExpression DO
-					leftType := x.left.type.resolved;
-					rightType := x.right.type.resolved;
+					leftType := x.left.type.resolvedType;
+					rightType := x.right.type.resolvedType;
 					CASE x.operator OF
 					Scanner.Or:
 						(* shortcut evaluation of left OR right *)
@@ -1923,7 +1923,7 @@ TYPE
 							Evaluate(x.left, left);
 							TransferToRegister(left.op, left.op);
 							ReuseCopy(temp,left.op);
-							Convert(temp,IntermediateCode.GetType(system,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved));
+							Convert(temp,IntermediateCode.GetType(system,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolvedType));
 							Convert(temp,left.op.type);
 							IF reason THEN
 								BreqL(label,left.op,temp);
@@ -1939,7 +1939,7 @@ TYPE
 							ELSE
 								Designate(x.left,left);
 							END;
-							TypeTest(left.tag,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved,label,reason,FALSE);
+							TypeTest(left.tag,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolvedType,label,reason,FALSE);
 						END;
 						ReleaseOperand(left);
 						RETURN;
@@ -2178,7 +2178,7 @@ TYPE
 				Evaluate(x.left, operand);
 				InitOperand(result,ModeValue);
 				Reuse1a(result.op,operand.op,dest);
-				type := x.left.type.resolved;
+				type := x.left.type.resolvedType;
 				IF type IS SyntaxTree.SetType THEN
 					Emit(Not(position,result.op,operand.op));
 				ELSIF (type IS SyntaxTree.ComplexType) THEN
@@ -2193,7 +2193,7 @@ TYPE
 			|Scanner.Address:
 				Designate(x.left,result);
 				result.mode := ModeValue;
-				t0 := x.left.type.resolved;
+				t0 := x.left.type.resolvedType;
 				IF (t0 IS SyntaxTree.MathArrayType) & (t0(SyntaxTree.MathArrayType).form = SyntaxTree.Open) THEN
 					ReleaseIntermediateOperand(result.op);
 					result.op := result.tag;
@@ -2215,8 +2215,8 @@ TYPE
 		BEGIN
 			IF Trace THEN TraceEnter("BinaryExpression") END;
 			dest := destination; destination := emptyOperand;
-			leftType := x.left.type.resolved;
-			rightType := x.right.type.resolved;
+			leftType := x.left.type.resolvedType;
+			rightType := x.right.type.resolvedType;
 			CASE x.operator OF
 			Scanner.Or, Scanner.And, Scanner.Is:
 				result := ConditionValue(x);
@@ -2293,7 +2293,7 @@ TYPE
 			|Scanner.Div:
 				Evaluate(x.left, left);
 				Evaluate(x.right, right);
-				IF (x.type.resolved IS SyntaxTree.IntegerType) & (x.right.resolved = NIL) THEN (* divisor negative check *)
+				IF (x.type.resolvedType IS SyntaxTree.IntegerType) & (x.right.resolved = NIL) THEN (* divisor negative check *)
 					IntermediateCode.InitImmediate(zero,IntermediateCode.GetType(system,rightType),0);
 					IF ~isUnchecked THEN
 						exit := NewLabel();
@@ -2309,7 +2309,7 @@ TYPE
 			|Scanner.Mod:
 				Evaluate(x.left, left);
 				Evaluate(x.right, right);
-				IF (x.type.resolved IS SyntaxTree.IntegerType) & (x.right.resolved = NIL) THEN (* divisor negative check *)
+				IF (x.type.resolvedType IS SyntaxTree.IntegerType) & (x.right.resolved = NIL) THEN (* divisor negative check *)
 					IntermediateCode.InitImmediate(zero,IntermediateCode.GetType(system,rightType),0);
 					IF ~isUnchecked THEN
 						exit := NewLabel();
@@ -2367,7 +2367,7 @@ TYPE
 			|Scanner.Equal, Scanner.LessEqual, Scanner.Less, Scanner.Greater, Scanner.GreaterEqual, Scanner.Unequal :
 				result := ConditionValue(x);
 			|Scanner.In:
-				ASSERT(rightType.resolved IS SyntaxTree.SetType);
+				ASSERT(rightType.resolvedType IS SyntaxTree.SetType);
 				Evaluate(x.left, left);
 				Evaluate(x.right, right);
 				Convert(left.op,setType);
@@ -2381,7 +2381,7 @@ TYPE
 				Emit(And(position,result.op,result.op,one));
 				Convert(result.op,booleanType);
 			ELSE
-				IF (x.operator = Scanner.Questionmarks) OR (x.operator = Scanner.LessLessQ) & (x.right.type.resolved IS SyntaxTree.PortType) THEN
+				IF (x.operator = Scanner.Questionmarks) OR (x.operator = Scanner.LessLessQ) & (x.right.type.resolvedType IS SyntaxTree.PortType) THEN
 					IF x.operator = Scanner.Questionmarks THEN
 						leftExpression := x.left;
 						rightExpression := x.right;
@@ -2408,7 +2408,7 @@ TYPE
 					InitOperand(result, ModeValue);
 					result.op := NewRegisterOperand(booleanType);
 					Emit(Result(position,result.op));
-				ELSIF (x.operator = Scanner.ExclamationMarks) OR (x.operator = Scanner.LessLessQ) & (x.left.type.resolved IS SyntaxTree.PortType) THEN
+				ELSIF (x.operator = Scanner.ExclamationMarks) OR (x.operator = Scanner.LessLessQ) & (x.left.type.resolvedType IS SyntaxTree.PortType) THEN
 					leftExpression := x.left;
 					rightExpression := x.right;
 
@@ -3011,10 +3011,10 @@ TYPE
 		PROCEDURE TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; label: Label; reason: BOOLEAN; withPart: BOOLEAN);
 		VAR left,right: IntermediateCode.Operand; level,offset: SIGNED32; repeatL,skip: Label; originalType: SyntaxTree.Type;
 		BEGIN
-			type := type.resolved;
+			type := type.resolvedType;
 			originalType := type;
 			IF type IS SyntaxTree.PointerType THEN
-				type := type(SyntaxTree.PointerType).pointerBase.resolved;
+				type := type(SyntaxTree.PointerType).pointerBase.resolvedType;
 			END;
 			IF (type IS SyntaxTree.ObjectType) & reason THEN
 				BrL(label);
@@ -3112,7 +3112,7 @@ TYPE
 
 			variable := mod.moduleScope.firstVariable;
 			WHILE variable # NIL DO
-				IF ~variable.untraced & variable.type.resolved.hasPointers THEN
+				IF ~variable.untraced & variable.type.resolvedType.hasPointers THEN
 					Symbol(variable, operand);
 					register := operand.op;
 					CallTraceMethod(register, variable.type);
@@ -3148,7 +3148,7 @@ TYPE
 			ELSIF type.IsRecordType() THEN
 				Emit (Push(position,dst));
 				Emit (Push(position,src));
-				GetRecordTypeName (type.resolved(SyntaxTree.RecordType),name);
+				GetRecordTypeName (type.resolvedType(SyntaxTree.RecordType),name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Assign"));
 				IntermediateCode.InitAddress(op, addressType, name , 0, 0);
 				Emit(Call(position,op, ToMemoryUnits(system, 2*system.addressSize)));
@@ -3159,12 +3159,12 @@ TYPE
 					Emit (Push(position, IntermediateCode.Immediate (sizeType,size)));
 					Emit (Push(position, dst));
 					Emit (Push(position, src));
-					GetRecordTypeName (base.resolved(SyntaxTree.RecordType),name);
+					GetRecordTypeName (base.resolvedType(SyntaxTree.RecordType),name);
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Assign"));
 					IntermediateCode.InitAddress(op, addressType, name , 0, 0);
 					Emit(Call(position,op,ToMemoryUnits(system, 3*system.addressSize)));
-				ELSIF base.resolved IS SyntaxTree.ProcedureType THEN (* array of delegates *)
+				ELSIF base.resolvedType IS SyntaxTree.ProcedureType THEN (* array of delegates *)
 					Emit (Push(position, IntermediateCode.Immediate (sizeType,size)));
 					Emit (Push(position, dst));
 					Emit (Push(position, IntermediateCode.Immediate (sizeType,size)));
@@ -3178,8 +3178,8 @@ TYPE
 					CallThis(position,"GarbageCollector","AssignPointerArray", 4);
 					ASSERT(StaticArrayBaseType(type).IsPointer());
 				END;
-			ELSIF type.resolved IS SyntaxTree.ProcedureType THEN
-				ASSERT(type.resolved(SyntaxTree.ProcedureType).isDelegate);
+			ELSIF type.resolvedType IS SyntaxTree.ProcedureType THEN
+				ASSERT(type.resolvedType(SyntaxTree.ProcedureType).isDelegate);
 				Emit (Push(position, dst));
 				Emit (Push(position, src));
 				CallThis(position,"GarbageCollector","AssignDelegate", 2);
@@ -3282,14 +3282,14 @@ TYPE
 				IntermediateCode.InitRegister(op, addressType, IntermediateCode.GeneralPurposeRegister, register.register);
 				Emit (Mov (position, op, IntermediateCode.Memory (addressType,register,0)));
 				BreqL (skip, op, nil);
-				CallTraceMethod (op,type.resolved(SyntaxTree.PointerType).pointerBase);
+				CallTraceMethod (op,type.resolvedType(SyntaxTree.PointerType).pointerBase);
 				SetLabel (skip);
 			ELSIF SemanticChecker.IsPointerType (type) THEN
 				Emit (Push(position, IntermediateCode.Memory (addressType,register,0)));
 				CallThis(position,"GarbageCollector","Mark", 1);
 			ELSIF type.IsRecordType() THEN
 				Emit (Push(position,register));
-				GetRecordTypeName (type.resolved(SyntaxTree.RecordType),name);
+				GetRecordTypeName (type.resolvedType(SyntaxTree.RecordType),name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
 				IntermediateCode.InitAddress(op, addressType, name , 0, 0);
 				Emit(Call(position,op, ToMemoryUnits(system, system.addressSize)));
@@ -3299,12 +3299,12 @@ TYPE
 				IF base.IsRecordType() THEN
 					Emit (Push(position, IntermediateCode.Immediate (sizeType,size)));
 					Emit (Push(position, register));
-					GetRecordTypeName (base.resolved(SyntaxTree.RecordType), name);
+					GetRecordTypeName (base.resolvedType(SyntaxTree.RecordType), name);
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
 					IntermediateCode.InitAddress(op, addressType, name , 0, 0);
 					Emit(Call(position, op, ToMemoryUnits(system, system.addressSize*2)));
-				ELSIF base.resolved IS SyntaxTree.ProcedureType THEN (* array of delegates *)
+				ELSIF base.resolvedType IS SyntaxTree.ProcedureType THEN (* array of delegates *)
 					Emit (Push(position, IntermediateCode.Immediate (sizeType,size)));
 					Emit (Push(position, register));
 					CallThis(position,"GarbageCollector","MarkDelegateArray", 2);
@@ -3314,7 +3314,7 @@ TYPE
 					CallThis(position,"GarbageCollector","MarkPointerArray", 2);
 					ASSERT(base.IsPointer());
 				END;
-			ELSIF type.resolved IS SyntaxTree.ProcedureType THEN
+			ELSIF type.resolvedType IS SyntaxTree.ProcedureType THEN
 				Emit (Push(position, IntermediateCode.Memory (addressType,register,ToMemoryUnits(system,addressType.sizeInBits))));
 				CallThis(position,"GarbageCollector","Mark", 1);
 			ELSE HALT(100); (* missing ? *)
@@ -3546,22 +3546,22 @@ TYPE
 				CallThis(position,"GarbageCollector","Reset", 1);
 			ELSIF type.IsRecordType() THEN
 				Emit (Push(position, dest));
-				GetRecordTypeName (type.resolved(SyntaxTree.RecordType),name);
+				GetRecordTypeName (type.resolvedType(SyntaxTree.RecordType),name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
 				IntermediateCode.InitAddress(op, addressType, name , 0, 0);
 				Emit(Call(position,op, ToMemoryUnits(system, system.addressSize)));
-			ELSIF type.resolved IS SyntaxTree.ArrayType THEN
+			ELSIF type.resolvedType IS SyntaxTree.ArrayType THEN
 				size := GetArrayLength(type, tag);
 				base := ArrayBaseType(type);
 				IF base.IsRecordType() THEN
 					Emit (Push(position, size));
 					Emit (Push(position, dest));
-					GetRecordTypeName (base.resolved(SyntaxTree.RecordType),name);
+					GetRecordTypeName (base.resolvedType(SyntaxTree.RecordType),name);
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
 					IntermediateCode.InitAddress(op, addressType, name , 0, 0);
 					Emit(Call(position,op,ToMemoryUnits(system, 2*system.addressSize)));
-				ELSIF base.resolved IS SyntaxTree.ProcedureType THEN (* array of delegates *)
+				ELSIF base.resolvedType IS SyntaxTree.ProcedureType THEN (* array of delegates *)
 					Emit (Push(position, size));
 					Emit (Push(position, dest));
 					CallThis(position,"GarbageCollector","ResetDelegateArray", 2);
@@ -3572,8 +3572,8 @@ TYPE
 					ASSERT(ArrayBaseType(type).IsPointer());
 				END;
 				ReleaseIntermediateOperand(size);
-			ELSIF type.resolved IS SyntaxTree.ProcedureType THEN
-				ASSERT(type.resolved(SyntaxTree.ProcedureType).isDelegate);
+			ELSIF type.resolvedType IS SyntaxTree.ProcedureType THEN
+				ASSERT(type.resolvedType(SyntaxTree.ProcedureType).isDelegate);
 				Emit (Push(position, dest));
 				CallThis(position,"GarbageCollector","ResetDelegate", 1);
 			ELSE HALT(100); (* missing ? *)
@@ -3587,7 +3587,7 @@ TYPE
 			VAR operand: Operand;
 			BEGIN
 				Symbol (symbol, operand);
-				CallResetProcedure(operand.op, operand.tag, symbol.type.resolved);
+				CallResetProcedure(operand.op, operand.tag, symbol.type.resolvedType);
 				ReleaseOperand(operand);
 			END Reset;
 
@@ -3723,7 +3723,7 @@ TYPE
 			VAR baseType: SyntaxTree.Type; size: SIGNED32; sizeOperand,len,res: IntermediateCode.Operand;
 			BEGIN
 				ASSERT(type.form = SyntaxTree.Open);
-				baseType := type.arrayBase.resolved;
+				baseType := type.arrayBase.resolvedType;
 				IF IsOpenArray(baseType) THEN
 					sizeOperand := GetArraySize(baseType(SyntaxTree.ArrayType),offset+system.addressSize);
 				ELSE
@@ -3741,12 +3741,12 @@ TYPE
 			END GetArraySize;
 
 		BEGIN
-			type := type.resolved;
+			type := type.resolvedType;
 			IF IsOpenArray(type)  THEN
 				IF tag.mode = IntermediateCode.ModeImmediate THEN (* special rule for winapi/c  arrays *)
 					RETURN tag
 				ELSE
-					RETURN  GetArraySize(type.resolved(SyntaxTree.ArrayType),0)
+					RETURN  GetArraySize(type.resolvedType(SyntaxTree.ArrayType),0)
 				END;
 			ELSE
 				size := ToMemoryUnits(system,system.SizeOf(type));
@@ -3760,7 +3760,7 @@ TYPE
 			VAR baseType: SyntaxTree.Type; sizeOperand,len,res: IntermediateCode.Operand;
 			BEGIN
 				ASSERT(type.form = SyntaxTree.Open);
-				baseType := type.arrayBase.resolved;
+				baseType := type.arrayBase.resolvedType;
 				IF IsOpenArray(baseType) THEN
 					sizeOperand := GetLength(baseType(SyntaxTree.ArrayType),offset+system.addressSize);
 				ELSE
@@ -3777,10 +3777,10 @@ TYPE
 			END GetLength;
 
 		BEGIN
-			type := type.resolved;
+			type := type.resolvedType;
 			IF IsOpenArray(type)   THEN
 				ASSERT(tag.mode # IntermediateCode.ModeImmediate);
-				RETURN  GetLength(type.resolved(SyntaxTree.ArrayType),0)
+				RETURN  GetLength(type.resolvedType(SyntaxTree.ArrayType),0)
 			ELSIF type IS SyntaxTree.StringType THEN
 				RETURN tag;
 			ELSE
@@ -3804,9 +3804,9 @@ TYPE
 		BEGIN
 			IF (e IS SyntaxTree.SymbolDesignator) & (e(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Parameter) THEN
 				parameter := e(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Parameter);
-				IF (parameter.kind IN {SyntaxTree.VarParameter,SyntaxTree.ConstParameter}) & ((parameter.type.resolved IS SyntaxTree.RecordType) OR (parameter.type.resolved IS SyntaxTree.AnyRecordType)) THEN RETURN GetSizeFromTag(tag) END;
+				IF (parameter.kind IN {SyntaxTree.VarParameter,SyntaxTree.ConstParameter}) & ((parameter.type.resolvedType IS SyntaxTree.RecordType) OR (parameter.type.resolvedType IS SyntaxTree.AnyRecordType)) THEN RETURN GetSizeFromTag(tag) END;
 			ELSIF e IS SyntaxTree.DereferenceDesignator THEN
-				IF (e.type.resolved IS SyntaxTree.RecordType) OR (e.type.resolved IS SyntaxTree.AnyRecordType) THEN RETURN GetSizeFromTag(tag) END;
+				IF (e.type.resolvedType IS SyntaxTree.RecordType) OR (e.type.resolvedType IS SyntaxTree.AnyRecordType) THEN RETURN GetSizeFromTag(tag) END;
 			END;
 			RETURN GetDynamicSize(e.type, tag);
 		END GetArrayOfBytesSize;
@@ -3976,7 +3976,7 @@ TYPE
 		BEGIN
 			IF Trace THEN TraceEnter("DesignateConversion") END;
 
-			ASSERT(~(x.expression.type.resolved IS SyntaxTree.RangeType));
+			ASSERT(~(x.expression.type.resolvedType IS SyntaxTree.RangeType));
 
 			dest := destination; destination := emptyOperand;
 			Evaluate(x.expression,old);
@@ -3984,12 +3984,12 @@ TYPE
 
 			result.op := old.op;
 			ASSERT(result.op.mode # 0);
-			IF x.type.resolved IS SyntaxTree.ComplexType THEN
+			IF x.type.resolvedType IS SyntaxTree.ComplexType THEN
 				(* convert TO a complex number *)
-				componentType := x.type.resolved(SyntaxTree.ComplexType).componentType;
+				componentType := x.type.resolvedType(SyntaxTree.ComplexType).componentType;
 				Convert(result.op,IntermediateCode.GetType(system, componentType));
 				ASSERT(result.op.mode # 0);
-				IF x.expression.type.resolved IS SyntaxTree.ComplexType THEN
+				IF x.expression.type.resolvedType IS SyntaxTree.ComplexType THEN
 					(* convert FROM a complex number TO a complex number*)
 					result.tag := old.tag;
 					ASSERT(result.tag.mode # 0);
@@ -4019,9 +4019,9 @@ TYPE
 			IF x.left # NIL THEN Designate(x.left, result) END;
 			Symbol(x.symbol,result);
 			IF backend.cooperative & (x.symbol IS SyntaxTree.Variable) & (x.symbol.scope # NIL) & (x.symbol.scope IS SyntaxTree.RecordScope) THEN
-				ASSERT ((x.left # NIL) & (x.left.type.resolved IS SyntaxTree.RecordType));
+				ASSERT ((x.left # NIL) & (x.left.type.resolvedType IS SyntaxTree.RecordType));
 				ownerType := x.symbol.scope(SyntaxTree.RecordScope).ownerRecord;
-				designatorType := x.left.type.resolved(SyntaxTree.RecordType);
+				designatorType := x.left.type.resolvedType(SyntaxTree.RecordType);
 				IF ~ownerType.isObject & designatorType.isObject & ~designatorType.pointerType.isPlain THEN
 					IntermediateCode.AddOffset(result.op,BaseRecordTypeSize * ToMemoryUnits(system,addressType.sizeInBits));
 				END;
@@ -4093,8 +4093,8 @@ TYPE
 		BEGIN
 			ASSERT(tagsAvailable);
 
-			resultingType := x.type.resolved; (* resulting type *)
-			leftType := x.left.type.resolved; (* type of array to be indexed over *)
+			resultingType := x.type.resolvedType; (* resulting type *)
+			leftType := x.left.type.resolvedType; (* type of array to be indexed over *)
 
 			InitOperand(localResult, ModeReference);
 
@@ -4170,7 +4170,7 @@ TYPE
 					(* release the dim operand, if dynamic. No register reuse to decrease register pressure *)
 					ReleaseIntermediateOperand(srcDim);
 
-					IF SemanticChecker.IsIntegerType(expression.type.resolved) THEN
+					IF SemanticChecker.IsIntegerType(expression.type.resolvedType) THEN
 						(* SINGLE INDEX *)
 						Evaluate(expression, index);
 						ReleaseIntermediateOperand(index.tag);
@@ -4197,7 +4197,7 @@ TYPE
 						Convert(index.op, addressType);
 						summand := index.op;
 
-					ELSIF expression.type.resolved IS SyntaxTree.RangeType THEN
+					ELSIF expression.type.resolvedType IS SyntaxTree.RangeType THEN
 						(* RANGE OF INDICES *)
 						Evaluate(expression, range);
 						firstIndex := range.op; UseIntermediateOperand(firstIndex);
@@ -4428,7 +4428,7 @@ TYPE
 		PROCEDURE ArrayLength(type: SyntaxTree.Type; dim: SIZE; tag: IntermediateCode.Operand): IntermediateCode.Operand;
 		VAR res: IntermediateCode.Operand; size: SIGNED32;
 		BEGIN
-			type := type.resolved;
+			type := type.resolvedType;
 			IF type IS SyntaxTree.ArrayType THEN
 				WITH type: SyntaxTree.ArrayType DO
 					IF type.form = SyntaxTree.Static THEN
@@ -4544,7 +4544,7 @@ TYPE
 		VAR length,res: IntermediateCode.Operand; type,ttype: SyntaxTree.Type; maxDim: SIZE; array:Operand;
 			index: Operand; e: SyntaxTree.Expression; i: SIZE; size: SIGNED32; atype: SyntaxTree.ArrayType;
 		BEGIN
-			type := x.left.type.resolved;
+			type := x.left.type.resolvedType;
 			IF type IS SyntaxTree.StringType THEN
 				atype := SyntaxTree.NewArrayType(Basic.invalidPosition, NIL, SyntaxTree.Static);
 				atype.SetArrayBase(type(SyntaxTree.StringType).baseType);
@@ -4573,7 +4573,7 @@ TYPE
 					ReuseCopy(res, index.op);
 					*)
 					Designate(x.left,array);
-					type := x.left.type.resolved;
+					type := x.left.type.resolvedType;
 					IF (type(SyntaxTree.ArrayType).form = SyntaxTree.SemiDynamic) & backend.cellsAreObjects THEN
 						Dereference(array, type, FALSE);
 					END;
@@ -4590,7 +4590,7 @@ TYPE
 					ReleaseIntermediateOperand(length);
 				END;
 				ReleaseOperand(index);
-				type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+				type := type(SyntaxTree.ArrayType).arrayBase.resolvedType;
 
 				length := ArrayLength(type,array.dimOffset+i-1,array.tag);
 				IF (length.mode # IntermediateCode.ModeImmediate) OR (length.intValue # 1) THEN
@@ -4602,7 +4602,7 @@ TYPE
 			(* remaining open dimensions -- compute address *)
 			i := maxDim+1;
 			IF type IS SyntaxTree.ArrayType THEN
-				ttype := type(SyntaxTree.ArrayType).arrayBase.resolved;
+				ttype := type(SyntaxTree.ArrayType).arrayBase.resolvedType;
 				WHILE (ttype IS SyntaxTree.ArrayType) & (ttype(SyntaxTree.ArrayType).form # SyntaxTree.Static) DO
 					length := ArrayLength(ttype,array.dimOffset+i-1,array.tag);
 					IF (length.mode # IntermediateCode.ModeImmediate) OR (length.intValue # 1) THEN
@@ -4610,7 +4610,7 @@ TYPE
 					END;
 					ReleaseIntermediateOperand(length);
 					INC(i);
-					ttype := ttype(SyntaxTree.ArrayType).arrayBase.resolved;
+					ttype := ttype(SyntaxTree.ArrayType).arrayBase.resolvedType;
 				END;
 			END;
 
@@ -4654,7 +4654,7 @@ TYPE
 		BEGIN
 			IF Trace THEN TraceEnter("DesignateIndexDesignator") END;
 			dest := destination; destination := emptyOperand;
-			type := x.left.type.resolved;
+			type := x.left.type.resolvedType;
 			IF type IS SyntaxTree.MathArrayType THEN
 				MathIndexDesignator(x, result);
 			ELSE ASSERT((type IS SyntaxTree.ArrayType) OR (type IS SyntaxTree.StringType));
@@ -4695,7 +4695,7 @@ TYPE
 					(* push src *)
 					Evaluate(expression.left,srcOperand);
 					(*
-					Dereference(srcOperand,expression.type.resolved);
+					Dereference(srcOperand,expression.type.resolvedType);
 					Emit(Push(position,srcOperand.tag));
 					*)
 					Emit(Push(position,srcOperand.op));
@@ -4760,25 +4760,25 @@ TYPE
 			PROCEDURE PushArrayLens(formalType,actualType: SyntaxTree.Type; dim: SIZE);
 			VAR tmp: IntermediateCode.Operand; actualArrayBase: SyntaxTree.Type;
 			BEGIN
-				formalType := formalType.resolved; actualType := actualType.resolved;
+				formalType := formalType.resolvedType; actualType := actualType.resolvedType;
 				IF IsOpenArray(formalType)THEN
 					IF actualType IS SyntaxTree.StringType THEN
 						Pass((IntermediateCode.Immediate(addressType,actualType(SyntaxTree.StringType).length)));
 						RETURN;
 					ELSIF (actualType IS SyntaxTree.MathArrayType) & (actualType(SyntaxTree.MathArrayType).form = SyntaxTree.Static) THEN
 						Pass((IntermediateCode.Immediate(addressType,actualType(SyntaxTree.MathArrayType).staticLength)));
-						actualArrayBase := actualType(SyntaxTree.MathArrayType).arrayBase.resolved;
+						actualArrayBase := actualType(SyntaxTree.MathArrayType).arrayBase.resolvedType;
 					ELSIF actualType(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
 						Pass((IntermediateCode.Immediate(addressType,actualType(SyntaxTree.ArrayType).staticLength)));
-						actualArrayBase := actualType(SyntaxTree.ArrayType).arrayBase.resolved;
+						actualArrayBase := actualType(SyntaxTree.ArrayType).arrayBase.resolvedType;
 					ELSE
 						tmp := baseReg;
 						IntermediateCode.AddOffset(tmp,ToMemoryUnits(system,dim*system.addressSize));
 						IntermediateCode.MakeMemory(tmp,addressType);
 						Pass((tmp));
-						actualArrayBase := actualType(SyntaxTree.ArrayType).arrayBase.resolved;
+						actualArrayBase := actualType(SyntaxTree.ArrayType).arrayBase.resolvedType;
 					END;
-					PushArrayLens(formalType(SyntaxTree.ArrayType).arrayBase.resolved, actualArrayBase,dim-1);
+					PushArrayLens(formalType(SyntaxTree.ArrayType).arrayBase.resolvedType, actualArrayBase,dim-1);
 				END;
 			END PushArrayLens;
 
@@ -4799,21 +4799,21 @@ TYPE
 			IF Trace THEN TraceEnter("PushParameter") END;
 			position := expression.position;
 			IF expression.resolved # NIL THEN expression := expression.resolved END;
-			type := expression.type.resolved;
+			type := expression.type.resolvedType;
 
-			IF ~( ((type IS SyntaxTree.MathArrayType) = (parameter.type.resolved IS SyntaxTree.MathArrayType))
-						OR  (type IS SyntaxTree.MathArrayType) & (parameter.type.resolved IS SyntaxTree.ArrayType)
+			IF ~( ((type IS SyntaxTree.MathArrayType) = (parameter.type.resolvedType IS SyntaxTree.MathArrayType))
+						OR  (type IS SyntaxTree.MathArrayType) & (parameter.type.resolvedType IS SyntaxTree.ArrayType)
 							& (type(SyntaxTree.MathArrayType).form = SyntaxTree.Static)
-							& (parameter.type.resolved(SyntaxTree.ArrayType).form = SyntaxTree.Open)
+							& (parameter.type.resolvedType(SyntaxTree.ArrayType).form = SyntaxTree.Open)
 				) THEN Printout.Info("type",type);
 				TRACE(position.start);
 				Printout.Info("parameter",parameter);
 				END;
 
-			ASSERT( ((type IS SyntaxTree.MathArrayType) = (parameter.type.resolved IS SyntaxTree.MathArrayType))
-						OR  (type IS SyntaxTree.MathArrayType) & (parameter.type.resolved IS SyntaxTree.ArrayType)
+			ASSERT( ((type IS SyntaxTree.MathArrayType) = (parameter.type.resolvedType IS SyntaxTree.MathArrayType))
+						OR  (type IS SyntaxTree.MathArrayType) & (parameter.type.resolvedType IS SyntaxTree.ArrayType)
 							& (type(SyntaxTree.MathArrayType).form = SyntaxTree.Static)
-							& (parameter.type.resolved(SyntaxTree.ArrayType).form = SyntaxTree.Open)
+							& (parameter.type.resolvedType(SyntaxTree.ArrayType).form = SyntaxTree.Open)
 				);
 
 			(* TODO: needed? *)
@@ -4846,17 +4846,17 @@ TYPE
 					PushArrayLens(parameter.type,type,operand.dimOffset+DynamicDim(parameter.type)-1);
 				END;
 				Pass((operand.op)); (* address of the array *)
-			ELSIF parameter.type.resolved IS SyntaxTree.MathArrayType THEN
+			ELSIF parameter.type.resolvedType IS SyntaxTree.MathArrayType THEN
 
 				(* case 1
 					procedure P([left args], [const] A: array [*,*] of Type, [right args])
 				*)
-				IF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) &
+				IF (parameter.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Open) &
 				(parameter.kind IN {SyntaxTree.ValueParameter, SyntaxTree.ConstParameter}) THEN
-					size := MathLenOffset + 2*SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
+					size := MathLenOffset + 2*SemanticChecker.Dimension(parameter.type.resolvedType,{SyntaxTree.Open});
 					size := ToMemoryUnits(system,size*addressType.sizeInBits);
 					Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,size)));
-					dim := SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
+					dim := SemanticChecker.Dimension(parameter.type.resolvedType,{SyntaxTree.Open});
 					arrayDestinationTag := sp;
 
 					(* case 1b
@@ -4864,26 +4864,26 @@ TYPE
 					*)
 					IF expression IS SyntaxTree.IndexDesignator THEN
 						ReuseCopy(arrayDestinationTag,arrayDestinationTag);
-						dim := SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
+						dim := SemanticChecker.Dimension(parameter.type.resolvedType,{SyntaxTree.Open});
 						arrayDestinationDimension := dim;
 						Designate(expression,operand);
 					(* case 1a
 						P(...,A,...) push: push array descriptor to stack
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
 						Designate(expression,operand);
 						Emit(Copy(position,arrayDestinationTag,operand.tag,IntermediateCode.Immediate(addressType,size)));
 						i := 0;
-						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
-							type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
+						WHILE (i< dim) & (type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
+							type := type.resolvedType(SyntaxTree.MathArrayType).arrayBase;
 							INC(i);
 						END;
-						type := expression.type.resolved;
+						type := expression.type.resolvedType;
 						WHILE (i<dim) DO (* remaining static dimensions *)
-							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 							PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
-							GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							GetMathArrayIncrementAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
 							INC(i);
@@ -4897,10 +4897,10 @@ TYPE
 						+ case 1e
 						P(.. PT() ... );
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
-						Dereference(operand,type.resolved,FALSE);
-						DimensionCheck(type.resolved(SyntaxTree.MathArrayType),operand.tag, IntermediateCode.Immediate(addressType,dim),BreqL);
+						Dereference(operand,type.resolvedType,FALSE);
+						DimensionCheck(type.resolvedType(SyntaxTree.MathArrayType),operand.tag, IntermediateCode.Immediate(addressType,dim),BreqL);
 						Emit(Copy(position,sp(*arrayDestinationTag*),operand.tag,IntermediateCode.Immediate(addressType,size)));
 						PutMathArrayField(arrayDestinationTag,nil,MathFlagsOffset);
 
@@ -4909,13 +4909,13 @@ TYPE
 						case 1g
 						P(... PS()...)
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						Designate(expression,operand);
 						FOR i := 0 TO dim-1 DO
-							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 							PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
-							GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							GetMathArrayIncrementAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
 						END;
@@ -4925,17 +4925,17 @@ TYPE
 						*)
 						arrayFlags := {StaticFlag};
 						IF dim = 1 THEN
-							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
+							GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
 							ReleaseOperand(tmpOperand);
 							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
 							m := SIGNED32(tmpOperand.op.intValue);
 							IF (m >= 2) & (m <= 8) THEN INCL(arrayFlags,SmallVectorFlag); SetSmallArraySizeFlag(arrayFlags,m); END;
 						ELSIF dim = 2 THEN
-							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
+							GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
 							ReleaseOperand(tmpOperand);
 							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
 							m := SIGNED32(tmpOperand.op.intValue);
-							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,1,FALSE,tmpOperand);
+							GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,1,FALSE,tmpOperand);
 							ReleaseOperand(tmpOperand);
 							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
 							n := SIGNED32(tmpOperand.op.intValue);
@@ -4959,8 +4959,8 @@ TYPE
 				(* case 2
 					procedure P([left args], var A: array [*,*] of Type, [right args])
 				*)
-				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) & (parameter.kind = SyntaxTree.VarParameter) THEN
-					dim := SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
+				ELSIF (parameter.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Open) & (parameter.kind = SyntaxTree.VarParameter) THEN
+					dim := SemanticChecker.Dimension(parameter.type.resolvedType,{SyntaxTree.Open});
 					(* case 2b
 						P(...,A[a..b,c..d],...) pre: emit range and push array range descriptor, memorize stack position
 							push: push reference to pushed array descriptor
@@ -4982,16 +4982,16 @@ TYPE
 						P(...,A,...)
 						push: push reference to array descriptor on stack
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
-						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
-							type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
+						WHILE (i< dim) & (type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
+							type := type.resolvedType(SyntaxTree.MathArrayType).arrayBase;
 							INC(i);
 						END;
 						IF i = dim THEN
 							Designate(expression,operand);
 							Pass((operand.tag));
 						ELSE (* open-static *)
-							type := expression.type.resolved;
+							type := expression.type.resolvedType;
 							descriptorType := GetMathArrayDescriptorType(dim);
 							(* static array , cannot be reallocated, untraced !*)
 							variable := GetTemporaryVariable(SyntaxTree.ValueParameter,descriptorType, FALSE, TRUE (* untraced *));
@@ -4999,10 +4999,10 @@ TYPE
 							arrayDestinationTag := variableOp.op;
 							Designate(expression,operand);
 							FOR i := 0 TO dim-1 DO
-								GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 								PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
 								ReleaseOperand(tmpOperand);
-								GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								GetMathArrayIncrementAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 								PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
 								ReleaseOperand(tmpOperand);
 							END;
@@ -5019,17 +5019,17 @@ TYPE
 					(* case 2d
 						P(...,T,...) push: emit dimension check, push T
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
-						Dereference(operand,type.resolved,FALSE);
-						DimensionCheck(type.resolved(SyntaxTree.MathArrayType),operand.tag, IntermediateCode.Immediate(addressType,dim),BreqL);
+						Dereference(operand,type.resolvedType,FALSE);
+						DimensionCheck(type.resolvedType(SyntaxTree.MathArrayType),operand.tag, IntermediateCode.Immediate(addressType,dim),BreqL);
 						Pass((operand.tag));
 					(* case 2f
 						P(...,S,...) pre: allocate array descriptor on stack and memorize stack position
 							push: push reference to pushed array descriptor
 							post: remove array descriptor
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						descriptorType := GetMathArrayDescriptorType(dim);
 						(* static array -- cannot be reallocatated, untraced *)
 						variable := GetTemporaryVariable(SyntaxTree.ValueParameter,descriptorType, FALSE, TRUE (* untraced *));
@@ -5037,10 +5037,10 @@ TYPE
 						arrayDestinationTag := variableOp.op;
 						Designate(expression,operand);
 						FOR i := 0 TO dim-1 DO
-							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 							PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
-							GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							GetMathArrayIncrementAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
 						END;
@@ -5050,17 +5050,17 @@ TYPE
 						*)
 						arrayFlags := {StaticFlag};
 						IF dim = 1 THEN
-							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
+							GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
 							ReleaseOperand(tmpOperand);
 							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
 							m := SIGNED32(tmpOperand.op.intValue);
 							IF (m >= 2) & (m <= 8) THEN INCL(arrayFlags,SmallVectorFlag); SetSmallArraySizeFlag(arrayFlags,m); END;
 						ELSIF dim = 2 THEN
-							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
+							GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
 							ReleaseOperand(tmpOperand);
 							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
 							m := SIGNED32(tmpOperand.op.intValue);
-							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,1,FALSE,tmpOperand);
+							GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,1,FALSE,tmpOperand);
 							ReleaseOperand(tmpOperand);
 							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
 							n := SIGNED32(tmpOperand.op.intValue);
@@ -5085,12 +5085,12 @@ TYPE
 				(* case 3
 					procedure P([left args], [const] A: array [?] of Type, [right args])
 				*)
-				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) & (parameter.kind IN {SyntaxTree.ConstParameter,SyntaxTree.ValueParameter}) THEN
+				ELSIF (parameter.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) & (parameter.kind IN {SyntaxTree.ConstParameter,SyntaxTree.ValueParameter}) THEN
 					dim := SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static});
 					(* case 3b
 						P(...,A[a..b,c..d],...)
 					*)
-					IF (expression IS SyntaxTree.IndexDesignator) & (type.resolved(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
+					IF (expression IS SyntaxTree.IndexDesignator) & (type.resolvedType(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
 						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN (* indexer of form a[e,....,?] *)
 							variable := PrepareTensorDescriptor(expression(SyntaxTree.IndexDesignator));
 							Symbol(variable,variableOp);
@@ -5110,17 +5110,17 @@ TYPE
 					(* case 3a
 						P(...,A,...)
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
 						i := 0;
-						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
-							type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
+						WHILE (i< dim) & (type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
+							type := type.resolvedType(SyntaxTree.MathArrayType).arrayBase;
 							INC(i);
 						END;
 						IF i = dim THEN
 							Designate(expression,operand);
 							Pass((operand.tag));
 						ELSE (* open-static *)
-							type := expression.type.resolved;
+							type := expression.type.resolvedType;
 							descriptorType := GetMathArrayDescriptorType(dim);
 							(* static array -- cannot be reallocated -- no pointer to be traced *)
 							variable := GetTemporaryVariable(SyntaxTree.ValueParameter,descriptorType, FALSE, TRUE (* untraced *));
@@ -5128,10 +5128,10 @@ TYPE
 							arrayDestinationTag := variableOp.op;
 							Designate(expression,operand);
 							FOR i := 0 TO dim-1 DO
-								GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 								PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
 								ReleaseOperand(tmpOperand);
-								GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								GetMathArrayIncrementAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 								PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
 								ReleaseOperand(tmpOperand);
 							END;
@@ -5150,16 +5150,16 @@ TYPE
 						case 3e
 						P(...,PT(...),...)
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
-						Dereference(operand,type.resolved,FALSE);
+						Dereference(operand,type.resolvedType,FALSE);
 						Pass((operand.tag));
 					(* case 3f
 						P(...,S,...)
 						case 3g
 						P(...,PS(...),...)
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						descriptorType := GetMathArrayDescriptorType(dim);
 						(* static array does not need to be traced *)
 						variable := GetTemporaryVariable(SyntaxTree.ValueParameter,descriptorType, FALSE, TRUE (* untraced *));
@@ -5177,10 +5177,10 @@ TYPE
 						END;
 
 						FOR i := 0 TO dim-1 DO
-							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 							PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
-							GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							GetMathArrayIncrementAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
 						END;
@@ -5195,12 +5195,12 @@ TYPE
 						Pass((arrayDestinationTag));
 					ELSE HALT(100);
 					END;
-				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) & (parameter.kind = SyntaxTree.VarParameter) THEN
+				ELSIF (parameter.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) & (parameter.kind = SyntaxTree.VarParameter) THEN
 					dim := SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static});
 					(* case 4b
 						P(...,A[a..b,c..d],...)
 					*)
-					IF (expression IS SyntaxTree.IndexDesignator) & (type.resolved(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
+					IF (expression IS SyntaxTree.IndexDesignator) & (type.resolvedType(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
 						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN (* indexer of form a[e,....,?] *)
 							variable := PrepareTensorDescriptor(expression(SyntaxTree.IndexDesignator));
 							Symbol(variable,variableOp);
@@ -5219,7 +5219,7 @@ TYPE
 							Symbol(variable,variableOp);
 						ELSE
 							(* alias to range -- untraced *)
-							variable := GetTemporaryVariable(SyntaxTree.ValueParameter,parameter.type.resolved, FALSE, TRUE (* untraced *));
+							variable := GetTemporaryVariable(SyntaxTree.ValueParameter,parameter.type.resolvedType, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 							MakeMemory(tmp,variableOp.op,addressType,0);
 							Emit(Mov(position,tmp,operand.tag));
@@ -5230,17 +5230,17 @@ TYPE
 					(* case 4a
 						P(...,A,...)
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
 						i := 0;
-						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
-							type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
+						WHILE (i< dim) & (type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
+							type := type.resolvedType(SyntaxTree.MathArrayType).arrayBase;
 							INC(i);
 						END;
 						IF i = dim THEN
 							Designate(expression,operand);
 							arrayDestinationTag := operand.tag;
 						ELSE (* open-static *)
-							type := expression.type.resolved;
+							type := expression.type.resolvedType;
 							descriptorType := GetMathArrayDescriptorType(dim);
 							(* static array -- untraced *)
 							variable := GetTemporaryVariable(SyntaxTree.ValueParameter,descriptorType, FALSE, TRUE (* untraced *));
@@ -5248,10 +5248,10 @@ TYPE
 							arrayDestinationTag := variableOp.op;
 							Designate(expression,operand);
 							FOR i := 0 TO dim-1 DO
-								GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 								PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
 								ReleaseOperand(tmpOperand);
-								GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								GetMathArrayIncrementAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 								PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
 								ReleaseOperand(tmpOperand);
 							END;
@@ -5265,7 +5265,7 @@ TYPE
 							PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
 						END;
 						(* tensor alias to open array -- untraced *)
-						variable := GetTemporaryVariable(SyntaxTree.ValueParameter,parameter.type.resolved, FALSE, TRUE (* untraced *));
+						variable := GetTemporaryVariable(SyntaxTree.ValueParameter,parameter.type.resolvedType, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						MakeMemory(tmp,variableOp.op,addressType,0);
 						Emit(Mov(position,tmp,arrayDestinationTag));
@@ -5275,13 +5275,13 @@ TYPE
 					(* case 4d
 						P(...,T,...)
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
 						Pass((operand.op));
 					(* case 4f
 						P(...,S,...)
 					*)
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						descriptorType := GetMathArrayDescriptorType(dim);
 						(* static array -- cannot be reallocated, untraced *)
 						variable := GetTemporaryVariable(SyntaxTree.ValueParameter,descriptorType, FALSE, TRUE (* untraced *));
@@ -5289,10 +5289,10 @@ TYPE
 						arrayDestinationTag := variableOp.op;
 						Designate(expression,operand);
 						FOR i := 0 TO dim-1 DO
-							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							GetMathArrayLengthAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 							PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
-							GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							GetMathArrayIncrementAt(type.resolvedType(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
 							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
 						END;
@@ -5304,7 +5304,7 @@ TYPE
 						baseType := SemanticChecker.ArrayBase(type,dim);
 						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
 						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
-						variable := GetTemporaryVariable(SyntaxTree.ValueParameter,parameter.type.resolved, FALSE, TRUE (* untraced *));
+						variable := GetTemporaryVariable(SyntaxTree.ValueParameter,parameter.type.resolvedType, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						MakeMemory(tmp,variableOp.op,addressType,0);
 						Emit(Mov(position,tmp,arrayDestinationTag));
@@ -5313,9 +5313,9 @@ TYPE
 						ReleaseOperand(variableOp);
 					ELSE HALT(100);
 					END;
-				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static) & (parameter.kind = SyntaxTree.ValueParameter) THEN
-					ASSERT(type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static);
-					IF SemanticChecker.CanPassInRegister(system,parameter.type.resolved) THEN
+				ELSIF (parameter.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Static) & (parameter.kind = SyntaxTree.ValueParameter) THEN
+					ASSERT(type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Static);
+					IF SemanticChecker.CanPassInRegister(system,parameter.type.resolvedType) THEN
 						Evaluate(expression, operand);
 						Emit(Push(position, operand.op));
 					(*
@@ -5332,22 +5332,22 @@ TYPE
 						arrayDestinationTag := sp;
 						Emit(Copy(position,arrayDestinationTag,operand.op,IntermediateCode.Immediate(addressType,size)));
 					END;
-				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static) & (parameter.kind IN {SyntaxTree.VarParameter,SyntaxTree.ConstParameter}) THEN
+				ELSIF (parameter.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Static) & (parameter.kind IN {SyntaxTree.VarParameter,SyntaxTree.ConstParameter}) THEN
 					Designate(expression,operand);
 					IF operand.op.type.length > 1 THEN (* need temporary to pass register *)
 						(* static array no pointer *)
-						variable := GetTemporaryVariable(SyntaxTree.ValueParameter,parameter.type.resolved, FALSE, TRUE (* untraced *));
+						variable := GetTemporaryVariable(SyntaxTree.ValueParameter,parameter.type.resolvedType, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						MakeMemory(tmp,variableOp.op,operand.op.type,0);
 						Emit(Mov(position,tmp,operand.op));
 						Emit(Push(position,variableOp.op));
-					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+					ELSIF type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						Pass((operand.op));
 					ELSE Error(position,"Forbidden non-static actual type. Conversion involved?");
 					END;
 				ELSE HALT(200)
 				END;
-			ELSIF parameter.type.resolved IS SyntaxTree.RangeType THEN
+			ELSIF parameter.type.resolvedType IS SyntaxTree.RangeType THEN
 				IF parameter.kind = SyntaxTree.VarParameter THEN
 					ASSERT(~(expression IS SyntaxTree.RangeExpression));
 					Designate(expression, operand);
@@ -5374,14 +5374,14 @@ TYPE
 						Emit(Mov(position,tmp,operand.extra)); (* step *)
 					END;
 				END
-			ELSIF parameter.type.resolved IS SyntaxTree.ComplexType THEN
+			ELSIF parameter.type.resolvedType IS SyntaxTree.ComplexType THEN
 				IF parameter.kind = SyntaxTree.VarParameter THEN
 					Designate(expression, operand);
 					Pass((operand.op));
 				ELSE
 					ASSERT((parameter.kind = SyntaxTree.ValueParameter) OR (parameter.kind = SyntaxTree.ConstParameter));
 					Evaluate(expression, operand);
-					componentType := parameter.type.resolved(SyntaxTree.ComplexType).componentType;
+					componentType := parameter.type.resolvedType(SyntaxTree.ComplexType).componentType;
 					IF (register >= 0) OR (system.AlignmentOf(system.parameterAlignment,componentType) = system.AlignmentOf(system.variableAlignment,componentType)) THEN
 						Pass((operand.tag)); (* imaginary part *)
 						Pass((operand.op)) (* real part *)
@@ -5399,7 +5399,7 @@ TYPE
 					END
 				END
 			ELSE
-				IF (parameter.kind = SyntaxTree.ValueParameter) & (parameter.assignmentOperator = NIL) OR (parameter.kind = SyntaxTree.ConstParameter) & ~(parameter.type.resolved IS SyntaxTree.RecordType) & ~(parameter.type.resolved IS SyntaxTree.AnyRecordType) & ~(parameter.type.resolved IS SyntaxTree.ArrayType) THEN
+				IF (parameter.kind = SyntaxTree.ValueParameter) & (parameter.assignmentOperator = NIL) OR (parameter.kind = SyntaxTree.ConstParameter) & ~(parameter.type.resolvedType IS SyntaxTree.RecordType) & ~(parameter.type.resolvedType IS SyntaxTree.AnyRecordType) & ~(parameter.type.resolvedType IS SyntaxTree.ArrayType) THEN
 					IF (type IS SyntaxTree.RecordType) OR IsStaticArray(parameter.type) THEN
 						Designate(expression,operand);
 						size := ToMemoryUnits(system,system.SizeOf(parameter.type));
@@ -5559,7 +5559,7 @@ TYPE
 
 					IF var.initializer # NIL THEN
 						variableDesignator := SyntaxTree.NewSymbolDesignator(var.position,NIL, NIL,var);
-						variableDesignator.SetType(var.type.resolved);
+						variableDesignator.SetType(var.type.resolvedType);
 						variableDesignator.SetAssignable(TRUE);
 						IF SemanticChecker.IsReference(var) THEN
 							AssignReference(variableDesignator, var.initializer);
@@ -5660,14 +5660,14 @@ TYPE
 				expression, left: SyntaxTree.Expression; tempVariableDesignator : SyntaxTree.Designator;
 			BEGIN
 				IF (formalParameter.kind = SyntaxTree.VarParameter) & SemanticChecker.IsIndexOperator(actualParameter) THEN
-					IF actualParameter(SyntaxTree.ProcedureCallDesignator).left.type.resolved(SyntaxTree.ProcedureType).varReturn THEN
+					IF actualParameter(SyntaxTree.ProcedureCallDesignator).left.type.resolvedType(SyntaxTree.ProcedureType).varReturn THEN
 						RETURN
 					END;
 					WITH actualParameter: SyntaxTree.ProcedureCallDesignator DO
 						(* prepare writeback for any other "normal" indexer *)
-						variable := GetTemporaryVariable(SyntaxTree.ValueParameter,actualParameter.type.resolved, FALSE, TRUE (* untraced *));
+						variable := GetTemporaryVariable(SyntaxTree.ValueParameter,actualParameter.type.resolvedType, FALSE, TRUE (* untraced *));
 						tempVariableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, NIL, variable);
-						tempVariableDesignator.SetType(actualParameter.type.resolved);
+						tempVariableDesignator.SetType(actualParameter.type.resolvedType);
 						Assign(tempVariableDesignator, actualParameter);
 						IF firstWriteBackCall = NIL THEN
 							NEW(firstWriteBackCall);
@@ -5696,7 +5696,7 @@ TYPE
 			IF Trace THEN TraceEnter("DesignateProcedureCallDesignator") END;
 
 			resultDesignator := procedureResultDesignator; procedureResultDesignator := NIL;
-			procedureType := x.left.type.resolved(SyntaxTree.ProcedureType);
+			procedureType := x.left.type.resolvedType(SyntaxTree.ProcedureType);
 			callingConvention := procedureType.callingConvention;
 
 			dest := destination; destination := emptyOperand;
@@ -5737,7 +5737,7 @@ TYPE
 					FOR i := 0 TO parameters.Length()-1 DO
 						IF (formalParameter.kind = SyntaxTree.VarParameter) THEN
 							type := addressType;
-						ELSIF formalParameter.type.IsRecordType() OR (formalParameter.type.resolved IS SyntaxTree.ArrayType) THEN
+						ELSIF formalParameter.type.IsRecordType() OR (formalParameter.type.resolvedType IS SyntaxTree.ArrayType) THEN
 							type := addressType;
 						ELSE
 							type := GetType(system, formalParameter.type);
@@ -5794,7 +5794,7 @@ TYPE
 
 			IF procedureType.selfParameter # NIL THEN (* type bound procedure in a record *)
 				Designate(x.left(SyntaxTree.Designator).left, operand);
-				IF (procedureType.selfParameter.type.resolved IS SyntaxTree.RecordType) & ~procedureType.selfParameter.type.resolved(SyntaxTree.RecordType).isFinal THEN
+				IF (procedureType.selfParameter.type.resolvedType IS SyntaxTree.RecordType) & ~procedureType.selfParameter.type.resolvedType(SyntaxTree.RecordType).isFinal THEN
 					Emit(Push(position, operand.tag));
 				END;
 				Emit(Push(position, operand.op));
@@ -5867,7 +5867,7 @@ TYPE
 				FOR i := 0 TO parameters.Length()-1 DO
 					IF (formalParameter.kind = SyntaxTree.VarParameter) THEN
 						type := addressType;
-					ELSIF formalParameter.type.IsRecordType() OR (formalParameter.type.resolved IS SyntaxTree.ArrayType) THEN
+					ELSIF formalParameter.type.IsRecordType() OR (formalParameter.type.resolvedType IS SyntaxTree.ArrayType) THEN
 						type := addressType;
 					ELSE
 						type := GetType(system, formalParameter.type);
@@ -5965,7 +5965,7 @@ TYPE
 
 							(* push typetag *)
 							(* IF dump # NIL THEN dump.String("push typetag"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-							recordType := formalParameter.type.resolved(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
+							recordType := formalParameter.type.resolvedType(SyntaxTree.PointerType).pointerBase.resolvedType(SyntaxTree.RecordType);
 							arg := TypeDescriptorAdr(recordType);
 							Emit(Push(position,arg));
 						ELSE
@@ -5975,7 +5975,7 @@ TYPE
 
 							(* push fingerprint *)
 							(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-							fingerprint := fingerprinter.TypeFP(formalParameter.type.resolved);
+							fingerprint := fingerprinter.TypeFP(formalParameter.type.resolvedType);
 							Emit(Push(position,IntermediateCode.Immediate(signed64, fingerprint.public))) (* TODO: push the type's fingerprint *)
 						END
 					END;
@@ -6185,7 +6185,7 @@ TYPE
 				baseRecord: SyntaxTree.RecordType;
 			BEGIN (* no code emission *)
 				source := NIL;
-				x := x.resolved;
+				x := x.resolvedType;
 				IF (x IS SyntaxTree.AnyType) OR (x IS SyntaxTree.PointerType) THEN
 					x := GetHiddenPointerType();
 				ELSIF (x IS SyntaxTree.AnyRecordType) THEN
@@ -6199,7 +6199,7 @@ TYPE
 				td := x.typeDeclaration;
 				IF td = NIL THEN
 					ASSERT(x(SyntaxTree.RecordType).pointerType # NIL);
-					td := x(SyntaxTree.RecordType).pointerType.resolved.typeDeclaration;
+					td := x(SyntaxTree.RecordType).pointerType.resolvedType.typeDeclaration;
 					ASSERT(td # NIL);
 				END;
 
@@ -6346,12 +6346,12 @@ TYPE
 				ELSIF IsStrictlyPointerToRecord(type) THEN
 					(* pointer to record type: push typetag *)
 					(* IF dump # NIL THEN dump.String("push typetag"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-					recordType := type.resolved(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
+					recordType := type.resolvedType(SyntaxTree.PointerType).pointerBase.resolvedType(SyntaxTree.RecordType);
 					arg := TypeDescriptorAdr(recordType);
 				ELSE
 					(* non-pointer to record type: push fingerprint *)
 					(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-					fingerprint := fingerprinter.TypeFP(type.resolved);
+					fingerprint := fingerprinter.TypeFP(type.resolvedType);
 					arg := IntermediateCode.Immediate(signed64, fingerprint.public)
 				END;
 				operatorInitializationCodeSection.Emit(Push(position,arg))
@@ -6459,8 +6459,8 @@ TYPE
 					size := ProcParametersSize(procedure);
 				ELSE
 					Symbol(procedureVariable, result);
-					LoadValue(result, procedureVariable.type.resolved);
-					size := ParametersSize(system, procedureVariable.type.resolved(SyntaxTree.ProcedureType), FALSE);
+					LoadValue(result, procedureVariable.type.resolvedType);
+					size := ParametersSize(system, procedureVariable.type.resolvedType(SyntaxTree.ProcedureType), FALSE);
 				END;
 				Emit(Call(position,result.op,size));
 			END CallProcedure;
@@ -6619,31 +6619,31 @@ TYPE
 						StringOperand(res, expression.type);
 					ELSE
 						Evaluate(expression,res);
-						IF expression.type.resolved IS SyntaxTree.IntegerType THEN
+						IF expression.type.resolvedType IS SyntaxTree.IntegerType THEN
 							IF res.op.type.sizeInBits < IntermediateCode.Bits64 THEN
 								Convert(res.op,int64);
 							END;
 							Integer(res.op);
-						ELSIF expression.type.resolved IS SyntaxTree.BooleanType THEN
+						ELSIF expression.type.resolvedType IS SyntaxTree.BooleanType THEN
 							Boolean(res.op);
-						ELSIF expression.type.resolved IS SyntaxTree.SetType THEN
+						ELSIF expression.type.resolvedType IS SyntaxTree.SetType THEN
 							Set(res.op);
-						ELSIF expression.type.resolved IS SyntaxTree.FloatType THEN
+						ELSIF expression.type.resolvedType IS SyntaxTree.FloatType THEN
 							IF res.op.type.sizeInBits = IntermediateCode.Bits32 THEN
 								Convert(res.op,float64);
 							END;
 							Float(res.op);
-						ELSIF (expression.type.resolved IS SyntaxTree.CharacterType) & (expression.type.resolved.sizeInBits = 8) THEN
+						ELSIF (expression.type.resolvedType IS SyntaxTree.CharacterType) & (expression.type.resolvedType.sizeInBits = 8) THEN
 							Char(res.op);
-						ELSIF expression.type.resolved IS SyntaxTree.AddressType THEN
+						ELSIF expression.type.resolvedType IS SyntaxTree.AddressType THEN
 							Address(res.op);String("H");
-						ELSIF expression.type.resolved IS SyntaxTree.SizeType THEN
+						ELSIF expression.type.resolvedType IS SyntaxTree.SizeType THEN
 							Size(res.op);
-						ELSIF (expression.type.resolved IS SyntaxTree.PointerType) OR IsPointerToRecord(expression.type,recordType) THEN
+						ELSIF (expression.type.resolvedType IS SyntaxTree.PointerType) OR IsPointerToRecord(expression.type,recordType) THEN
 							Address(res.op);String("H");
-						ELSIF (expression.type.resolved IS SyntaxTree.ProcedureType) THEN
+						ELSIF (expression.type.resolvedType IS SyntaxTree.ProcedureType) THEN
 							Address(res.op);String("H");
-						ELSIF expression.type.resolved IS SyntaxTree.NilType THEN
+						ELSIF expression.type.resolvedType IS SyntaxTree.NilType THEN
 							String("NIL");
 						ELSE HALT(200);
 						END;
@@ -6665,12 +6665,12 @@ TYPE
 		VAR baseType: SyntaxTree.Type; imm,mem: IntermediateCode.Operand; dim,size: SIZE;
 			variable: SyntaxTree.Variable; i: SIZE; initializerOp: Operand;
 		BEGIN
-			type := type.resolved;
+			type := type.resolvedType;
 			IF type IS SyntaxTree.RecordType THEN
 				WITH type: SyntaxTree.RecordType DO
 					baseType := type.baseType;
 					IF baseType # NIL THEN
-						baseType := baseType.resolved;
+						baseType := baseType.resolvedType;
 						IF baseType IS SyntaxTree.PointerType THEN baseType := baseType(SyntaxTree.PointerType).pointerBase END;
 						InitFields(baseType,adr,offset,initStatic);
 					END;
@@ -6695,7 +6695,7 @@ TYPE
 				WITH type: SyntaxTree.CellType DO
 					baseType := type.baseType;
 					IF baseType # NIL THEN
-						baseType := baseType.resolved;
+						baseType := baseType.resolvedType;
 						IF baseType IS SyntaxTree.PointerType THEN baseType := baseType(SyntaxTree.PointerType).pointerBase END;
 						InitFields(baseType,adr,offset,initStatic);
 					END;
@@ -6757,7 +6757,7 @@ TYPE
 		VAR type: SyntaxTree.Type; operand, ignore: Operand; tmp: IntermediateCode.Operand; reference: SyntaxTree.Expression;
 			saved: RegisterEntry; constructor: SyntaxTree.Procedure;
 		BEGIN
-			type := variable.type.resolved;
+			type := variable.type.resolvedType;
 			IF (type IS SyntaxTree.MathArrayType) THEN
 				IF initStatic THEN
 					WITH type: SyntaxTree.MathArrayType DO
@@ -6779,7 +6779,7 @@ TYPE
 				IF ~initStatic & (variable.initializer # NIL) THEN
 					Symbol(variable,operand);
 					reference := SyntaxTree.NewSymbolDesignator(variable.initializer.position,NIL, NIL,variable);
-					reference.SetType(variable.type.resolved);
+					reference.SetType(variable.type.resolvedType);
 					reference.SetAssignable(TRUE);
 					Assign(reference,variable.initializer);
 				END;
@@ -6794,7 +6794,7 @@ TYPE
 					ASSERT(constructor.type(SyntaxTree.ProcedureType).firstParameter = NIL);
 					IF (variable.initializer = NIL) OR (variable.initializer.type = NIL) THEN
 						(* no assignment or overloaded operatpr "=" *)
-						CallConstructor(constructor, type.resolved(SyntaxTree.RecordType), operand.op, NIL,0,-1);
+						CallConstructor(constructor, type.resolvedType(SyntaxTree.RecordType), operand.op, NIL,0,-1);
 					END;
 				END;
 				
@@ -6804,7 +6804,7 @@ TYPE
 					ELSE
 						Symbol(variable,operand);
 						reference := SyntaxTree.NewSymbolDesignator(variable.initializer.position,NIL, NIL,variable);
-						reference.SetType(variable.type.resolved);
+						reference.SetType(variable.type.resolvedType);
 						reference.SetAssignable(TRUE);
 						Assign(reference,variable.initializer);
 					END
@@ -6947,7 +6947,7 @@ TYPE
 				val := dim.intValue;
 				IF type.form # SyntaxTree.Tensor THEN
 					t := SemanticChecker.ArrayBase(type,val(SIZE));
-					type := t.resolved(SyntaxTree.MathArrayType);
+					type := t.resolvedType(SyntaxTree.MathArrayType);
 					IF type.form = SyntaxTree.Static THEN
 						IF increment THEN
 							res := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,type.staticIncrementInBits));
@@ -6998,7 +6998,7 @@ TYPE
 						BrL(end);
 					ELSE hasDynamicPart := TRUE;
 					END;
-					t := type.arrayBase.resolved;
+					t := type.arrayBase.resolvedType;
 					val := val + 1;
 					IF next # NIL THEN SetLabel(next) END;
 				END;
@@ -7029,7 +7029,7 @@ TYPE
 				ASSERT(type.form IN {SyntaxTree.Open, SyntaxTree.SemiDynamic});
 				val := dim.intValue;
 				t := SemanticChecker.ArrayBase(type,val(SIZE));
-				type := t.resolved(SyntaxTree.ArrayType);
+				type := t.resolvedType(SyntaxTree.ArrayType);
 				IF type.form = SyntaxTree.Static THEN
 					res := IntermediateCode.Immediate(addressType,type.staticLength);
 				ELSE
@@ -7065,7 +7065,7 @@ TYPE
 						BrL(end);
 					ELSE hasDynamicPart := TRUE;
 					END;
-					t := type.arrayBase.resolved;
+					t := type.arrayBase.resolvedType;
 					val := val + 1;
 					IF next # NIL THEN SetLabel(next) END;
 				END;
@@ -7304,8 +7304,8 @@ TYPE
 						Emit(Push(modifier.position, op.op));
 						ReleaseOperand(op);
 						CallThis(position,"ActiveCellsRuntime","AddPortStringProperty",5);
-					ELSIF (modifier.expression.type.resolved IS SyntaxTree.IntegerType) THEN
-						ASSERT(value.type.resolved IS SyntaxTree.IntegerType);
+					ELSIF (modifier.expression.type.resolvedType IS SyntaxTree.IntegerType) THEN
+						ASSERT(value.type.resolvedType IS SyntaxTree.IntegerType);
 						Evaluate(value, op);
 						Emit(Push(modifier.position, op.op));
 						ReleaseOperand(op);
@@ -7332,14 +7332,14 @@ TYPE
 				PROCEDURE PushLens(type: SyntaxTree.Type);
 				BEGIN
 					IF IsSemiDynamicArray(type) THEN
-						PushLens(type(SyntaxTree.ArrayType).arrayBase.resolved);
+						PushLens(type(SyntaxTree.ArrayType).arrayBase.resolvedType);
 						Evaluate(type(SyntaxTree.ArrayType).length, op);
 						Emit(Push(Basic.invalidPosition, op.op));
 						ReleaseOperand(op);
 						INC(dim);
 					ELSIF IsStaticArray(type) THEN
 						len := len * type(SyntaxTree.ArrayType).staticLength;
-						PushLens(type(SyntaxTree.ArrayType).arrayBase.resolved);
+						PushLens(type(SyntaxTree.ArrayType).arrayBase.resolvedType);
 						INC(dim);
 					ELSE
 						baseType := type;
@@ -7353,7 +7353,7 @@ TYPE
 						dim := 0;
 						len := 1;
 						PushLens(type);
-						portType := baseType.resolved(SyntaxTree.PortType);
+						portType := baseType.resolvedType(SyntaxTree.PortType);
 					ELSE
 						portType := parameter.type(SyntaxTree.PortType);
 					END;
@@ -7401,14 +7401,14 @@ TYPE
 
 		BEGIN
 			IF backend.cellsAreObjects THEN
-				IF (x.baseType # NIL)  & (x.baseType.resolved IS SyntaxTree.CellType) THEN
-					AddPorts(cell, x.baseType.resolved(SyntaxTree.CellType));
+				IF (x.baseType # NIL)  & (x.baseType.resolvedType IS SyntaxTree.CellType) THEN
+					AddPorts(cell, x.baseType.resolvedType(SyntaxTree.CellType));
 				END;
 				parameter := x.firstParameter;
 				WHILE (parameter # NIL) DO
-					type := parameter.type.resolved;
+					type := parameter.type.resolvedType;
 					WHILE (type IS SyntaxTree.ArrayType) DO
-						type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+						type := type(SyntaxTree.ArrayType).arrayBase.resolvedType;
 					END;
 					IF (type IS SyntaxTree.PortType) THEN (* port found *)
 						Global.GetSymbolNameInScope(parameter,x.cellScope,name);
@@ -7439,10 +7439,10 @@ TYPE
 				IF (value # NIL) THEN
 					ASSERT(
 						SemanticChecker.IsStringType(property.type)
-						OR (property.type.resolved IS SyntaxTree.IntegerType)
-						OR (property.type.resolved IS SyntaxTree.FloatType)
-						OR (property.type.resolved IS SyntaxTree.BooleanType)
-						OR (property.type.resolved IS SyntaxTree.SetType)
+						OR (property.type.resolvedType IS SyntaxTree.IntegerType)
+						OR (property.type.resolvedType IS SyntaxTree.FloatType)
+						OR (property.type.resolvedType IS SyntaxTree.BooleanType)
+						OR (property.type.resolvedType IS SyntaxTree.SetType)
 						);
 					left := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition,NIL,left,cell); left.SetType(system.anyType);
 					left := SyntaxTree.NewDereferenceDesignator(Basic.invalidPosition, NIL,left); left.SetType(cellType);
@@ -7463,26 +7463,26 @@ TYPE
 					PushString(op, value.type);
 					ReleaseOperand(op);
 					CallThis(position,"ActiveCellsRuntime","AddStringProperty",7);
-				ELSIF (property.type.resolved IS SyntaxTree.IntegerType) THEN
-					ASSERT(value.type.resolved IS SyntaxTree.IntegerType);
+				ELSIF (property.type.resolvedType IS SyntaxTree.IntegerType) THEN
+					ASSERT(value.type.resolvedType IS SyntaxTree.IntegerType);
 					Evaluate(value, op);
 					Emit(Push(property.position, op.op));
 					ReleaseOperand(op);
 					CallThis(position,"ActiveCellsRuntime","AddIntegerProperty",5);
-				ELSIF (property.type.resolved IS SyntaxTree.BooleanType) THEN
-					ASSERT(value.type.resolved IS SyntaxTree.BooleanType);
+				ELSIF (property.type.resolvedType IS SyntaxTree.BooleanType) THEN
+					ASSERT(value.type.resolvedType IS SyntaxTree.BooleanType);
 					Evaluate(value, op);
 					Emit(Push(property.position, op.op));
 					ReleaseOperand(op);
 					CallThis(position,"ActiveCellsRuntime","AddBooleanProperty",5);
-				ELSIF (property.type.resolved IS SyntaxTree.FloatType) THEN
-					ASSERT((value.type.resolved IS SyntaxTree.FloatType) & (value.type.resolved(SyntaxTree.FloatType).sizeInBits =64));
+				ELSIF (property.type.resolvedType IS SyntaxTree.FloatType) THEN
+					ASSERT((value.type.resolvedType IS SyntaxTree.FloatType) & (value.type.resolvedType(SyntaxTree.FloatType).sizeInBits =64));
 					Evaluate(value, op);
 					Emit(Push(property.position, op.op));
 					ReleaseOperand(op);
 					CallThis(position,"ActiveCellsRuntime","AddRealProperty",-1); (* must import *)
-				ELSIF (property.type.resolved IS SyntaxTree.SetType) THEN
-					ASSERT((value.type.resolved IS SyntaxTree.SetType));
+				ELSIF (property.type.resolvedType IS SyntaxTree.SetType) THEN
+					ASSERT((value.type.resolvedType IS SyntaxTree.SetType));
 					Evaluate(value, op);
 					Emit(Push(property.position, op.op));
 					ReleaseOperand(op);
@@ -7550,8 +7550,8 @@ TYPE
 				PushString(op, value.type);
 				ReleaseOperand(op);
 				CallThisChecked(position,"ActiveCellsRuntime","AddPortStringProperty",4,FALSE);
-			ELSIF (modifier.expression.type.resolved IS SyntaxTree.IntegerType) THEN
-				ASSERT(value.type.resolved IS SyntaxTree.IntegerType);
+			ELSIF (modifier.expression.type.resolvedType IS SyntaxTree.IntegerType) THEN
+				ASSERT(value.type.resolvedType IS SyntaxTree.IntegerType);
 				Evaluate(value, op);
 				Emit(Push(modifier.position, op.op));
 				ReleaseOperand(op);
@@ -7583,7 +7583,7 @@ TYPE
 		PROCEDURE PushString(op: Operand; actualType: SyntaxTree.Type);
 		VAR tmp: IntermediateCode.Operand;
 		BEGIN
-			actualType := actualType.resolved;
+			actualType := actualType.resolvedType;
 			IF actualType IS SyntaxTree.StringType THEN
 				Emit(Push(position,IntermediateCode.Immediate(addressType,actualType(SyntaxTree.StringType).length)));
 			ELSIF actualType(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
@@ -7660,9 +7660,9 @@ TYPE
 				op,callop: Operand;
 			BEGIN
 				IF type = NIL THEN RETURN END;
-				type := type.resolved;
+				type := type.resolvedType;
 				IF type IS SyntaxTree.PointerType THEN
-					type := type(SyntaxTree.PointerType).pointerBase.resolved
+					type := type(SyntaxTree.PointerType).pointerBase.resolvedType
 				END;
 				IF type IS SyntaxTree.MathArrayType THEN RETURN END;
 				CallBodies(self,type(SyntaxTree.RecordType).baseType);
@@ -7708,20 +7708,20 @@ TYPE
 			ELSE
 				len := 0
 			END;
-			IF len > 0 THEN p[0] := x.parameters.GetExpression(0); t0 := p[0].type.resolved END;
-			IF len > 1 THEN p[1] := x.parameters.GetExpression(1); t1 := p[1].type.resolved END;
+			IF len > 0 THEN p[0] := x.parameters.GetExpression(0); t0 := p[0].type.resolvedType END;
+			IF len > 1 THEN p[1] := x.parameters.GetExpression(1); t1 := p[1].type.resolvedType END;
 			IF x.type # NIL THEN
-				type := x.type.resolved;
+				type := x.type.resolvedType;
 				t1 := t0;
 				t0 := type;
 				firstPar := 0;
 			ELSE
-				type := p[0].type.resolved;
+				type := p[0].type.resolvedType;
 				firstPar := 1;
 			END;
-			IF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType)
+			IF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolvedType IS SyntaxTree.RecordType)
 			THEN
-				recordType := type(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
+				recordType := type(SyntaxTree.PointerType).pointerBase.resolvedType(SyntaxTree.RecordType);
 				IF backend.cooperative THEN
 					size := ToMemoryUnits(system,system.SizeOf(recordType));
 					IF ~type(SyntaxTree.PointerType).isPlain THEN
@@ -7777,8 +7777,8 @@ TYPE
 						constructor := x.expression(SyntaxTree.ProcedureCallDesignator).left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
 						parameters := x.expression(SyntaxTree.ProcedureCallDesignator).parameters;
 						len := parameters.Length();
-						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);
-						recordType := x.expression.type.resolved(SyntaxTree.RecordType);
+						ASSERT(x.expression.type.resolvedType IS SyntaxTree.RecordType);
+						recordType := x.expression.type.resolvedType(SyntaxTree.RecordType);
 					ELSE
 						parameters := x.parameters;
 					END;
@@ -7840,7 +7840,7 @@ TYPE
 					ReleaseIntermediateOperand(reg);
 
 					(* push realtime flag *)
-					IF type.resolved.isRealtime THEN Emit(Push(position,true));
+					IF type.resolvedType.isRealtime THEN Emit(Push(position,true));
 					ELSE Emit(Push(position,false));
 					END;
 
@@ -7864,8 +7864,8 @@ TYPE
 						constructor := x.expression(SyntaxTree.ProcedureCallDesignator).left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
 						parameters := x.expression(SyntaxTree.ProcedureCallDesignator).parameters;
 						len := parameters.Length();
-						ASSERT(x.expression.type.resolved IS SyntaxTree.RecordType);
-						recordType := x.expression.type.resolved(SyntaxTree.RecordType);
+						ASSERT(x.expression.type.resolvedType IS SyntaxTree.RecordType);
+						recordType := x.expression.type.resolvedType(SyntaxTree.RecordType);
 					ELSE
 						parameters := x.parameters;
 					END;
@@ -7907,8 +7907,8 @@ TYPE
 						SetLabel(exit);
 					END;
 				END;
-			ELSIF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.ArrayType)  THEN
-				type := type(SyntaxTree.PointerType).pointerBase.resolved;
+			ELSIF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolvedType IS SyntaxTree.ArrayType)  THEN
+				type := type(SyntaxTree.PointerType).pointerBase.resolvedType;
 				IF ~backend.cooperative THEN  (* simpler version *)
 					(*
 						push len0
@@ -7926,7 +7926,7 @@ TYPE
 					dim := 0;
 
 					FOR i := len-1 TO firstPar BY -1 DO
-						type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+						type := type(SyntaxTree.ArrayType).arrayBase.resolvedType;
 						parameter := x.parameters.GetExpression(i);
 						Evaluate(parameter,r);
 						IF (r.op.mode # IntermediateCode.ModeImmediate) & ~isUnchecked THEN
@@ -7950,7 +7950,7 @@ TYPE
 					IF type IS SyntaxTree.ArrayType THEN
 						WHILE (type IS SyntaxTree.ArrayType) DO (* static array *)
 							staticLength := staticLength * type(SyntaxTree.ArrayType).staticLength;
-							type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+							type := type(SyntaxTree.ArrayType).arrayBase.resolvedType;
 						END;
 					END;
 					IF SemanticChecker.ContainsPointer(type) THEN
@@ -7983,7 +7983,7 @@ TYPE
 					IntermediateCode.InitOperand(reg);
 					IF p[1] # NIL THEN
 						FOR i := firstPar TO len-1 DO
-							type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+							type := type(SyntaxTree.ArrayType).arrayBase.resolvedType;
 							parameter := x.parameters.GetExpression(i);
 							Evaluate(parameter,r);
 							IF (r.op.mode # IntermediateCode.ModeImmediate) & ~isUnchecked THEN
@@ -8011,7 +8011,7 @@ TYPE
 					IF backend.cooperative THEN
 						size := ToMemoryUnits(system,system.SizeOf(type));
 						WHILE type IS SyntaxTree.ArrayType DO
-							type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+							type := type(SyntaxTree.ArrayType).arrayBase.resolvedType;
 						END;
 						size := size DIV ToMemoryUnits(system,system.SizeOf(type));
 						IF (size # 1) THEN
@@ -8060,7 +8060,7 @@ TYPE
 
 						needsTrace := p[0].NeedsTrace();
 						IF needsTrace THEN ModifyAssignments(true) END;
-						IF ~p[0].type.resolved(SyntaxTree.PointerType).isDisposable THEN
+						IF ~p[0].type.resolvedType(SyntaxTree.PointerType).isDisposable THEN
 							Emit(Push(position, pointer));
 							CallThisChecked(position,"GarbageCollector","Watch",0,FALSE);
 							Emit(Pop(position, pointer));
@@ -8081,7 +8081,7 @@ TYPE
 						Emit(Add(position,sp,sp,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,(openDim+1)*system.addressSize))));
 						Designate(p[0],l);
 						IF needsTrace THEN
-							CallResetProcedure(l.op,l.tag,p[0].type.resolved);
+							CallResetProcedure(l.op,l.tag,p[0].type.resolvedType);
 						ELSE
 							ToMemory(l.op,addressType,0);
 							Emit(Mov(position,l.op,pointer));
@@ -8095,7 +8095,7 @@ TYPE
 								staticLength := 1;
 								WHILE (type IS SyntaxTree.ArrayType) DO (* static array *)
 									staticLength := staticLength * type(SyntaxTree.ArrayType).staticLength;
-									type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+									type := type(SyntaxTree.ArrayType).arrayBase.resolvedType;
 								END;
 								tmp := IntermediateCode.Immediate(reg.type,staticLength);
 								MulInt(reg,reg,tmp);
@@ -8116,7 +8116,7 @@ TYPE
 							tmp := IntermediateCode.Immediate(addressType,dim);
 							Emit(Push(position,tmp)); (* dimensions *)
 							(* push realtime flag *)
-							IF (p[0].type.resolved.isRealtime) THEN Emit(Push(position,true));
+							IF (p[0].type.resolvedType.isRealtime) THEN Emit(Push(position,true));
 							ELSE Emit(Push(position,false));
 							END;
 							CallThis(position,"Heaps","NewArr",5)
@@ -8144,7 +8144,7 @@ TYPE
 							Emit(Push(position,reg)); (* size *)
 							ReleaseIntermediateOperand(reg);
 							(* push realtime flag *)
-							IF (p[0].type.resolved.isRealtime) THEN Emit(Push(position,true));
+							IF (p[0].type.resolvedType.isRealtime) THEN Emit(Push(position,true));
 							ELSE Emit(Push(position,false));
 							END;
 							CallThis(position,"Heaps","NewSys", 3)
@@ -8195,7 +8195,7 @@ TYPE
 						IF x.type # NIL THEN 
 							temporaryVariable := GetTemporaryVariable(SyntaxTree.ValueParameter,x.type, FALSE, FALSE (* untraced *));
 							temporaryVariableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, NIL, temporaryVariable);
-							temporaryVariableDesignator.SetType(x.type.resolved);
+							temporaryVariableDesignator.SetType(x.type.resolvedType);
 							PushParameter(temporaryVariableDesignator, formalParameter, callingConvention, FALSE, dummy,-1);
 						ELSE
 							PushParameter(p[0], formalParameter, callingConvention, FALSE, dummy,-1);
@@ -8208,7 +8208,7 @@ TYPE
 						(* push size *)
 						type := t0;
 						WHILE (type IS SyntaxTree.MathArrayType) & (type(SyntaxTree.MathArrayType).form # SyntaxTree.Static) DO
-							type := type(SyntaxTree.MathArrayType).arrayBase.resolved;
+							type := type(SyntaxTree.MathArrayType).arrayBase.resolvedType;
 						END;
 						tmp := IntermediateCode.Immediate(sizeType,ToMemoryUnits(system,system.SizeOf(type))); (* alignment *)
 						Emit(Push(position,tmp));
@@ -8257,7 +8257,7 @@ TYPE
 
 					FOR i := len-1 TO firstPar BY -1 DO
 						IF ~isTensor THEN
-							type := type(SyntaxTree.MathArrayType).arrayBase.resolved;
+							type := type(SyntaxTree.MathArrayType).arrayBase.resolvedType;
 						END;
 						parameter := x.parameters.GetExpression(i);
 						Evaluate(parameter,r);
@@ -8318,7 +8318,7 @@ TYPE
 					tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,dim*system.addressSize));
 					Emit(Add(position,sp,sp,tmp));
 			END;
-		ELSIF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved  IS SyntaxTree.CellType)
+		ELSIF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolvedType  IS SyntaxTree.CellType)
 			THEN
 				IF ~backend.cellsAreObjects THEN RETURN END;
 				IF InCellScope(currentScope) THEN
@@ -8327,7 +8327,7 @@ TYPE
 					Emit(Push(position, nil));
 				END;
 				(* push temp address *)
-				baseType := type(SyntaxTree.PointerType).pointerBase.resolved;
+				baseType := type(SyntaxTree.PointerType).pointerBase.resolvedType;
 				temporaryVariable := GetTemporaryVariable(SyntaxTree.ValueParameter,type, FALSE, FALSE (* untraced *));
 				Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
 				(* l.op contains address of pointer to record *)
@@ -8400,7 +8400,7 @@ TYPE
 				Emit(Call(position,IntermediateCode.Address(addressType, init.name, 0, 0), ToMemoryUnits(system, addressType.sizeInBits)));
 
 				(* call initializer *)
-				constructor := baseType(SyntaxTree.CellType).cellScope.constructor (*GetConstructor(p[0].type.resolved(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType))*);
+				constructor := baseType(SyntaxTree.CellType).cellScope.constructor (*GetConstructor(p[0].type.resolvedType(SyntaxTree.PointerType).pointerBase.resolvedType(SyntaxTree.RecordType))*);
 				IF constructor # NIL THEN
 					(*! should be unified with ProcedureCallDesignator *)
 					IF backend.cellsAreObjects THEN
@@ -8560,12 +8560,12 @@ TYPE
 			VAR op: IntermediateCode.Operand;
 			BEGIN
 				IF type = NIL THEN Emit(Push(position,IntermediateCode.Immediate(addressType,0)))
-				ELSIF type.resolved IS SyntaxTree.AnyType THEN Emit(Push(position,IntermediateCode.Immediate(addressType,1)))
+				ELSIF type.resolvedType IS SyntaxTree.AnyType THEN Emit(Push(position,IntermediateCode.Immediate(addressType,1)))
 				ELSE
-					IF type.resolved IS SyntaxTree.PointerType THEN
-						type := type.resolved(SyntaxTree.PointerType).pointerBase;
+					IF type.resolvedType IS SyntaxTree.PointerType THEN
+						type := type.resolvedType(SyntaxTree.PointerType).pointerBase;
 					END;
-					op := TypeDescriptorAdr(type.resolved);
+					op := TypeDescriptorAdr(type.resolvedType);
 					Emit(Push(position,op));
 				END
 			END PushTD;
@@ -8581,9 +8581,9 @@ TYPE
 			ELSE
 				len := 0
 			END;
-			IF len > 0 THEN p0 := x.parameters.GetExpression(0); t0 := p0.type.resolved END;
-			IF len > 1 THEN p1 := x.parameters.GetExpression(1); t1 := p1.type.resolved END;
-			IF len > 2 THEN p2 := x.parameters.GetExpression(2); t2 := p2.type.resolved END;
+			IF len > 0 THEN p0 := x.parameters.GetExpression(0); t0 := p0.type.resolvedType END;
+			IF len > 1 THEN p1 := x.parameters.GetExpression(1); t1 := p1.type.resolvedType END;
+			IF len > 2 THEN p2 := x.parameters.GetExpression(2); t2 := p2.type.resolvedType END;
 
 			CASE x.id OF
 
@@ -8626,7 +8626,7 @@ TYPE
 				PushString(s0,p0.type);
 				Designate(p1,s1);
 				PushString(s1,p1.type);
-				procedureType := p2.type.resolved(SyntaxTree.ProcedureType);
+				procedureType := p2.type.resolvedType(SyntaxTree.ProcedureType);
 				IF (procedureType.firstParameter = NIL) OR (procedureType.firstParameter.access = SyntaxTree.Hidden) THEN PushTD(NIL)
 				ELSE PushTD(procedureType.firstParameter.type)
 				END;
@@ -8822,18 +8822,18 @@ TYPE
 				ELSE
 					Evaluate(p1,l);
 				END;
-				IF p0.type.resolved IS SyntaxTree.ArrayType THEN
-					IF (p0.type.resolved(SyntaxTree.ArrayType).form= SyntaxTree.SemiDynamic) THEN
-						Dereference(operand, p0.type.resolved, FALSE);
+				IF p0.type.resolvedType IS SyntaxTree.ArrayType THEN
+					IF (p0.type.resolvedType(SyntaxTree.ArrayType).form= SyntaxTree.SemiDynamic) THEN
+						Dereference(operand, p0.type.resolvedType, FALSE);
 					END;
-					ArrayLen(p0.type.resolved(SyntaxTree.ArrayType),operand,l.op, result);
+					ArrayLen(p0.type.resolvedType(SyntaxTree.ArrayType),operand,l.op, result);
 					ReleaseOperand(operand); ReleaseOperand(l);
-				ELSIF p0.type.resolved IS SyntaxTree.MathArrayType THEN
+				ELSIF p0.type.resolvedType IS SyntaxTree.MathArrayType THEN
 					ASSERT(p1 # NIL);
-					IF p0.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
-						Dereference(operand,p0.type.resolved,FALSE);
+					IF p0.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+						Dereference(operand,p0.type.resolvedType,FALSE);
 					END;
-					GetMathArrayLength(p0.type.resolved(SyntaxTree.MathArrayType),operand, l.op, TRUE, result);
+					GetMathArrayLength(p0.type.resolvedType(SyntaxTree.MathArrayType),operand, l.op, TRUE, result);
 					ReleaseOperand(operand); ReleaseOperand(l);
 				ELSE HALT(100);
 				END;
@@ -8879,15 +8879,15 @@ TYPE
 
 			(* ---- RE ---- *)
 			|Global.Re:
-				IF p0.type.resolved IS SyntaxTree.ComplexType THEN
+				IF p0.type.resolvedType IS SyntaxTree.ComplexType THEN
 					Designate(p0, result)
 				ELSE
 					Evaluate(p0, result)
 				END
 			(* ---- IM ---- *)
 			|Global.Im:
-				ASSERT(p0.type.resolved IS SyntaxTree.ComplexType);
-				componentType := p0.type.resolved(SyntaxTree.ComplexType).componentType;
+				ASSERT(p0.type.resolvedType IS SyntaxTree.ComplexType);
+				componentType := p0.type.resolvedType(SyntaxTree.ComplexType).componentType;
 
 				Designate(p0, result);
 
@@ -8901,7 +8901,7 @@ TYPE
 			(* ---- ABS ----- *)
 			|Global.Abs:
 				Evaluate(p0,operand);
-				type := p0.type.resolved;
+				type := p0.type.resolvedType;
 				InitOperand(result,ModeValue);
 				Reuse1a(result.op,operand.op,dest);
 				Emit(Abs(position,result.op,operand.op));
@@ -9026,8 +9026,8 @@ TYPE
 			|Global.systemPut, Global.systemPut64, Global.systemPut32, Global.systemPut16, Global.systemPut8:
 				Evaluate(p0,s0); (*  *)
 				Evaluate(p1,s1); (* variable *)
-				IF p1.type.resolved IS SyntaxTree.ComplexType THEN
-					componentType := p1.type.resolved(SyntaxTree.ComplexType).componentType;
+				IF p1.type.resolvedType IS SyntaxTree.ComplexType THEN
+					componentType := p1.type.resolvedType(SyntaxTree.ComplexType).componentType;
 
 					(* real part *)
 					MakeMemory(res, s0.op, IntermediateCode.GetType(system, componentType), 0);
@@ -9076,12 +9076,12 @@ TYPE
 			(* ---- INCR ----- *)
 			|Global.Incr:
 				Designate(p0,operand);
-				IF p0.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
-					Dereference(operand,p0.type.resolved,FALSE);
+				IF p0.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+					Dereference(operand,p0.type.resolvedType,FALSE);
 				END;
 				ASSERT(p1 # NIL);
 				Evaluate(p1,l);
-				GetMathArrayIncrement(p0.type.resolved(SyntaxTree.MathArrayType),operand, l.op,TRUE, result);
+				GetMathArrayIncrement(p0.type.resolvedType(SyntaxTree.MathArrayType),operand, l.op,TRUE, result);
 
 				ReleaseOperand(operand); ReleaseOperand(l);
 				Convert(result.op,IntermediateCode.GetType(system, x.type));
@@ -9094,10 +9094,10 @@ TYPE
 			(* ---- DIM ----- *)
 			|Global.Dim:
 				Designate(p0,s0);
-				IF p0.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
-					Dereference(s0,p0.type.resolved,FALSE);
+				IF p0.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+					Dereference(s0,p0.type.resolvedType,FALSE);
 				END;
-				MathArrayDim(p0.type.resolved(SyntaxTree.MathArrayType),s0.tag,result);
+				MathArrayDim(p0.type.resolvedType(SyntaxTree.MathArrayType),s0.tag,result);
 				ReleaseOperand(s0);
 			(* ---- RESHAPE ----- *)
 			|Global.Reshape:
@@ -9110,8 +9110,8 @@ TYPE
 			(* ---- SYSTEM.TYPECODE ----- *)
 			|Global.systemTypeCode:
 				type := p0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
-				IF type.resolved IS SyntaxTree.PointerType THEN
-					type := type.resolved(SyntaxTree.PointerType).pointerBase;
+				IF type.resolvedType IS SyntaxTree.PointerType THEN
+					type := type.resolvedType(SyntaxTree.PointerType).pointerBase;
 				END;
 				result.op := TypeDescriptorAdr(type);
 				Convert(result.op, IntermediateCode.GetType(system,x.type));
@@ -9263,9 +9263,9 @@ TYPE
 			ELSE
 				len := 0
 			END;
-			IF len > 0 THEN p0 := x.parameters.GetExpression(0); t0 := p0.type.resolved END;
-			IF len > 1 THEN p1 := x.parameters.GetExpression(1); t1 := p1.type.resolved END;
-			IF len > 2 THEN p2 := x.parameters.GetExpression(2); t2 := p2.type.resolved END;
+			IF len > 0 THEN p0 := x.parameters.GetExpression(0); t0 := p0.type.resolvedType END;
+			IF len > 1 THEN p1 := x.parameters.GetExpression(1); t1 := p1.type.resolvedType END;
+			IF len > 2 THEN p2 := x.parameters.GetExpression(2); t2 := p2.type.resolvedType END;
 
 			CASE x.id OF
 			|Global.Shr, Global.Shl, Global.Ror, Global.Rol:
@@ -9416,18 +9416,18 @@ TYPE
 				ELSE
 					Evaluate(p1,l);
 				END;
-				IF p0.type.resolved IS SyntaxTree.ArrayType THEN
-					IF (p0.type.resolved(SyntaxTree.ArrayType).form= SyntaxTree.SemiDynamic) THEN
-						Dereference(operand, p0.type.resolved, FALSE);
+				IF p0.type.resolvedType IS SyntaxTree.ArrayType THEN
+					IF (p0.type.resolvedType(SyntaxTree.ArrayType).form= SyntaxTree.SemiDynamic) THEN
+						Dereference(operand, p0.type.resolvedType, FALSE);
 					END;
-					ArrayLen(p0.type.resolved(SyntaxTree.ArrayType),operand,l.op, result);
+					ArrayLen(p0.type.resolvedType(SyntaxTree.ArrayType),operand,l.op, result);
 					ReleaseOperand(operand); ReleaseOperand(l);
-				ELSIF p0.type.resolved IS SyntaxTree.MathArrayType THEN
+				ELSIF p0.type.resolvedType IS SyntaxTree.MathArrayType THEN
 					ASSERT(p1 # NIL);
-					IF p0.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
-						Dereference(operand,p0.type.resolved,FALSE);
+					IF p0.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+						Dereference(operand,p0.type.resolvedType,FALSE);
 					END;
-					GetMathArrayLength(p0.type.resolved(SyntaxTree.MathArrayType),operand, l.op, TRUE, result);
+					GetMathArrayLength(p0.type.resolvedType(SyntaxTree.MathArrayType),operand, l.op, TRUE, result);
 					ReleaseOperand(operand); ReleaseOperand(l);
 				ELSE HALT(100);
 				END;
@@ -9458,7 +9458,7 @@ TYPE
 
 			(* ---- RE ---- *)
 			|Global.Re:
-				IF p0.type.resolved IS SyntaxTree.ComplexType THEN
+				IF p0.type.resolvedType IS SyntaxTree.ComplexType THEN
 					DesignateAndLoad(x,result);
 				ELSE
 					Evaluate(p0, result)
@@ -9469,7 +9469,7 @@ TYPE
 			(* ---- ABS ----- *)
 			|Global.Abs:
 				Evaluate(p0,operand);
-				type := p0.type.resolved;
+				type := p0.type.resolvedType;
 				InitOperand(result,ModeValue);
 				Reuse1a(result.op,operand.op,dest);
 				Emit(Abs(position,result.op,operand.op));
@@ -9477,7 +9477,7 @@ TYPE
 			(* ----- NEW ----- *)
 			|Global.New:
 				Allocate(x, result);
-				LoadValue(result, x.type.resolved);
+				LoadValue(result, x.type.resolvedType);
 			(* ---- ADDRESSOF----- *)
 			|Global.systemAdr:
 				Designate(p0,s0);
@@ -9565,12 +9565,12 @@ TYPE
 			(* ---- INCR ----- *)
 			|Global.Incr:
 				Designate(p0,operand);
-				IF p0.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
-					Dereference(operand,p0.type.resolved,FALSE);
+				IF p0.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+					Dereference(operand,p0.type.resolvedType,FALSE);
 				END;
 				ASSERT(p1 # NIL);
 				Evaluate(p1,l);
-				GetMathArrayIncrement(p0.type.resolved(SyntaxTree.MathArrayType),operand, l.op,TRUE, result);
+				GetMathArrayIncrement(p0.type.resolvedType(SyntaxTree.MathArrayType),operand, l.op,TRUE, result);
 
 				ReleaseOperand(operand); ReleaseOperand(l);
 				Convert(result.op,IntermediateCode.GetType(system, x.type));
@@ -9614,16 +9614,16 @@ TYPE
 			(* ---- DIM ----- *)
 			|Global.Dim:
 				Designate(p0,s0);
-				IF p0.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
-					Dereference(s0,p0.type.resolved,FALSE);
+				IF p0.type.resolvedType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+					Dereference(s0,p0.type.resolvedType,FALSE);
 				END;
-				MathArrayDim(p0.type.resolved(SyntaxTree.MathArrayType),s0.tag,result);
+				MathArrayDim(p0.type.resolvedType(SyntaxTree.MathArrayType),s0.tag,result);
 				ReleaseOperand(s0);
 			(* ---- SYSTEM.TYPECODE ----- *)
 			|Global.systemTypeCode:
 				type := p0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
-				IF type.resolved IS SyntaxTree.PointerType THEN
-					type := type.resolved(SyntaxTree.PointerType).pointerBase;
+				IF type.resolvedType IS SyntaxTree.PointerType THEN
+					type := type.resolvedType(SyntaxTree.PointerType).pointerBase;
 				END;
 				result.op := TypeDescriptorAdr(type);
 				Convert(result.op, IntermediateCode.GetType(system,x.type));
@@ -9669,13 +9669,13 @@ TYPE
 			IF Trace THEN TraceEnter("DesignateTypeGuardDesignator") END;
 			dest := destination; destination := emptyOperand;
 
-			IF (x.type.resolved IS SyntaxTree.NumberType) OR (x.type.resolved IS SyntaxTree.AddressType) OR (x.type.resolved IS SyntaxTree.SizeType) THEN
+			IF (x.type.resolvedType IS SyntaxTree.NumberType) OR (x.type.resolvedType IS SyntaxTree.AddressType) OR (x.type.resolvedType IS SyntaxTree.SizeType) THEN
 				Evaluate(x.left, result);
-				IF isUnchecked OR (x.left.type.resolved = x.type.resolved) THEN RETURN END;
+				IF isUnchecked OR (x.left.type.resolvedType = x.type.resolvedType) THEN RETURN END;
 				trueL := NewLabel();
 				TransferToRegister(result.op, result.op);
 				ReuseCopy(original,result.op);
-				Convert(result.op,IntermediateCode.GetType(system,x.type.resolved));
+				Convert(result.op,IntermediateCode.GetType(system,x.type.resolvedType));
 				ReuseCopy(converted,result.op);
 				Convert(converted,original.type);
 				BreqL(trueL,original,converted);
@@ -9685,7 +9685,7 @@ TYPE
 				SetLabel(trueL);
 			ELSE
 				Designate(x.left, result);
-				IF isUnchecked OR (x.left.type.resolved = x.type.resolved) THEN RETURN END;
+				IF isUnchecked OR (x.left.type.resolvedType = x.type.resolvedType) THEN RETURN END;
 				trueL := NewLabel();
 				IF IsPointerToRecord(x.left.type,recordType) THEN
 					IntermediateCode.InitRegister(tag,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
@@ -9782,7 +9782,7 @@ TYPE
 			IF Trace THEN TraceEnter("DesignateDereferenceDesignator") END;
 			dest := destination; destination := emptyOperand;
 			Evaluate(x.left,d);
-			type := x.type.resolved;
+			type := x.type.resolvedType;
 			prevIsUnchecked := isUnchecked;
 			IF (x.left # NIL) & (x.left IS SyntaxTree.SelfDesignator) THEN
 				isUnchecked := TRUE; (* avoid NIL-pointer-check for SELF pointer *)
@@ -9790,7 +9790,7 @@ TYPE
 			Dereference(d,type,IsUnsafePointer(x.left.type));
 			isUnchecked := prevIsUnchecked;
 			result := d;
-			IF backend.cooperative & (x.left.type.resolved IS SyntaxTree.PointerType) & ~x.left.type.resolved(SyntaxTree.PointerType).isPlain & ~x.left.type.resolved(SyntaxTree.PointerType).isUnsafe THEN
+			IF backend.cooperative & (x.left.type.resolvedType IS SyntaxTree.PointerType) & ~x.left.type.resolvedType(SyntaxTree.PointerType).isPlain & ~x.left.type.resolvedType(SyntaxTree.PointerType).isUnsafe THEN
 				IF (type IS SyntaxTree.RecordType) & ~type(SyntaxTree.RecordType).isObject THEN
 					IntermediateCode.AddOffset(result.op,BaseRecordTypeSize * ToMemoryUnits(system,addressType.sizeInBits));
 				END;
@@ -9855,7 +9855,7 @@ TYPE
 				IF backend.cooperative THEN
 					IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,addressType.sizeInBits));
 				END;
-				IF ~(x.type.resolved.IsPointer() OR (x.type.resolved IS SyntaxTree.CellType) &  backend.cellsAreObjects) THEN (* var par ! *)
+				IF ~(x.type.resolvedType.IsPointer() OR (x.type.resolvedType IS SyntaxTree.CellType) &  backend.cellsAreObjects) THEN (* var par ! *)
 					MakeMemory(result.op, result.op, addressType, 0);
 				END;
 				(* tag must be loaded when dereferencing SELF pointer *)
@@ -10049,7 +10049,7 @@ TYPE
 			nm: ARRAY 256 OF CHAR;
 		BEGIN
 			IF Trace THEN TraceEnter("DesignateVariable");  END;
-			type := x.type.resolved;
+			type := x.type.resolvedType;
 			x.GetName(nm);
 
 			IF (x.preferRegister) THEN
@@ -10168,7 +10168,7 @@ TYPE
 		VAR type: SyntaxTree.Type; basereg, mem: IntermediateCode.Operand; symbol: Sections.Section;
 			name: Basic.SegmentedName; ptype: SyntaxTree.Type; temp: IntermediateCode.Operand; reg: SIZE;
 		BEGIN
-			type := x.type.resolved;
+			type := x.type.resolvedType;
 			IF Trace THEN TraceEnter("DesignateParameter") END;
 			IF (x.preferRegister) THEN
 				InitOperand(result, ModeValue);
@@ -10182,7 +10182,7 @@ TYPE
 				IntermediateCode.InitRegister(result.op,IntermediateCode.GetType(system, type),IntermediateCode.GeneralPurposeRegister,reg);
 				RETURN;
 			ELSIF x.ownerType IS SyntaxTree.CellType THEN
-				ptype := x.type.resolved;
+				ptype := x.type.resolvedType;
 				IF backend.cellsAreObjects THEN
 					ASSERT(result.mode = ModeReference);
 					IF result.op.mode = IntermediateCode.ModeMemory THEN
@@ -10406,7 +10406,7 @@ TYPE
 		BEGIN
 			WITH x:
 			| SyntaxTree.TypeDeclaration DO
-						ASSERT((x.declaredType.resolved IS SyntaxTree.EnumerationType) OR (x.declaredType.resolved IS SyntaxTree.RecordType) OR (x.declaredType.resolved IS SyntaxTree.PointerType) & (x.declaredType.resolved(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType));
+						ASSERT((x.declaredType.resolvedType IS SyntaxTree.EnumerationType) OR (x.declaredType.resolvedType IS SyntaxTree.RecordType) OR (x.declaredType.resolvedType IS SyntaxTree.PointerType) & (x.declaredType.resolvedType(SyntaxTree.PointerType).pointerBase.resolvedType IS SyntaxTree.RecordType));
 			| SyntaxTree.Parameter DO DesignateParameter(x, result);
 			| SyntaxTree.Variable DO DesignateVariable(x, result);
 			| SyntaxTree.Procedure DO DesignateProcedure(x, result);
@@ -10434,7 +10434,7 @@ TYPE
 			PROCEDURE OpenArray(from: SyntaxTree.MathArrayType): SyntaxTree.MathArrayType;
 			VAR result: SyntaxTree.MathArrayType; base: SyntaxTree.Type;
 			BEGIN
-				base := from(SyntaxTree.MathArrayType).arrayBase.resolved;
+				base := from(SyntaxTree.MathArrayType).arrayBase.resolvedType;
 				IF base IS SyntaxTree.MathArrayType THEN
 					base := OpenArray(base(SyntaxTree.MathArrayType));
 				END;
@@ -10446,11 +10446,11 @@ TYPE
 		BEGIN
 			IF AddImport(moduleName,arrayBase,TRUE) THEN
 				SaveRegisters();ReleaseUsedRegisters(saved);
-				leftType := left.type.resolved(SyntaxTree.MathArrayType);
-				rightType := right.type.resolved(SyntaxTree.MathArrayType);
+				leftType := left.type.resolvedType(SyntaxTree.MathArrayType);
+				rightType := right.type.resolvedType(SyntaxTree.MathArrayType);
 				leftBase := SemanticChecker.ArrayBase(leftType,MAX(SIZE));
 				rightBase := SemanticChecker.ArrayBase(rightType,MAX(SIZE));
-				ASSERT(leftBase.resolved.SameType(rightBase.resolved));
+				ASSERT(leftBase.resolvedType.SameType(rightBase.resolvedType));
 
 				IF leftType.form = SyntaxTree.Tensor THEN
 					procedureName := "CopyTensor"; rightKind := SyntaxTree.ValueParameter;
@@ -10512,10 +10512,10 @@ TYPE
 		PROCEDURE CopySize(left: SyntaxTree.Expression; tag: IntermediateCode.Operand): IntermediateCode.Operand;
 		VAR type: SyntaxTree.Type; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter; mem: IntermediateCode.Operand;
 		BEGIN
-			type := left.type.resolved;
+			type := left.type.resolvedType;
 			IF (type IS SyntaxTree.RecordType) & (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Parameter) THEN
 				parameter := left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Parameter);
-				procedureType := parameter.ownerType.resolved(SyntaxTree.ProcedureType);
+				procedureType := parameter.ownerType.resolvedType(SyntaxTree.ProcedureType);
 				IF procedureType.returnParameter = parameter THEN
 					(* this is the only case where the destination can be dynamically smaller than the source
 						in all other cases the dynamic size has to be taken
@@ -10537,7 +10537,7 @@ TYPE
 			Designate(right,rightO);
 			Designate(left,leftO);
 			Emit(Mov(position,leftO.op,rightO.op));
-			IF left.type.resolved IS SyntaxTree.RecordType THEN
+			IF left.type.resolvedType IS SyntaxTree.RecordType THEN
 				Emit(Mov(position,leftO.tag,rightO.tag));
 			END;
 			ReleaseOperand(leftO);
@@ -10560,7 +10560,7 @@ TYPE
 			BEGIN
 				IF SemanticChecker.ReturnedAsParameter(system,right.type)  THEN
 					IF right IS SyntaxTree.ProcedureCallDesignator THEN
-						procedureType := right(SyntaxTree.ProcedureCallDesignator).left.type.resolved(SyntaxTree.ProcedureType);
+						procedureType := right(SyntaxTree.ProcedureCallDesignator).left.type.resolvedType(SyntaxTree.ProcedureType);
 						RETURN procedureType.callingConvention = SyntaxTree.OberonCallingConvention
 					ELSIF right IS SyntaxTree.BuiltinCallDesignator THEN
 						WITH right: SyntaxTree.BuiltinCallDesignator DO
@@ -10581,7 +10581,7 @@ TYPE
 				RETURN;
 			END;
 			ASSERT(left.type # NIL); ASSERT(right.type # NIL);
-			leftType := left.type.resolved; rightType:= right.type.resolved;
+			leftType := left.type.resolvedType; rightType:= right.type.resolvedType;
 
 			IF backend.cooperative & left.NeedsTrace() THEN
 				ModifyAssignments(true);
@@ -10833,7 +10833,7 @@ TYPE
 					ELSE
 						Symbol(variable, result);
 						reference := SyntaxTree.NewSymbolDesignator(init.position,NIL, NIL,variable);
-						reference.SetType(variable.type.resolved);
+						reference.SetType(variable.type.resolvedType);
 						reference.SetAssignable(TRUE);
 						Assign(reference,init);
 					END;
@@ -10845,7 +10845,7 @@ TYPE
 		VAR p0,p1,tmp: SyntaxTree.Expression; s0,s1: Operand; size: SIGNED32;
 		BEGIN
 			p0 := communication.left; p1 := communication.right;
-			IF (communication.op = Scanner.ExclamationMark) OR (communication.op = Scanner.LessLess) & (communication.left.type.resolved IS SyntaxTree.PortType) THEN
+			IF (communication.op = Scanner.ExclamationMark) OR (communication.op = Scanner.LessLess) & (communication.left.type.resolvedType IS SyntaxTree.PortType) THEN
 				Evaluate(p0,s0);
 				Evaluate(p1,s1);
 				size := ToMemoryUnits(system,system.SizeOf(p1.type));
@@ -10866,7 +10866,7 @@ TYPE
 				END;
 			(* ----- RECEIVE ------*)
 			ELSE
-				IF (communication.op = Scanner.LessLess) & (communication.right.type.resolved IS SyntaxTree.PortType) THEN
+				IF (communication.op = Scanner.LessLess) & (communication.right.type.resolvedType IS SyntaxTree.PortType) THEN
 					tmp := p0; p0 := p1; p1 := tmp;
 				END;
 				Evaluate(p0,s0);
@@ -11139,7 +11139,7 @@ TYPE
 			Assign(x.variable,x.from);
 			temporaryVariable := GetTemporaryVariable(SyntaxTree.ValueParameter,x.variable.type, FALSE, FALSE);
 			temporaryVariableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, NIL, temporaryVariable);
-			temporaryVariableDesignator.SetType(x.variable.type.resolved);
+			temporaryVariableDesignator.SetType(x.variable.type.resolvedType);
 
 			Assign(temporaryVariableDesignator,x.to);
 			IF x.by = NIL THEN by := 1 ELSE by := x.by.resolved(SyntaxTree.IntegerValue).value END;
@@ -11253,7 +11253,7 @@ TYPE
 			IF x.assignmentOperator # NIL THEN
 				Designate(x.assignmentOperator,res);
 			ELSIF expression # NIL THEN
-				type := expression.type.resolved;
+				type := expression.type.resolvedType;
 				IF (expression IS SyntaxTree.ResultDesignator) THEN (* RETURN RESULT *)
 					IF locked THEN Lock(FALSE) END;
 					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
@@ -11553,7 +11553,7 @@ TYPE
 			parameter := x.firstParameter;
 			WHILE parameter # NIL DO
 				IF parameter.kind = SyntaxTree.ValueParameter THEN
-					type := parameter.type.resolved;
+					type := parameter.type.resolvedType;
 					IF IsOpenArray(type) THEN
 						DesignateParameter(parameter, op);
 						IF backend.cooperative & parameter.NeedsTrace() THEN
@@ -11583,12 +11583,12 @@ TYPE
 								Emit (Push(position, length));
 								Emit (Push(position, dst));
 								Emit (Push(position, op.op));
-								GetRecordTypeName (base.resolved(SyntaxTree.RecordType),name);
+								GetRecordTypeName (base.resolvedType(SyntaxTree.RecordType),name);
 								Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 								Basic.SuffixSegmentedName (name, Basic.MakeString ("@Assign"));
 								IntermediateCode.InitAddress(call, addressType, name , 0, 0);
 								Emit(Call(position,call,ToMemoryUnits(system, 3*system.addressSize)));
-							ELSIF base.resolved IS SyntaxTree.ProcedureType THEN (* array of delegates *)
+							ELSIF base.resolvedType IS SyntaxTree.ProcedureType THEN (* array of delegates *)
 								Emit (Push(position,length));
 								Emit (Push(position, dst));
 								Emit (Push(position, length));
@@ -12144,7 +12144,7 @@ TYPE
 		PROCEDURE Pointers(offset: SIGNED32; symbol: Sections.Section; section: IntermediateCode.Section; type: SyntaxTree.Type; VAR numberPointers: SIZE);
 		VAR variable: SyntaxTree.Variable; i,n,size: SIGNED32; base: SyntaxTree.Type; property: SyntaxTree.Property; parameter: SyntaxTree.Parameter;
 		BEGIN
-			type := type.resolved;
+			type := type.resolvedType;
 			IF (type IS SyntaxTree.AnyType) OR (type IS SyntaxTree.ObjectType) THEN
 				Symbol(section, symbol, 0, (offset )); INC(numberPointers);
 				IF Trace THEN D.Str("ptr at offset="); D.Int(offset,1); D.Ln; END;
@@ -12203,11 +12203,11 @@ TYPE
 				WITH type: SyntaxTree.ArrayType DO
 					IF type.form= SyntaxTree.Static THEN
 						n := type.staticLength;
-						base := type.arrayBase.resolved;
+						base := type.arrayBase.resolvedType;
 						WHILE(base IS SyntaxTree.ArrayType) DO
 							type := base(SyntaxTree.ArrayType);
 							n := n* type.staticLength;
-							base := type.arrayBase.resolved;
+							base := type.arrayBase.resolvedType;
 						END;
 						size := ToMemoryUnits(module.system,module.system.AlignedSizeOf(base));
 						IF SemanticChecker.ContainsPointer(base) & base.NeedsTrace()  THEN
@@ -12225,11 +12225,11 @@ TYPE
 				WITH type: SyntaxTree.MathArrayType DO
 					IF type.form = SyntaxTree.Static THEN
 						n := type.staticLength;
-						base := type.arrayBase.resolved;
+						base := type.arrayBase.resolvedType;
 						WHILE(base IS SyntaxTree.MathArrayType) DO
 							type := base(SyntaxTree.MathArrayType);
 							n := n* type.staticLength;
-							base := type.arrayBase.resolved;
+							base := type.arrayBase.resolvedType;
 						END;
 						size := ToMemoryUnits(module.system,module.system.AlignedSizeOf(base));
 						IF SemanticChecker.ContainsPointer(base) THEN
@@ -12733,14 +12733,14 @@ TYPE
 					IF type = NIL THEN
 						Char(section, sfTypeNone)
 					ELSE
-						type := type.resolved;
+						type := type.resolvedType;
 						size := type.sizeInBits;
 
 						WITH type:
 						SyntaxTree.PointerType DO
-							IF type.pointerBase.resolved IS SyntaxTree.RecordType THEN
+							IF type.pointerBase.resolvedType IS SyntaxTree.RecordType THEN
 								IF RefInfo THEN Info(section,"PointerToRecord") END;
-								IF type.pointerBase.resolved(SyntaxTree.RecordType).isObject THEN
+								IF type.pointerBase.resolvedType(SyntaxTree.RecordType).isObject THEN
 									Char(section, sfTypeOBJECT);
 								ELSE
 									Char(section, sfTypePointerToRecord);
@@ -12969,7 +12969,7 @@ TYPE
 					Char(section, sfVariable);
 					Size(section, procOffset);
 					String0(section, parameter.name);
-					type := parameter.type.resolved;
+					type := parameter.type.resolvedType;
 					IF parameter.kind = SyntaxTree.VarParameter THEN
 						IF IsOpenArray(type) THEN Char(section, sfRelative)
 						ELSE Char(section, sfIndirect)
@@ -12997,7 +12997,7 @@ TYPE
 					IF procedure.extern # NIL THEN RETURN END;
 					IF RefInfo THEN Info(section, "Procedure") END;
 					pos := CurrentIndex();
-					procedureType := procedure.type.resolved(SyntaxTree.ProcedureType);
+					procedureType := procedure.type.resolvedType(SyntaxTree.ProcedureType);
 					Char(section, sfProcedure);
 					Size(section, scopeOffset);
 					String0(section,procedure.name);
@@ -13078,9 +13078,9 @@ TYPE
 					Size(section, scopeOffset);
 					String0(section, typeDeclaration.name);
 
-					declared := typeDeclaration.declaredType.resolved;
+					declared := typeDeclaration.declaredType.resolvedType;
 					IF (declared IS SyntaxTree.PointerType) THEN
-						declared := declared(SyntaxTree.PointerType).pointerBase.resolved;
+						declared := declared(SyntaxTree.PointerType).pointerBase.resolvedType;
 					END;
 
 					WITH declared:
@@ -13186,9 +13186,9 @@ TYPE
 					BEGIN
 						RETURN
 							(type = NIL) OR
-							(type.resolved IS SyntaxTree.RecordType) OR
-							(type.resolved IS SyntaxTree.PointerType) & (type.resolved(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType) OR
-							(type.resolved IS SyntaxTree.AnyType);
+							(type.resolvedType IS SyntaxTree.RecordType) OR
+							(type.resolvedType IS SyntaxTree.PointerType) & (type.resolvedType(SyntaxTree.PointerType).pointerBase.resolvedType IS SyntaxTree.RecordType) OR
+							(type.resolvedType IS SyntaxTree.AnyType);
 				END TypeAllowed;
 
 				BEGIN
@@ -13196,7 +13196,7 @@ TYPE
 					RETURN
 						(numberParameters = 0) & TypeAllowed(procedureType.returnType) OR
 						(numberParameters = 1) & TypeAllowed(procedureType.firstParameter.type) & TypeAllowed(procedureType.returnType) OR
-						(numberParameters = 1) & (procedureType.firstParameter.type.resolved IS SyntaxTree.AnyType) & (procedureType.returnType # NIL) & (procedureType.returnType.resolved IS SyntaxTree.AnyType);
+						(numberParameters = 1) & (procedureType.firstParameter.type.resolvedType IS SyntaxTree.AnyType) & (procedureType.returnType # NIL) & (procedureType.returnType.resolvedType IS SyntaxTree.AnyType);
 				END GetProcedureAllowed;
 
 				PROCEDURE WriteType(type : SyntaxTree.Type);
@@ -13205,12 +13205,12 @@ TYPE
 				BEGIN
 					IF type = NIL THEN
 						Address(source,0);
-					ELSIF (type.resolved IS SyntaxTree.AnyType) OR (type.resolved IS SyntaxTree.ObjectType) THEN
+					ELSIF (type.resolvedType IS SyntaxTree.AnyType) OR (type.resolvedType IS SyntaxTree.ObjectType) THEN
 						Address(source,1);
 					ELSE
-						type := type.resolved;
+						type := type.resolvedType;
 						IF type IS SyntaxTree.PointerType THEN
-							type := type(SyntaxTree.PointerType).pointerBase.resolved;
+							type := type(SyntaxTree.PointerType).pointerBase.resolvedType;
 						END;
 						typeDeclaration := type.typeDeclaration; (* must be non-nil *)
 						IF (typeDeclaration.scope = NIL) OR InThisModule(typeDeclaration.scope,module.module) THEN
@@ -14081,15 +14081,15 @@ TYPE
 			END NewTypeDescriptor;
 
 		BEGIN
-			x := x.resolved;
+			x := x.resolvedType;
 			IF (x IS SyntaxTree.PointerType) THEN
-				x := x(SyntaxTree.PointerType).pointerBase.resolved;
+				x := x(SyntaxTree.PointerType).pointerBase.resolvedType;
 			END;
 
 			IF (x IS SyntaxTree.RecordType) THEN (* enter: insert only if not already inserted *)
 				recordType := x(SyntaxTree.RecordType);
 				td := x.typeDeclaration;
-				IF td = NIL THEN td := recordType.pointerType.resolved.typeDeclaration END; (* for compatibility with paco *)
+				IF td = NIL THEN td := recordType.pointerType.resolvedType.typeDeclaration END; (* for compatibility with paco *)
 				ASSERT(td # NIL);
 
 				section := module.allSections.FindBySymbol(td); (* TODO *)
@@ -14409,9 +14409,9 @@ TYPE
 	BEGIN
 		IF parameter.kind = SyntaxTree.ValueParameter THEN RETURN FALSE
 		ELSIF parameter.kind = SyntaxTree.ConstParameter THEN
-			RETURN (parameter.type.resolved IS SyntaxTree.RecordType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & (callingConvention IN SysvABIorWINAPI)
+			RETURN (parameter.type.resolvedType IS SyntaxTree.RecordType) OR (parameter.type.resolvedType IS SyntaxTree.ArrayType) & (callingConvention IN SysvABIorWINAPI)
 		ELSIF parameter.kind = SyntaxTree.VarParameter THEN
-			RETURN ~(parameter.type.resolved IS SyntaxTree.ArrayType) & ~(parameter.type.resolved IS SyntaxTree.MathArrayType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & (callingConvention IN SysvABIorWINAPI)
+			RETURN ~(parameter.type.resolvedType IS SyntaxTree.ArrayType) & ~(parameter.type.resolvedType IS SyntaxTree.MathArrayType) OR (parameter.type.resolvedType IS SyntaxTree.ArrayType) & (callingConvention IN SysvABIorWINAPI)
 		END
 	END PassBySingleReference;
 
@@ -14559,7 +14559,7 @@ TYPE
 	END HasPointers;
 
 	PROCEDURE IsVariableParameter (parameter: SyntaxTree.Parameter): BOOLEAN;
-	BEGIN RETURN (parameter.kind = SyntaxTree.VarParameter) OR (parameter.kind = SyntaxTree.ConstParameter) & ((parameter.type.resolved IS SyntaxTree.RecordType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) OR (parameter.type.resolved IS SyntaxTree.MathArrayType));
+	BEGIN RETURN (parameter.kind = SyntaxTree.VarParameter) OR (parameter.kind = SyntaxTree.ConstParameter) & ((parameter.type.resolvedType IS SyntaxTree.RecordType) OR (parameter.type.resolvedType IS SyntaxTree.ArrayType) OR (parameter.type.resolvedType IS SyntaxTree.MathArrayType));
 	END IsVariableParameter;
 
 	PROCEDURE HasVariableParameters(scope: SyntaxTree.ProcedureScope): BOOLEAN;
@@ -14609,7 +14609,7 @@ TYPE
 		IF type = NIL THEN 
 			RETURN NIL 
 		END;
-		type := type.resolved;
+		type := type.resolvedType;
 		WITH type: SyntaxTree.RecordType DO
 			procedure := type.recordScope.constructor;
 			IF procedure = NIL THEN
@@ -14634,22 +14634,22 @@ TYPE
 	BEGIN
 		IF type = NIL THEN
 			RETURN FALSE
-		ELSIF type.resolved IS SyntaxTree.PointerType THEN
-			RETURN type.resolved(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType
+		ELSIF type.resolvedType IS SyntaxTree.PointerType THEN
+			RETURN type.resolvedType(SyntaxTree.PointerType).pointerBase.resolvedType IS SyntaxTree.RecordType
 		ELSE
 			RETURN FALSE
 		END
 	END IsStrictlyPointerToRecord;
 
 	PROCEDURE IsUnsafePointer(type: SyntaxTree.Type): BOOLEAN;
-	BEGIN RETURN (type # NIL) & (type.resolved IS SyntaxTree.PointerType) & type.resolved(SyntaxTree.PointerType).isUnsafe
+	BEGIN RETURN (type # NIL) & (type.resolvedType IS SyntaxTree.PointerType) & type.resolvedType(SyntaxTree.PointerType).isUnsafe
 	END IsUnsafePointer;
 
 	PROCEDURE IsPointerToRecord(type: SyntaxTree.Type; VAR recordType: SyntaxTree.RecordType): BOOLEAN;
-	BEGIN type := type.resolved;
+	BEGIN type := type.resolvedType;
 		IF type IS SyntaxTree.PointerType THEN
 			type := type(SyntaxTree.PointerType).pointerBase;
-			type := type.resolved;
+			type := type.resolvedType;
 			IF type IS SyntaxTree.RecordType THEN
 				recordType := type(SyntaxTree.RecordType);
 				RETURN TRUE
@@ -14670,29 +14670,29 @@ TYPE
 
 	PROCEDURE IsArrayOfSystemByte(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
-		type := type.resolved;
+		type := type.resolvedType;
 		RETURN (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Open)
-		& (type(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType);
+		& (type(SyntaxTree.ArrayType).arrayBase.resolvedType IS SyntaxTree.ByteType);
 	END IsArrayOfSystemByte;
 
 	PROCEDURE IsOpenArray(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
 		IF type = NIL THEN RETURN FALSE END;
-		type := type.resolved;
+		type := type.resolvedType;
 		RETURN (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Open);
 	END IsOpenArray;
 
 	PROCEDURE IsSemiDynamicArray(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
 		IF type = NIL THEN RETURN FALSE END;
-		type := type.resolved;
+		type := type.resolvedType;
 		RETURN (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.SemiDynamic);
 	END IsSemiDynamicArray;
 
 	PROCEDURE IsStaticArray(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
 		IF type = NIL THEN RETURN FALSE END;
-		type := type.resolved;
+		type := type.resolvedType;
 		RETURN (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Static);
 	END IsStaticArray;
 
@@ -14701,8 +14701,8 @@ TYPE
 	BEGIN
 		size := 1;
 		WHILE (IsStaticArray(type)) DO
-			size := size * type.resolved(SyntaxTree.ArrayType).staticLength;
-			type := type.resolved(SyntaxTree.ArrayType).arrayBase;
+			size := size * type.resolvedType(SyntaxTree.ArrayType).staticLength;
+			type := type.resolvedType(SyntaxTree.ArrayType).arrayBase;
 		END;
 		RETURN size;
 	END StaticArrayNumElements;
@@ -14710,15 +14710,15 @@ TYPE
 	PROCEDURE StaticArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type;
 	BEGIN
 		WHILE (IsStaticArray(type)) DO
-			type := type.resolved(SyntaxTree.ArrayType).arrayBase;
+			type := type.resolvedType(SyntaxTree.ArrayType).arrayBase;
 		END;
 		RETURN type;
 	END StaticArrayBaseType;
 
 	PROCEDURE ArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type;
 	BEGIN
-		WHILE (type.resolved IS SyntaxTree.ArrayType) DO
-			type := type.resolved(SyntaxTree.ArrayType).arrayBase;
+		WHILE (type.resolvedType IS SyntaxTree.ArrayType) DO
+			type := type.resolvedType(SyntaxTree.ArrayType).arrayBase;
 		END;
 		RETURN type;
 	END ArrayBaseType;
@@ -14726,22 +14726,22 @@ TYPE
 	PROCEDURE IsDelegate(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
 		IF type = NIL THEN RETURN FALSE END;
-		type := type.resolved;
+		type := type.resolvedType;
 		RETURN (type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate)
 	END IsDelegate;
 
 	PROCEDURE DynamicDim(type:SyntaxTree.Type): SIGNED32;
 	VAR i: SIGNED32;
 	BEGIN
-		i := 0; type := type.resolved;
+		i := 0; type := type.resolvedType;
 		WHILE(type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form # SyntaxTree.Static) DO
 			INC(i);
-			type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+			type := type(SyntaxTree.ArrayType).arrayBase.resolvedType;
 		END;
 		WHILE(type # NIL) & (type IS SyntaxTree.MathArrayType) & (type(SyntaxTree.MathArrayType).form # SyntaxTree.Static) DO
 			INC(i);
 			type := type(SyntaxTree.MathArrayType).arrayBase;
-			IF type # NIL THEN type := type.resolved END;
+			IF type # NIL THEN type := type.resolvedType END;
 		END;
 		RETURN i
 	END DynamicDim;
@@ -14776,7 +14776,7 @@ TYPE
 	VAR typeDeclaration: SyntaxTree.TypeDeclaration;
 	BEGIN
 		typeDeclaration := recordType.typeDeclaration;
-		IF typeDeclaration = NIL THEN typeDeclaration := recordType.pointerType.resolved.typeDeclaration END; (* for compatibility with paco *)
+		IF typeDeclaration = NIL THEN typeDeclaration := recordType.pointerType.resolvedType.typeDeclaration END; (* for compatibility with paco *)
 		Global.GetSymbolSegmentedName(typeDeclaration,name);
 	END GetRecordTypeName;
 

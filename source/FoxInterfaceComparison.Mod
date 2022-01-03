@@ -13,7 +13,7 @@ CONST
 	PROCEDURE SameType(new,old: SyntaxTree.Type): BOOLEAN;
 	VAR fpNew,fpOld: SyntaxTree.Fingerprint;
 	BEGIN
-		old := old.resolved; new := new.resolved;
+		old := old.resolvedType; new := new.resolvedType;
 
 		IF old IS SyntaxTree.PointerType THEN
 			old := old(SyntaxTree.PointerType).pointerBase;

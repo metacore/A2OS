@@ -1227,7 +1227,6 @@ TYPE
 			IF (ch = Texts.LabelChar) THEN WriteLabel(r.object(Texts.LabelPiece).label^) END;
 
 			RetrieveAttributes;
-			PrintAttributes;
 
 			IF (pStyle # NIL) & (pstylename # "Left") THEN WriteParagraph(pstylename) END;
 			WriteSpan(stylename);

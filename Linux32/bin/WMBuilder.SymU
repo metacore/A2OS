@@ -93,26 +93,33 @@ TYPE
 
 	CodeMode = ENUM cmImport = 0, cmVar = 1, cmWire = 2 END; 
 
-	ComponentCode = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
-	VAR 
-		rootComponent: Repositories.Component; 
-		moduleName: Strings.String; 
-		editor: WMEditors.Editor; 
-		importList: StringCollections.Vector; 
+	CodeGenerator = RECORD 
+		form: Repositories.Component; 
+		imports: StringCollections.Vector; 
+		moduleName, fileName: Files.FileName; 
 
-		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ SetComponent(rootComponent: Repositories.Component); 
-		PROCEDURE ^ SetModuleName(moduleName: Strings.String); 
-		PROCEDURE ^ Refresh(sender, data: ANY ); 
+		PROCEDURE ^ Generate(form: Repositories.Component; CONST aFileName: ARRAY OF CHAR): Strings.String; 
 		PROCEDURE ^ WriteModule(w: Streams.Writer); 
 		PROCEDURE ^ WriteModuleImports(w: Streams.Writer); 
 		PROCEDURE ^ WriteModuleTypes(w: Streams.Writer); 
 		PROCEDURE ^ WriteWindow(w: Streams.Writer); 
 		PROCEDURE ^ WriteWindowVariables(w: Streams.Writer); 
-		PROCEDURE ^ WriteWindowProcs(writer: Streams.Writer); 
-		PROCEDURE ^ WriteModuleProcs(writer: Streams.Writer); 
+		PROCEDURE ^ WriteWindowProcs(w: Streams.Writer); 
+		PROCEDURE ^ WriteModuleProcs(w: Streams.Writer); 
 		PROCEDURE ^ PostprocessGenerator(CONST generator: ARRAY OF CHAR): Strings.String; 
-		PROCEDURE ^ TraverseComponent(component: Repositories.Component; mode: CodeMode; writer: Streams.Writer); 
+		PROCEDURE ^ TraverseComponent(component: Repositories.Component; mode: CodeMode; w: Streams.Writer); 
+	END
+	; 
+
+	ComponentCode = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		editor: WMEditors.Editor; 
+		form: Repositories.Component; 
+		fileName: Files.FileName; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetInfo(form: Repositories.Component; fileName: ARRAY OF CHAR); 
+		PROCEDURE ^ Refresh(sender, data: ANY ); 
 	END ComponentCode; 
 
 	Indicator = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)

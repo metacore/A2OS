@@ -27,12 +27,12 @@ TYPE
 	(** Abstract container *)
 	Container* = OBJECT 
 
-		PROCEDURE Count*(): SIZE;
+		PROCEDURE Count*(): (*unresolved*)SIZE;
 		BEGIN
 			HALT(301)
 		END Count; 
 
-		PROCEDURE Empty*(): BOOLEAN;
+		PROCEDURE Empty*(): (*unresolved*)BOOLEAN;
 		BEGIN
 			HALT(301)
 		END Empty; 
@@ -43,18 +43,18 @@ TYPE
 		END Reset; 
 	END Container; 
 
-	PArrayT* = POINTER TO ARRAY OF T; 
+	PArrayT* = POINTER TO ARRAY OF (*unresolved*)T; 
 
 	(** Abstract Linear Container, based on dynamic array of T *)
-	LinearContainer* = OBJECT (Container)
+	LinearContainer* = OBJECT ((*unresolved*)Container)
 	VAR 
-		m_iSize: SIZE; 
-		m_pArray: PArrayT; 
+		m_iSize: (*unresolved*)SIZE; 
+		m_pArray: (*unresolved*)PArrayT; 
 
 		PROCEDURE Grow;
 		VAR 
-			pOldArray: PArrayT; 
-			iOldSize, i: SIZE; 
+			pOldArray: (*unresolved*)PArrayT; 
+			iOldSize, i: (*unresolved*)SIZE; 
 		BEGIN
 			pOldArray := m_pArray; 
 			iOldSize := m_iSize; 
@@ -80,47 +80,47 @@ TYPE
 	END LinearContainer; 
 
 	(** Abstract stack *)
-	Stack* = OBJECT (LinearContainer)
+	Stack* = OBJECT ((*unresolved*)LinearContainer)
 
-		PROCEDURE Pop*(VAR t: T): BOOLEAN;
+		PROCEDURE Pop*(VAR t: (*unresolved*)T): (*unresolved*)BOOLEAN;
 		BEGIN
 			HALT(301)
 		END Pop; 
 
-		PROCEDURE Push*(CONST t: T);
+		PROCEDURE Push*(CONST t: (*unresolved*)T);
 		BEGIN
 			HALT(301)
 		END Push; 
 
-		PROCEDURE Top*(VAR t: T): BOOLEAN;
+		PROCEDURE Top*(VAR t: (*unresolved*)T): (*unresolved*)BOOLEAN;
 		BEGIN
 			HALT(301)
 		END Top; 
 	END Stack; 
 
 	(** Simple Queue or LIFO stack *)
-	Queue* = OBJECT (Stack)
+	Queue* = OBJECT ((*unresolved*)Stack)
 	VAR 
-		m_iPos: SIZE; 
+		m_iPos: (*unresolved*)SIZE; 
 
 		PROCEDURE Reset*;
 		BEGIN
 			m_iPos := 0
 		END Reset; 
 
-		PROCEDURE Count*(): SIZE;
+		PROCEDURE Count*(): (*unresolved*)SIZE;
 		BEGIN
 			RETURN m_iPos
 		END Count; 
 
-		PROCEDURE Empty*(): BOOLEAN;
+		PROCEDURE Empty*(): (*unresolved*)BOOLEAN;
 		BEGIN
 			RETURN (m_iPos = 0)
 		END Empty; 
 
-		PROCEDURE Pop*(VAR t: T): BOOLEAN;
+		PROCEDURE Pop*(VAR t: (*unresolved*)T): (*unresolved*)BOOLEAN;
 		VAR 
-			bOk: BOOLEAN; 
+			bOk: (*unresolved*)BOOLEAN; 
 		BEGIN
 			bOk := (m_iPos # 0); 
 			IF bOk THEN 
@@ -130,7 +130,7 @@ TYPE
 			RETURN bOk
 		END Pop; 
 
-		PROCEDURE Push*(CONST t: T);
+		PROCEDURE Push*(CONST t: (*unresolved*)T);
 		BEGIN
 			IF (m_iPos = m_iSize) THEN 
 				Grow
@@ -139,9 +139,9 @@ TYPE
 			INC(m_iPos)
 		END Push; 
 
-		PROCEDURE Top*(VAR t: T): BOOLEAN;
+		PROCEDURE Top*(VAR t: (*unresolved*)T): (*unresolved*)BOOLEAN;
 		VAR 
-			bOk: BOOLEAN; 
+			bOk: (*unresolved*)BOOLEAN; 
 		BEGIN
 			bOk := (m_iPos # 0); 
 			IF bOk THEN 
@@ -152,9 +152,9 @@ TYPE
 	END Queue; 
 
 	(** Double Ended Queue or FIFO stack *)
-	DEQue* = OBJECT (Stack)
+	DEQue* = OBJECT ((*unresolved*)Stack)
 	VAR 
-		m_iHead, m_iTail: SIZE; 
+		m_iHead, m_iTail: (*unresolved*)SIZE; 
 
 		PROCEDURE Reset*;
 		BEGIN
@@ -162,19 +162,19 @@ TYPE
 			m_iTail := 0
 		END Reset; 
 
-		PROCEDURE Count*(): SIZE;
+		PROCEDURE Count*(): (*unresolved*)SIZE;
 		BEGIN
 			RETURN (m_iTail - m_iHead)
 		END Count; 
 
-		PROCEDURE Empty*(): BOOLEAN;
+		PROCEDURE Empty*(): (*unresolved*)BOOLEAN;
 		BEGIN
 			RETURN ((m_iTail - m_iHead) = 0)
 		END Empty; 
 
 		PROCEDURE Grow;
 		VAR 
-			iCount, i: SIZE; 
+			iCount, i: (*unresolved*)SIZE; 
 		BEGIN
 			iCount := (m_iTail - m_iHead); 
 			IF (iCount = 0) THEN 
@@ -194,9 +194,9 @@ TYPE
 			END
 		END Grow; 
 
-		PROCEDURE Pop*(VAR t: T): BOOLEAN;
+		PROCEDURE Pop*(VAR t: (*unresolved*)T): (*unresolved*)BOOLEAN;
 		VAR 
-			bOk: BOOLEAN; 
+			bOk: (*unresolved*)BOOLEAN; 
 		BEGIN
 			bOk := (m_iHead # m_iTail); 
 			IF (m_iHead # m_iTail) THEN 
@@ -206,7 +206,7 @@ TYPE
 			RETURN bOk
 		END Pop; 
 
-		PROCEDURE Push*(CONST t: T);
+		PROCEDURE Push*(CONST t: (*unresolved*)T);
 		BEGIN
 			IF (m_iTail = m_iSize) THEN 
 				Grow
@@ -215,9 +215,9 @@ TYPE
 			INC(m_iTail)
 		END Push; 
 
-		PROCEDURE Top*(VAR t: T): BOOLEAN;
+		PROCEDURE Top*(VAR t: (*unresolved*)T): (*unresolved*)BOOLEAN;
 		VAR 
-			bOk: BOOLEAN; 
+			bOk: (*unresolved*)BOOLEAN; 
 		BEGIN
 			bOk := (m_iHead # m_iTail); 
 			IF bOk THEN 
@@ -227,14 +227,14 @@ TYPE
 		END Top; 
 	END DEQue; 
 
-	Vector* = OBJECT (LinearContainer)
+	Vector* = OBJECT ((*unresolved*)LinearContainer)
 	VAR 
-		m_iPos: SIZE; 
-		f_bSorted: BOOLEAN; 
+		m_iPos: (*unresolved*)SIZE; 
+		f_bSorted: (*unresolved*)BOOLEAN; 
 
-		PROCEDURE Add*(CONST t: T): SIZE;
+		PROCEDURE Add*(CONST t: (*unresolved*)T): (*unresolved*)SIZE;
 		VAR 
-			pos: SIZE; 
+			pos: (*unresolved*)SIZE; 
 		BEGIN
 			(* Append as to unsorted array *)
 			f_bSorted := FALSE; 
@@ -253,19 +253,19 @@ TYPE
 			m_iPos := 0
 		END Reset; 
 
-		PROCEDURE Count*(): SIZE;
+		PROCEDURE Count*(): (*unresolved*)SIZE;
 		BEGIN
 			RETURN m_iPos
 		END Count; 
 
-		PROCEDURE Empty*(): BOOLEAN;
+		PROCEDURE Empty*(): (*unresolved*)BOOLEAN;
 		BEGIN
 			RETURN (m_iPos = 0)
 		END Empty; 
 
-		PROCEDURE FindBinary(CONST t: T; VAR bFound: BOOLEAN): SIZE;
+		PROCEDURE FindBinary(CONST t: (*unresolved*)T; VAR bFound: (*unresolved*)BOOLEAN): (*unresolved*)SIZE;
 		VAR 
-			lower, middle, upper: SIZE; 
+			lower, middle, upper: (*unresolved*)SIZE; 
 		BEGIN
 			bFound := FALSE; 
 			IF (m_iPos = 0) THEN 
@@ -291,9 +291,9 @@ TYPE
 			END
 		END FindBinary; 
 
-		PROCEDURE FindSequentially(CONST t: T): SIZE;
+		PROCEDURE FindSequentially(CONST t: (*unresolved*)T): (*unresolved*)SIZE;
 		VAR 
-			i: SIZE; 
+			i: (*unresolved*)SIZE; 
 		BEGIN
 			i := 0; 
 			WHILE (i < m_iPos) DO 
@@ -305,21 +305,21 @@ TYPE
 			RETURN  -1
 		END FindSequentially; 
 
-		PROCEDURE Get*(pos: SIZE; VAR t: T);
+		PROCEDURE Get*(pos: (*unresolved*)SIZE; VAR t: (*unresolved*)T);
 		BEGIN
 			ASSERT(((pos >= 0) & (pos < m_iPos)), 101); 
 			t := m_pArray[pos]
 		END Get; 
 
-		PROCEDURE GetSorted*(): BOOLEAN;
+		PROCEDURE GetSorted*(): (*unresolved*)BOOLEAN;
 		BEGIN
 			RETURN f_bSorted
 		END GetSorted; 
 
-		PROCEDURE IndexOf*(CONST t: T): SIZE;
+		PROCEDURE IndexOf*(CONST t: (*unresolved*)T): (*unresolved*)SIZE;
 		VAR 
-			pos: SIZE; 
-			bFound: BOOLEAN; 
+			pos: (*unresolved*)SIZE; 
+			bFound: (*unresolved*)BOOLEAN; 
 		BEGIN
 			IF f_bSorted THEN 
 				pos := FindBinary(t, bFound); 
@@ -333,9 +333,9 @@ TYPE
 			END
 		END IndexOf; 
 
-		PROCEDURE Insert*(pos: SIZE; CONST t: T);
+		PROCEDURE Insert*(pos: (*unresolved*)SIZE; CONST t: (*unresolved*)T);
 		VAR 
-			iSrc: SIZE; 
+			iSrc: (*unresolved*)SIZE; 
 		BEGIN
 			ASSERT(((pos >= 0) & (pos < m_iPos)), 101)(* Insert as to unsorted array *); 
 			f_bSorted := FALSE; 
@@ -353,10 +353,10 @@ TYPE
 			INC(m_iPos)
 		END Insert; 
 
-		PROCEDURE QuickSort(l, r: SIZE);
+		PROCEDURE QuickSort(l, r: (*unresolved*)SIZE);
 		VAR 
-			i, j, x: SIZE; 
-			t: T; 
+			i, j, x: (*unresolved*)SIZE; 
+			t: (*unresolved*)T; 
 		BEGIN
 			REPEAT 
 				i := l; 
@@ -390,9 +390,9 @@ TYPE
 			UNTIL (i >= r)
 		END QuickSort; 
 
-		PROCEDURE Remove*(index: SIZE);
+		PROCEDURE Remove*(index: (*unresolved*)SIZE);
 		VAR 
-			iDst: SIZE; 
+			iDst: (*unresolved*)SIZE; 
 		BEGIN
 			ASSERT(((index >= 0) & (index < m_iPos)), 101)(* Shift content of array *); 
 			iDst := index; 
@@ -403,13 +403,13 @@ TYPE
 			DEC(m_iPos)
 		END Remove; 
 
-		PROCEDURE Set*(index: SIZE; CONST t: T);
+		PROCEDURE Set*(index: (*unresolved*)SIZE; CONST t: (*unresolved*)T);
 		BEGIN
 			ASSERT(((index >= 0) & (index < m_iPos)), 101); 
 			m_pArray[index] := t
 		END Set; 
 
-		PROCEDURE SetSorted*(bValue: BOOLEAN);
+		PROCEDURE SetSorted*(bValue: (*unresolved*)BOOLEAN);
 		BEGIN
 			IF (f_bSorted = bValue) THEN 
 				RETURN 

@@ -376,6 +376,8 @@ TYPE
 	END ModuleCache; 
 
 	EnumeratorProc = PROCEDURE {DELEGATE}(module: Module; cache: ModuleCache); 
+VAR 
+	invalidIdentifier*: Strings.String; 
 
 	PROCEDURE ^ AppendLast(head, node: NodeList); 
 	PROCEDURE ^ SplitName*(CONST name: ARRAY OF CHAR; VAR moduleName, typeName: ARRAY OF CHAR); 

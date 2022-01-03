@@ -184,7 +184,7 @@ TYPE
 	VAR 
 		typeDeclaration-: TypeDeclaration; 
 		scope-: Scope; 
-		resolved-: Type; 
+		resolvedType-: Type; 
 		position-, end-: Position; 
 		state-: SET; 
 		hasPointers-: BOOLEAN; 

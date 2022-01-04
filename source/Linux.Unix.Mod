@@ -1161,7 +1161,8 @@ VAR
 		libraryPaths[0] := "/lib/arm-linux-gnueabihf/";
 		libraryPaths[1] := "/lib";
 		libraryPaths[2] := "/usr/lib";
-		noPaths := 3;
+		libraryPaths[3] := "/usr/lib/arm-linux-gnueabihf/";
+		noPaths := 4;
 #ELSE
 	=== error
 #END

@@ -828,9 +828,9 @@ TYPE
 
 		
 		(*compute line statistics and integral. getter() yields intensity value at some location*)
-		PROCEDURE LineIntegral*(VAR length,sum:REAL; VAR count:SIZE; getter:PROCEDURE{DELEGATE}(x,y:SIZE):REAL): REAL;
+		PROCEDURE LineIntegral*(VAR length,sum:REAL; VAR count:SIZE; getter:PROCEDURE{DELEGATE}(x,y:SIZE):REAL; weight:=NIL:PROCEDURE{DELEGATE}(x,y:SIZE):REAL): REAL;
 		VAR i,x,y,x0,y0,left,top:SIZE; 
-			intensity,integral,l: REAL;
+			intensity,integral,l,w: REAL;
 			(*nSegments:SIZE;*)
 			isClosed:BOOLEAN;
 		BEGIN
@@ -849,6 +849,7 @@ TYPE
 			FOR i:=0 TO nSegments-1 DO
 				x:=left+pointArray[i].x;
 				y:=top+pointArray[i].y;
+				IF weight#NIL THEN w:=weight(x,y) ELSE w:=1 END;
 				IF getter#NIL THEN 
 					intensity:=getter(x,y);
 					sum:=sum+intensity;
@@ -856,7 +857,7 @@ TYPE
 				IF isClosed OR (i>0) THEN
 					l:=Distance(x,y,x0,y0);
 					length:=length+l; 
-					integral:=integral+l*intensity;
+					integral:=integral+w*l*intensity;
 				END;
 				x0:=x; y0:=y;
 			END;

@@ -101,7 +101,7 @@ TYPE
 		PROCEDURE ^ Normalize*; 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ Length*(): REAL; 
-		PROCEDURE ^ LineIntegral*(VAR length, sum: REAL; VAR count: SIZE; getter: PROCEDURE {DELEGATE}(x, y: SIZE):REAL): REAL; 
+		PROCEDURE ^ LineIntegral*(VAR length, sum: REAL; VAR count: SIZE; getter: PROCEDURE {DELEGATE}(x, y: SIZE):REAL; weight:= NIL: PROCEDURE {DELEGATE}(x, y: SIZE):REAL): REAL; 
 	END Spline; 
 VAR 
 	log: Streams.Writer; 

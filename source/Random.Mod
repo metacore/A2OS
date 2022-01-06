@@ -106,7 +106,7 @@ TYPE
 				x1:=2.0*Uniform()-1;
 				x2:=2.0*Uniform()-1;
 				w:=x1*x1+x2*x2;
-			UNTIL w<1;
+			UNTIL (w>0) & (w<1);
 			w:=Math.sqrt( (-2.0* Math.ln(w) ) /w);
 			y1:=x1*w;
 			(*y2:=x2*w*)

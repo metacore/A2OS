@@ -6454,7 +6454,9 @@ TYPE
 			- check procedure symbol
 		**)
 		PROCEDURE ResolveProcedure(procedure: SyntaxTree.Procedure);
-		VAR super,proc: SyntaxTree.Procedure; record: SyntaxTree.RecordType;
+		VAR super,proc: SyntaxTree.Procedure; 
+			record: SyntaxTree.RecordType;
+			cell: SyntaxTree.CellType;
 			procedureType: SyntaxTree.ProcedureType;
 			selfParameter: SyntaxTree.Parameter; qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 			qualifiedType: SyntaxTree.QualifiedType;
@@ -6588,7 +6590,7 @@ TYPE
 					IF record.isFinal THEN procedure.SetFinal(TRUE) END;
 					procedureType.SetDelegate(TRUE);
 
-					IF (record.pointerType # NIL) & (procedureType.selfParameter = NIL) THEN
+					IF (record.pointerType # NIL) & (procedureType.selfParameterInObject = NIL) THEN
 						(* add auto-self *)
 						selfParameter := SyntaxTree.NewParameter(procedure.position,procedureType,Global.SelfParameterName,SyntaxTree.ValueParameter);
 						IF (record.pointerType.typeDeclaration = NIL) THEN
@@ -6682,10 +6684,25 @@ TYPE
 					END;
 				ELSIF procedure.scope IS SyntaxTree.CellScope THEN (* allowed to be constructor *)
 					IF cellsAreObjects THEN
-						procedureType.SetDelegate(TRUE);
+						cell := procedure.scope(SyntaxTree.CellScope).ownerCell;
+						procedureType.SetDelegate(TRUE);						
+						IF (procedureType.selfParameterInObject = NIL) THEN
+							(* add auto-self *)
+							selfParameter := SyntaxTree.NewParameter(procedure.position,procedureType,Global.SelfParameterName,SyntaxTree.ValueParameter);
+							qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(procedure.position,SyntaxTree.invalidIdentifier,cell.typeDeclaration.name);
+							qualifiedType := SyntaxTree.NewQualifiedType(procedure.position,procedure.scope,qualifiedIdentifier);
+							qualifiedType.SetResolved(cell);
+							selfParameter.SetType(qualifiedType);
+							selfParameter.SetAccess(SyntaxTree.Hidden);
+							procedureType.SetSelfParameterInObject(selfParameter);
+						END;
 					END;
 					IF procedure.isConstructor THEN
 						procedure.scope(SyntaxTree.CellScope).SetConstructor(procedure);
+					END;
+					IF  ~system.GenerateParameterOffsets(procedure,FALSE) (* assume that this is no nested procedure, is fixed later otherwise *)
+					THEN
+						Error(procedure.position,"problems during parameter offset computation");
 					END;
 				ELSIF procedure.isConstructor THEN
 					Error(procedure.position,"procedure illegaly marked as initializer - not in object scope");

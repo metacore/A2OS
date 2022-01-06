@@ -7246,11 +7246,12 @@ TYPE
 			procedureScope := SyntaxTree.NewProcedureScope(scope);
 			Global.GetSymbolSegmentedName(symbol, name);
 			Basic.SuffixSegmentedName(name, Basic.MakeString("@Initializer"));
-			procedure := SyntaxTree.NewProcedure(Basic.invalidPosition, SyntaxTree.NewIdentifier(""), procedureScope);
-			procedure.SetScope(moduleScope);
+			procedure := SyntaxTree.NewProcedure(Basic.invalidPosition, SyntaxTree.NewIdentifier("@Initializer"), procedureScope);
+			procedure.SetScope(scope);
 			procedure.SetType(SyntaxTree.NewProcedureType(Basic.invalidPosition,scope));
 			procedure.type(SyntaxTree.ProcedureType).SetDelegate(TRUE);
 			procedure.SetAccess(SyntaxTree.Hidden);
+			checker.ResolveSymbol(procedure);
 			currentScope := procedureScope;
 			section := NewSection(module.allSections, Sections.CodeSection, name, NIL,commentPrintout # NIL);
 			EmitEnter(section, Basic.invalidPosition,procedure,0,0);
@@ -11446,6 +11447,7 @@ TYPE
 				ELSIF procedureType.selfParameterInObject # NIL THEN
 					offset := procedureType.selfParameterInObject.offsetInBits DIV 8;
 				ELSE
+					Printout.Info("procedure", procedure);
 					Error(procedure.position,"compiler implementation error: missing self parameter ? ");
 				END;
 				IntermediateCode.AddOffset(op.op,offset);

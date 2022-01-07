@@ -32,6 +32,8 @@ CONST
 		(*LUT*)
 		gray*=0;
 		flow*=1;
+		color8*=2;
+		custom*=3;
 
 		(*normalization (intensity scaling min->max) *)
 		none*=0;
@@ -120,7 +122,7 @@ END writeByteFrame;
 PROCEDURE writeRGBFrame();
 END writeRGBFrame;
 
-PROCEDURE WriteLUT(VAR R: Files.Writer; lut:SIGNED16);
+PROCEDURE WriteLUT(VAR R: Files.Writer; lut:SIGNED16; customLUT:=NIL:POINTER TO ARRAY OF CHAR); (*lut size: 256*4 CHARs   *)
 VAR i,j:SIGNED16;
 BEGIN
 	CASE lut OF
@@ -144,6 +146,60 @@ BEGIN
 			R.Char( CHR(2*i));
 			R.Char( CHR(0));
 		END;
+	| color8:
+		FOR i:=0 TO 31 DO
+			R.Char( CHR(0));
+			R.Char( CHR(0));
+			R.Char( CHR(0));
+			R.Char( CHR(0));
+		END;
+		FOR i:=0 TO 31 DO
+			R.Char( CHR(0));
+			R.Char( CHR(0));
+			R.Char( CHR(0));
+			R.Char( CHR(255));
+		END;
+		FOR i:=0 TO 31 DO
+			R.Char( CHR(255));
+			R.Char( CHR(255));
+			R.Char( CHR(255));
+			R.Char( CHR(255));
+		END;
+		FOR i:=0 TO 31 DO
+			R.Char( CHR(255));
+			R.Char( CHR(0));
+			R.Char( CHR(0));
+			R.Char( CHR(255));
+		END;
+		FOR i:=0 TO 31 DO
+			R.Char( CHR(0));
+			R.Char( CHR(255));
+			R.Char( CHR(0));
+			R.Char( CHR(255));
+		END;
+		FOR i:=0 TO 31 DO
+			R.Char( CHR(255));
+			R.Char( CHR(0));
+			R.Char( CHR(0));
+			R.Char( CHR(255));
+		END;
+		FOR i:=0 TO 31 DO
+			R.Char( CHR(127));
+			R.Char( CHR(0));
+			R.Char( CHR(127));
+			R.Char( CHR(255));
+		END;
+		FOR i:=0 TO 31 DO
+			R.Char( CHR(0));
+			R.Char( CHR(127));
+			R.Char( CHR(127));
+			R.Char( CHR(255));
+		END;
+	|custom:
+		FOR i:=0 TO 4*256-1 DO
+			R.Char(customLUT[i])
+		END;
+	ELSE HALT(200)
 	END;
 END WriteLUT;
 
@@ -259,7 +315,7 @@ BEGIN
 END Store;
 
 (** Store files as .avi ; for first try, see Store() ;  *)
-PROCEDURE StoreB*(CONST data:ARRAY [*] OF Matrix; filename:ARRAY OF CHAR; framesPerSec:FLOAT32; compression, lut, normalize:SIGNED16):Files.File;
+PROCEDURE StoreB*(CONST data:ARRAY [*] OF Matrix; filename:ARRAY OF CHAR; framesPerSec:FLOAT32; compression, lut, normalize:SIGNED16; customLUT:=NIL: POINTER TO ARRAY OF CHAR):Files.File;
 VAR R,Counter:Files.Writer;
 		F:Files.File;
 		saveFileSize,saveLIST1Size,saveList1subSize,savestrfSize,savestrnPos,saveJUNKsignature,saveLIST2Size,
@@ -389,7 +445,7 @@ BEGIN
 									savestrfSize:=R.Pos();
 									R.RawLInt(NULL);		(* to be updated with strl ChunkSizeFromNextPos *)
 									WriteBitmapInfoHeader;
-									IF TRUE (*(compression=1) OR (bytesperpixel=1)*) THEN WriteLUT(R,lut);  END;
+									IF TRUE (*(compression=1) OR (bytesperpixel=1)*) THEN WriteLUT(R,lut,customLUT);  END;
 									savestrnPos:=R.Pos();
 									R.Update;
 									Counter.SetPos(savestrfSize); Counter.RawLInt((savestrnPos-savestrfSize-4)(SIGNED32));
@@ -428,6 +484,9 @@ BEGIN
 					R.RawLInt((bytesperpixel*xDim*yDim)(SIGNED32));
 					IF lut=gray THEN WritePixelsUncompressed(R,data[z],bytesperpixel, 254/absmax, 1);
 					ELSIF lut=flow THEN WritePixelsUncompressed(R,data[z],bytesperpixel, 127/absmax, 128);
+					ELSIF lut=color8 THEN WritePixelsUncompressed(R,data[z],bytesperpixel, 1, 0);
+					ELSIF lut=custom THEN WritePixelsUncompressed(R,data[z],bytesperpixel, 1, 0);
+					ELSE HALT(199);
 					END;
 				END;
 			ELSIF compression=1 THEN
@@ -442,6 +501,8 @@ BEGIN
 					(*R.RawLInt(0);  encoded length is inserted here within WriteRLE8() *)
 					IF lut=gray THEN WriteRLE8(R,data[z],bytesperpixel,254/absmax, 1);
 					ELSIF lut=flow THEN WriteRLE8(R,data[z],bytesperpixel,127/absmax, 128);
+					ELSIF lut=color8 THEN WriteRLE8(R,data[z],bytesperpixel,1,0);
+					ELSIF lut=custom THEN WriteRLE8(R,data[z],bytesperpixel,1,0);
 					ELSE HALT(199);
 					END;
 					dcLength[z]:=R.Pos()-savedcLength[z]-4;
@@ -484,11 +545,30 @@ BEGIN
 
 PROCEDURE Test*;
 VAR frames: ARRAY [*,*,*] OF Datatype; i:SIGNED32; F:Files.File;
+	lut:POINTER TO ARRAY OF CHAR;
 BEGIN
-	NEW(frames,30,100,100);
-	frames[..14, 30..50,30..50]:=1;
-	frames[15.., 50..80, 50..80]:=1;
+	NEW(frames,64,100,100);
+	frames[.., 0..49,..]:=0;
+	frames[.., 50..,..]:=32;	
+	frames[0..7, 30..50,30..50]:=0;
+	frames[8..15, 50..80, 50..80]:=32;
+	frames[16..23, 30..50,30..50]:=64;
+	frames[24..31, 30..50,30..50]:=96;
+	frames[32..39, 30..50,30..50]:=128;
+	frames[40..47, 50..80, 50..80]:=160;
+	frames[48..55, 30..50,30..50]:=192;
+	frames[56..63, 30..50,30..50]:=224;
+	
 	F:=Store(frames,"demoRLE.avi");
+	F:=StoreB(frames,"demoRLELUT8.avi",30,RLE8,color8,none);
+	NEW(lut,4*256); 
+	FOR i:=0 TO 256-1 DO
+		lut[4*i]:=CHR(i MOD 256);
+		lut[4*i+1]:=CHR(i DIV 256);
+		lut[4*i+2]:=CHR(255-i);
+		lut[4*i+3]:=CHR(255-i)
+	END;
+	F:=StoreB(frames,"demoRLELUT256.avi",30,RLE8,custom,none,lut);
 END Test;
 
 BEGIN

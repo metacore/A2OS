@@ -370,6 +370,9 @@ To update: Configuration.Init ~
 		<Section name="mta">
 			<Setting name="Open" value="WMMatrixLoader.Open"/>
 		</Section>
+		<Section name="mtz">
+			<Setting name="Open" value="WMMatrixLoader.Open"/>
+		</Section>
 		<Section name="sym">
 				<Setting name="Open" value="PET.Open"/>
 			</Section>

@@ -241,7 +241,37 @@ TYPE
 		END CheckHeader;
 
 	END Inflator;
+	
+TYPE	DeflateWriter* = OBJECT (Streams.Writer);
+		VAR deflator:Deflator;
 
+		PROCEDURE &Initialize*(out:Streams.Writer; compression:=DefaultCompression:SIGNED8; strategy:=DefaultStrategy:SIGNED8; flush:=FullFlush:SIGNED8);
+		BEGIN
+			NEW(deflator, out, compression,strategy,flush);
+			InitWriter(deflator.Send, DefaultWriterSize);
+			Reset;
+		END Initialize;
+
+		PROCEDURE Send*(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
+		BEGIN
+			deflator.Send(outBuf,ofs,len,propagate,res);
+		END Send;
+	END DeflateWriter;
+
+	InflateReader* = OBJECT(Streams.Reader)
+		VAR inflator:Inflator;
+
+		PROCEDURE &Initialize*(in: Streams.Reader; size:=DefaultReaderSize:SIZE);
+		BEGIN
+			NEW(inflator,in);
+			InitReader(inflator.Receive, size);
+		END Initialize;
+
+		PROCEDURE Receive*(VAR inBuf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
+		BEGIN
+			inflator.Receive(inBuf,ofs,size,min,len,res);
+		END Receive;
+	END InflateReader;
 
 PROCEDURE Deflate*(in,out :Files.File; level, strategy, flush: SIGNED8);
 VAR
@@ -339,9 +369,31 @@ BEGIN
 	END;
 END UnGZip;
 
+(*
+PROCEDURE TestStream*(context:Commands.Context);
+VAR f,f1:Files.File;
+	fr:Files.Reader;
+	fw:Files.Writer;
+	r:InflateReader;
+	w:DeflateWriter;
+	string:ARRAY 16 OF CHAR;
+BEGIN
+	f:=Files.New("TestGZ.gz");Files.Register(f);
+	Files.OpenWriter(fw,f,0);
+	NEW(w,fw);
+	w.String("Hello World"); w.Update;
+	f1:=Files.Old("TestGZ.gz");
+	Files.OpenReader(fr,f,0);
+	NEW(r,fr);
+	WHILE r.GetString(string) DO
+		context.out.String(string); context.out.String(" "); context.out.Update;
+	END;
+END TestStream;*)
+
 
 END GZip.
 
 GZip.GZip "../httproot/raphael-min.js" ~
 GZip.UnGZip "../httproot/raphael-min2.js.gz" ~
+GZip.TestStream ~
 

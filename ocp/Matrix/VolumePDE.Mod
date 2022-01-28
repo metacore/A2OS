@@ -27,8 +27,14 @@ MODULE VolumePDE;
 	Centered time, centered space (CTCS);
 	etc
 	*)
+	
+	(*number of iterations adapted to resolutio can use the 'iterationScale' variable. If >1, the number of iterations is increased at coarser resolutions*)
+	(*not yet implemented: solving the equations could use 'precision achieved' (in literature: e.g. 1E-15 with limiting iterations to 100 for Krylov solver *)
 
-IMPORT VolumeBase, Transform:=VolumeTransform, Util:=MatrixUtilities, Nabla:=VolumeNabla;
+	
+
+IMPORT VolumeBase, Transform:=VolumeTransform, Util:=MatrixUtilities, Nabla:=VolumeNabla, ComputeObjects:=MatrixComputeObjects, Objects;
+
 
 TYPE
 	Datatype* = VolumeBase.Datatype;
@@ -175,6 +181,11 @@ TYPE
 	ds is grid spacing
 	*)
 
+	(*For future parallelization of Poisson, see, e.g.
+	https://dl.acm.org/doi/abs/10.1145/882262.882364
+	using SOR instead of Jacobi, see Tingting Tang et al. / Procedia Engineering 61 (2013) 136 – 143 
+	and https://www.sciencedirect.com/book/9780127730509/iterative-solution-of-large-linear-systems *)
+
 	VAR temp, bsmall, xsmall: Grid;
 		alpha, beta: Datatype;
 		child: Poisson;
@@ -253,7 +264,7 @@ TYPE
 		BEGIN
 			alpha:=ds * ds  / (nu*dt);  beta:=6+alpha;
 			IF (LEN( x, 0 ) > 2*minsize-1) & (LEN(x,1)> 2*minsize-1)& (LEN(x,2)> 2*minsize-1) THEN
-				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings ); (*here reduction of Boundary checking may impact speed*)
+				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings ); (*here reduction of Boundary checking might impact speed*)
 
 				xsmall:=Reduce( x );
 				bsmall:=Reduce( b );
@@ -289,7 +300,7 @@ TYPE
  		(*explicit solving-forward time, centered space; not yet tested*)
 		PROCEDURE SolveExplicit*( CONST phim1,phi0 : Grid; VAR x: Grid;  c, dt, ds: Datatype; Boundaries: Boundary); (* explicit solution Forward time, centered space-not unconditionally stable*)
 		BEGIN
-			(* Laplacian(A)=second derivative of x is computed directly (forward/explicit scheme), (solution not unconditiionally stable).
+		(* Laplacian(A)=second derivative of x is computed directly (forward/explicit scheme), (solution not unconditionally stable).
 		The data are kept in original 3D shape, in contrast to the linearization typically used for matrix algebra*)
 			Stencil(phi0,temp);
 			tempse:=6.0*phi0;
@@ -335,10 +346,10 @@ TYPE
 
 	END Wave;
 
-	(*advection operator. for  backward time approach, use Advect() below. 	*)
+	(*advection operator. for  backward time (implicit Euler) approach, use Advect() below. 	*)
 	TYPE Advection*= OBJECT
-		VAR U, G, G1,G2, R: Nabla.VectorField;
-			g, div: Grid;
+		VAR U, G, G1, R: Nabla.VectorField;
+			g, div, tmp: Grid;
 
 			(*incompressible, scalar, simplistic, for u= velocity field, A=scalar conserved quantity*)
 			(* dA/dt =-Div( A u), in the case that Nabla(u)=0 and the flow is thus solenoidal , the equation is equivalent
@@ -349,12 +360,13 @@ TYPE
 					NEW(U, 3, LEN(u,0), LEN(u,1), LEN(u,2))
 				END; (*to do: avoid allocation*)
 				U[0]:=u; U[1]:=v; U[2]:=w;
-				RETURN -Nabla.DirectionalDerivative(A, U, Nabla.centered);
+				RESULT:=Nabla.DirectionalDerivative(A, U, Nabla.centered);
+				RETURN -RESULT
 			END Solenoidal;
 
 
 			(* skew symmetric form for the advection operator, see https://en.wikipedia.org/wiki/Advection#Treatment_of_the_advection_operator_in_the_incompressible_Navier_Stokes_equations*)
-			PROCEDURE SkewSymmetric*(CONST u,v,w:Grid; VAR u1,v1,w1:Grid); (*returns operator, to be operated on entity*)(*! to do: eliminate local variables/reallocations*)
+			PROCEDURE SkewSymmetric*(CONST u,v,w:Grid; VAR u1,v1,w1:Grid); (*returns operator, to be operated on entity*)
 			(*VAR  g, div: Grid;*)
 			BEGIN
 				IF (LEN(U,0) # 3) OR (LEN(U,1) # LEN(u,0)) OR (LEN(U,2) # LEN(u,1)) OR (LEN(U,3) # LEN(u,2)) THEN (*LEN(U) # [3,LEN(u,0), LEN(u,1), LEN(u,2)]*)
@@ -362,27 +374,107 @@ TYPE
 				END;
 				IF (DIM(g)#DIM(u)) OR (LEN(g)#LEN(u)) THEN NEW(g, LEN(u)) END;
 				U[0]:=u; U[1]:=v; U[2]:=w;
-				g:= u.*u; g:=g+v.*v; g:=g+w.*w;
+				(*g:= u.*u; g:=g+v.*v; g:=g+w.*w; g:=0.5*g;*)
+				g:= u.*u; 
+				tmp:=v.*v; g:=g+tmp; 
+				tmp:=w.*w; g:=g+tmp; 
 				g:=0.5*g;
+				
 				G:=Nabla.Grad(g, Nabla.centered);
-
 				R:=Nabla.Rot(U, Nabla.centered);
 				G1:=Cross(R, U);
 				G:=G+G1;
 
-				IF (DIM(div)#DIM(u)) OR (LEN(div)#LEN(u)) THEN NEW(div, LEN(u)) END;
+				IF ~Util.SameSize(div,u) THEN NEW(div, LEN(u)) END;
 				div:=Nabla.Div(U, Nabla.centered);
 				G1[0]:=u .* div;
 				G1[1]:=v .* div;
 				G1[2]:=w .* div;
-				G1:=0.5 * G1;
-				G:=G+G1;
-
+				
+				(*G1:=0.5 * G1; G:=G+G1;*)
+				G:=INCMUL(0.5,G1);
 				u1:=G[0]; (*! to do: write to u1,v1,w1 directly instead of copying*)
 				v1:=G[1];
 				w1:=G[2];
+				
 			END SkewSymmetric;
+			
+			(*TBD: consider Crank–Nicolson method*)  
 		END Advection;
+
+TYPE
+	NablaScaleIncActive*= OBJECT (ComputeObjects.ComputeObject) (* for operations of type "Matrix := Op(Matrix,Scalar)" ; *)
+		VAR A: Grid;
+		B: Grid; 
+		tmp:Grid;
+		s: Datatype;
+		op: PROCEDURE(CONST g:Grid; mode: INTEGER):Grid;
+		PROCEDURE &Init*(VAR A : Grid; CONST B:Grid; VAR tmp:Grid; s: Datatype; nabla: PROCEDURE(CONST g:Grid; mode: INTEGER):Grid);
+		BEGIN
+			SELF.A:=ALIAS OF A; 
+			SELF.B:=ALIAS OF B;
+			SELF.tmp:=ALIAS OF tmp;
+			SELF.s:=s;
+			op:=nabla;
+			SELF.Notify:=NIL;
+			wait:=FALSE; (*debug*)
+			SELF.priority:=Objects.Normal; 
+		END Init;
+		PROCEDURE compute;	
+		BEGIN
+			tmp:=op(B,Nabla.centered);
+			A:=INCMUL(s,tmp);
+			(*A:=A+op(B,Nabla.centered);*)
+		END compute;
+	END NablaScaleIncActive;
+
+	DiffusionActive*= OBJECT (ComputeObjects.ComputeObject) (* for operations of type "Matrix := Op(Matrix,Scalar)" ; *)
+		VAR u, u1: Grid;
+			nu,dt,ds,threshold: Datatype;
+			minsize, diffusioniterations,smoothingiterations: INTEGER;
+			diffusion:Diffusion;
+			bounds:Boundary; 
+		PROCEDURE &Init*(diffusion: Diffusion; CONST u: Grid; VAR u1:Grid; nu,dt,ds,threshold: Datatype; minsize, diffusioniterations, smoothingiterations: INTEGER; bounds:Boundary);
+		BEGIN
+			SELF.u:=ALIAS OF u; 
+			SELF.u1:=ALIAS OF u1;
+			SELF.diffusion:=diffusion;
+			SELF.nu:=nu; SELF.dt:=dt; SELF.ds:=ds; SELF.threshold:=threshold;
+			SELF.minsize:=minsize; SELF.diffusioniterations:=diffusioniterations; SELF.smoothingiterations:=smoothingiterations;
+			SELF.bounds:=bounds;
+			SELF.Notify:=NIL;
+			wait:=FALSE; (*debug*)
+			SELF.priority:=Objects.Normal; 
+		END Init;
+		PROCEDURE compute;	
+		BEGIN
+			diffusion.SolveMultigrid(u, u1, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, bounds ); 
+		END compute;
+	END DiffusionActive;
+	
+	AdvectionActive*= OBJECT (ComputeObjects.ComputeObject) 
+		VAR a, a1, u, w, v: Grid;
+			dt,ds,threshold: Datatype;
+			mode:BOOLEAN;
+			fromZ,toZ:SIZE;
+		PROCEDURE &Init*( CONST a, u, v, w: Grid; VAR a1:Grid; dt, ds: Datatype; mode:BOOLEAN; fromZ:=0, toZ:=-1:SIZE);
+		BEGIN
+			SELF.a:=ALIAS OF a; 
+			SELF.a1:=ALIAS OF a1;
+			SELF.u:=ALIAS OF u; SELF.v:=ALIAS OF v; SELF.w:=ALIAS OF w; 
+			SELF.dt:=dt; SELF.ds:=ds;
+			SELF.mode:=mode;
+			SELF.Notify:=NIL;
+			wait:=FALSE; (*debug*)
+			SELF.priority:=Objects.Normal; 
+			SELF.fromZ:=fromZ; SELF.toZ:=toZ;
+		END Init;
+		PROCEDURE compute;	
+		BEGIN
+			Advect( a,  u, v, w, a1, dt, ds, mode, fromZ,toZ );
+		END compute;
+	END AdvectionActive;
+
 
 	PROCEDURE Cross(CONST a,b: Nabla.VectorField): Nabla.VectorField;
 	BEGIN
@@ -466,6 +558,7 @@ TYPE
 	END Expand;
 
 	PROCEDURE Stencil( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite difference*) (* not in-place *)
+	(* Performance by stride-wise memory accesses. An alternative could be the use of 3D filtering for "the Jacobi smoother". This stencil cost ~8% of overal runtime in a 256*128*138 navier stokes problem *)
 	VAR lenx, leny, lenz: SIZE;
 	BEGIN
 		AllocateSame(x1,x);(*with reuse if possible*)
@@ -550,28 +643,9 @@ PROCEDURE Stencil333( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite dif
 		Stencil(x,x1);
 		(*Stencil333(x,x1);*)(*slow, but not allocating large temp memory*)
 		IF LEN(b,0)#0 THEN (* b is 0 in case of Laplace equation*)
-			x1:=INCMUL(alpha,b); (*! but, INCMUL may not be part of FoxArrayOptimized SSE procedures => slower ??*)
+			x1:=INCMUL(alpha,b); 
 		END;
 		x:=invbeta * x1;
-
-		(*ScaledStencil(x,x1,invbeta);(*DOES NOT WORK*)
-		IF LEN(b,0)#0 THEN (* b is 0 in case of Laplace equation*)
-			x:=INCMUL(alpha,b);
-		END;
-		(*x:=invbeta * x1;*)
-		*)
-		
-(*		IF LEN(b,0)#0 THEN (* b is 0 in case of Laplace equation*)
-			x1:= x1+alpha * b;
-		END;
-		x:=invbeta * x1;*)
-		
-		(*IF LEN(b,0)#0 THEN (* b is 0 in case of Laplace equation*)
-			x:=alpha * b;
-			x:=x+x1;
-		END;
-		x:=invbeta * x;*)
-
 	END JacobiStep;
 
 	PROCEDURE JacobiSteps( CONST b: Grid;  VAR x, x1: Grid;  alpha, beta: Datatype;  Boundaries: Boundary; iterations:SIGNED32);
@@ -589,7 +663,7 @@ PROCEDURE Stencil333( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite dif
 		RETURN [[[a0,a1],[b0,b1]],[[c0,c1],[d0,d1]]];
 	END Cast2x2x2X;
 *)
-	PROCEDURE -Cast2x2x2*(a0,a1,b0,b1,c0,c1,d0,d1: Datatype):ARRAY [2,2,2] OF Datatype;
+	PROCEDURE -Cast2x2x2*(a0,a1,b0,b1,c0,c1,d0,d1: FLOAT64):ARRAY [2,2,2] OF FLOAT64;
 	BEGIN
 		RESULT[0,0,0]:=a0;
 		RESULT[0,0,1]:=a1;
@@ -602,29 +676,88 @@ PROCEDURE Stencil333( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite dif
 		RETURN RESULT
 	END Cast2x2x2;
 
-(*	PROCEDURE Cast2x2x2B*(VAR res:ARRAY [2,2,2] OF FLOAT64; a0,a1,b0,b1,c0,c1,d0,d1: FLOAT64);
-	BEGIN
-		res[0,0,0]:=a0;
-		res[0,0,1]:=a1;
-		res[0,1,0]:=b0;
-		res[0,1,1]:=b1;
-		res[1,0,0]:=c0;
-		res[1,0,1]:=c1;
-		res[1,1,0]:=d0;
-		res[1,1,1]:=d1;
-	END Cast2x2x2B;
-*)
-	PROCEDURE Advect*( CONST source,  u, v, w: Grid;  VAR target: Grid;  dt, ds: Datatype; bilinear: BOOLEAN );   (* to do: other interpolation methods *)
+
+	(*line buffer alias to reduce indexing work => no apparent performance advantage on  Prestige notebook compared to below*)
+(*	PROCEDURE Advect*( CONST source,  u, v, w: Grid;  VAR target: Grid;  dt, ds: Datatype; bilinear: BOOLEAN );   (* to do: other interpolation methods *)
 	(*for each gridpoint in target grid, find value in source grid based on retrograd application of map u,v,w ;  u and ds are in SI units*)
 	(* to do: speed up by doing it linewise or slicewise *)
 	VAR x, y, z,  ox, oy, oz: SIZE;  a, b, c: Datatype;  len,lenu,lenv,lenw:ARRAY [3] OF SIZE; tmp222: ARRAY [2,2,2] OF Datatype;
+		lineU,lineV,lineW,(*lineS,*)lineT:ARRAY [*] OF Datatype;
 	BEGIN
 		len:=LEN(source);lenu:=LEN(u); lenv:=LEN(v); lenw:=LEN(w);
 		IF  LEN(target)# LEN(source) THEN NEW(target,LEN(source)) END;
 		FOR z:=0 TO len[0]-1 DO
 			FOR y:=0 TO len[1]-1 DO
+				lineU:=u[z, y, ..];
+				lineV:=v[z, y, ..];
+				lineW:=w[z, y, ..];
+				lineT:=target[z, y, ..];
+				(*lineS:=ALIAS OF source[z, y, ..];*)
 				FOR x:=0 TO len[2]-1 DO
 					IF lenu = 0 THEN ox:=x ELSE
+						IF bilinear THEN
+							a:=x-dt/ds * lineU[x];  ox:=ENTIER( a );  a:=1-a+ox;
+						ELSE (*nearest neighbour*)
+							ox:=ENTIER( x-dt/ds * lineU[x]+0.5 );
+						END;
+						IF ox < 0 THEN ox:=0; a:=0; (* apply boundary *)
+						ELSIF ox > len[2]-2 THEN ox:=len[2]-2; a:=0; (* apply boundary *)
+						END;
+					END;
+					IF lenv = 0 THEN oy:=y ELSE
+						IF bilinear THEN
+							b:=y-dt/ds * lineV[x];  oy:=ENTIER( b );  b:=1-b+oy;
+						ELSE (*nearest neighbour*)
+							oy:=ENTIER( y-dt/ds * lineV[x]+0.5 );
+						END;
+						IF oy < 0 THEN oy:=0; b:=0; (* apply boundary *)
+						ELSIF oy > len[1]-2 THEN oy:=len[1]-2; b:=0; (* apply boundary *)
+						END;
+					END;
+					IF lenw = 0 THEN oz:=z ELSE
+						IF bilinear THEN
+							c:=z-dt/ds * lineW[x];  oz:=ENTIER( c );  c:=1-c+oz;
+						ELSE (*nearest neighbour*)
+							oz:=ENTIER( z-dt/ds * lineW[x]+0.5 );
+						END;
+						IF oz < 0 THEN oz:=0; c:=0; (* apply boundary *)
+						ELSIF oz > len[0]-2 THEN oz:=len[0]-2; c:=0; (* apply boundary *)
+						END;
+					END;
+					IF bilinear THEN
+						tmp222:=Cast2x2x2(a*b*c, (1-a) * b * c,
+										  a * (1-b) * c , (1-a) * (1-b) * c,
+										a * b * (1-c), (1-a) * b * (1 -c),
+										  a * (1-b) * (1-c), (1-a)*(1-b)*(1-c));
+						lineT[x]:=tmp222 +* source[oz..oz+1,oy..oy+1,ox..ox+1];
+					ELSE lineT[x]:=source[oz, oy, ox];
+					END;
+				END;
+				target[z, y, ..]:=lineT;
+			END;
+		END;
+	END Advect;
+*)
+
+
+PROCEDURE Advect*( CONST source,  u, v, w: Grid;  VAR target: Grid;  dt, ds: Datatype; bilinear: BOOLEAN; fromZ:=0,toZ:=-1:SIZE ); (* allows splitting advection among several processes . splitToZ<splitFromZ implies no splitting*)  (* to do: other interpolation methods *)
+	(*for each gridpoint in target grid, find value in source grid based on retrograd application of map u,v,w ;  u and ds are in SI units*)
+	(* to do: speed up by doing it linewise or slicewise; but version above does not offer improved speed *)
+	VAR x, y, z,  ox, oy, oz: SIZE;  a, b, c: Datatype;  len,lenu,lenv,lenw:ARRAY [3] OF SIZE; tmp222: ARRAY [2,2,2] OF Datatype;
+		lenu0,lenv0,lenw0:BOOLEAN;
+	BEGIN
+		len:=LEN(source);lenu:=LEN(u); lenv:=LEN(v); lenw:=LEN(w);
+		lenu0:=lenu=0; lenv0:=lenv=0; lenw0:=lenw=0;
+		IF fromZ>toZ THEN 
+			fromZ:=0; toZ:=len[0]-1;
+			IF  LEN(target)# LEN(source) THEN NEW(target,LEN(source)) END;
+		ELSE (* no re-allocation of subarrays*)
+		END;
+		(*FOR z:=0 TO len[0]-1 DO*)
+		FOR z:=fromZ TO toZ DO
+			FOR y:=0 TO len[1]-1 DO
+				FOR x:=0 TO len[2]-1 DO
+					IF lenu0 (*lenu = 0*) THEN ox:=x ELSE
 						IF bilinear THEN
 							a:=x-dt/ds * u[z, y, x];  ox:=ENTIER( a );  a:=1-a+ox;
 						ELSE (*nearest neighbour*)
@@ -634,7 +767,7 @@ PROCEDURE Stencil333( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite dif
 						ELSIF ox > len[2]-2 THEN ox:=len[2]-2; a:=0; (* apply boundary *)
 						END;
 					END;
-					IF lenv = 0 THEN oy:=y ELSE
+					IF lenv0 (*lenv = 0*) THEN oy:=y ELSE
 						IF bilinear THEN
 							b:=y-dt/ds * v[z, y, x];  oy:=ENTIER( b );  b:=1-b+oy;
 						ELSE (*nearest neighbour*)
@@ -644,7 +777,7 @@ PROCEDURE Stencil333( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite dif
 						ELSIF oy > len[1]-2 THEN oy:=len[1]-2; b:=0; (* apply boundary *)
 						END;
 					END;
-					IF lenw = 0 THEN oz:=z ELSE
+					IF lenw0 (*lenw = 0*) THEN oz:=z ELSE
 						IF bilinear THEN
 							c:=z-dt/ds * w[z, y, x];  oz:=ENTIER( c );  c:=1-c+oz;
 						ELSE (*nearest neighbour*)
@@ -692,6 +825,107 @@ PROCEDURE Stencil333( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite dif
 		END;
 	END Advect;
 
+
+
+(*PROCEDURE Advect*( CONST source,  u, v, w: Grid;  VAR target: Grid;  dt, ds: Datatype; bilinear: BOOLEAN; fromZ:=0,toZ:=-1:SIZE ); (* allows splitting advection among several processes . splitToZ<splitFromZ implies no splitting*)  (* to do: other interpolation methods *)
+	(*for each gridpoint in target grid, find value in source grid based on retrograd application of map u,v,w ;  u and ds are in SI units*)
+	(* to do: speed up by doing it linewise or slicewise; but version above does not offer improved speed *)
+	VAR x, y, z,  ox, oy, oz: SIZE;   
+		a, b, c: Datatype;  len,lenu,lenv,lenw:ARRAY [3] OF SIZE; tmp222: ARRAY [2,2,2] OF Datatype;
+		lenu0,lenv0,lenw0:BOOLEAN;
+	BEGIN
+		len:=LEN(source);lenu:=LEN(u); lenv:=LEN(v); lenw:=LEN(w);
+		lenu0:=lenu=0; lenv0:=lenv=0; lenw0:=lenw=0;
+		IF fromZ>toZ THEN 
+			fromZ:=0; toZ:=len[0]-1;
+			IF ~Util.SameSize(target,source) THEN NEW(target,len) END;
+		ELSE (* no re-allocation of subarrays*)
+		END;
+		IF bilinear THEN
+			(*!TBD: on/off boundary. may not be absolutely necessary*)
+			FOR z:=fromZ TO toZ DO
+				FOR y:=0 TO len[1]-1 DO
+					FOR x:=0 TO len[2]-1 DO
+						IF ~lenu0 THEN a:=x-dt/ds * u[z, y, x]; ox:=MIN(len[2]-2,MAX(0,ENTIER( a ))); a:=1-a+ox; 
+						ELSE ox:=x 
+						END;
+						IF ~lenv0 THEN b:=y-dt/ds * v[z, y, x]; oy:=MIN(len[1]-2,MAX(0,ENTIER( b ))); b:=1-b+oy; 
+						ELSE oy:=y
+						END;
+						IF ~lenw0 THEN c:=z-dt/ds * w[z, y, x]; oz:=MIN(len[0]-2,MAX(0,ENTIER( c ))); c:=1-c+oz; 
+						ELSE oz:=z
+						END;
+						tmp222:=Cast2x2x2(a*b*c, (1-a) * b * c,
+										  a * (1-b) * c , (1-a) * (1-b) * c,
+										a * b * (1-c), (1-a) * b * (1 -c),
+										  a * (1-b) * (1-c), (1-a)*(1-b)*(1-c));
+						target[z, y, x]:=tmp222 +* source[oz..oz+1,oy..oy+1,ox..ox+1];
+					END;
+				END;
+			END;
+			
+			(*not on boundary*)
+			(*FOR z:=fromZ TO toZ DO
+				FOR y:=1 TO len[1]-2 DO
+					FOR x:=1 TO len[2]-2 DO (*assume advection distance > boundary layer thickness*)
+						IF lenu = 0 THEN ox:=x ELSE
+							a:=x-dt/ds * u[z, y, x];  ox:=ENTIER( a );  a:=1-a+ox;
+							(*IF ox < 0 THEN ox:=0; a:=0; (* apply boundary *)
+							ELSIF ox > len[2]-2 THEN ox:=len[2]-2; a:=0; (* apply boundary *)
+							END;*)
+						END;
+						IF lenv = 0 THEN oy:=y ELSE
+							b:=y-dt/ds * v[z, y, x];  oy:=ENTIER( b );  b:=1-b+oy;
+							(*IF oy < 0 THEN oy:=0; b:=0; (* apply boundary *)
+							ELSIF oy > len[1]-2 THEN oy:=len[1]-2; b:=0; (* apply boundary *)
+							END;*)
+						END;
+						IF lenw = 0 THEN oz:=z ELSE
+							c:=z-dt/ds * w[z, y, x];  oz:=ENTIER( c );  c:=1-c+oz;
+							(*IF oz < 0 THEN oz:=0; c:=0; (* apply boundary *)
+							ELSIF oz > len[0]-2 THEN oz:=len[0]-2; c:=0; (* apply boundary *)
+							END;*)
+						END;
+						tmp222:=Cast2x2x2(a*b*c, (1-a) * b * c,
+										  a * (1-b) * c , (1-a) * (1-b) * c,
+										a * b * (1-c), (1-a) * b * (1 -c),
+										  a * (1-b) * (1-c), (1-a)*(1-b)*(1-c));
+						target[z, y, x]:=tmp222 +* source[oz..oz+1,oy..oy+1,ox..ox+1];
+					END;
+				END;
+			END;*)
+		ELSE
+			FOR z:=fromZ TO toZ DO
+				FOR y:=0 TO len[1]-1 DO
+					FOR x:=0 TO len[2]-1 DO
+						IF lenu = 0 THEN ox:=x ELSE
+							 (*nearest neighbour*)
+							ox:=ENTIER( x-dt/ds * u[z, y, x]+0.5 );
+							IF ox < 0 THEN ox:=0; a:=0; (* apply boundary *)
+							ELSIF ox > len[2]-2 THEN ox:=len[2]-2; a:=0; (* apply boundary *)
+							END;
+						END;
+						IF lenv = 0 THEN oy:=y ELSE
+							oy:=ENTIER( y-dt/ds * v[z, y, x]+0.5 );
+							IF oy < 0 THEN oy:=0; b:=0; (* apply boundary *)
+							ELSIF oy > len[1]-2 THEN oy:=len[1]-2; b:=0; (* apply boundary *)
+							END;
+						END;
+						IF lenw = 0 THEN oz:=z ELSE
+							oz:=ENTIER( z-dt/ds * w[z, y, x]+0.5 );
+							IF oz < 0 THEN oz:=0; c:=0; (* apply boundary *)
+							ELSIF oz > len[0]-2 THEN oz:=len[0]-2; c:=0; (* apply boundary *)
+							END;
+						END;
+						target[z, y, x]:=source[oz, oy, ox];
+					END;
+				END;
+			END;
+		END;
+	END Advect;*)
+
+VAR FullRange:RANGE;
+
 PROCEDURE Test*;
 VAR A,C,B,D: Grid; s:Datatype;
 BEGIN
@@ -711,3 +945,16 @@ VolumePDE.Test
 System.FreeDownTo VolumePDE ~
 
 Use: See TestVolumePDE.Mod
+
+(*reading for future inspiration and improvement:
+
+	Neural network improvement of multigrid solvers: https://www.sciencedirect.com/science/article/pii/S0021999122000456
+	
+	Ocellaris solvers, including free surface computations. https://www.ocellaris.org/index.html
+	
+	with meshing: https://perso.uclouvain.be/paul.vandooren/publications/MelchiorLVW09.pdf
+
+    Benedikt Klein, Florian Kummer, Markus Keil, and Martin Oberlack. An extension of the SIMPLE based discontinuous galerkin solver to unsteady incompressible flows. International Journal for Numerical Methods in Fluids, 77(10):571–589, 2015. doi:10.1002/fld.3994.
+
+    Tormod Landet and Mikael Mortensen. On exactly incompressible DG FEM pressure splitting schemes for the Navier-Stokes equation. arXiv physics.comp-ph, 2019. arXiv:1903.11943.
+*)

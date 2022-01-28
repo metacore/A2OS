@@ -14,7 +14,7 @@ see wikipedia: "Del": Del can also be applied to a vector field with the result 
  =  = 2  is Laplacian
  *)
 
-IMPORT MatrixBase;
+
 
 CONST
 	x=0; y=1; z=2;
@@ -25,14 +25,19 @@ CONST
 	spline3*=3;
 	entier*=4;
 	nearestneighbour*=8;
+	custom*=9;
 
 
 TYPE
-	Datatype* = MatrixBase.Datatype;
+	Datatype* = FLOAT64;
+	Line*=ARRAY [*] OF Datatype;
 	ScalarField* = ARRAY [*,*,*] OF Datatype;
 	VectorField* = ARRAY [*,*,*,*] OF Datatype; (* dimension in first index: [3, *,*,*]  *)
 	Field= ARRAY [*,*,*,*] OF Datatype; (* scalar & vector quantity at a point *)
 	TensorField* = ARRAY [*,*,*,*,*] OF Datatype;
+	
+VAR derivative*: PROCEDURE {DELEGATE} (CONST data:ScalarField; direction:SET):ScalarField;
+
 
 PROCEDURE dx* (CONST sf:ScalarField; sampling:SIGNED32): ScalarField;	(*to do: implement exact computation*)
 BEGIN
@@ -50,6 +55,8 @@ BEGIN
 			RESULT[..,.., 1..LEN(sf,2)-2] := sf[.., .., 2..]-sf[.., .. LEN(sf,2)-3];
 			RESULT[..,..,0]:=RESULT[..,..,1]; RESULT[..,.., LEN(sf,2)-1]:=RESULT[..,.., LEN(sf,2)-2];(*simplistic boundary handling*)
 			RESULT:=0.5*RESULT;
+		|custom:
+			RESULT:=derivative(sf, {2});
 	ELSE HALT(100);
 		(*VolumeBase.Handle3D(sf,RESULT,{toSpline,derivative,fromSpline},{2}, boundary); *)
 	END;
@@ -70,6 +77,8 @@ BEGIN
 		RESULT[.., 1..LEN(sf,1)-2] := sf[..,2..]-sf[.., .. LEN(sf,1)-3];
 		RESULT[..,0]:=RESULT[..,1];
 		RESULT[.., LEN(sf,1)-1]:=RESULT[.., LEN(sf,1)-2]; (*simplistic boundary handling*)
+	|custom:
+			RESULT:=derivative(sf, {1});
 	ELSE HALT(100)
 	END;
 	RESULT:=0.5*RESULT;
@@ -89,6 +98,8 @@ BEGIN
 	|nearestneighbour:
 		RESULT[1..LEN(sf,0)-2] := sf[2..]-sf[..LEN(sf,0)-3];
 		RESULT[0]:=RESULT[1]; RESULT[ LEN(sf,0)-1]:=RESULT[ LEN(sf,0)-2]; (*simplistic boundary handling*)
+	|custom:
+		RESULT:=derivative(sf, {0});
 	ELSE HALT(100);
 	END;
 	RESULT:=0.5*RESULT;

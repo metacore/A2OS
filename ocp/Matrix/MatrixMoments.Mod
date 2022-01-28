@@ -1,4 +1,4 @@
-MODULE MatrixMoments;   (**  AUTHOR "Patrick Hunziker"; PURPOSE ""; , all rights, 2008 **)
+MODULE MatrixMoments;   (**  AUTHOR "Patrick Hunziker"; PURPOSE "Filtering-based moment computation" **)
 
 IMPORT MatrixBase, Filters := LinearFilters, Transform := PlanarTransform;
 
@@ -9,7 +9,8 @@ TYPE
 	Datatype = MatrixBase.Datatype;
 	Matrix = ARRAY [ * , * ] OF Datatype;
 
-	PROCEDURE Moment*( CONST from: Matrix;  degreeX, degreeY: SIGNED32 ): Matrix;
+	(*input: "from" contains cubic spline coefficients of input matrix *)
+	PROCEDURE Moment*( CONST from: Matrix;  degreeX, degreeY: SIGNED32): Matrix;
 	VAR MomentFilter0, MomentFilter1, MomentFilter2: Filters.Filter;
 	BEGIN
 		ASSERT( LEN( from, 0 ) > 0 );

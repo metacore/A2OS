@@ -29,15 +29,15 @@ BEGIN
 	RETURN PlanarNabla.Grad(p, sampling);
 END DifferentialEdgeDirection;
 
-PROCEDURE arctan2(x,y:Datatype):Datatype; (*arctan in range 0..2pi*)
+(*PROCEDURE arctan2(x,y:FLOAT64):FLOAT64; (*arctan in range 0..2pi*)(*note nonstandard parameters (x,y) instead of (y,x)*)
 BEGIN
-	IF (x>0) & (y>=0) THEN RETURN Datatype(Mathe.arctan(y/x))
-	ELSIF (x>0) & (y<0) THEN RETURN Datatype(Mathe.arctan(y/x)+2*Mathe.pi)
-	ELSIF x<0 THEN RETURN Datatype(Mathe.arctan(y/x)+Mathe.pi)	ELSIF (x=0) & (y>0) THEN RETURN Datatype(Mathe.pi/2)
-	ELSIF (x=0) & (y<0) THEN RETURN Datatype(3*Mathe.pi/2)
+	IF (x>0) & (y>=0) THEN RETURN Mathe.arctan(y/x)
+	ELSIF (x>0) & (y<0) THEN RETURN Mathe.arctan(y/x)+2*Mathe.pi
+	ELSIF x<0 THEN RETURN Mathe.arctan(y/x)+Mathe.pi	ELSIF (x=0) & (y>0) THEN RETURN Mathe.pi/2
+	ELSIF (x=0) & (y<0) THEN RETURN 3*Mathe.pi/2
 	ELSE (*( x=0) & (y=0) *) RETURN 0 (*or RETURN NaN ?*)
 	END
-END arctan2;
+END arctan2;*)
 
 PROCEDURE DifferentialEdgeAngle*(CONST p:ScalarField; sampling:SIGNED32):ScalarField; (*! needs speedup - parallelize how ?*)
 VAR vec:VectorField; x,y:SIZE;
@@ -46,7 +46,7 @@ BEGIN
 	IF LEN(RESULT,0)=0 THEN NEW(RESULT, LEN(p,0), LEN(p,1)) END;
 	FOR y:=0 TO LEN(p,0)-1 DO
 		FOR x:=0 TO LEN(p,1)-1 DO
-			RESULT[y,x]:=arctan2(vec.x[y,x], vec.y[y,x]);
+			RESULT[y,x]:=Mathe.arctan2(vec.y[y,x],vec.x[y,x]);
 		END;
 	END;
 	RETURN RESULT
@@ -61,7 +61,7 @@ VAR line: Line;
 	d1,deriv, pix, InvSqrt2: Datatype;
 	nil: ScalarField;
 BEGIN
-	InvSqrt2:=1/Datatype(Mathe.sqrt(2));
+	InvSqrt2:=1/Mathe.sqrt(2);
 	width:=LEN(in,1); height:=LEN(in,0);
 	IF height=0  THEN RETURN nil END;
 	IF LEN(RESULT,0)=0 THEN NEW(RESULT, LEN(in,0), LEN(in,1)); END;
@@ -84,11 +84,13 @@ BEGIN
 
 			deriv:=ABS(lines[h,i1]-lines[h,iM1]); dir:=0;
 			d1:=ABS(lines[h1,i1]-lines[hM1,iM1]);
-			IF InvSqrt2*d1>deriv THEN deriv:=SHORT(ENTIER(InvSqrt2*d1)); dir:=1 END;
+			(*IF InvSqrt2*d1>deriv THEN deriv:=SHORT(ENTIER(InvSqrt2*d1)); dir:=1 END;*)
+			IF InvSqrt2*d1>deriv THEN deriv:=InvSqrt2*d1; dir:=1 END;
 			d1:=ABS(lines[h1,i]-lines[hM1,i]);
 			IF d1>deriv THEN deriv:=d1; dir:=2 END;
 			d1:=ABS(lines[h1,iM1]-lines[hM1,i1]);
-			IF InvSqrt2*d1>deriv THEN deriv:=SHORT(ENTIER(InvSqrt2*d1)); dir:=3 END;
+			(*IF InvSqrt2*d1>deriv THEN deriv:=SHORT(ENTIER(InvSqrt2*d1)); dir:=3 END;*)
+			IF InvSqrt2*d1>deriv THEN deriv:=InvSqrt2*d1; dir:=3 END;
 			line[i]:=deriv;
 			(*
 			IF deriv>255 THEN line[i]:=255 (* 8 bit case *)

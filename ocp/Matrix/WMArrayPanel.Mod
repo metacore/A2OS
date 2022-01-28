@@ -1,7 +1,7 @@
 MODULE WMArrayPanel; (** AUTHOR ""; PURPOSE "Display of 3D and 4D tensors as image"; *)
 
-IMPORT Inputs, XML, MatrixRaster, MatrixUtilities, Files, Streams, WMMessages, Modules,Kernel,
-	WM:=WMWindowManager, WMComponents, WMProperties, WMStandardComponents, WMRectangles, Strings, Models, MatrixBase, WMGraphics, Commands;
+IMPORT Inputs, XML, MatrixRaster, MatrixUtilities, Files, Streams, WMMessages, Modules, Kernel, 
+	WM:=WMWindowManager, WMComponents, WMProperties, WMStandardComponents, WMRectangles, Strings, Models, WMGraphics, Commands, GZip;
 CONST
 	unsigned=0;
 	signed=1;
@@ -16,8 +16,7 @@ CONST
 (*! to do: improve current limitation to subtensor[0,?] display. Generalize to 1D, 2D and 5D+ data. implement lookup table display*)
 
 TYPE
-	Datatype=MatrixBase.Datatype;
-	Tensor= ARRAY [?] OF Datatype;
+	Tensor= ARRAY [?] OF FLOAT64;
 
 TYPE Data*= OBJECT (Models.Model)
 		VAR m*, r*,g*,b*: Tensor;
@@ -71,6 +70,7 @@ TYPE Panel*= OBJECT (WMStandardComponents.ImagePanel) (*! tbd: convert some loca
 		showIndex*:BOOLEAN;
 		win*:WM.Window;
 		animator: Animator;
+		dataStoreSuffix*:ARRAY 7 OF CHAR; (* "MtA" for array storage, "MtZ" or "MtA.gz" for gzipped array storage*)
 
 	PROCEDURE &Init*();
 	BEGIN
@@ -85,21 +85,30 @@ TYPE Panel*= OBJECT (WMStandardComponents.ImagePanel) (*! tbd: convert some loca
 		NEW(data);
 	 	model.Set(data); model.Changed;
 		COPY(title,baseTitle);
+		(*dataStoreSuffix:="MtA";*)
+		dataStoreSuffix:="MtZ";
 		id.Set(Strings.NewString(title));
 		current:=0;
 		RecacheProperties;
 	END Init;
 
 	PROCEDURE HandleInternal*(VAR x : WMMessages.Message);
-		VAR filename: Files.FileName; f:Files.File; w:Files.Writer;
+		VAR filename: Files.FileName; f:Files.File; w:Streams.Writer; fw:Files.Writer; dw:GZip.DeflateWriter;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgSerialize) & (x.msgSubType = WMMessages.MsgSubSerializeData) THEN
 				IF title#"" THEN GenerateName(title, filename)
 				ELSE GenerateName(id.Get()^, filename);
 				END;
-				Strings.Append(filename, ".MtA"); (* file type "MathArray" *)
-				f:=Files.New(filename);
-				Files.OpenWriter(w,f,0);
+				IF dataStoreSuffix="MtA" THEN
+					Strings.Append(filename, ".MtA"); (* file type "MathArray" *)
+					w:=fw;
+				ELSIF (dataStoreSuffix="MtZ") OR (dataStoreSuffix="MtA.gz") THEN
+					Strings.Append(filename,"."); Strings.Append(filename,dataStoreSuffix);
+					f:=Files.New(filename);
+					Files.OpenWriter(fw,f,0);
+					NEW(dw,fw); 
+					w:=dw;
+				END;
 				MatrixUtilities.StoreLR(w, data.m);
 				w.Update;
 				Files.Register(f);
@@ -430,7 +439,7 @@ BEGIN
 	RETURN res;
 END "SUM";*)
 
-OPERATOR "SUM"*(CONST m:Tensor; dimension:SIGNED32):Tensor; (*! TBD: eliminate allocation of "len"k and of tensor descriptor*)
+OPERATOR "SUM"*(CONST m:Tensor; dimension:SIGNED8):Tensor; (*! TBD: eliminate allocation of "len"k and of tensor descriptor*)
 VAR len:ARRAY[*]OF SIZE; dims,i:SIZE;
 BEGIN
 	dims:=DIM(m);
@@ -461,8 +470,8 @@ BEGIN
 	RETURN RESULT
 END "SUM";
 
-OPERATOR "MAX"*(CONST t:Tensor; dim: SIGNED32):Tensor; (*implementation limitation: 3D*)
-VAR res: Tensor;i:SIGNED32; a,b: SIZE;
+OPERATOR "MAX"*(CONST t:Tensor; dim: SIGNED8):Tensor; (*implementation limitation: 3D*)
+VAR res: Tensor;a,b: SIZE;
 BEGIN
 	IF dim=0 THEN
 		NEW(res, LEN(t)[1..]);
@@ -502,7 +511,7 @@ VAR d : Data;
 BEGIN NEW(d); RETURN d
 END GenData;
 
-PROCEDURE GetPanel*(CONST tensor: ARRAY [?] OF Datatype; deepCopy:=FALSE:BOOLEAN): Panel;
+PROCEDURE GetPanel*(CONST tensor: ARRAY [?] OF FLOAT64; deepCopy:=FALSE:BOOLEAN): Panel;
 VAR	panel:Panel; 
 BEGIN
 	NEW(panel);
@@ -556,7 +565,7 @@ BEGIN
 	RETURN window;
 END CreateWindow;
 
-PROCEDURE AddWindow*(CONST tensor: ARRAY [?] OF Datatype; CONST title: ARRAY OF CHAR; deepCopy:=FALSE:BOOLEAN);
+PROCEDURE AddWindow*(CONST tensor: ARRAY [?] OF FLOAT64; CONST title: ARRAY OF CHAR; deepCopy:=FALSE:BOOLEAN);
 VAR window:WMComponents.FormWindow;
 	w,h:SIZE;
 	panel:Panel;
@@ -599,7 +608,7 @@ END Cleanup;
 PROCEDURE  Test*(context:Commands.Context); (*deprecated -  will be eliminated from source*)
 VAR window:WMComponents.FormWindow;
 	panel:Panel;
-	tensor: ARRAY [?] OF Datatype; (* or FLOAT64 or other..*)
+	tensor: ARRAY [?] OF FLOAT64; (* or FLOAT64 or other..*)
 BEGIN
 	log:=context.out;
 	(*have some data in a 3D array ready*)

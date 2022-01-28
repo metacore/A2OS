@@ -1,5 +1,5 @@
 MODULE WMStack; (** AUTHOR ""; PURPOSE "Display of stacks of matrices as image"; *)
-IMPORT Modules, Inputs, Raster, MatrixRaster, MatrixUtilities, Files, WMMessages, WM:=WMWindowManager, Strings, Models, WMRectangles, WMGraphics, Commands;
+IMPORT Modules, Inputs, Raster, MatrixRaster, MatrixUtilities, Files, Streams, WMMessages, WM:=WMWindowManager, Strings, Models, WMRectangles, WMGraphics, Commands, GZip;
 CONST 	signed=1;
 		lut=2;
 		rgb=3;
@@ -25,6 +25,8 @@ TYPE Window*= OBJECT (WM.BufferWindow) (* or could use WM.DoubleBufferWindow or 
 		dummy: Stack;
 		baseTitle, title: ARRAY 256 OF CHAR;
 		source*:ANY;
+		dataStoreSuffix* , frameStr:ARRAY 7 OF CHAR;
+		frameNr*:=-1:INTEGER;
 
 
 	PROCEDURE &Initialize*(CONST m: Stack; CONST title: ARRAY OF CHAR; orientation:SIGNED32);
@@ -32,6 +34,8 @@ TYPE Window*= OBJECT (WM.BufferWindow) (* or could use WM.DoubleBufferWindow or 
 	(*PROCEDURE &Initialize*(CONST m: ARRAY [*,*,*] OF FLOAT64; CONST title: ARRAY OF CHAR; orientation:SIGNED32);*)
 	BEGIN
 		ASSERT(DIM(m)=3,200);
+		dataStoreSuffix:="MtZ";
+		(*dataStoreSuffix:="MtA";*)
 		SELF.orientation:=orientation;
 		IF ~exists  & (LEN(m)>0) THEN
 			IF orientation=0 THEN Init(LEN(m,2), LEN(m,1), TRUE);
@@ -67,6 +71,14 @@ TYPE Window*= OBJECT (WM.BufferWindow) (* or could use WM.DoubleBufferWindow or 
 			SELF.orientation:=orientation
 		END;
 	END SetOrientation;
+	
+	PROCEDURE SetFrame*(fNr:INTEGER);
+	BEGIN
+		frameNr:=fNr;
+		Strings.IntToStr(frameNr,frameStr);
+		COPY(baseTitle,title); Strings.Append(title,"_"); Strings.Append(title,frameStr); 
+		SetTitle(Strings.NewString(title));
+	END SetFrame;
 
 	PROCEDURE PostInvalidate;
 	VAR m: WMMessages.Message;
@@ -76,16 +88,46 @@ TYPE Window*= OBJECT (WM.BufferWindow) (* or could use WM.DoubleBufferWindow or 
 	END PostInvalidate;
 
 	PROCEDURE Handle*(VAR x : WMMessages.Message);
-		VAR filename: Files.FileName; f:Files.File; w:Files.Writer;
+		VAR filename: Files.FileName; f,f0:Files.File; fw:Files.Writer; w:Streams.Writer; dw:GZip.DeflateWriter;pos:SIZE;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgSerialize) THEN
 				GenerateName(GetTitle(),filename);
-				Strings.Append(filename, ".MtA"); (* file type "MathArray" *)
-				f:=Files.New(filename);
-				Files.OpenWriter(w,f,0);
+				pos:=Strings.Pos(".Mt",filename);
+				IF pos>0 THEN filename[pos]:=0X END;
+				
+				
+				
+				(*IF dataStoreSuffix="MtA" THEN
+					Strings.Append(filename, ".MtA"); (* file type "MathArray" *)
+					f:=Files.New(filename);
+					Files.OpenWriter(fw,f,0);
+					w:=fw;
+				ELSIF (dataStoreSuffix="MtZ") OR (dataStoreSuffix="MtA.gz") THEN
+					Strings.Append(filename,"."); Strings.Append(filename,dataStoreSuffix);
+					f:=Files.New(filename);
+					Files.OpenWriter(fw,f0,0);
+					NEW(dw,fw); 
+					w:=dw;
+				END;
 				MatrixUtilities.StoreLR(w, model.m);
 				w.Update;
+				Files.Register(f);*)
+				
+				Strings.Append(filename,"."); Strings.Append(filename,dataStoreSuffix);
+				f:=Files.New(filename);
 				Files.Register(f);
+				IF dataStoreSuffix="MtA" THEN
+					Files.OpenWriter(fw,f,0);
+					MatrixUtilities.StoreLR(fw, model.m);
+					fw.Update;
+				ELSIF (dataStoreSuffix="MtZ") OR (dataStoreSuffix="MtA.gz") THEN
+					f0:=Files.New("");
+					Files.OpenWriter(fw,f0,0);
+					MatrixUtilities.StoreLR(fw, model.m);
+					(*MatrixUtilities.StoreAsType(fw, MatrixUtilities.DatatypeLInt, 255/MAX(ABS(max),ABS(min))* model.m);*)
+					fw.Update;
+					GZip.Deflate(f0,f,GZip.DefaultCompression, GZip.DefaultStrategy, GZip.SyncFlush);
+				END;
 			ELSIF x.msgType = WMMessages.MsgInvalidate THEN
 			IF x.msgSubType = WMMessages.MsgSubAll THEN
 				Invalidate(WMRectangles.MakeRect(0, 0, GetWidth(), GetHeight()));
@@ -125,7 +167,9 @@ TYPE Window*= OBJECT (WM.BufferWindow) (* or could use WM.DoubleBufferWindow or 
 		BEGIN
 			current:=(current - dz) MOD LEN(model.m,orientation);
 			Strings.IntToStr(current,s);
-			COPY(baseTitle,title); Strings.Append(title,"-"); Strings.Append(title,s);
+			COPY(baseTitle,title); 
+			IF frameStr#"" THEN Strings.Append(title,"_"); Strings.Append(title,frameStr) END;
+			Strings.Append(title,"-"); Strings.Append(title,s);
 			SetTitle(Strings.NewString(title));
 			Render
 		END WheelMove;
@@ -350,14 +394,14 @@ BEGIN
 	Modules.InstallTermHandler(RemoveAllWindows);
 	InsertPosX:=30; InsertPosY:=30;
 END WMStack.
-~
+(*~*)
 (*
 example code in application:
 *)
 
-MODULE Test;
+MODULE TestWMStack;
 
-IMPORT WMStack;
+IMPORT WMStack,GZip,Files,MatrixUtilities;
 
 PROCEDURE Test*;
 VAR window:WMStack.Window;
@@ -373,11 +417,44 @@ BEGIN
 	window.AddWindow;
 END Test;
 
-END Test.
+PROCEDURE TestFile*;
+VAR window:WMStack.Window;
+	stack: ARRAY [*,*,*] OF FLOAT64; (* or FLOAT64 or other..*)
+	iStack:ARRAY [*,*,*] OF SIGNED32;
+	f:Files.File; fw:Files.Writer; gw:GZip.DeflateWriter;
+BEGIN
+	(*have some data in a 3D array ready*)
+	NEW(stack, 40,100,100);
+	stack[..,10..40,..]:=1;
+	stack[10..15,..,..]:=2;
+	stack[..,..,10..30]:=3;
+
+	iStack:=ENTIER(stack);
+	(*show data as mouse or arrow key scrollable window*)
+	NEW(window, stack, "MyStack",0);
+	window.AddWindow;
+	
+	f:=Files.New("MyFile.MtZ");Files.Register(f);
+	Files.OpenWriter(fw,f,0);
+	NEW(gw,fw);
+	MatrixUtilities.StoreLR(gw,stack);
+	(*MatrixUtilities.StoreLInt(gw,iStack); *)(*!something is wrong: structure is store and reloadable, but content is all black*)
+	gw.Update;
+END TestFile;
+
+END TestWMStack.
 
 WMStack.RemoveWindows ~ (*close and remove all stack windows*)
 WMStack.RemoveWindows 5 ~ (* close and remove a number of stack windows*)
 
-SystemTools.FreeDownTo WMStack~
-SystemTools.FreeDownTo Test 
-Test.Test
+System.FreeDownTo WMStack ~
+System.FreeDownTo Test ~
+TestWMStack.Test ~
+TestWMStack.TestFile ~
+GZip.GZip MyStack.MtA ~
+WMMatrixLoader.Open MyStack.MtA ~ 
+WMMatrixLoader.Open MyStack.MtA.gz ~ 
+WMMatrixLoader.Open MyFile.MtZ ~ 
+WMMatrixLoader.Open MyStackMtA.MtA.gz~
+
+

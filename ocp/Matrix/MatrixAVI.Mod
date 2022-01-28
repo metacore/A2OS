@@ -1,5 +1,5 @@
 MODULE MatrixAVI;		(*(c) Patrick Hunziker *)
-IMPORT Out:=KernelLog, Files;
+IMPORT Out:=KernelLog, Files,GZip,Strings;
 CONST
 		NULL=0;
 	(* AVI RIFFs *)			(*RIFF is little endian, like INTEL hardware, and the Oberon system; RIFX would be for big endian *)
@@ -315,9 +315,9 @@ BEGIN
 END Store;
 
 (** Store files as .avi ; for first try, see Store() ;  *)
-PROCEDURE StoreB*(CONST data:ARRAY [*] OF Matrix; filename:ARRAY OF CHAR; framesPerSec:FLOAT32; compression, lut, normalize:SIGNED16; customLUT:=NIL: POINTER TO ARRAY OF CHAR):Files.File;
+PROCEDURE StoreB*(CONST data:ARRAY [*] OF Matrix; filename:ARRAY OF CHAR; framesPerSec:FLOAT32; compression, lut, normalize:SIGNED16; customLUT:=NIL: POINTER TO ARRAY OF CHAR; gZip:=FALSE:BOOLEAN):Files.File;
 VAR R,Counter:Files.Writer;
-		F:Files.File;
+		F,F1:Files.File;
 		saveFileSize,saveLIST1Size,saveList1subSize,savestrfSize,savestrnPos,saveJUNKsignature,saveLIST2Size,
 		idx1Pos,endPos,saveidx1Length,savemovi:Files.Position;
 		savedbLength,savedcLength:POINTER TO ARRAY OF Files.Position;
@@ -420,7 +420,9 @@ BEGIN
 	NEW(savedcLength,tDim*zDim); (*"long" SIGNED32 ARRAY FOR uncompressed image data*)
 	NEW(dcLength,tDim*zDim); (*"int" SIGNED32 ARRAY for uncompressed image data*)
 
-	F:=Files.New(filename);
+	IF ~gZip THEN F:=Files.New(filename);
+	ELSE F:=Files.New(""); Strings.Append(filename,".gz"); F1:=Files.New(filename)
+	END;
 	NEW(R,F,0);
 	NEW(Counter,F,0);
 	WriteFOURCC(R,"RIFF"); (*WriteRIFFHeader*)
@@ -539,8 +541,11 @@ BEGIN
 			Counter.SetPos(saveFileSize); Counter.RawLInt((endPos-saveFileSize-4)(SIGNED32));
 			Counter.SetPos(saveidx1Length); Counter.RawLInt((endPos-saveidx1Length-4)(SIGNED32));
 			Counter.Update;
-		Files.Register(F);
-		RETURN(F);
+			
+		IF ~gZip THEN Files.Register(F);
+		ELSE GZip.Deflate(F,F1,GZip.DefaultCompression, GZip.DefaultStrategy, GZip.SyncFlush);Files.Register(F1);
+		END;
+		RETURN(F)
 	END StoreB;
 
 PROCEDURE Test*;

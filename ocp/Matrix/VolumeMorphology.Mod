@@ -108,14 +108,21 @@ END BinaryErosion;
 PROCEDURE SimpleErosion*(CONST t:Volume; directions:SET):Volume;
 VAR  l0,l1,l2: SIZE;
 BEGIN
+	IF directions={} THEN directions:={0,1,2} END;
 	IF (DIM(RESULT)=0) OR (LEN(RESULT,0)=0) THEN NEW(RESULT, LEN(t)) END;
 	l0:=LEN(t,0); l1:=LEN(t,1); l2:=LEN(t,2);
-	RESULT[1.., ..,..]:= MIN(t[1.., ..,..], t[..l0-2, ..,..]);
-	RESULT[..l0-2, ..,..]:= MIN(RESULT[..l0-2, ..,..], RESULT[1.., ..,..]);
-	RESULT[.., 1.., ..]:= MIN(RESULT[.., 1.., ..], RESULT[.., ..l1-2, ..]);
-	RESULT[.., ..l1-2, ..]:= MIN(RESULT[.., ..l1-2, ..], RESULT[.., 1.., ..]);
-	RESULT[.., .., 1..]:= MIN(RESULT[.., .., 1..], RESULT[.., .., ..l2-2]);
-	RESULT[.., .., ..l2-2]:= MIN(RESULT[.., .., ..l2-2], RESULT[.., .., 1..]);
+	IF 0 IN directions THEN
+		RESULT[1.., ..,..]:= MIN(t[1.., ..,..], t[..l0-2, ..,..]);
+		RESULT[..l0-2, ..,..]:= MIN(RESULT[..l0-2, ..,..], RESULT[1.., ..,..]);
+	END;
+	IF 1 IN directions THEN
+		RESULT[.., 1.., ..]:= MIN(RESULT[.., 1.., ..], RESULT[.., ..l1-2, ..]);
+		RESULT[.., ..l1-2, ..]:= MIN(RESULT[.., ..l1-2, ..], RESULT[.., 1.., ..]);
+	END;
+	IF 2 IN directions THEN
+		RESULT[.., .., 1..]:= MIN(RESULT[.., .., 1..], RESULT[.., .., ..l2-2]);
+		RESULT[.., .., ..l2-2]:= MIN(RESULT[.., .., ..l2-2], RESULT[.., .., 1..]);
+	END;
 	RETURN RESULT
 END SimpleErosion;
 
@@ -197,14 +204,21 @@ END BinaryDilation;
 PROCEDURE SimpleDilation*(CONST t:Volume; directions:SET):Volume;
 VAR l0,l1,l2: SIZE;
 BEGIN
+	IF directions={} THEN directions:={0,1,2} END;
 	IF (DIM(RESULT)=0) OR (LEN(RESULT,0)=0) THEN NEW(RESULT, LEN(t)) END;
 	l0:=LEN(t,0); l1:=LEN(t,1); l2:=LEN(t,2);
-	RESULT[1.., ..,..]:= MAX(t[1.., ..,..], t[..l0-2, ..,..]);
-	RESULT[..l0-2, ..,..]:= MAX(RESULT[..l0-2, ..,..], RESULT[1.., ..,..]);
-	RESULT[.., 1.., ..]:= MAX(RESULT[.., 1.., ..], RESULT[.., ..l1-2, ..]);
-	RESULT[.., ..l1-2, ..]:= MAX(RESULT[.., ..l1-2, ..], RESULT[.., 1.., ..]);
-	RESULT[.., .., 1..]:= MAX(RESULT[.., .., 1..], RESULT[.., .., ..l2-2]);
-	RESULT[.., .., ..l2-2]:= MAX(RESULT[.., .., ..l2-2], RESULT[.., .., 1..]);
+	IF 0 IN directions THEN
+		RESULT[1.., ..,..]:= MAX(t[1.., ..,..], t[..l0-2, ..,..]);
+		RESULT[..l0-2, ..,..]:= MAX(RESULT[..l0-2, ..,..], RESULT[1.., ..,..]);
+	END;
+	IF 1 IN directions THEN
+		RESULT[.., 1.., ..]:= MAX(RESULT[.., 1.., ..], RESULT[.., ..l1-2, ..]);
+		RESULT[.., ..l1-2, ..]:= MAX(RESULT[.., ..l1-2, ..], RESULT[.., 1.., ..]);
+	END;
+	IF 2 IN directions THEN
+		RESULT[.., .., 1..]:= MAX(RESULT[.., .., 1..], RESULT[.., .., ..l2-2]);
+		RESULT[.., .., ..l2-2]:= MAX(RESULT[.., .., ..l2-2], RESULT[.., .., 1..]);
+	END;
 	RETURN RESULT
 END SimpleDilation;
 
@@ -250,7 +264,7 @@ END BinaryOpening;
 
 PROCEDURE SimpleOpening*(CONST t:Volume; directions:SET):Volume;
 BEGIN
-	RETURN SimpleDilation(SimpleErosion(t,{}),{});
+	RETURN SimpleDilation(SimpleErosion(t,directions),directions);
 END SimpleOpening;
 
 PROCEDURE BinarySimpleClosure*(CONST t:BinaryVolume; directions:SET):BinaryVolume;
@@ -265,7 +279,7 @@ END BinaryClosure;
 
 PROCEDURE SimpleClosure*(CONST t:Volume; directions:SET):Volume;
 BEGIN
-	RETURN SimpleErosion(SimpleDilation(t,{}),{});
+	RETURN SimpleErosion(SimpleDilation(t,directions),directions);
 END SimpleClosure;
 (*
 PROCEDURE Closure(t:CONST Volume; CONST structure:Volume):Volume;

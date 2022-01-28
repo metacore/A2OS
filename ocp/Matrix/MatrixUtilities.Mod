@@ -817,11 +817,14 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	VAR i:SIZE;
 	BEGIN
 		ASSERT(DIM(t)>0);
-		IF  DIM(t)=1 THEN 
+		W.RawLReal(t); (*handle all elements*)
+		RETURN;
+		
+		(*IF  DIM(t)=1 THEN 
 			FOR i:=0 TO LEN(t,0)-1 DO W.RawLReal(t[i]) END;
-		ELSE
+		ELSE 
 			FOR i:=0 TO LEN(t,0)-1 DO WriteLR(W, t[i,?]) END;
-		END;
+		END;*)
 	END WriteLR;
 	
 	PROCEDURE WriteR*(W:Streams.Writer; CONST t: ARRAY [?] OF FLOAT32);
@@ -1095,6 +1098,7 @@ PROCEDURE JoinMasked*(CONST data,data1: Tensor; CONST mask: BoolTensor): Tensor;
 	VAR i,j,k:SIZE;
 	BEGIN
 		ASSERT(DIM(t)>0);
+		(*R.RawLReal(t);*)
 		IF  DIM(t)=1 THEN 
 			FOR i:=0 TO LEN(t,0)-1 DO R.RawLReal(t[i]) END;
 		ELSIF DIM(t)=2 THEN (*performance*)

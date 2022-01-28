@@ -8,7 +8,7 @@ to enable direct opening from File List Window, add this to the FileHandler sect
 			</Section>
 *)
 
-IMPORT WMWindowManager, WMGraphics, WMMatrix, WMStack, Files, Streams, Strings, Options, MatrixBase, MatrixUtilities,MatrixRaster, Codecs, Commands, WMTensor;
+IMPORT WMWindowManager, WMGraphics, WMMatrix, WMStack, Files, Streams, Strings,GZip, Options, MatrixBase, MatrixUtilities,MatrixRaster, Codecs, Commands, WMTensor;
 
 CONST
 	(* display options *)
@@ -23,7 +23,9 @@ VAR d: ARRAY [?] OF MatrixBase.Datatype;
 	d32: ARRAY[?] OF SIGNED32;
 	len: ARRAY [*] OF SIZE;
 	f:Files.File;
-	r:Files.Reader;
+	fr:Files.Reader;
+	inflateReader:GZip.InflateReader;
+	r:Streams.Reader;
 	mWindow:WMMatrix.Window;
 	sWindow:WMStack.Window;
 	tWindow: WMTensor.Window;
@@ -31,11 +33,18 @@ VAR d: ARRAY [?] OF MatrixBase.Datatype;
 	i,x,y,z,xx,yy: SIZE;
 	datatype, version:SIGNED32;
 	max: MatrixBase.Datatype;
+	fn:Files.FileName;
 BEGIN
 	f:=Files.Old(name);
+	IF f=NIL THEN COPY(name,fn); Strings.Append(fn,".gz"); f:=Files.Old(fn) END; (*maybe, the file was gzipped*)
 	IF f#NIL THEN
-		Files.OpenReader(r,f,0);
-		(*MatrixUtilities.ParseHeader(r,version, datatype,len);
+		Files.OpenReader(fr,f,0);
+		IF (Strings.Pos(".MtZ",name)>0) OR (Strings.Pos(".MtA.gz",name)>0) THEN (*GZip deflated data*)
+			NEW(inflateReader,fr); r:=inflateReader;
+		ELSE 
+			r:=fr
+		END;
+		MatrixUtilities.ParseHeader(r,version, datatype,len);
 		NEW(d,len);
 		CASE datatype OF
 		MatrixUtilities.DatatypeUInt8: NEW(d16,len); MatrixUtilities.ReadUInt8(r,d16); d:=d16;
@@ -43,8 +52,7 @@ BEGIN
 		| MatrixUtilities.DatatypeR : NEW(d, len); MatrixUtilities.ReadR(r,dr); d:=dr;
 		| MatrixUtilities.DatatypeLR : NEW(d, len); MatrixUtilities.ReadLR(r,d);
 		ELSE HALT(200);
-		END;*)
-		d := MatrixUtilities.Load(r);
+		END;
 		IF DIM(d)=2 THEN
 			NEW(mWindow, d, name);
 			mWindow.AddWindow;
@@ -219,7 +227,14 @@ END Do;
 
 END WMMatrixLoader.
 
-WMMatrixLoader.Open A.MtA ~ (* matrix example *)
+WMMatrixLoader.Open MyStack.MtA.gz ~ 
+WMMatrixLoader.Open Channel92.MtA ~ 
+WMMatrixLoader.Open -s Channel92.MtA ~ 
+WMMatrixLoader.Open -s -o Channel92.MtA ~ 
+WMMatrixLoader.Open -m Channel92.MtA 0~ 
+WMMatrixLoader.Open -m Channel92.MtA 1~ 
+WMMatrixLoader.Open -m Channel92.MtA 2~ 
+WMMatrixLoader.Open Channel92.MtZ ~ 
 WMMatrixLoader.Open -s BraidVolume16.MtA ~ (* sum projection, volume example *)
 WMMatrixLoader.Open -m BraidVolume16.MtA 0 ~ (* max projection, volume example *)
 WMMatrixLoader.Open -m BraidVolume16.MtA 1 ~ (* max projection, volume example *)
@@ -234,4 +249,4 @@ WMMatrixLoader.Open BraidVolume16.MtA 2~ (* volume example *)
 
 WMMatrixLoader.Do SchwarzeDame.png~
 
-SystemTools.FreeDownTo WMMatrixLoader ~
+System.FreeDownTo WMMatrixLoader ~

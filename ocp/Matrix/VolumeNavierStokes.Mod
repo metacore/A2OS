@@ -9,6 +9,9 @@ MODULE VolumeNavierStokes;  (** AUTHOR "Patrick Hunziker 2009-2020" ; PURPOSE "N
 	
 	Solving strategy: BTCS - 'backward time- centered space' interpolation to achieve numerical stability.
 **)
+
+(*for fluid dynamics constants and helper functions, see ComputationalFluids.Mod *)
+
 (*
 Physics:	
 Incompressible flow of Newtonian fluids:
@@ -42,7 +45,7 @@ the implied sparse matrices for matrix solving are not constructed. This allows 
 compare thesis compressible Navier Stokes: https://www.wpi.edu/Pubs/ETD/Available/etd-0424102-132343/unrestricted/nanson.pdf
 *)
 
-IMPORT Nabla:=VolumeNabla, PDE:=VolumePDE, Objects, ComputeObjects:=MatrixComputeObjects, KernelLog;
+IMPORT Nabla:=VolumeNabla, PDE:=VolumePDE, Objects, ComputeObjects:=MatrixComputeObjects, KernelLog, Util:=MatrixUtilities, LinearFilters, VolumeTransform;
 
 CONST 
 	BILINEAR = TRUE;  
@@ -54,7 +57,8 @@ TYPE
 	Grid* = PDE.Grid;  
 	BGrid*=PDE.VolumeBooleanMap;
 	Boundary* = PDE.Boundary; 
-	
+
+(*	
 TYPE
 	NablaScaleIncActive*= OBJECT (ComputeObjects.ComputeObject) (* for operations of type "Matrix := Op(Matrix,Scalar)" ; *)
 		VAR A: Grid;
@@ -111,7 +115,8 @@ TYPE
 		VAR a, a1, u, w, v: Grid;
 			dt,ds,threshold: Datatype;
 			mode:BOOLEAN;
-		PROCEDURE &Init*( CONST a, u, v, w: Grid; VAR a1:Grid; dt, ds: Datatype; mode:BOOLEAN);
+			fromZ,toZ:SIZE;
+		PROCEDURE &Init*( CONST a, u, v, w: Grid; VAR a1:Grid; dt, ds: Datatype; mode:BOOLEAN; fromZ:=0, toZ:=-1:SIZE);
 		BEGIN
 			SELF.a:=ALIAS OF a; 
 			SELF.a1:=ALIAS OF a1;
@@ -121,19 +126,24 @@ TYPE
 			SELF.Notify:=NIL;
 			wait:=FALSE; (*debug*)
 			SELF.priority:=Objects.Normal; 
+			SELF.fromZ:=fromZ; SELF.toZ:=toZ;
 		END Init;
 		PROCEDURE compute;	
 		BEGIN
-			PDE.Advect( a,  u, v, w, a1, dt, ds, mode );
+			PDE.Advect( a,  u, v, w, a1, dt, ds, mode, fromZ,toZ );
 		END compute;
 	END AdvectionActive;
-	
+*)
 TYPE NavierStokes* = OBJECT
+	CONST 
+		NablaMethod=Nabla.centered;
+		(*NablaMethod=Nabla.custom;*)
 	VAR
 	diffusioniterations*, poissoniterations*,smoothingiterations*:INTEGER;
 	u*, v*, w*, p*, heat*, solutes*: Grid;  (* in SI units *)
 	nu*, rho*,  ds*, threshold*, stabilityCriterion-: Datatype;  (* in SI units: mu[Pa*s = kg/m/s ],nu[m2/s],rho[kg/m3],ds[m],dt[s], force[ ],velocities[m/s] , pressure[kg/ms2]*)
 	len: ARRAY [*] OF SIZE;
+	splitZ:SIZE;
 	
 	temp0*:=273+25:Datatype;
 	heatDiffusionCoeff*:Datatype;
@@ -146,17 +156,18 @@ TYPE NavierStokes* = OBJECT
 	UseHeat*:=FALSE: BOOLEAN;
 	UseBuoyancy*:=FALSE: BOOLEAN;
 	UseCompressibility*:=FALSE:BOOLEAN;
+	Parallel*:INTEGER;
 	FlowBoundX, FlowBoundY, FlowBoundZ, PressureBound, PressureBoundPDT, HeatBounds*, SoluteBounds*: Boundary;
 	(* dopplerconstraint*:VolumeDoppler.DopplerConstraint;*)
-	u2, u3, v2, v3, w2, w3,  pdt-, div-,tmp-, d, tmpu,tmpv,tmpw, heat0, solutes0, heat00: Grid;  
+	u2, u3, v2, v3, w2, w3,  pdt-, div-,div0,tmp-, d, tmpu,tmpv,tmpw, heat0, solutes0, heat00: Grid;  
 	advection:PDE.Advection;
 	diffusionU,diffusionV, diffusionW, diffusionP, diffusionH, diffusionS: PDE.Diffusion;
 	poisson: PDE.Poisson;
 	laplace: PDE.Laplace;
 	
-	nablaScaleInc0, nablaScaleInc1, nablaScaleInc2: NablaScaleIncActive;
-	diffusion0,diffusion1,diffusion2, diffusion3, diffusion4: DiffusionActive;
-	advection0, advection1, advection2, advection3, advection4: AdvectionActive;
+	nablaScaleInc0, nablaScaleInc1, nablaScaleInc2: PDE.NablaScaleIncActive;
+	diffusion0,diffusion1,diffusion2, diffusion3, diffusion4: PDE.DiffusionActive;
+	advection0, advection1, advection2, advection3, advection4, advection00,advection11,advection22,advection33: PDE.AdvectionActive;
 	
 	(** 
 	Initialize Navier-Stokes Solver. 
@@ -179,7 +190,7 @@ TYPE NavierStokes* = OBJECT
 	
 	PROCEDURE &Init*( VAR u, v, w, p: Grid;  nu, rho, ds: Datatype;  
 							FlowBoundX, FlowBoundY, FlowBoundZ, 
-							PressureBound, PressureBoundPDT: Boundary );  
+							PressureBound, PressureBoundPDT: Boundary; Parallel:=6:INTEGER );  
 	BEGIN 
 		threshold := 0.05;  (*desired accuracy; not currently used in implementation*)
 		minsize:=16; (* minimum grid size for multigrid solver *)
@@ -208,9 +219,10 @@ TYPE NavierStokes* = OBJECT
 		SELF.FlowBoundZ:=FlowBoundZ;
 		SELF.PressureBound:=PressureBound;
 		SELF.PressureBoundPDT:=PressureBoundPDT;
+		SELF.Parallel:=Parallel;
 		
+		(*some of these are only used in single-threaded, not in parallel usage *)
 		NEW(advection);
-		
 		NEW(diffusionU); 
 		NEW(diffusionV);
 		NEW(diffusionW);
@@ -283,19 +295,16 @@ TYPE NavierStokes* = OBJECT
 		 (*  this is a better code location (than below) for 3) force application when flow is driven by a pressure field. *)
 		 (* in this case, we drive the system by external pressure boundary conditions at inlet and outlet *)
 		k :=dt/ds/rho;
-		u2 := u2- k * Nabla.dx(p, Nabla.centered);(* m/s*)
-		v2 := v2-k * Nabla.dy(p, Nabla.centered);
-		w2 := w2-k* Nabla.dz(p, Nabla.centered);
-
-(*		d:=Nabla.dx(p, Nabla.centered);
-		d:=k*d;
-		u2:= u2-d;(* m/s*)
-		d:=Nabla.dy(p, Nabla.centered);
-		d:=k*d;
-		v2 := v2-d;
-		d:=Nabla.dz(p, Nabla.centered);
-		d:=k*d;
-		w2:=w2-d;*)
+		(*u2 := u2- k * Nabla.dx(p, NablaMethod);(* m/s*)
+		v2 := v2-k * Nabla.dy(p, NablaMethod);
+		w2 := w2-k* Nabla.dz(p, NablaMethod);*)
+		
+		d:=Nabla.dx(p, NablaMethod);
+		u2:= DECMUL(k,d);(* m/s*)
+		d:=Nabla.dy(p, NablaMethod);
+		v2 := DECMUL(k,d);
+		d:=Nabla.dz(p, NablaMethod);
+		w2:=DECMUL(k,d);
 
 		lenu3:=LEN(u3);
 		IF lenu3#len THEN NEW(u3,len); NEW(v3,len); NEW (w3,len) END;
@@ -336,17 +345,17 @@ TYPE NavierStokes* = OBJECT
 		
 		(* adjust velocity field to conform to the noncompressibility requirement *) 	
 		k := 1/ds;
-		u := u3 - k * Nabla.dx(pdt, Nabla.centered);
-		v := v3 - k * Nabla.dy(pdt, Nabla.centered);
-		w := w3- k * Nabla.dz(pdt, Nabla.centered);
+		u := u3 - k * Nabla.dx(pdt, NablaMethod);
+		v := v3 - k * Nabla.dy(pdt, NablaMethod);
+		w := w3- k * Nabla.dz(pdt, NablaMethod);
 
-(*		d:=Nabla.dx(pdt, Nabla.centered);
+(*		d:=Nabla.dx(pdt, NablaMethod);
 		d:=k*d;
 		u := u3 - d;
-		d:=Nabla.dy(pdt, Nabla.centered);
+		d:=Nabla.dy(pdt, NablaMethod);
 		d:=k*d;
 		v := v3 - d;
-		d:=Nabla.dz(pdt, Nabla.centered);
+		d:=Nabla.dz(pdt, NablaMethod);
 		d:=k*d;
 		w:=w3- d;
 *)
@@ -366,7 +375,7 @@ TYPE NavierStokes* = OBJECT
 		PressureBound(p); 	
 	END Step;
 	
-	(* 3-threaded version *)
+	(* 3-6-threaded version *)
 	PROCEDURE StepParallel*( VAR fx, fy, fz: Grid;  dt: Datatype); (* performance question: are the constraints needed inside the multiresolution solvers or can they be used with minimal loss outside only ?*)
 	 	VAR stepsize, k:Datatype;
 	BEGIN 
@@ -378,10 +387,28 @@ TYPE NavierStokes* = OBJECT
 		(* approach: decompose solution of the problem into advection - diffusion - force application - projection; Solution operator S(u)= P( F( D( A(u) ) ) )  *)
 		(* 1) advection A *) (*units: 'length/time' *)
 		
-		NEW(advection1, v,  u, v, w, v2, dt, ds, BILINEAR );
-		NEW(advection0, u,  u, v, w, u2, dt, ds, BILINEAR );
-		NEW(advection2, w,  u, v, w, w2, dt, ds, BILINEAR );
-		IF UseHeat THEN NEW(advection3, heat,  u, v, w, heat0, dt, ds, BILINEAR ) END;
+		IF Parallel=3 THEN (*three parallel threads*)
+			NEW(advection1, v,  u, v, w, v2, dt, ds, BILINEAR );
+			NEW(advection0, u,  u, v, w, u2, dt, ds, BILINEAR );
+			NEW(advection2, w,  u, v, w, w2, dt, ds, BILINEAR );
+		ELSIF Parallel=6 THEN	(*6 parallel threads. As advection is the speed-limiting step in some applications, this may be beneficial on multicore hardware*)(*TBD: better concept for splitting with common border*)
+			splitZ:=LEN(v,0) DIV 2;
+			NEW(advection1, v,  u, v, w, v2, dt, ds, BILINEAR,0,splitZ-1 ); NEW(advection11, v,  u, v, w, v2, dt, ds, BILINEAR, splitZ,LEN(v,0)-1 );
+			NEW(advection0, u,  u, v, w, u2, dt, ds, BILINEAR,0,splitZ-1 ); NEW(advection00, u,  u, v, w, u2, dt, ds, BILINEAR, splitZ,LEN(u,0)-1 );
+			NEW(advection2, w,  u, v, w, w2, dt, ds, BILINEAR,0,splitZ-1 ); NEW(advection22, w,  u, v, w, w2, dt, ds, BILINEAR, splitZ,LEN(w,0)-1 );
+		ELSE HALT(200)
+		END;
+		
+		IF UseHeat THEN 
+			IF Parallel=1 THEN 
+				NEW(advection3, heat,  u, v, w, heat0, dt, ds, BILINEAR ) 
+			ELSE 
+				IF ~Util.SameSize(heat,heat0) THEN NEW(heat0,LEN(heat)) END;
+				splitZ:=LEN(heat,0) DIV 2;
+				NEW(advection3, heat,  u, v, w, heat0, dt, ds, BILINEAR, 0, splitZ-1 ); 
+				NEW(advection33, heat,  u, v, w, heat0, dt, ds, BILINEAR, splitZ, LEN(heat,0)-1 ); 
+			END;
+		END;
 
 		(*
 		advection.SkewSymmetric(u,v,w, u2,v2,w2); (* explodes after 40 steps when using forward/explicit*)
@@ -400,9 +427,9 @@ TYPE NavierStokes* = OBJECT
 		 (* 3) force application  this is a better code location (than below)+ for when flow is driven by a pressure field. *)
 		 (* in this case, we drive the system by external pressure boundary conditions at inlet and outlet *)
 		k :=dt/ds/rho;
-		advection1.WaitReady;	NEW(nablaScaleInc1, v2, p, tmpv, -k, Nabla.dy);
-		advection0.WaitReady; 	NEW(nablaScaleInc0, u2, p, tmpu, -k, Nabla.dx); (* u2:= u2- k * Nabla.dx(p, Nabla.centered);*)(* m/s *)
-		advection2.WaitReady;	NEW(nablaScaleInc2, w2, p, tmpw, -k, Nabla.dz);
+		advection1.WaitReady;	IF advection11#NIL THEN advection11.WaitReady END; NEW(nablaScaleInc1, v2, p, tmpv, -k, Nabla.dy);
+		advection0.WaitReady;	IF advection00#NIL THEN advection00.WaitReady END; NEW(nablaScaleInc0, u2, p, tmpu, -k, Nabla.dx); (* u2:= u2- k * Nabla.dx(p, NablaMethod);*)(* m/s *)
+		advection2.WaitReady;	IF advection22#NIL THEN advection22.WaitReady END; NEW(nablaScaleInc2, w2, p, tmpw, -k, Nabla.dz);
 		
 		(* 2) diffusion D *) (*result units: length/time *)(* could the boundaries above be taken out of the diffusion multigrid above at limited precision  loss ?? *)
 		nablaScaleInc1.WaitReady; NEW(diffusion1, diffusionV, v2, v, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundY ); 
@@ -410,7 +437,8 @@ TYPE NavierStokes* = OBJECT
 		nablaScaleInc2.WaitReady;NEW(diffusion2, diffusionW, w2, w, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundZ ); 
 
 		IF UseHeat THEN (* velocity used for advection is not yet corrected for divergence here ..*)
-			advection3.WaitReady;
+			advection3.WaitReady; 
+			IF advection33#NIL THEN advection33.WaitReady END;
 			NEW(diffusion3, diffusionH, heat0, heat, heatDiffusionCoeff, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, HeatBounds ); 			
 		END;
 
@@ -445,7 +473,7 @@ TYPE NavierStokes* = OBJECT
 		
 		(* adjust velocity field to conform to the noncompressibility requirement *) 		
 		k:=1/ds;
-		NEW(nablaScaleInc0, u, pdt, tmpu, -k, Nabla.dx);(*u := u - k * Nabla.dx(pdt, Nabla.centered);*)
+		NEW(nablaScaleInc0, u, pdt, tmpu, -k, Nabla.dx);(*u := u - k * Nabla.dx(pdt, NablaMethod);*)
 		NEW(nablaScaleInc1, v, pdt, tmpv, -k, Nabla.dy);
 		NEW(nablaScaleInc2, w, pdt, tmpw, -k, Nabla.dz);
 		
@@ -469,15 +497,35 @@ TYPE NavierStokes* = OBJECT
 		IF UseHeat THEN diffusion3.WaitReady END;
 		IF UseSolutes THEN diffusion4.WaitReady END;
 	END StepParallel;	
+	
+	PROCEDURE divergence( CONST u, v, w: Grid; ds: Datatype ): Grid;  
+	BEGIN 
+		RESULT:=Nabla.dx(u, NablaMethod); 
+		div0:=Nabla.dy(v, NablaMethod); RESULT := RESULT + div0; 
+		div0:=Nabla.dz(w, NablaMethod); RESULT := RESULT + div0;
+		RETURN ( 1/ds) * RESULT;
+	END divergence;  
+	
 END NavierStokes;
 
-PROCEDURE divergence( CONST u, v, w: Grid; ds: Datatype ): Grid;  
+PROCEDURE Derivative(CONST data:Grid; directions:SET):Grid;
+VAR fir:LinearFilters.Filter;
+BEGIN
+	IF ~Util.SameSize(data,RESULT) THEN NEW(RESULT,LEN(data)) END;
+	fir:=LinearFilters.CreateSplineFilter( LinearFilters.SplineDerivativeApproximation);
+	(*toSpline3D( cube, cube, 3, directions );*)
+	VolumeTransform.Filter3D(data, RESULT, LinearFilters.CreateSplineFilter( LinearFilters.SplineDerivativeApproximation(*LinearFilters.CubicSplineDifferentiator*) ), directions, LinearFilters.mirrorH );
+	RETURN RESULT
+END Derivative;
+
+
+(*PROCEDURE divergence( CONST u, v, w: Grid; ds: Datatype ): Grid;  
 BEGIN 
-	RESULT := 			Nabla.dx(u, Nabla.centered); 
-	RESULT := RESULT + Nabla.dy(v, Nabla.centered); 
-	RESULT := RESULT + Nabla.dz(w, Nabla.centered); 
+	RESULT := 			Nabla.dx(u, NablaMethod); 
+	RESULT := RESULT + Nabla.dy(v, NablaMethod); 
+	RESULT := RESULT + Nabla.dz(w, NablaMethod); 
 	RETURN ( 1/ds) * RESULT;
-END divergence;  
+END divergence;  *)
 
 (*
 possible extensions: 
@@ -489,6 +537,7 @@ add arbitrary boundaries
 add free surface flow (monitor position of surface)
 *)
 BEGIN
+	(*Nabla.splineDerivative:=Derivative*)
 END VolumeNavierStokes.
 
 Compiler.Compile

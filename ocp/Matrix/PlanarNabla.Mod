@@ -42,7 +42,7 @@ BEGIN
 				PlanarTransform.Filter2D( g1, g1,  DSPFilters.CreateSplineFilter( DSPFilters.InverseBSpline2 ),   {1}, DSPFilters.mirrorH );
 			*)
 		| spline3:
-				(*HALT (100);*) (*ADD DIRECT B-Spline transform. does not work - probably the problem of SAME in/out variable in the Filter2D() procedure below*)
+				HALT (100); (*ADD DIRECT B-Spline transform. does not work - probably the problem of SAME in/out variable in the Filter2D() procedure below*)
 				(*PlanarTransform.Filter2D( sf, RESULT, DSPFilters.CreateSplineFilter( DSPFilters.DirectBSpline0 + SHORT(sampling) ), {1}, DSPFilters.mirrorH ); *)
 				(*PlanarTransform.Filter2D( sf, RESULT,MatrixFilters.CreateSplineFilter( MatrixFilters.CubicSplineDifferentiator), {1}, MatrixFilters.mirrorH );*)
 		| entier: RESULT[.. ,..LEN(sf,1)-2] := sf[.., 1..]-sf[.., ..LEN(sf,1)-2];

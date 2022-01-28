@@ -139,7 +139,7 @@ VAR f:ArrayFunction; res:Datatype;
 BEGIN
 	f:=arrayFunctionsPool.Get();(*?what is the impact of locking on performance ?*)
 	f.Init; 
-	f.MinAbs(a);(*redundant assignment, is compiler limitation*)
+	f.MinAbs(a);
 	res:=f.min;
 	arrayFunctionsPool.Put(f);(*?what is the impact of locking on performance ?*)
 	RETURN res
@@ -150,7 +150,7 @@ VAR f:ArrayFunction; res:Datatype;
 BEGIN
 	f:=arrayFunctionsPool.Get();
 	f.Init; 
-	(*a:=*)f.MaxAbs(a);(*redundant assignment, is compiler limitation*)
+	f.MaxAbs(a);
 	res:=f.max;
 	arrayFunctionsPool.Put(f);
 	RETURN res
@@ -161,7 +161,7 @@ VAR f:ArrayFunction; res:Datatype;
 BEGIN
 	f:=arrayFunctionsPool.Get();
 	f.Init; 
-	(*a:=*)f.AddAbs(a);(*redundant assignment, is compiler limitation*)
+	f.AddAbs(a);
 	res:=f.sum;
 	arrayFunctionsPool.Put(f);
 	RETURN res
@@ -176,7 +176,7 @@ BEGIN
 	END;
 END Mean;
 
-PROCEDURE MeanSquare*(CONST X: Array): Datatype;
+(*PROCEDURE MeanSquare*(CONST X: Array): Datatype;
 VAR cnt: SIZE;
 	f:ArrayFunction;
 	res:Datatype;
@@ -192,18 +192,18 @@ BEGIN
 		RETURN res
 	END;
 END MeanSquare;
+*)
 
- (*
+ 
 PROCEDURE MeanSquare*(CONST X: Array): Datatype;
 VAR cnt: SIZE;
 BEGIN
-	(*RETURN X+*X / ProdS(LEN(X))*)
 	cnt:=Count(X);
 	IF cnt=0 THEN RETURN 0 (*? or NaN  ?*)
-	ELSE RETURN X+*X/Count(X)
+	ELSE RETURN X+*X/cnt
 	END;
 END MeanSquare;
-*)
+
 
 PROCEDURE RMS*(CONST X: Array): Datatype; (*root mean square*)
 BEGIN

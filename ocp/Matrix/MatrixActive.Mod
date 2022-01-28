@@ -26,7 +26,7 @@ CONST
 	High*=Objects.High;
 
 TYPE
-	Datatype*=MatrixBase.Datatype;
+	Datatype*=FLOAT64;
 	BaseVector* = ARRAY [*] OF Datatype; (*MatrixBase.Vector*)
 	BaseMatrix* = ARRAY [*,*] OF Datatype;(*MatrixBase.Matrix*)
 

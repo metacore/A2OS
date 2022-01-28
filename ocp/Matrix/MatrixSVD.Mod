@@ -50,7 +50,7 @@ TYPE
 					scale := Util.SumAbs( u[i..m - 1, i] );(* SUM(ABS()) overhead: allocation of temp array behind the scenes*)
 					IF (scale # 0.0) THEN
 						u[i..m - 1, i] := u[i..m - 1, i] / scale;  s := s + u[i..m - 1, i] +* u[i..m - 1, i];  f := u[i, i];
-						IF f >= 0 THEN g := -sqrt( s ) ELSE g := sqrt( s ) END;
+						IF f >= 0 THEN g := -Math.sqrt( s ) ELSE g := Math.sqrt( s ) END;
 						h := f * g - s;  u[i, i] := (f - g);
 						FOR j := l TO n - 1 DO
 							s := u[i..m - 1, i] +* u[i..m - 1, j];
@@ -66,7 +66,7 @@ TYPE
 					scale := Util.SumAbs( u[i, l..n - 1] );(* SUM(ABS()) overhead: allocation of temp array behind the scenes*)
 					IF (scale # 0.0) THEN
 						u[i, l..n - 1] := u[i, l..n - 1] / scale;  s := s + u[i, l..n - 1] +* u[i, l..n - 1];  f := u[i, l];
-						IF f >= 0 THEN g := -sqrt( s ) ELSE g := sqrt( s ) END;
+						IF f >= 0 THEN g := -Math.sqrt( s ) ELSE g := Math.sqrt( s ) END;
 						h := f * g - s;  u[i, l] := (f - g);  rv1[l..n - 1] := u[i, l..n - 1] / h;
 						FOR j := l TO m - 1 DO
 							s := u[j, l..n - 1] +* u[i, l..n - 1];
@@ -184,14 +184,14 @@ TYPE
 			R:=pythag(F,G);
 			sx:=Q+R;
 			sy:=Q-R;
-			a1:=Real(PMath.arctan2L(G,F));
-			a2:=Real(PMath.arctan2L(H,E));
+			a1:=PMath.arctan2L(G,F);
+			a2:=PMath.arctan2L(H,E);
 			theta:=(a2-a1)/2;
 			phi:=(a2+a1)/2;
-			cosPhi:=Real(Math.cos(phi));
-			sinPhi:=Real(Math.sin(phi));
-			cosTheta:=Real(Math.cos(theta));
-			sinTheta:=Real(Math.sin(theta));
+			cosPhi:=Math.cos(phi);
+			sinPhi:=Math.sin(phi);
+			cosTheta:=Math.cos(theta);
+			sinTheta:=Math.sin(theta);
 			(*? changes below might be related to differences in result range (0..2pi versus -pi..pi) of arctan() ? *)
 			(*u:=[[cosPhi, -sinPhi],[sinPhi,cosPhi]];*)(*was according to scicomp reference, but leads to permuted sign/elements of u*)
 			u:=[[-sinPhi, cosPhi],[-cosPhi,-sinPhi]];
@@ -247,9 +247,9 @@ TYPE
 	VAR absa, absb, zero: Real;
 	BEGIN
 		zero := 0;  absa := ABS( a );  absb := ABS( b );
-		IF absa > absb THEN RETURN absa * sqrt( 1.0 + absb / absa * absb / absa );
+		IF absa > absb THEN RETURN absa * Math.sqrt( 1.0 + absb / absa * absb / absa );
 		ELSIF absb = 0 THEN RETURN zero
-		ELSE RETURN absb * sqrt( 1.0 + absa / absb * absa / absb )
+		ELSE RETURN absb * Math.sqrt( 1.0 + absa / absb * absa / absb )
 		END;
 	END pythag;
 
@@ -257,11 +257,6 @@ TYPE
 	BEGIN
 		RETURN MAX( MAX( m ), -MIN( m ) );   (*non-copying MAX(ABS(m))*)
 	END MaxAbs;
-
-	PROCEDURE sqrt( x: Real ): Real;
-	BEGIN
-		RETURN Real(Math.sqrt(x));
-	END sqrt;
 
 	PROCEDURE sign-( x: Real ): INTEGER;
 	BEGIN

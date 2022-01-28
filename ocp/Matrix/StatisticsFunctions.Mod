@@ -44,13 +44,13 @@ from J.Debord's Pascal version:
 	********************************************************************** *)
 
 MODULE StatisticsFunctions;
-IMPORT MatrixBase, BasicMath:=MathL;
+IMPORT BasicMath:=MathL;
 
 (* ----------------------------------------------------------------------
 	Floating point TYPE (Default = FLOAT64)
 	---------------------------------------------------------------------- *)
 
-		TYPE Float = MatrixBase.Datatype;
+		TYPE Float = FLOAT64;
 	TabCoef = ARRAY [10] OF Float;
 
 (* ----------------------------------------------------------------------
@@ -329,25 +329,25 @@ PROCEDURE FGamma(A, B, X : Float) : Float;	(* Prob( <= X) *)
 	Elementary functions
 	---------------------------------------------------------------------- *)
 	PROCEDURE Ln(X : Float) : Float;
-	BEGIN RETURN Float(BasicMath.ln(X)) END Ln;
+	BEGIN RETURN BasicMath.ln(X) END Ln;
 
 	PROCEDURE Exp(X:Float) : Float;
-	BEGIN RETURN Float(BasicMath.exp(X)) END Exp;
+	BEGIN RETURN BasicMath.exp(X) END Exp;
 
 	PROCEDURE Sin(X : Float) : Float;
-	BEGIN RETURN Float(BasicMath.sin(X)) END Sin;
+	BEGIN RETURN BasicMath.sin(X) END Sin;
 
 	PROCEDURE Cos(X:Float) : Float;
-	BEGIN RETURN Float(BasicMath.cos(X)) END Cos;
+	BEGIN RETURN BasicMath.cos(X) END Cos;
 
 	PROCEDURE ArcTan(X:Float) : Float;
-	BEGIN RETURN Float(BasicMath.arctan(X)) END ArcTan;
+	BEGIN RETURN BasicMath.arctan(X) END ArcTan;
 
 	PROCEDURE Sqr(X:Float) : Float;
 	BEGIN RETURN X*X END Sqr;
 
 	PROCEDURE Sqrt(X:Float) : Float;
-	BEGIN RETURN Float(BasicMath.sqrt(X)) END Sqrt; (** To do: Handling of negative numbers*)
+	BEGIN RETURN BasicMath.sqrt(X) END Sqrt; (** To do: Handling of negative numbers*)
 
 	PROCEDURE Expo*(X : Float) : Float;
 	BEGIN

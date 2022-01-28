@@ -14,14 +14,9 @@ VAR
 	PROCEDURE pow( base, exponent: Datatype ): Datatype;
 	BEGIN
 		IF ABS( base ) < eps THEN RETURN 0
-		ELSE RETURN Datatype(MathL.exp( exponent * MathL.ln( base ) ));
+		ELSE RETURN MathL.exp( exponent * MathL.ln( base ) );
 		END;
 	END pow;
-
-	PROCEDURE sqrt( x: Datatype ): Datatype;
-	BEGIN
-		RETURN Datatype(MathL.sqrt(x));
-	END sqrt;
 
 	PROCEDURE sign( x: Datatype ): Datatype;
 	BEGIN
@@ -40,7 +35,7 @@ VAR
 		IF FALSE THEN
 		ELSIF x = 1 THEN n := 0;  d := x;  RETURN arctan2( n, d )
 		ELSIF x = -1 THEN n := 0;  d := x;  RETURN arctan2( n, d )
-		ELSE n := sqrt( 1 - x * x );  d := x;  RETURN arctan2( n, d )
+		ELSE n := MathL.sqrt( 1 - x * x );  d := x;  RETURN arctan2( n, d )
 		END;
 	END arccos;
 
@@ -52,13 +47,13 @@ VAR
 			END
 		ELSIF xn = 0 THEN RETURN (1 - sign( xd )) * MathL.pi / 2
 		ELSE
-			RETURN Datatype(MathL.arctan( xn / xd )) + sign( xn ) * (1 - sign( xd )) * Datatype(MathL.pi) / 2
+			RETURN MathL.arctan( xn / xd ) + sign( xn ) * (1 - sign( xd )) * MathL.pi / 2
 		END;
 	END arctan2;
 
 	PROCEDURE acos3( x: Datatype ): Datatype;
 	BEGIN
-		RETURN Datatype(MathL.cos( arccos( x ) * inv3 ))
+		RETURN MathL.cos( arccos( x ) * inv3 )
 	END acos3;
 
 	PROCEDURE cubicroot( x: Datatype ): Datatype;
@@ -109,7 +104,7 @@ END new;
 		ELSIF (q > Max) OR (q < -Max) THEN
 			new( v3, 1 );
 			IF q > 0 THEN v3[0] := -r / q;
-			ELSIF q < 0 THEN v3[0] := -sqrt( -q );
+			ELSIF q < 0 THEN v3[0] := -MathL.sqrt( -q );
 			ELSE v3[0] := 0;
 			END;
 		ELSIF (r > Max) OR (r < -Max) THEN
@@ -125,7 +120,7 @@ END new;
 					IF (u2o3 > Max) OR (u2o3 < -Max) THEN
 						IF p = 0 THEN
 							IF q > 0 THEN v3[0] := -r / q;
-							ELSIF q < 0 THEN v3[0] := -sqrt( -q );
+							ELSIF q < 0 THEN v3[0] := -MathL.sqrt( -q );
 							ELSE v3[0] := 0;
 							END;
 						ELSE v3[0] := -q / p;
@@ -136,7 +131,7 @@ END new;
 							new( v3, 1 );
 							IF p = 0 THEN
 								IF q > 0 THEN v3[0] := -r / q;
-								ELSIF q < 0 THEN v3[0] := -sqrt( -q );
+								ELSIF q < 0 THEN v3[0] := -MathL.sqrt( -q );
 								ELSE v3[0] := 0
 								END;
 							ELSE v3[0] := -q / p;
@@ -144,8 +139,8 @@ END new;
 						ELSE
 							uo3cu4 := uo3sq4 * uo3;  wsq := uo3cu4 + vsq;
 							IF wsq > 0 THEN  (*cubic has one real root -*)
-								IF v <= 0 THEN mcube := (-v + sqrt( wsq )) * 0.5;
-								ELSE mcube := (-v - sqrt( wsq )) * 0.5;
+								IF v <= 0 THEN mcube := (-v + MathL.sqrt( wsq )) * 0.5;
+								ELSE mcube := (-v - MathL.sqrt( wsq )) * 0.5;
 								END;
 								m1 := cubicroot( mcube );
 								IF m1 # 0 THEN m2 := -uo3 / m1;  ELSE m2 := 0;  END;
@@ -154,7 +149,7 @@ END new;
 								IF uo3 < 0 THEN
 									muo3 := -uo3;
 									IF muo3 > 0 THEN
-										s := sqrt( muo3 );
+										s := MathL.sqrt( muo3 );
 										IF p > 0 THEN s := -s END;
 									ELSE s := 0;
 									END;
@@ -166,7 +161,7 @@ END new;
 										sinsqk := 1 - cosk * cosk;
 										IF sinsqk >= 0 THEN
 											new( v3, 3 );  v3[0] := v0;
-											rt3sink := rt3 * sqrt( sinsqk );
+											rt3sink := rt3 * MathL.sqrt( sinsqk );
 											v3[1] := s * (-cosk + rt3sink) - po3;
 											v3[2] := s * (-cosk - rt3sink) - po3;  n3 := 3;
 										ELSE new( v3, 1 );  v3[0] := v0;
@@ -194,7 +189,7 @@ END new;
 		IF b = 0 THEN
 			IF c = 0 THEN roots := [0, 0];
 			ELSIF c < 0 THEN
-				NEW( roots, 2 );  roots[0] := sqrt( -c );  roots[1] := -roots[0];
+				NEW( roots, 2 );  roots[0] := MathL.sqrt( -c );  roots[1] := -roots[0];
 			ELSE
 				(*nroots := 0;*)
 			END;
@@ -202,7 +197,7 @@ END new;
 			NEW( roots, 2 );  roots[0] := -b;   (*roots[1]:=0; *)
 		ELSIF dis >= 0 THEN
 			NEW( roots, 2 );
-			rtdis := sqrt( dis );
+			rtdis := MathL.sqrt( dis );
 			IF b > 0 THEN roots[0] := (-b - rtdis) * 0.5;
 			ELSE roots[0] := (-b + rtdis) * 0.5;
 			END;
@@ -222,7 +217,7 @@ END new;
 *)
 
 BEGIN
-	rt3 := sqrt( 3 );  Max := sqrt( MAX( Datatype ) );
+	rt3 := MathL.sqrt( 3 );  Max := MathL.sqrt( MAX( FLOAT64 ) );
 END MatrixPolynomEq.
 
 (*
@@ -241,9 +236,9 @@ BEGIN
 			(*u1, u2*) (*complex solutions*)
 		END
 	ELSE
-		u0:= pow((q/2 + sqrt(sqr(q)/4+cub(p)/27)), 1/3); (*principal solution*)
-		(* u1:= u0* (-1/2 + i*sqrt(3)/2);			*)(*complex solutions with *)
-		(* u2:= u0* (-1/2 - i*sqrt(3)/2);			*)
+		u0:= pow((q/2 + MathL.sqrt(sqr(q)/4+cub(p)/27)), 1/3); (*principal solution*)
+		(* u1:= u0* (-1/2 + i*MathL.sqrt(3)/2);			*)(*complex solutions with *)
+		(* u2:= u0* (-1/2 - i*MathL.sqrt(3)/2);			*)
 	END;
 	x0:=p/3/u0 - u0 - a/3;
 	HALT(100); (*complex solutions and evaluation of u1,u2 neglected here ! *)
@@ -282,12 +277,12 @@ BEGIN
  	     nr = 0;
  	     FOR j:=0 TO nq-1 DO
  	        IF (roots[0] >= 0) THEN
- 	           rts[0] := sqrt(roots[0]);
+ 	           rts[0] := MathL.sqrt(roots[0]);
  	           rts[1] := -rts[0];
  	           nr := 2;
  	        END;
  	        IF (roots[1] >= 0) THEN
- 	           rts[nr] := sqrt(roots[1]);
+ 	           rts[nr] := MathL.sqrt(roots[1]);
  	           rts[nr+1] := -rts[nr];
  	           INC(nr, 2);
  	        END;

@@ -13,7 +13,7 @@ TYPE
 	(** Vector Norms *)
 	PROCEDURE l2*(CONST v:Vector):Datatype;
 	BEGIN
-		RETURN Datatype(MathL.sqrt(v +*v))
+		RETURN MathL.sqrt(v +*v)
 	END l2;
 
 
@@ -44,7 +44,7 @@ Its computation can be expensive. *)
 (** Frobenius matrix norm: ||A||F =  V tr(ATA).  Note: ||Ax||2 # ||A||F ||x||2 *)
 	PROCEDURE J2*( CONST A: Matrix ): Datatype;
 	BEGIN
-		RETURN Datatype(MathL.sqrt( A +* A )) (*???*)
+		RETURN MathL.sqrt( A +* A ) (*???*)
 	END J2;
 
 (** The maximum row-sum matrix norm. *)
@@ -111,7 +111,7 @@ Its computation can be expensive. *)
 
 	(** compute condition number from eigenvalues *)
 	PROCEDURE ConditionNumber*( CONST eigenvalues: ARRAY [?] OF Datatype ): Datatype;   (* see to be improved*)
-	VAR max, min: Datatype;  i: SIZE;
+	VAR max, min: FLOAT64;  i: SIZE;
 	BEGIN
 		IF DIM(eigenvalues)=1 THEN (*eigenvalues stored in vector*)
 			max:=ABS(eigenvalues[0]); min:=max;

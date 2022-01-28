@@ -3,7 +3,7 @@ MODULE TestMatrixOptim;
 IMPORT Optim := MatrixOptim, Out:=KernelLog, Strings;
 
 TYPE
-	Float = Optim.Real;
+	Float = FLOAT64;
 	Matrix = Optim.Matrix;
 	Vector = Optim.Vector;
 	TFuncNVar = Optim.TFuncNVar;

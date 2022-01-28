@@ -12,7 +12,7 @@ CONST
 	PROCEDURE ProjectVector*(CONST a,b: Vector):Vector;
 	VAR a1:Datatype; b0:Vector;
 	BEGIN
-		b0:= b / Datatype(MathL.sqrt(b+*b)); (*unit vector*)
+		b0:= b / MathL.sqrt(b+*b); (*unit vector*)
 		a1:=a+*b0; (*|a|*)
 		RETURN a1*b0
 	END ProjectVector;
@@ -21,7 +21,7 @@ CONST
 	PROCEDURE ProjectVectorsOnVector*(CONST a:Matrix; CONST b: Vector):Matrix;
 	VAR a1:Vector; b0:Vector;
 	BEGIN
-		b0:= b / Datatype(MathL.sqrt(b+*b)); (*unit vector*)
+		b0:= b / MathL.sqrt(b+*b); (*unit vector*)
 		a1:=a*b0; (*  *)
 		RETURN a1**b0
 	END ProjectVectorsOnVector;

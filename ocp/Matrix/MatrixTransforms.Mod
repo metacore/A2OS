@@ -23,7 +23,7 @@ TYPE
 
 		(** Gaussian elimination algorithm  with row pivoting; expects square matrix, transforms it into upper triangular matrix *)
 	PROCEDURE Gauss*( VAR A: Matrix );   (*in-place transformation*)
-	VAR i, j, k, m, n, u, maxi: SIZE;  val, max: Datatype; Ai, tRow: Vector;
+	VAR i, j, k, m, n, u, maxi: SIZE;  val, max: FLOAT64; Ai, tRow: Vector;
 
 		PROCEDURE SwapRows( I, K: SIZE );
 		BEGIN
@@ -53,7 +53,7 @@ TYPE
 (*
 	(** Gaussian elimination algorithm  with row pivoting; expects augmented matrix (last column containing right hand side) resulting in A now having a reduced row echelon form *)
 	PROCEDURE GaussAugmented*( VAR A: Matrix );   (*in-place transformation*) (* tested ??*)
-	VAR i, j, k, m, n, u, maxi: SIGNED32;  val, max: Datatype; Ai, tRow: Vector;
+	VAR i, j, k, m, n, u, maxi: SIGNED32;  val, max: FLOAT64; Ai, tRow: Vector;
 
 		PROCEDURE SwapRows( I, K: SIGNED32 );
 		VAR J: SIGNED32;
@@ -88,7 +88,7 @@ TYPE
 (*
 			(** produce upper Hessenberg Matrix (zeros below first subdiagonal) using Gaussian elimination algorithm  with row pivoting; expects square matrix*)
 	PROCEDURE Hessenberg*( VAR A: Matrix );   (*in-place transformation*)  (*NOT FINISHED - currently just Gauss Elimination - NOT TESTED*)
-	VAR i, j, k, m, n, u, maxi: SIGNED32;  val, max: Datatype; Ai, tRow: Vector;
+	VAR i, j, k, m, n, u, maxi: SIGNED32;  val, max: FLOAT64; Ai, tRow: Vector;
 
 		PROCEDURE SwapRows( I, K: SIGNED32 );
 		VAR J: SIGNED32;
@@ -121,27 +121,27 @@ Householder is more stable but yields results only at the end *)
 (** n < 0 implies 'all' *)
 
 	PROCEDURE GramSchmidt*( VAR A: Matrix;  n: SIZE );   (*tested - OK*)
-	VAR j, i, k: SIZE;  ss: Datatype;
+	VAR j, i, k: SIZE;  ss: FLOAT64;
 	BEGIN
 		IF n < 0 THEN n := LEN( A,0 ) END;
 		FOR j := 0 TO n - 1 DO
 			FOR i := 0 TO j - 1 DO
 				A[j] := A[j] - (A[j] +* A[i] * A[i]);   (*remove component in direction Ai*)
 			END;
-			A[j] := A[j] / sqrt( A[j] +* A[j] );  (* todo: see MatrixSolvers.QRDecomp for how to catch a nonpositive result here*)
+			A[j] := A[j] / MathL.sqrt( A[j] +* A[j] );  (* todo: see MatrixSolvers.QRDecomp for how to catch a nonpositive result here*)
 		END;
 	END GramSchmidt;
 
 (*QR by modified Gram Schmidt algorithm, avoids the numerical loss of orthogonality with the classical approach.
 input: A; output: Q packed in A; upper diagonal R*)
 	PROCEDURE QRGramSchmidt*( VAR A, R: Matrix;  n: SIZE );   (*tested - OK*)
-	VAR j, i: SIZE;
+	VAR j, i, k: SIZE;  r: FLOAT64;
 	BEGIN
 	(*ASSERT(sizes are correct)*)  (*to do*)
 		R := 0;
 		IF n < 0 THEN n := LEN( A,0 ) END;
 		FOR i := 0 TO n - 1 DO
-			R[i, i] := sqrt( A[i] +* A[i] );   (* todo: see MatrixSolvers.QRDecomp for how to catch a nonpositive result here*)
+			R[i, i] := MathL.sqrt( A[i] +* A[i] );   (* todo: see MatrixSolvers.QRDecomp for how to catch a nonpositive result here*)
 			A[i] := A[i] / R[i, i];
 			FOR j := i + 1 TO n - 1 DO  (*to do: this can be rewritten using matrix multiplications - however, there is some strange size mismatch error when doing that*)
 				R[i, j] := A[j] +* A[i];
@@ -154,8 +154,8 @@ input: A; output: Q packed in A; upper diagonal R*)
 	VAR v: Vector;
 	BEGIN
 		NEW( v, LEN( x,0 ) );
-		v[0] := x[0] + sign( x[0] ) * sqrt( x +* x );   (*  *)
-		v[1..] := x[1..];  v := v / sqrt( v +* v );  RETURN v
+		v[0] := x[0] + sign( x[0] ) * MathL.sqrt( x +* x );   (*  *)
+		v[1..] := x[1..];  v := v / MathL.sqrt( v +* v );  RETURN v
 	END House;
 
 	(**
@@ -190,7 +190,7 @@ add backsubstitution to householder:
 (* ???? not yet correct...
 	(* how to extract Q from the algorithm *)
 	PROCEDURE HouseholderQ* (VAR A: Matrix);
-	VAR x: ARRAY [*] OF Datatype; k, m, n: SIGNED32;
+	VAR x: ARRAY [*] OF FLOAT64; k, m, n: SIGNED32;
 	BEGIN
 		m:=LEN(A,0); n:=LEN(A,1);
 		NEW(x,n); x:=1;
@@ -200,12 +200,7 @@ add backsubstitution to householder:
 	END HouseholderQ;
 *)
 
-	PROCEDURE sqrt( x: Datatype ): Datatype;
-	BEGIN
-		RETURN Datatype(MathL.sqrt(x));
-	END sqrt;
-
-	PROCEDURE sign( x: Datatype ): Datatype;
+	PROCEDURE sign( x: FLOAT64 ): FLOAT64;
 	BEGIN
 		IF x > 0 THEN RETURN 1
 		ELSIF x < 0 THEN RETURN -1
@@ -225,7 +220,7 @@ A full Givens Rotation Matrix with rotation theta, where c=cos(theta) and s=sin(
 *)
 (** parameters: 'ab' contains the 2 entries: A[row-1..row,col] of the target matrix; the givens rotation will set these elements to [r,0] *)
 	PROCEDURE GivensMatrix*( CONST ab: Vector; VAR G: Matrix );   (**tested - OK*)
-	VAR u, t: Datatype;  a, b: Datatype;  c, s, r: Datatype;
+	VAR u, t: FLOAT64;  a, b: FLOAT64;  c, s, r: FLOAT64;
 	BEGIN
 		a := ab[0];  b := ab[1];
 		IF b = 0 THEN
@@ -237,11 +232,11 @@ A full Givens Rotation Matrix with rotation theta, where c=cos(theta) and s=sin(
 			r := ABS( b )
 		ELSIF ABS( b ) > ABS( a ) THEN
 			t := a / b;
-			IF b > 0 THEN u := sqrt( 1 + t * t ) ELSE u := -sqrt( 1 + t * t ) END;
+			IF b > 0 THEN u := MathL.sqrt( 1 + t * t ) ELSE u := -MathL.sqrt( 1 + t * t ) END;
 			s := 1 / u;  c := s * t;  r := b * u
 		ELSE
 			t := b / a;
-			IF a > 0 THEN u := sqrt( 1 + t * t ) ELSE u := -sqrt( 1 + t * t ) END;
+			IF a > 0 THEN u := MathL.sqrt( 1 + t * t ) ELSE u := -MathL.sqrt( 1 + t * t ) END;
 			c := 1 / u;  s := c * t;  r := a * u;
 		END;
 		G[0, 0] := c;  G[0, 1] := s;  G[1, 0] := -s;  G[1, 1] := c;
@@ -249,8 +244,8 @@ A full Givens Rotation Matrix with rotation theta, where c=cos(theta) and s=sin(
 
 (** applies Givens Rotation GA to set element i,j of Matrix A to zero *)
 	PROCEDURE GivensRotation*( VAR A: Matrix;  i, j: SIGNED32 );
-	VAR B: Matrix;
-		G: ARRAY [ 2, 2] OF Datatype;
+	VAR c, s, r: FLOAT64;  B: Matrix;
+		G: ARRAY [ 2, 2] OF FLOAT64;
 	BEGIN
 		GivensMatrix( A[i - 1..i, j], G );
 		(*A[i-1..i]:= G * A[i-1..i];*)  (*here is a logical/compiler implementation problem: overwriting of second line; upon debugginf of compiler, variable B should be redundant*)

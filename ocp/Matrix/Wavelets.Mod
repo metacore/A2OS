@@ -1,6 +1,6 @@
 MODULE Wavelets; (*Patrick Hunziker, 2009. *)(* Wavelet transform - basic compute framework *)
 
-IMPORT MatrixBase, LinearFilters, LinearConvolve, FIR:=LinearFIRConvolveLongReal;
+IMPORT LinearFilters, LinearConvolve, FIR:=LinearFIRConvolveLongReal;
 
 CONST
 	sqrt2 = 1.41421356237309504880168872420969808;   (* reconstruction factor in wavelet filters *)
@@ -43,7 +43,7 @@ CONST
 	ShiftOrthoCubicSpline* = 71;
 
 TYPE
-	Datatype* = MatrixBase.Datatype;
+	Datatype* = FLOAT64;
 	FIRFilter* = LinearFilters.FIRFilter;
 	Dataarray* = ARRAY [ * ] OF Datatype;
 	FilterCoeffs* = ARRAY [ * ] OF Datatype;

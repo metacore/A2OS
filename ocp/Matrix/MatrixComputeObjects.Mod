@@ -235,7 +235,11 @@ TYPE ComputeQueue=OBJECT
 		BEGIN
 			R.RawLInt(rows); R.RawLInt(cols);
 			IF (LEN(M,0)#rows) OR (LEN(M,1)#cols) THEN NEW(M,rows,cols) END;
-			MatrixBase.ReadMatrix(R, M);
+			FOR r:=0 TO rows-1 DO
+				FOR c:=0 TO cols-1 DO
+					R.RawLReal(M[r,c])
+				END;
+			END;
 		END GetMatrix;
 
 	END ComputeAgent;

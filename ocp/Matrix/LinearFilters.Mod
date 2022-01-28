@@ -1,5 +1,5 @@
 MODULE LinearFilters ;	(**  AUTHOR "Patrick Hunziker"; PURPOSE "Filter construction for Spline and Moment Processing ";  **)
-IMPORT Out:=KernelLog, math:=MathL, MatrixBase;
+IMPORT Out:=KernelLog, math:=MathL;
 
 CONST
 		(*boundaries*)
@@ -179,7 +179,7 @@ CONST
 	Smooth* = 300;
 
 TYPE
-		Datatype*=MatrixBase.Datatype;
+		Datatype*=FLOAT64;
 		Vector*= ARRAY [*] OF Datatype;
 		Filter*= OBJECT
 		END Filter;
@@ -268,9 +268,9 @@ PROCEDURE  CreateSplineFilter* (name: SIGNED32):Filter;
 		CASE name OF
 			| DirectBSpline0: IIR.poles:=[1]; IIR.gain:=1; RETURN IIR;
 			| DirectBSpline1: IIR.poles:=[1]; IIR.gain:=1 ;RETURN IIR;
-			| DirectBSpline2: NEW(IIR.poles,1); IIR.poles[0]:=Datatype(2*math.sqrt(2)-3); IIR.gain:=Datatype(24 - 16*sqrt2); RETURN IIR;
+			| DirectBSpline2: NEW(IIR.poles,1); IIR.poles[0]:=2*math.sqrt(2)-3; IIR.gain:=24 - 16*sqrt2; RETURN IIR;
 				(* calculation of gain??: gain:=1; FOR i:=0 TO LEN(IIR.poles^)-1 DO IIR.gain:=IIR.gain*(1-IIR.poles[i])*(1-1/IIR.poles[i])END; ??*)
-			| DirectBSpline3: NEW(IIR.poles,1); IIR.poles[0]:=Datatype(math.sqrt(3)-2); IIR.gain:=Datatype((24 - 16*sqrt2)*1.171291); RETURN IIR;
+			| DirectBSpline3: NEW(IIR.poles,1); IIR.poles[0]:=math.sqrt(3)-2; IIR.gain:=(24 - 16*sqrt2)*1.171291; RETURN IIR;
 			| DirectBSpline4: IIR.poles:=[-0.361341, -0.0137254]; IIR.gain:=(1-IIR.poles[0])*(1-IIR.poles[1]) ; RETURN IIR;
 			| DirectBSpline5: IIR.poles:=[-0.430575, 0.0430963]; IIR.gain:=(1-IIR.poles[0])*(1-IIR.poles[1]) ; RETURN IIR;
 			| DirectBSpline6: IIR.poles:=[-0.48829458930304475513, -0.0816792710762375126, -0.0014141518083258177511];

@@ -1,45 +1,10 @@
 MODULE LinearMath;
 
-IMPORT MatrixBase, Mathe:=MathL, NbrCplx, NbrRe, MathCplx, PMath;
+IMPORT MatrixBase, Mathe:=MathL, NbrCplx, MathCplx, PMath;
 
 TYPE
 	Datatype=MatrixBase.Datatype;
 	Array = ARRAY [*] OF Datatype;
-
-	PROCEDURE sqrt*(x: Datatype): Datatype;
-	BEGIN
-		RETURN Datatype(Mathe.sqrt(x));
-	END sqrt;
-
-	PROCEDURE sin*(x: Datatype): Datatype;
-	BEGIN
-		RETURN Datatype(Mathe.sin(x));
-	END sin;
-
-	PROCEDURE cos*(x: Datatype): Datatype;
-	BEGIN
-		RETURN Datatype(Mathe.cos(x));
-	END cos;
-
-	PROCEDURE arctan*(x: Datatype): Datatype;
-	BEGIN
-		RETURN Datatype(Mathe.arctan(x));
-	END arctan;
-
-	PROCEDURE tanh*(x: Datatype): Datatype;
-	BEGIN
-		RETURN Datatype(PMath.tanhL(x));
-	END tanh;
-	
-	PROCEDURE logistic*(x: Datatype): Datatype;
-	BEGIN
-		RETURN Datatype(PMath.logisticL(x));
-	END logistic;
-
-	PROCEDURE ln*(x: Datatype): Datatype;
-	BEGIN
-		RETURN Datatype(Mathe.ln(x));
-	END ln;
 
 	PROCEDURE Max*(CONST a,b:Array):Array;
 	VAR i:SIZE;
@@ -69,51 +34,64 @@ TYPE
 	END Sqr;
 
 	PROCEDURE Sqrt*(CONST in:Array):Array;
+	VAR i:SIGNED32;
 	BEGIN
 		IF LEN(RESULT,0)=0 THEN NEW(RESULT,LEN(in,0)) END;
-		RESULT:=ALL(in, sqrt);
+		RESULT:=ALL(in, Mathe.sqrt);
+		(*FOR i:=0 TO LEN(in,0)-1 DO
+			RESULT[i]:=Mathe.sqrt(in[i])
+		END;;*)
 		RETURN RESULT
 	END Sqrt;
 
 	PROCEDURE Sin*(CONST in:Array):Array;
+	VAR i:SIGNED32;
 	BEGIN
 		IF LEN(RESULT,0)=0 THEN NEW(RESULT,LEN(in,0)) END;
-		RESULT:=ALL(in, sin);
+		RESULT:=ALL(in, Mathe.sin);
+		(*FOR i:=0 TO LEN(in,0)-1 DO
+			RESULT[i]:=Mathe.sin(in[i])
+		END;;*)
 		RETURN RESULT
 	END Sin;
 
 	PROCEDURE Cos*(CONST in:Array):Array;
+	VAR i:SIGNED32;
 	BEGIN
 		IF LEN(RESULT,0)=0 THEN NEW(RESULT,LEN(in,0)) END;
-		RESULT:=ALL(in, cos);
+		RESULT:=ALL(in, Mathe.cos);
+		(*FOR i:=0 TO LEN(in,0)-1 DO
+			RESULT[i]:=Mathe.cos(in[i])
+		END;;*)
 		RETURN RESULT
 	END Cos;
 
 	PROCEDURE Arctan*(CONST in:Array):Array;
+	VAR i:SIGNED32;
 	BEGIN
 		IF LEN(RESULT,0)=0 THEN NEW(RESULT,LEN(in,0)) END;
-		RESULT:=ALL(in, arctan);
+		RESULT:=ALL(in, Mathe.arctan);
+		(*FOR i:=0 TO LEN(in,0)-1 DO
+			RESULT[i]:=Mathe.arctan(in[i])
+		END;;*)
 		RETURN RESULT
 	END Arctan;
 
 	PROCEDURE Tanh*(CONST in:Array):Array;
 	BEGIN
 		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in))  END;
-		RESULT:=ALL(in, tanh);
+		RESULT:=ALL(in, PMath.tanhL);
 		RETURN RESULT
 	END Tanh;
 
-	PROCEDURE Logistic*(CONST in:Array):Array;
-	BEGIN
-		IF LEN(RESULT)#LEN(in) THEN NEW(RESULT,LEN(in))  END;
-		RESULT:=ALL(in, logistic);
-		RETURN RESULT
-	END Logistic;
-
 	PROCEDURE Ln*(CONST in:Array):Array;
+	VAR i:SIGNED32;
 	BEGIN
 		IF LEN(RESULT,0)=0 THEN NEW(RESULT,LEN(in,0)) END;
-		RESULT:=ALL(in, ln);
+		RESULT:=ALL(in, Mathe.ln);
+		(*FOR i:=0 TO LEN(in,0)-1 DO
+			RESULT[i]:=Mathe.ln(in[i])
+		END;;*)
 		RETURN RESULT
 	END Ln;
 
@@ -128,6 +106,7 @@ TYPE
 	END ComplexDivision;
 
 	PROCEDURE ComplexMultiplication*(CONST R1,I1,R2,I2: Array; VAR outR,outI:Array);
+	VAR rsqr:Array;
 	BEGIN
 		outR := R1 .* R2;
 		outR := outR - I1 .* I2;
@@ -138,8 +117,8 @@ TYPE
 	VAR cplx,root:NbrCplx.Complex; i:SIZE; re,im:FLOAT32;
 	BEGIN
 		FOR i:=0 TO LEN(R,0)-1 DO
-			IF LEN(I)=0 THEN NbrCplx.Set(NbrRe.Real(R[i]),0, cplx);
-			ELSE NbrCplx.Set(NbrRe.Real(R[i]),NbrRe.Real(I[i]), cplx); (*hack: NbrCplx can be compiled for FLOAT32 or FLOAT64*)
+			IF LEN(I)=0 THEN NbrCplx.Set(SHORT(R[i]),0, cplx);
+			ELSE NbrCplx.Set(SHORT(R[i]),SHORT(I[i]), cplx); (*hack: NbrCplx can be compiled for FLOAT32 or FLOAT64*)
 			END;
 			root:=MathCplx.Sqrt(cplx);
 			NbrCplx.Get(root, re,im);

@@ -63,7 +63,7 @@ TYPE PCA*= OBJECT (MatrixBase.Solver)
 			axislengths:=unit*(YT.*YT);
 			FOR i:=0 TO LEN(axislengths,0)-1 DO
 				IF ABS(axislengths[i]) > 1.0E-6 THEN (*? eps handling can be improved*)
-					scale:=1/Datatype(MathL.sqrt(axislengths[i]));
+					scale:=1/MathL.sqrt(axislengths[i]);
 					U[.., i]:= YT[..,i]*scale;
 				ELSE
 					U[.., i]:=0;

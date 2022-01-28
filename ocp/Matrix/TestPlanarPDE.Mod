@@ -6,7 +6,7 @@ MODULE TestPlanarPDE;
 	DATE 2009-2-12
 **)
 
-IMPORT PlanarPDE, WMMatrix, Files, MatrixBase, MatrixUtilities;
+IMPORT PlanarPDE, WMMatrix, Files, MatrixUtilities;
 
 CONST TestFileName*="Matrix/PlanarPDE_ConstrainedLaplace.MtA";
 
@@ -86,10 +86,8 @@ TYPE
 		NEW( laplace );  laplace.SolveMultigrid( d, threshold, 32, 20, 200, con.Constrain );
 		f:=Files.Old(TestFileName);
 		Files.OpenReader(r,f,0);
-		e:=MatrixUtilities.Load(r);
-		VAR err:=d-e;
-		VAR errNrm:=err+*err;
-		ASSERT(errNrm <= MatrixBase.EPS);
+		e:=MatrixUtilities.LoadLR(r);
+		ASSERT(d=e);
 	END Test;
 	
 

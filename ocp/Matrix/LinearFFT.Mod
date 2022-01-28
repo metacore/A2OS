@@ -54,9 +54,9 @@ TYPE Datatype=MatrixBase.Datatype;
 		end := 1; size := 2;
 		WHILE size <= nSamples DO
 			angle := fullAngle / size;
-      	  alpha := Datatype(Mathe.sin(0.5 * angle));
+      	  alpha := Mathe.sin(0.5 * angle);
 			alpha := 2.0 * alpha * alpha;
-			beta := Datatype(Mathe.sin(angle));
+			beta := Mathe.sin(angle);
 			i := 0;
 			WHILE i < nSamples DO
 				ar := 1.0; ai := 0.0; (* cos(0) / sin(0) *)
@@ -95,8 +95,8 @@ TYPE Datatype=MatrixBase.Datatype;
 	BEGIN
 		realOut := 0.0; imagOut := 0.0;
 		theta := 2*Mathe.pi * index / nSamples;
-		sin1 := Datatype(Mathe.sin(-2 * theta)); sin2 := Datatype(Mathe.sin(-theta));
-		cos1 := Datatype(Mathe.cos(-2 * theta)); cos2 := Datatype(Mathe.cos(-theta));
+		sin1 := Mathe.sin(-2 * theta); sin2 := Mathe.sin(-theta);
+		cos1 := Mathe.cos(-2 * theta); cos2 := Mathe.cos(-theta);
 		beta := 2 * cos2;
 		i := 0;
 		WHILE i < nSamples DO

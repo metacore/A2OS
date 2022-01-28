@@ -218,7 +218,7 @@ TYPE
 
 	PROCEDURE L2( CONST m: Vector ): Datatype;
 	BEGIN
-		RETURN Datatype(MathL.sqrt( m +* m ))
+		RETURN MathL.sqrt( m +* m )
 	END L2;
 
 	PROCEDURE InvDiag( CONST M: Matrix ): Vector;

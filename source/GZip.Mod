@@ -1,11 +1,15 @@
 MODULE GZip;	(** DK **)
 
-IMPORT Streams, Files, Strings, ZlibInflate, ZlibDeflate, Zlib, ZlibBuffers, Commands;
+(*for flush modes, see https://www.bolet.org/~pornin/deflate-flush.html *)
+
+(*on compressing floating point data, see https://journals.sagepub.com/doi/full/10.1177/1094342019853336*)
+
+IMPORT Streams, Files, Strings, ZlibInflate, ZlibDeflate, Zlib, ZlibBuffers, Commands, Random;
 
 CONST
 	WriteError = 2907;
-	DefaultWriterSize = 4096;
-	DefaultReaderSize = 4096;
+	(*DefaultWriterSize = 4096;
+	DefaultReaderSize = 4096;*)
 
 
 	BufSize = 4000H;
@@ -26,7 +30,7 @@ CONST
 
 	(** flush values **)
 	NoFlush* = ZlibDeflate.NoFlush;
-	SyncFlush* = ZlibDeflate.SyncFlush;
+	SyncFlush* = ZlibDeflate.SyncFlush; (*Default*)
 	FullFlush* = ZlibDeflate.FullFlush;
 
 
@@ -126,8 +130,12 @@ TYPE
 				writer.RawLInt(crc32);
 				writer.RawLInt(inputsize(SIGNED32));
 				writer.Update();
+				TRACE("deflator", SELF.res);
 			END;
 		END Send;
+		
+		
+
 
 	END Deflator;
 
@@ -245,32 +253,23 @@ TYPE
 TYPE	DeflateWriter* = OBJECT (Streams.Writer);
 		VAR deflator:Deflator;
 
-		PROCEDURE &Initialize*(out:Streams.Writer; compression:=DefaultCompression:SIGNED8; strategy:=DefaultStrategy:SIGNED8; flush:=FullFlush:SIGNED8);
+		PROCEDURE &Initialize*(out:Streams.Writer; compression:=DefaultCompression:SIGNED8; strategy:=DefaultStrategy:SIGNED8; flush:=SyncFlush:SIGNED8);
 		BEGIN
 			NEW(deflator, out, compression,strategy,flush);
-			InitWriter(deflator.Send, DefaultWriterSize);
-			Reset;
+			InitWriter(deflator.Send, BufSize);
 		END Initialize;
 
-		PROCEDURE Send*(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
-		BEGIN
-			deflator.Send(outBuf,ofs,len,propagate,res);
-		END Send;
 	END DeflateWriter;
 
 	InflateReader* = OBJECT(Streams.Reader)
 		VAR inflator:Inflator;
 
-		PROCEDURE &Initialize*(in: Streams.Reader; size:=DefaultReaderSize:SIZE);
+		PROCEDURE &Initialize*(in: Streams.Reader; size:=BufSize:SIZE);
 		BEGIN
 			NEW(inflator,in);
 			InitReader(inflator.Receive, size);
 		END Initialize;
 
-		PROCEDURE Receive*(VAR inBuf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
-		BEGIN
-			inflator.Receive(inBuf,ofs,size,min,len,res);
-		END Receive;
 	END InflateReader;
 
 PROCEDURE Deflate*(in,out :Files.File; level, strategy, flush: SIGNED8);
@@ -298,7 +297,6 @@ BEGIN
 	W2.Update();
 END Deflate;
 
-
 PROCEDURE Inflate*(in,out :Files.File);
 VAR
 	d : Inflator;
@@ -321,7 +319,6 @@ BEGIN
 		R2.Bytes(buf, 0, LEN(buf), read);
 	END;
 	W.Update();
-
 END Inflate;
 
 PROCEDURE GZip*(context:Commands.Context);
@@ -338,7 +335,7 @@ BEGIN
 			ELSIF ~context.arg.GetInteger(strategy,FALSE) THEN
 				strategy:=DefaultStrategy;
 			END;
-			Deflate(from,to,SIGNED8(compression), SIGNED8(strategy), FullFlush(*?*));
+			Deflate(from,to,SIGNED8(compression), SIGNED8(strategy), SyncFlush(*FullFlush*)(*?*));
 			Files.Register(to);
 			context.out.String("gzipped "); context.out.String(filename);context.out.Ln; context.out.Update;
 		ELSE
@@ -369,7 +366,7 @@ BEGIN
 	END;
 END UnGZip;
 
-(*
+
 PROCEDURE TestStream*(context:Commands.Context);
 VAR f,f1:Files.File;
 	fr:Files.Reader;
@@ -377,23 +374,38 @@ VAR f,f1:Files.File;
 	r:InflateReader;
 	w:DeflateWriter;
 	string:ARRAY 16 OF CHAR;
+	rand,rand1: ARRAY 100 OF FLOAT64;
+	random:Random.Generator;
+	i:SIZE;
 BEGIN
-	f:=Files.New("TestGZ.gz");Files.Register(f);
+	NEW(random);
+	FOR i:=0 TO LEN(rand)-1 DO rand[i]:=random.Uniform() END;
+	
+	f:=Files.New("TestGZipStreams.gz");Files.Register(f);
 	Files.OpenWriter(fw,f,0);
 	NEW(w,fw);
+	
+	FOR i:=0 TO LEN(rand)-1 DO w.RawLReal(rand[i]); END; w.Char(" "); w.Update;
 	w.String("Hello World"); w.Update;
-	f1:=Files.Old("TestGZ.gz");
-	Files.OpenReader(fr,f,0);
+	
+	f1:=Files.Old("TestGZipStreams.gz");
+	Files.OpenReader(fr,f1,0);
 	NEW(r,fr);
+	FOR i:=0 TO LEN(rand1)-1 DO r.RawLReal(rand1[i]) END;
 	WHILE r.GetString(string) DO
 		context.out.String(string); context.out.String(" "); context.out.Update;
 	END;
-END TestStream;*)
+	
+	FOR i:=0 TO LEN(rand)-1 DO
+		context.out.Float(rand[i], 14); context.out.Char(" "); context.out.Float(rand1[i]-rand[i], 14); context.out.Ln; context.out.Update;
+	END;
+END TestStream;
 
 
 END GZip.
 
-GZip.GZip "../httproot/raphael-min.js" ~
+GZip.GZip MyStack.MtA ~
+WMMatrixLoader.Open MyStack.MtA.gz ~
 GZip.UnGZip "../httproot/raphael-min2.js.gz" ~
 GZip.TestStream ~
-
+System.FreeDownTo GZip ~

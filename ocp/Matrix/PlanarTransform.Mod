@@ -297,8 +297,8 @@ CONST
 
 	
 	PROCEDURE {TEST} Test*;
-	VAR a,b,c,d,e,f,g,j: ARRAY [*,*] OF Datatype;
-		h,i: ARRAY [?] OF Datatype;
+	VAR a,b,c,d,e,f,g,j: ARRAY [*,*] OF REAL;
+		h,i: ARRAY [?] OF REAL;
 	BEGIN
 		NEW(a,100,100);
 		NEW(b, 50,100);

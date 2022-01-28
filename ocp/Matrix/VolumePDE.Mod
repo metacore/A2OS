@@ -1,4 +1,4 @@
-MODULE VolumePDE;
+MODULE VolumePDE; 
  (**  AUTHOR "Patrick Hunziker, Basel; email: Patrick.Hunziker@swissnano.org";  DATE 2009-2-12 ;
  PURPOSE "implementation of partial differential equations for 3D  grids solved directly in the grid domain";
  LICENCE "free for noncommercial use, as long as  author is cited and this header is kept unchanged " **)

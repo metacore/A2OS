@@ -495,7 +495,7 @@ TYPE
 END HomogenousVectors.
 
 
-System.FreeDownTo FoxSemanticChecker ~ HomogenousVectors~
+System.FreeDownTo HomogenousVectors~
 System.FreeDownTo FoxGlobal ~ HomogenousVectors~
 
 System.FreeDownTo FoxIntermediateBackend ~ HomogenousVectors~

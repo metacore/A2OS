@@ -56,7 +56,7 @@ CONST
 	theta=0.6; (* around y axis *)
 	(*threshold = 0.001; *)(*was 0.0001; can be 0.01 for some cases*)(* illumination detection *) (*? this constant is critical for artifacts on fine features. Does it need dynamic adaptation to structure size ?*)
 	threshold0 = 0.001;
-	thresholds=[threshold0,threshold0,threshold0,0];
+	(*thresholds=[threshold0,threshold0,threshold0,0];*)
 	maxReflections=10; (* avoid infinitely travelling rays *)
 	
 	(*illumination*)
@@ -175,7 +175,7 @@ TYPE
 			
 			PROCEDURE Add*(Object:ANY); (* add shape/list of shapes/lights; accepts linked lists of shapes, not yet of lights; DOES NOT currently propagate world field etc to nrcz childr level*)
 			VAR s:Shape;
-			BEGIN
+			BEGIN (*! to be done: handle case when a shape is erroneously repeatedly added*)
 				IF Object IS Shape THEN
 					WITH Object: Shape DO 
 						s:=Object;
@@ -189,6 +189,19 @@ TYPE
 					WITH Object: Light DO Object.next:=lights; lights:=Object; lights.world:=SELF END;
 				END;
 			END Add;
+			
+			PROCEDURE AddCutout*(shape:VolumeShape); (* add shape/list of shapes; accepts linked lists of shapes; DOES NOT currently propagate world field etc to nrcz childr level*)
+			VAR s:Shape;
+			BEGIN
+				IF shape #NIL THEN
+					s:=shape;
+					LOOP
+						s.world:=SELF;
+						IF s.next=NIL THEN s.next:=cutout; cutout:=shape; EXIT END;
+						s:=s.next;
+					END;
+				END; (* prepend to list *)
+			END AddCutout;
 	END World;
 
 	Shape*=OBJECT (*! to do: objects moving in time*)
@@ -242,16 +255,20 @@ TYPE
 			InitBox(box,b0,b1);
 		END Transform;
 		
-		PROCEDURE AddChild*(c:Shape);
+		PROCEDURE AddChild*(c:Shape); (*! Do not add the same child twice = implementation limitation*)
 		VAR b0,b1: Coordinate;
 		BEGIN
 			IF ValidCoordinate(c.box.p0) & ValidCoordinate(c.box.p1) THEN 
 				c.next:=child; child:=c; (*prepend*)
-				b0:=MIN(box.p0, c.box.p0-threshold); (*! is + and minus inverted ??*)
-				b1:=MAX(box.p1, c.box.p1+threshold); 
+				b0:=MIN(box.p0, c.box.p0-thresholds); (*! is + and minus inverted ??*)
+				b1:=MAX(box.p1, c.box.p1+thresholds);
+				(*b0[3]:=1.0;
+				b1[3]:=1.0;*)
 				InitBox(box,b0,b1); 
 			ELSE 
-				IF log#NIL THEN log.String("Shape.AddChild: c inconsistent - not added"); log.Ln; log.Update; END;
+				IF log#NIL THEN log.String("Shape.AddChild: c inconsistent - not added"); 
+					log.Ln; log.Update; 
+				END;
 			END;
 		END AddChild;
 		
@@ -997,13 +1014,18 @@ TYPE
 		
 		(* produce binary dataset in cartesian grid. 'transform' describes transformation from world coordinate system to cartesian voxel coordinates  *)
 		PROCEDURE CastVolume*(VAR cartesian: ARRAY [*,*,*] OF BOOLEAN; CONST transform:AffineTransform; mode:ARRAY OF CHAR);
-		VAR x,y,z: SIZE;
+		VAR x,y,z: SIZE; a,b:BOOLEAN;
 		BEGIN
 			FOR x:=0 TO LEN(cartesian,0)-1 DO
 				FOR y:=0 TO LEN(cartesian,1)-1 DO
 					FOR z:=0 TO LEN(cartesian,2)-1 DO
 						IF mode="&" THEN cartesian[x,y,z]:=cartesian[x,y,z] & Inside(transform*V.CastVector(x,y,z,1.0));
 						ELSIF mode="OR" THEN cartesian[x,y,z]:=cartesian[x,y,z] OR Inside(transform*V.CastVector(x,y,z,1.0));
+						ELSIF mode="EXCL" THEN cartesian[x,y,z]:=cartesian[x,y,z] & ~Inside(transform*V.CastVector(x,y,z,1.0));
+						ELSIF mode="XOR" THEN 
+							a:=cartesian[x,y,z];
+							b:=Inside(transform*V.CastVector(x,y,z,1.0));
+							cartesian[x,y,z]:=(a & ~b) OR (b & ~a);
 						ELSE cartesian[x,y,z]:=Inside(transform*V.CastVector(x,y,z,1.0));
 						END;
 					END;
@@ -2072,7 +2094,7 @@ TYPE PatchB= OBJECT(VolumeShape);
 			RETURN shape;
 		END FindShape;
 		
-		PROCEDURE RenderRay(CONST ray:Ray0; list0: ShapeList; VAR shine:Color );
+		PROCEDURE RenderRay(CONST ray:Ray0; list0: ShapeList; VAR shine:Color );(*TBD: rendering of composite hierarchical shapes still has some problems, e.g. for cylinders as children of cylinders. For the moment, add them independently to the World for best results*)
 		VAR 
 			distance, distance00, distance0, distance1,distance2:Datatype;
 			found1, illuminated:BOOLEAN;
@@ -2346,6 +2368,7 @@ VAR
 	log:Streams.Writer;
 	
 	threshold*:Datatype;
+	thresholds*:ARRAY [4] OF Datatype;
 	
 	goldenratio: Datatype;
 	Invalid, PlusInfinity, MinusInfinity: Coordinate;
@@ -3545,6 +3568,8 @@ BEGIN
 	Streams.OpenWriter(log, KernelLog.Send);
 	NEW(rand);
 	threshold:=threshold0;
+	thresholds:=[threshold0,threshold0,threshold0,0];
+
 	NEW(s);
 	Raster.InitMode(SrcCopy,Raster.srcCopy);
 	

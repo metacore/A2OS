@@ -33,7 +33,8 @@ MODULE VolumePDE;
 
 	
 
-IMPORT VolumeBase, Transform:=VolumeTransform, Util:=MatrixUtilities, Nabla:=VolumeNabla, ComputeObjects:=MatrixComputeObjects, Objects;
+IMPORT VolumeBase,Transform:=VolumeTransform, Util:=MatrixUtilities, Nabla:=VolumeNabla, 
+	ComputeObjects:=MatrixComputeObjects, Objects, FoxArrayBase, SYSTEM;
 
 
 TYPE
@@ -41,7 +42,23 @@ TYPE
 	Grid* = ARRAY [*,*,*] OF Datatype;
 	PlanarBooleanMap* = ARRAY [*,*] OF BOOLEAN;
 	VolumeBooleanMap* = ARRAY [*,*,*] OF BOOLEAN;
-	Boundary* = PROCEDURE{DELEGATE} ( VAR boundary: Grid );
+	Region*= VolumeBase.Region;
+	Boundary* = PROCEDURE{DELEGATE} ( VAR boundary: Grid; region:=NIL:Region);
+
+TYPE 
+	Emphasis*=OBJECT (*circumscribed regions may receive more attention*)
+		VAR
+			region*: Region; 
+			enhancement*:REAL;
+			maxLayer*:=MAX(INTEGER):INTEGER;
+			next*:Emphasis;
+			PROCEDURE &Init*(x0,x1, y0,y1, z0,z1: REAL; enhancement:REAL);(*region relative coordinates [0..1] relative to volume dimensions*)
+			BEGIN
+				NEW(region);
+				SELF.region.x0:=x0; SELF.region.x1:=x1; SELF.region.y0:=y0; SELF.region.y1:=y1; SELF.region.z0:=z0; SELF.region.z1:=z1;
+				SELF.enhancement:=enhancement;
+			END Init;
+	END Emphasis;
 
 TYPE
 	Constraint* = OBJECT  (*untested in 3D*)(*! extend/apply also with VolumeBooleanMap*)
@@ -95,7 +112,7 @@ TYPE
 		ELSE resized:=FALSE
 		END;
 	END Resize;
-	PROCEDURE Constrain0(VAR data: Grid); (*use "constraint" and "map" as constraints; *)
+	PROCEDURE Constrain0(VAR data: Grid; region:=NIL:Region); (*use "constraint" and "map" as constraints; *)
 	VAR w,h,i:SIZE;
 	BEGIN
 		IF LEN(constraint)=0 THEN RETURN END;
@@ -133,6 +150,7 @@ TYPE
 	VAR null, temp, xsmall: Grid;
 		alpha, beta: Datatype;
 		child: Laplace;
+		childLevel:=0:INTEGER;
 		iterationScale*:=3:INTEGER;(*allows tailoring of iterations at different resolution levels in multigrid *)
 		reduce*,expand*: PROCEDURE( CONST g: Grid ): Grid;  (* pluggable resize operators *)
 
@@ -142,31 +160,31 @@ TYPE
 		END Init;
 
 		(*implicit solving BTCS*)
-		PROCEDURE Solve*(VAR x: Grid;  threshold: Datatype;  iterations: SIGNED32;  Boundaries: Boundary );   (*TO DO: check for convergence*)
+		PROCEDURE Solve*(VAR x: Grid;  threshold: Datatype;  iterations: SIGNED32;  Boundaries: Boundary; emphasis:=NIL:Emphasis );   (*TO DO: check for convergence*)
 		BEGIN
 			(* Laplacian(A)=second derivative of x is usually modeled as A*x with A containing the coefficients for discrete approximation of the laplacian,
 		but here, the Laplacian computed by digital filtering takes its place; if done in the real domain, the approximation is equivalent to MatMul; if done in the
 		spline domain, the laplacian can be computed exactly.
 		The data are kept in original 3D shape, in contrast to the linearization used for matrix algebra*)
 			alpha:= 0; beta:=6;
-			JacobiSteps( null, x, temp, alpha, beta, Boundaries, iterations );
+			JacobiSteps( null, x, temp, alpha, beta, Boundaries, iterations, emphasis );
 		END Solve;
 
 		(*implicit solving BTCS*)
-		PROCEDURE SolveMultigrid*( VAR x: Grid;  threshold: Datatype;  minsize, iterations, smoothings: SIGNED32;  Boundaries: Boundary );
+		PROCEDURE SolveMultigrid*( VAR x: Grid;  threshold: Datatype;  minsize, iterations, smoothings: SIGNED32;  Boundaries: Boundary; emphasis:=NIL:Emphasis );
 		BEGIN
 			alpha:= 0; beta:=6;
+			IF (emphasis#NIL)&(emphasis.maxLayer<childLevel) THEN emphasis:=NIL END;
 			IF (LEN( x, 0 ) > 2*minsize-1) & (LEN(x,1)> 2*minsize-1) & (LEN(x,2)> 2*minsize-1) THEN
-				JacobiSteps( null, x, temp, alpha, beta, Boundaries, smoothings );  (*here reduction of Boundary checking may impact speed*)
-
+				JacobiSteps( null, x, temp, alpha, beta, Boundaries, smoothings, emphasis );  (*here reduction of Boundary checking may impact speed*)
 				xsmall:=Reduce( x );
-				IF child = NIL THEN NEW( child); child.iterationScale:=iterationScale END;
-				child.SolveMultigrid( xsmall, threshold, minsize, iterationScale*iterations, iterationScale*smoothings, Boundaries );
+				IF child = NIL THEN NEW( child); child.iterationScale:=iterationScale; child.childLevel:=childLevel+1 END;
+				child.SolveMultigrid( xsmall, threshold, minsize, iterationScale*iterations, (*??*)iterationScale*smoothings, Boundaries, emphasis );
 				x:=Expand( xsmall );
 
-				JacobiSteps( null, x, temp, alpha, beta, Boundaries, smoothings );  (*here reduction of Boundary checking may impact speed*)
+				JacobiSteps( null, x, temp, alpha, beta, Boundaries, smoothings, emphasis );  (*here reduction of Boundary checking may impact speed*)
 			ELSE
-				Solve ( x, threshold,iterations, Boundaries );
+				Solve ( x, threshold,iterations, Boundaries, emphasis );
 			END;
 		END SolveMultigrid;
 
@@ -189,6 +207,7 @@ TYPE
 	VAR temp, bsmall, xsmall: Grid;
 		alpha, beta: Datatype;
 		child: Poisson;
+		childLevel:=0:INTEGER;
 		iterationScale*:=3:INTEGER;(*allows tailoring of iterations in multiresolutions*)
 		reduce*,expand*: PROCEDURE( CONST g: Grid ): Grid;  (* pluggable resize operators *)
 
@@ -198,32 +217,33 @@ TYPE
 		END Init;
 
 		(*implicit solving BTCS*)
-		PROCEDURE Solve*(CONST b: Grid; VAR x: Grid;  ds, threshold: Datatype;  iterations: SIGNED32;  Boundaries: Boundary );   (*TO DO: check for convergence*)
+		PROCEDURE Solve*(CONST b: Grid; VAR x: Grid;  ds, threshold: Datatype;  iterations: SIGNED32;  Boundaries: Boundary; emphasis:=NIL:Emphasis );   (*TO DO: check for convergence*)
 		BEGIN
 			(* Laplacian(A)=second derivative of x is usually modeled as A*x with A containing the coefficients for discrete approximation of the laplacian,
 		but here, the Laplacian computed by digital filtering takes its place; if done in the real domain, the approximation is equivalent to MatMul; if done in the
 		spline domain, the laplacian can be computed exactly.
 		The data are kept in original 3D shape, in contrast to the linearization used for matrix algebra*)
 			alpha:= -ds*ds; beta:= 6;
-			JacobiSteps( b, x, temp, alpha, beta, Boundaries, iterations );
+			JacobiSteps( b, x, temp, alpha, beta, Boundaries, iterations, emphasis );
 		END Solve;
 
 		(*implicit solving BTCS*)
-		PROCEDURE SolveMultigrid*( CONST b: Grid; VAR x: Grid;  ds, threshold: Datatype;  minsize, iterations, smoothings: SIGNED32;  Boundaries: Boundary );
+		PROCEDURE SolveMultigrid*( CONST b: Grid; VAR x: Grid;  ds, threshold: Datatype;  minsize, iterations, smoothings: SIGNED32;  Boundaries: Boundary; emphasis:=NIL:Emphasis );
 		BEGIN
 			alpha:= -ds*ds; beta:=6;
+			IF (emphasis#NIL)&(emphasis.maxLayer<childLevel) THEN emphasis:=NIL END;
 			IF (LEN( x, 0 ) > 2*minsize-1) & (LEN(x,1)> 2*minsize-1)& (LEN(x,2)> 2*minsize-1) THEN
-				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings );  (*here reduction of Boundary checking may impact speed*)
+				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings, emphasis );  (*here reduction of Boundary checking may impact speed*)
 
 				xsmall:=Reduce( x );
 				bsmall:=Reduce( b );
-				IF child = NIL THEN NEW( child);child.iterationScale:=iterationScale END;
-				child.SolveMultigrid( bsmall, xsmall, 2*ds, threshold, minsize, iterationScale*iterations, iterationScale*smoothings, Boundaries );
+				IF child = NIL THEN NEW( child);child.iterationScale:=iterationScale; child.childLevel:=childLevel+1 END;
+				child.SolveMultigrid( bsmall, xsmall, 2*ds, threshold, minsize, iterationScale*iterations, (*??*)iterationScale*smoothings, Boundaries, emphasis );
 				x:=Expand( xsmall );
 
-				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings );  (*here reduction of Boundary checking may impact speed*)
+				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings, emphasis );  (*here reduction of Boundary checking may impact speed*)
 			ELSE
-				Solve ( b, x, ds, threshold,iterations, Boundaries );
+				Solve ( b, x, ds, threshold,iterations, Boundaries, emphasis );
 			END;
 		END SolveMultigrid;
 
@@ -240,6 +260,7 @@ TYPE
 	VAR temp, xsmall, bsmall: Grid;
 		alpha, beta: Datatype;
 		child: Diffusion;
+		childLevel:=0:INTEGER;
 		iterationScale*:=3:INTEGER;(*allows tailoring of iterations in multiresolutions*)
 		reduce*,expand*: PROCEDURE( CONST g: Grid ): Grid;  (* pluggable resize operators *)
 
@@ -248,33 +269,34 @@ TYPE
 			expand:=Expand; reduce:=Reduce;
 		END Init;
 
-		(*implicit solving BTCS*)
-		PROCEDURE Solve*( CONST b:Grid; VAR x: Grid;  nu, dt, ds, threshold: Datatype;  iterations: SIGNED32;  Boundaries: Boundary );
+		(*implicit Euler solving BTCS*)
+		PROCEDURE Solve*( CONST b:Grid; VAR x: Grid;  nu, dt, ds, threshold: Datatype;  iterations: SIGNED32;  Boundaries: Boundary; emphasis:=NIL:Emphasis );
 		BEGIN
 			(* Laplacian(A)=second derivative of x is usually modeled as A*x with A containing the coefficients for discrete approximation of the laplacian,
 		but here, the Laplacian computed by digital filtering takes its place; if done in the real domain, the approximation is equivalent to MatMul; if done in the
 		spline domain, the laplacian can be computed exactly.
 		The data are kept in original 3D shape, in contrast to the linearization typically used for matrix algebra*)
 			alpha:=ds * ds / (nu*dt);  beta:=6+alpha;
-			JacobiSteps( b, x, temp, alpha, beta, Boundaries, iterations );
+			JacobiSteps( b, x, temp, alpha, beta, Boundaries, iterations, emphasis );
 		END Solve;
 
-		(*implicit solving BTCS*)
-		PROCEDURE SolveMultigrid*( CONST b: Grid; VAR x: Grid;  nu, dt, ds, threshold: Datatype;  minsize, iterations, smoothings: SIGNED32;  Boundaries: Boundary );
+		(*implicit Euler solving BTCS*)
+		PROCEDURE SolveMultigrid*( CONST b: Grid; VAR x: Grid;  nu, dt, ds, threshold: Datatype;  minsize, iterations, smoothings: SIGNED32;  Boundaries: Boundary; emphasis:=NIL:Emphasis );
 		BEGIN
 			alpha:=ds * ds  / (nu*dt);  beta:=6+alpha;
+			IF (emphasis#NIL)&(emphasis.maxLayer<childLevel) THEN emphasis:=NIL END;
 			IF (LEN( x, 0 ) > 2*minsize-1) & (LEN(x,1)> 2*minsize-1)& (LEN(x,2)> 2*minsize-1) THEN
-				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings ); (*here reduction of Boundary checking might impact speed*)
+				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings, emphasis ); (*here reduction of Boundary checking might impact speed*)
 
 				xsmall:=Reduce( x );
 				bsmall:=Reduce( b );
-				IF child = NIL THEN NEW( child); child.iterationScale:=iterationScale END;
-				child.SolveMultigrid( bsmall, xsmall, nu, dt, 2* ds, threshold, minsize, iterationScale*iterations,iterationScale*smoothings, Boundaries );
+				IF child = NIL THEN NEW( child); child.iterationScale:=iterationScale; child.childLevel:=childLevel+1 END;
+				child.SolveMultigrid( bsmall, xsmall, nu, dt, 2* ds, threshold, minsize, iterationScale*iterations,(*??*)iterationScale*smoothings, Boundaries, emphasis );
 				x:=Expand( xsmall );
 
-				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings);  (*here reduction of Boundary checking may impact speed*)
+				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings, emphasis);  (*here reduction of Boundary checking may impact speed*)
 			ELSE
-				Solve ( b, x, nu, dt, ds, threshold,iterations, Boundaries );
+				Solve ( b, x, nu, dt, ds, threshold,iterations, Boundaries, emphasis );
 			END;
 		END SolveMultigrid;
 
@@ -290,6 +312,7 @@ TYPE
 	VAR temp, tempse, temps, tempsm, xsmall, b: Grid;
 		alpha, beta: Datatype;
 		child: Wave;
+		childLevel:=0:INTEGER;
 		iterationScale*:=3:INTEGER;(*allows tailoring of iterations in multiresolutions*)
 		reduce*,expand*: PROCEDURE( CONST g: Grid ): Grid;  (* pluggable resize operators *)
 
@@ -298,7 +321,7 @@ TYPE
 			expand:=Expand; reduce:=Reduce;
 		END Init;
  		(*explicit solving-forward time, centered space; not yet tested*)
-		PROCEDURE SolveExplicit*( CONST phim1,phi0 : Grid; VAR x: Grid;  c, dt, ds: Datatype; Boundaries: Boundary); (* explicit solution Forward time, centered space-not unconditionally stable*)
+		PROCEDURE SolveExplicit*( CONST phim1,phi0 : Grid; VAR x: Grid;  c, dt, ds: Datatype; Boundaries: Boundary; emphasis:=NIL:Emphasis); (* explicit solution Forward time, centered space-not unconditionally stable*)
 		BEGIN
 		(* Laplacian(A)=second derivative of x is computed directly (forward/explicit scheme), (solution not unconditionally stable).
 		The data are kept in original 3D shape, in contrast to the linearization typically used for matrix algebra*)
@@ -309,10 +332,11 @@ TYPE
 			x:=x-phim1;
 			x:=x+ (dt*dt*c*c/ds/ds)* temp;
 			IF Boundaries # NIL THEN Boundaries( x ) END;
+			(*!emphasis not yet implemented here*)
 		END SolveExplicit;
 
-		(*implicit solving BTCS*)
-		PROCEDURE Solve*( CONST phim1,phi0 : Grid;  VAR x: Grid;  c, dt, ds, threshold: Datatype;  iterations: SIGNED32;  Boundaries: Boundary );
+		(*implicit Euler solving BTCS*)
+		PROCEDURE Solve*( CONST phim1,phi0 : Grid;  VAR x: Grid;  c, dt, ds, threshold: Datatype;  iterations: SIGNED32;  Boundaries: Boundary; emphasis:=NIL:Emphasis );
 		BEGIN
 			(* Laplacian(A)=second derivative of x is usually modeled as A*x with A containing the coefficients for discrete approximation of the laplacian,
 		but here, the Laplacian computed by digital filtering takes its place; if done in the real domain, the approximation is equivalent to MatMul; if done in the
@@ -321,26 +345,27 @@ TYPE
 			alpha:=ds * ds / (c*c*dt*dt);  beta:=6+alpha;
 			temps:=2*phi0;
 			temps:=temps-phim1;
-			JacobiSteps( temps, x, temp, alpha, beta, Boundaries, iterations );
+			JacobiSteps( temps, x, temp, alpha, beta, Boundaries, iterations, emphasis );
 		END Solve;
 
-			(*implicit solving BTCS*)
-		PROCEDURE SolveMultigrid*( CONST phim1,phi0:Grid;  VAR x: Grid;  c, dt, ds, threshold: Datatype;  minsize, iterations, smoothings: SIGNED32;  Boundaries: Boundary );
+			(*implicit Euler solving BTCS*)
+		PROCEDURE SolveMultigrid*( CONST phim1,phi0:Grid;  VAR x: Grid;  c, dt, ds, threshold: Datatype;  minsize, iterations, smoothings: SIGNED32;  Boundaries: Boundary; emphasis:=NIL:Emphasis );
 		BEGIN
 			alpha:=ds * ds  / (c*c*dt*dt);  beta:=6+alpha;
+			IF (emphasis#NIL)&(emphasis.maxLayer<childLevel) THEN emphasis:=NIL END;
 			IF (LEN( x, 0 ) > 2*minsize-1) & (LEN(x,1)> 2*minsize-1)& (LEN(x,2)> 2*minsize-1) THEN
 				tempsm:=2*phi0;
 				b:=tempsm-phim1;
-				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings ); (*here reduction of Boundary checking may impact speed*)
+				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings, emphasis ); (*here reduction of Boundary checking may impact speed*)
 
 				xsmall:=Reduce( x );
-				IF child = NIL THEN NEW( child); child.iterationScale:=iterationScale END;
-				child.SolveMultigrid( Reduce(phim1), Reduce(phi0), xsmall, c, dt, 2* ds, threshold, minsize, iterationScale*iterations,iterationScale*smoothings, Boundaries );
+				IF child = NIL THEN NEW( child); child.iterationScale:=iterationScale; child.childLevel:=childLevel+1 END;
+				child.SolveMultigrid( Reduce(phim1), Reduce(phi0), xsmall, c, dt, 2* ds, threshold, minsize, iterationScale*iterations,iterationScale*smoothings, Boundaries, emphasis );
 				x:=Expand( xsmall );
 
-				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings);  (*here reduction of Boundary checking may impact speed*)
+				JacobiSteps( b, x, temp, alpha, beta, Boundaries, smoothings, emphasis);  (*here reduction of Boundary checking may impact speed*)
 			ELSE
-				Solve ( phim1, phi0, x, c, dt, ds, threshold,iterations, Boundaries );
+				Solve ( phim1, phi0, x, c, dt, ds, threshold,iterations, Boundaries, emphasis );
 			END;
 		END SolveMultigrid;
 
@@ -434,7 +459,8 @@ TYPE
 			minsize, diffusioniterations,smoothingiterations: INTEGER;
 			diffusion:Diffusion;
 			bounds:Boundary; 
-		PROCEDURE &Init*(diffusion: Diffusion; CONST u: Grid; VAR u1:Grid; nu,dt,ds,threshold: Datatype; minsize, diffusioniterations, smoothingiterations: INTEGER; bounds:Boundary);
+			emphasis:Emphasis;
+		PROCEDURE &Init*(diffusion: Diffusion; CONST u: Grid; VAR u1:Grid; nu,dt,ds,threshold: Datatype; minsize, diffusioniterations, smoothingiterations: INTEGER; bounds:Boundary; emphasis:=NIL:Emphasis);
 		BEGIN
 			SELF.u:=ALIAS OF u; 
 			SELF.u1:=ALIAS OF u1;
@@ -442,26 +468,29 @@ TYPE
 			SELF.nu:=nu; SELF.dt:=dt; SELF.ds:=ds; SELF.threshold:=threshold;
 			SELF.minsize:=minsize; SELF.diffusioniterations:=diffusioniterations; SELF.smoothingiterations:=smoothingiterations;
 			SELF.bounds:=bounds;
+			SELF.emphasis:=emphasis;
 			SELF.Notify:=NIL;
 			wait:=FALSE; (*debug*)
 			SELF.priority:=Objects.Normal; 
 		END Init;
 		PROCEDURE compute;	
 		BEGIN
-			diffusion.SolveMultigrid(u, u1, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, bounds ); 
+			diffusion.SolveMultigrid(u, u1, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, bounds, emphasis ); 
 		END compute;
 	END DiffusionActive;
 	
 	AdvectionActive*= OBJECT (ComputeObjects.ComputeObject) 
 		VAR a, a1, u, w, v: Grid;
+			mask:VolumeBooleanMap;
 			dt,ds,threshold: Datatype;
 			mode:BOOLEAN;
 			fromZ,toZ:SIZE;
-		PROCEDURE &Init*( CONST a, u, v, w: Grid; VAR a1:Grid; dt, ds: Datatype; mode:BOOLEAN; fromZ:=0, toZ:=-1:SIZE);
+		PROCEDURE &Init*( CONST a, u, v, w: Grid; VAR a1:Grid; dt, ds: Datatype; mode:BOOLEAN; CONST mask:VolumeBooleanMap; fromZ:=0, toZ:=-1:SIZE);
 		BEGIN
 			SELF.a:=ALIAS OF a; 
 			SELF.a1:=ALIAS OF a1;
 			SELF.u:=ALIAS OF u; SELF.v:=ALIAS OF v; SELF.w:=ALIAS OF w; 
+			SELF.mask:=ALIAS OF mask;
 			SELF.dt:=dt; SELF.ds:=ds;
 			SELF.mode:=mode;
 			SELF.Notify:=NIL;
@@ -471,14 +500,14 @@ TYPE
 		END Init;
 		PROCEDURE compute;	
 		BEGIN
-			Advect( a,  u, v, w, a1, dt, ds, mode, fromZ,toZ );
+			Advect( a,  u, v, w, a1, dt, ds, mode, mask, fromZ,toZ );
 		END compute;
 	END AdvectionActive;
 
 
 	PROCEDURE Cross(CONST a,b: Nabla.VectorField): Nabla.VectorField;
 	BEGIN
-		IF LEN(RESULT)#LEN(a) THEN NEW(RESULT,LEN(a)) END;
+		IF LEN(RESULT)#LEN(a) THEN NEW(RESULT, LEN(a)) END;
 		RESULT[0]:= a[1].*b[2]-a[2].*b[1];
 		RESULT[1]:= a[2].*b[0]-a[0].*b[2];
 		RESULT[2]:= a[0].*b[1]-a[1].*b[0];
@@ -502,11 +531,30 @@ TYPE
 		RESULT:=RESULT+a[2] .* b[2];
 		RETURN RESULT
 	END Dot;
+	
+		
+	PROCEDURE Sum3AXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	VAR lval, rval,dval: FLOAT64;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval ); SYSTEM.GET(dadr,dval);  SYSTEM.PUT( dadr,dval+lval+rval);
+			INC( ladr, linc );  INC( radr, rinc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END Sum3AXAXLoop;
+
+	PROCEDURE SumInc(CONST left, right: ARRAY [?] OF FLOAT64): ARRAY {UNSAFE} [?] OF FLOAT64;
+	BEGIN
+		FoxArrayBase.ApplyBinaryAAAOp( RESULT, left, right,
+										SIZEOF( FLOAT64 ), Sum3AXAXLoop );
+		RETURN RESULT
+	END  SumInc;
 
   	PROCEDURE AllocateSame( VAR x: Grid; CONST templ: Grid ); (*allocation to size of template, with reuse if possible*)
  	BEGIN
 	 	IF (LEN( x, 0 ) # LEN( templ, 0 )) OR (LEN( x, 1 ) # LEN( templ, 1 )) OR (LEN( x, 2 ) # LEN( templ, 2 ))  THEN
 		 	NEW( x, LEN( templ, 0 ), LEN( templ, 1 ), LEN( templ, 2));
+	 	(*ELSE 
+	 		x:=0;*)
 	 	END;
  	END AllocateSame;
 
@@ -557,7 +605,7 @@ TYPE
 		RETURN RESULT
 	END Expand;
 
-	PROCEDURE Stencil( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite difference*) (* not in-place *)
+	PROCEDURE Stencil0( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite difference*) (* not in-place *)
 	(* Performance by stride-wise memory accesses. An alternative could be the use of 3D filtering for "the Jacobi smoother". This stencil cost ~8% of overal runtime in a 256*128*138 navier stokes problem *)
 	VAR lenx, leny, lenz: SIZE;
 	BEGIN
@@ -572,7 +620,36 @@ TYPE
 
 		x1[..lenz-2,..,..]:=	x1[..lenz-2,..,..]+x[ 1..,.., ..];  	x1[ lenz- 1,..,..]:=x1[ lenz- 1,..,..]+x[lenz-1,.., ..];   (*boundary*)
 		x1[ 1..,.., ..]:=			x1[ 1..,..,..]+x[..lenz-2,..,..];  	x1[ 0,.., ..]:=		x1[ 0,.. ,..]+x[ 0,.., ..];   (*boundary*)
+	END Stencil0;
+
+	PROCEDURE Stencil( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite difference*) (* not in-place *)
+	(* Performance by stride-wise memory accesses. An alternative could be the use of 3D filtering for "the Jacobi smoother". This stencil cost ?% of overal runtime in a 256*128*138 navier stokes problem *)
+	VAR lenx, leny, lenz: SIZE;
+	BEGIN
+		AllocateSame(x1,x);(*with reuse if possible*)
+		lenx:=LEN( x, 2 );  leny:=LEN( x, 1 ); lenz:= LEN(x,0);
+		(*3D stencil*)
+		x1[..,..,1..lenx-2]:=x[..,..,2..]+x[..,..,..lenx-3]; x1[..,..,0]:=x[..,..,0]+x[..,..,1];	x1[..,..,lenx-1]:=x[..,..,lenx-1]+x[..,..,lenx-2];(*!TBD: not yet accurate at edges*)
+		x1[..,1..leny-2,..]:=SumInc(x[..,2..,..],x[..,..leny-3,..]); x1[..,0,..]:=SumInc(x[..,0,..],x[..,1,..]); x1[..,leny-1,..]:=SumInc(x[..,leny-1,..],x[..,leny-2,..]);
+		x1[1..lenz-2,..,..]:=SumInc(x[2..,..,..],x[..lenz-3,..,..]); x1[0,..,..]:=SumInc(x[0,..,..],x[1,..,..]); x1[lenz-1,..,..]:=SumInc(x[lenz-1,..,..],x[lenz-2,..,..]);	
 	END Stencil;
+
+	PROCEDURE StencilC( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite difference*) (* not in-place *)
+	(* Performance by stride-wise memory accesses. An alternative could be the use of 3D filtering for "the Jacobi smoother". This stencil cost ?% of overal runtime in a 256*128*138 navier stokes problem *)
+	VAR lenx, leny, lenz, z,y: SIZE;
+	BEGIN
+		AllocateSame(x1,x);(*with reuse if possible*)
+		lenx:=LEN( x, 2 );  leny:=LEN( x, 1 ); lenz:= LEN(x,0);
+		(*3D stencil*)
+		FOR z:=1 TO LEN(x,0)-2 DO
+			FOR y:=1 TO LEN(x,1)-2 DO
+				x1[z,y,1..LEN(x,2)-2]:= SumInc(x[z,y,0..LEN(x,2)-3],x[z,y,2..LEN(x,2)-1]);
+				x1[z,y,1..LEN(x,2)-2]:= SumInc(x[z,y-1,1..LEN(x,2)-2],x[z,y+1,1..LEN(x,2)-2]);
+				x1[z,y,1..LEN(x,2)-2]:= SumInc(x[z-1,y,1..LEN(x,2)-2],x[z+1,y,1..LEN(x,2)-2]);
+			END;
+		END;
+	END StencilC;
+
 
 PROCEDURE Stencil333( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite difference -not allocating temp memory, but slow, probably due to its data copy overhead ? but should move to cache... *) 
 	VAR lenx, leny, lenz, zz,yy,xx: SIZE; x333: ARRAY [3,3,3] OF Datatype; rx,ry,rz:RANGE;
@@ -634,7 +711,7 @@ PROCEDURE Stencil333( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite dif
 
 	PROCEDURE JacobiStep*( CONST b: Grid;  VAR x, x1: Grid;  alpha, beta: Datatype);  (*key procedure for speed*)
 	(*this is a key procedure for performance:
-	apply the jacobi step to the whole data plane in its original format, which would correspond to the diagonal in the Jacobi Matrix formulation, at once, using a stencil like approach;
+	apply the jacobi step with a 3D stencil to the whole data grid in its original 3D format, which would correspond to the diagonal in the Jacobi Matrix formulation, at once, using a stencil like approach;
 	i.e., we do not need to convert the data explicitely into a sparse matrix for doing a smooting=Jacobi step *)
 	(*see also description in cited gpugems paper *)
 	VAR invbeta: Datatype;
@@ -648,15 +725,34 @@ PROCEDURE Stencil333( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite dif
 		x:=invbeta * x1;
 	END JacobiStep;
 
-	PROCEDURE JacobiSteps( CONST b: Grid;  VAR x, x1: Grid;  alpha, beta: Datatype;  Boundaries: Boundary; iterations:SIGNED32);
+	PROCEDURE JacobiSteps( CONST b: Grid;  VAR x, x1: Grid;  alpha, beta: Datatype;  Boundaries: Boundary; iterations:SIGNED32; emphasis:=NIL:Emphasis);
+		VAR i:SIGNED32; e:Emphasis; rangeX,rangeY,rangeZ:RANGE;
+		
+		PROCEDURE Emphasize;(*Jacobi steps on sub-region*)
+		BEGIN
+			e:=emphasis; 
+			WHILE e#NIL DO
+				rangeX:=ENTIER(e.region.x0*LEN(x,2))..ENTIER(e.region.x1*LEN(x,2)-1);
+				rangeY:=ENTIER(e.region.y0*LEN(x,1))..ENTIER(e.region.y1*LEN(x,1)-1);
+				rangeZ:=ENTIER(e.region.z0*LEN(x,0))..ENTIER(e.region.z1*LEN(x,0)-1);
+				FOR i:=0 TO ENTIER(e.enhancement) DO
+					JacobiStep(b[rangeZ,rangeY,rangeX],x[rangeZ,rangeY,rangeX],x1[rangeZ,rangeY,rangeX],alpha,beta);
+					IF Boundaries # NIL THEN Boundaries( x, emphasis.region ) END;
+				END;
+				e:=e.next;
+			END;
+		END Emphasize;
+		
 	BEGIN
 		WHILE iterations>0 DO
 			IF Boundaries # NIL THEN Boundaries( x ) END;
 			JacobiStep(b,x,x1,alpha,beta);
+			Emphasize;(*emphasis regions can receive additional iterations*)
 			DEC(iterations)
 		END;
-			IF Boundaries # NIL THEN Boundaries( x ) END;
+		IF Boundaries # NIL THEN Boundaries( x ) END;
 	END JacobiSteps;
+
 
 (*	PROCEDURE Cast2x2x2X*(a0,a1,b0,b1,c0,c1,d0,d1: FLOAT64):ARRAY [2,2,2] OF FLOAT64;
 	BEGIN
@@ -740,85 +836,86 @@ PROCEDURE Stencil333( CONST x: Grid;  VAR x1: Grid); (*3D stencil for finite dif
 *)
 
 
-PROCEDURE Advect*( CONST source,  u, v, w: Grid;  VAR target: Grid;  dt, ds: Datatype; bilinear: BOOLEAN; fromZ:=0,toZ:=-1:SIZE ); (* allows splitting advection among several processes . splitToZ<splitFromZ implies no splitting*)  (* to do: other interpolation methods *)
+PROCEDURE Advect*( CONST source,  u, v, w: Grid;  VAR target: Grid;  dt, ds: Datatype; bilinear: BOOLEAN; CONST mask:VolumeBooleanMap; fromZ:=0,toZ:=-1:SIZE ); (* allows splitting advection among several processes . splitToZ<splitFromZ implies no splitting*)  (* to do: other interpolation methods *)
 	(*for each gridpoint in target grid, find value in source grid based on retrograd application of map u,v,w ;  u and ds are in SI units*)
 	(* to do: speed up by doing it linewise or slicewise; but version above does not offer improved speed *)
-	VAR x, y, z,  ox, oy, oz: SIZE;  a, b, c: Datatype;  len,lenu,lenv,lenw:ARRAY [3] OF SIZE; tmp222: ARRAY [2,2,2] OF Datatype;
-		lenu0,lenv0,lenw0:BOOLEAN;
+	VAR x, y, z,  ox, oy, oz: SIZE;  a, b, c: Datatype;  len,lenu,lenv,lenw,lenm:ARRAY [3] OF SIZE; tmp222: ARRAY [2,2,2] OF Datatype;
+		lenu0,lenv0,lenw0,lenm0:BOOLEAN;
 	BEGIN
-		len:=LEN(source);lenu:=LEN(u); lenv:=LEN(v); lenw:=LEN(w);
-		lenu0:=lenu=0; lenv0:=lenv=0; lenw0:=lenw=0;
+		len:=LEN(source);lenu:=LEN(u); lenv:=LEN(v); lenw:=LEN(w);lenm:=LEN(mask);
+		lenu0:=lenu=0; lenv0:=lenv=0; lenw0:=lenw=0; lenm0:=lenm=0;
 		IF fromZ>toZ THEN 
 			fromZ:=0; toZ:=len[0]-1;
 			IF  LEN(target)# LEN(source) THEN NEW(target,LEN(source)) END;
 		ELSE (* no re-allocation of subarrays*)
 		END;
-		(*FOR z:=0 TO len[0]-1 DO*)
 		FOR z:=fromZ TO toZ DO
 			FOR y:=0 TO len[1]-1 DO
 				FOR x:=0 TO len[2]-1 DO
-					IF lenu0 (*lenu = 0*) THEN ox:=x ELSE
+					IF lenm0 OR mask[z,y,x] THEN
+						IF lenu0 (*lenu = 0*) THEN ox:=x ELSE
+							IF bilinear THEN
+								a:=x-dt/ds * u[z, y, x];  ox:=ENTIER( a );  a:=1-a+ox;
+							ELSE (*nearest neighbour*)
+								ox:=ENTIER( x-dt/ds * u[z, y, x]+0.5 );
+							END;
+							IF ox < 0 THEN ox:=0; a:=0; (* apply boundary *)
+							ELSIF ox > len[2]-2 THEN ox:=len[2]-2; a:=1.0; (*a:=0;*) (* apply boundary *)
+							END;
+						END;
+						IF lenv0 (*lenv = 0*) THEN oy:=y ELSE
+							IF bilinear THEN
+								b:=y-dt/ds * v[z, y, x];  oy:=ENTIER( b );  b:=1-b+oy;
+							ELSE (*nearest neighbour*)
+								oy:=ENTIER( y-dt/ds * v[z, y, x]+0.5 );
+							END;
+							IF oy < 0 THEN oy:=0; b:=0; (* apply boundary *)
+							ELSIF oy > len[1]-2 THEN oy:=len[1]-2; b:=1.0; (*b:=0;*) (* apply boundary *)
+							END;
+						END;
+						IF lenw0 (*lenw = 0*) THEN oz:=z ELSE
+							IF bilinear THEN
+								c:=z-dt/ds * w[z, y, x];  oz:=ENTIER( c );  c:=1-c+oz;
+							ELSE (*nearest neighbour*)
+								oz:=ENTIER( z-dt/ds * w[z, y, x]+0.5 );
+							END;
+							IF oz < 0 THEN oz:=0; c:=0; (* apply boundary *)
+							ELSIF oz > len[0]-2 THEN oz:=len[0]-2; c:=1.0; (*c:=0;*) (* apply boundary *)
+							END;
+						END;
 						IF bilinear THEN
-							a:=x-dt/ds * u[z, y, x];  ox:=ENTIER( a );  a:=1-a+ox;
-						ELSE (*nearest neighbour*)
-							ox:=ENTIER( x-dt/ds * u[z, y, x]+0.5 );
-						END;
-						IF ox < 0 THEN ox:=0; a:=0; (* apply boundary *)
-						ELSIF ox > len[2]-2 THEN ox:=len[2]-2; a:=0; (* apply boundary *)
-						END;
-					END;
-					IF lenv0 (*lenv = 0*) THEN oy:=y ELSE
-						IF bilinear THEN
-							b:=y-dt/ds * v[z, y, x];  oy:=ENTIER( b );  b:=1-b+oy;
-						ELSE (*nearest neighbour*)
-							oy:=ENTIER( y-dt/ds * v[z, y, x]+0.5 );
-						END;
-						IF oy < 0 THEN oy:=0; b:=0; (* apply boundary *)
-						ELSIF oy > len[1]-2 THEN oy:=len[1]-2; b:=0; (* apply boundary *)
-						END;
-					END;
-					IF lenw0 (*lenw = 0*) THEN oz:=z ELSE
-						IF bilinear THEN
-							c:=z-dt/ds * w[z, y, x];  oz:=ENTIER( c );  c:=1-c+oz;
-						ELSE (*nearest neighbour*)
-							oz:=ENTIER( z-dt/ds * w[z, y, x]+0.5 );
-						END;
-						IF oz < 0 THEN oz:=0; c:=0; (* apply boundary *)
-						ELSIF oz > len[0]-2 THEN oz:=len[0]-2; c:=0; (* apply boundary *)
-						END;
-					END;
-					IF bilinear THEN
-						(*
-						target[z, y, x] :=
-									a * b * c * 		source[oz, oy, ox] +
-									(1-a) * b * c *	source[oz, oy, ox+1] +
-									a * (1-b) * c * source[oz, oy+1, ox] +
-									a * b * (1-c) * source[oz+1, oy, ox] +
-									(1-a) * (1-b) * c * 	source[oz, oy+1, ox+1] +
-									(1-a) * b * (1 -c) * 	source[oz+1, oy, ox+1] +
-									a * (1-b) * (1-c)*		source[oz+1, oy+1, ox] +
-									(1-a)*(1-b)*(1-c)*	source[oz+1, oy+1, ox+1];
-									*)
-						(*tmp222:=[[[a*b*c, (1-a) * b * c],
-										  [a * (1-b) * c ,(1-a) * (1-b) * c]],
-										[[a * b * (1-c),(1-a) * b * (1 -c) ],
-										  [a * (1-b) * (1-c),(1-a)*(1-b)*(1-c)]]];
-						target[z, y, x]:=tmp222 +* source[oz..oz+1,oy..oy+1,ox..ox+1];*) (* slow *)
+							(*
+							target[z, y, x] :=
+										a * b * c * 		source[oz, oy, ox] +
+										(1-a) * b * c *	source[oz, oy, ox+1] +
+										a * (1-b) * c * source[oz, oy+1, ox] +
+										a * b * (1-c) * source[oz+1, oy, ox] +
+										(1-a) * (1-b) * c * 	source[oz, oy+1, ox+1] +
+										(1-a) * b * (1 -c) * 	source[oz+1, oy, ox+1] +
+										a * (1-b) * (1-c)*		source[oz+1, oy+1, ox] +
+										(1-a)*(1-b)*(1-c)*	source[oz+1, oy+1, ox+1];
+										*)
+							(*tmp222:=[[[a*b*c, (1-a) * b * c],
+											  [a * (1-b) * c ,(1-a) * (1-b) * c]],
+											[[a * b * (1-c),(1-a) * b * (1 -c) ],
+											  [a * (1-b) * (1-c),(1-a)*(1-b)*(1-c)]]];
+							target[z, y, x]:=tmp222 +* source[oz..oz+1,oy..oy+1,ox..ox+1];*) (* slow *)
 
-						tmp222:=Cast2x2x2(a*b*c, (1-a) * b * c,
-										  a * (1-b) * c , (1-a) * (1-b) * c,
-										a * b * (1-c), (1-a) * b * (1 -c),
-										  a * (1-b) * (1-c), (1-a)*(1-b)*(1-c));
-						target[z, y, x]:=tmp222 +* source[oz..oz+1,oy..oy+1,ox..ox+1];
-						(*
-						target[z, y, x] :=[[[a*b*c, (1-a) * b * c],
-										  [a * (1-b) * c ,(1-a) * (1-b) * c]],
-										[[a * b * (1-c),(1-a) * b * (1 -c) ],
-										  [a * (1-b) * (1-c),(1-a)*(1-b)*(1-c)]]]			(*! on the fly array construction is still performance killer -> compiler !*)
-										 +* source[oz..oz+1,oy..oy+1,ox..ox+1];
-						*)
+							tmp222:=Cast2x2x2(a*b*c, (1-a) * b * c,
+											  a * (1-b) * c , (1-a) * (1-b) * c,
+											a * b * (1-c), (1-a) * b * (1 -c),
+											  a * (1-b) * (1-c), (1-a)*(1-b)*(1-c));
+							target[z, y, x]:=tmp222 +* source[oz..oz+1,oy..oy+1,ox..ox+1];
+							(*
+							target[z, y, x] :=[[[a*b*c, (1-a) * b * c],
+											  [a * (1-b) * c ,(1-a) * (1-b) * c]],
+											[[a * b * (1-c),(1-a) * b * (1 -c) ],
+											  [a * (1-b) * (1-c),(1-a)*(1-b)*(1-c)]]]			(*! on the fly array construction is still performance killer -> compiler !*)
+											 +* source[oz..oz+1,oy..oy+1,ox..ox+1];
+							*)
 
-					ELSE target[z, y, x]:=source[oz, oy, ox];
+						ELSE target[z, y, x]:=source[oz, oy, ox];
+						END;
 					END;
 				END;
 			END;
@@ -928,6 +1025,7 @@ VAR FullRange:RANGE;
 
 PROCEDURE Test*;
 VAR A,C,B,D: Grid; s:Datatype;
+	map,map0:VolumeBooleanMap;
 BEGIN
 	NEW(A,12,12,12); A:=5;
 	NEW(C,12,12,12);
@@ -935,6 +1033,7 @@ BEGIN
 	B:=Reduce(A);
 	C:=Expand(B);
 	s:=SUM(A-C);
+	map:=ALIAS OF map0; (*alias of nil map*)
 	HALT(101);
 END Test;
 

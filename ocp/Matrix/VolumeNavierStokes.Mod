@@ -45,7 +45,7 @@ the implied sparse matrices for matrix solving are not constructed. This allows 
 compare thesis compressible Navier Stokes: https://www.wpi.edu/Pubs/ETD/Available/etd-0424102-132343/unrestricted/nanson.pdf
 *)
 
-IMPORT Nabla:=VolumeNabla, PDE:=VolumePDE, Objects, ComputeObjects:=MatrixComputeObjects, KernelLog, Util:=MatrixUtilities, LinearFilters, VolumeTransform;
+IMPORT Nabla:=VolumeNabla, PDE:=VolumePDE, VolumeBoundaries, Objects, ComputeObjects:=MatrixComputeObjects, KernelLog, Util:=MatrixUtilities, LinearFilters, VolumeTransform;
 
 CONST 
 	BILINEAR = TRUE;  
@@ -141,6 +141,7 @@ TYPE NavierStokes* = OBJECT
 	VAR
 	diffusioniterations*, poissoniterations*,smoothingiterations*:INTEGER;
 	u*, v*, w*, p*, heat*, solutes*: Grid;  (* in SI units *)
+	mask*: BGrid;
 	nu*, rho*,  ds*, threshold*, stabilityCriterion-: Datatype;  (* in SI units: mu[Pa*s = kg/m/s ],nu[m2/s],rho[kg/m3],ds[m],dt[s], force[ ],velocities[m/s] , pressure[kg/ms2]*)
 	len: ARRAY [*] OF SIZE;
 	splitZ:SIZE;
@@ -159,6 +160,7 @@ TYPE NavierStokes* = OBJECT
 	Parallel*:INTEGER;
 	FlowBoundX, FlowBoundY, FlowBoundZ, PressureBound, PressureBoundPDT, HeatBounds*, SoluteBounds*: Boundary;
 	(* dopplerconstraint*:VolumeDoppler.DopplerConstraint;*)
+	emphasis*:PDE.Emphasis;
 	u2, u3, v2, v3, w2, w3,  pdt-, div-,div0,tmp-, d, tmpu,tmpv,tmpw, heat0, solutes0, heat00: Grid;  
 	advection:PDE.Advection;
 	diffusionU,diffusionV, diffusionW, diffusionP, diffusionH, diffusionS: PDE.Diffusion;
@@ -177,6 +179,7 @@ TYPE NavierStokes* = OBJECT
 	nu is kinematic viscosity (equivalent to  viscosity{mu}/density{rho} )
 	rho is density
 	ds is grid spacing in meters
+	the optional 'emphasis' (a linked list) defines regions where more Jacobi iterations are applied to increase precision at critical locations
 	XXBoundYY() are procedures that apply boundary conditions to the data grids;
 	   typical boundaries are
 	   - initial values = u,v,p before simulation step
@@ -188,9 +191,9 @@ TYPE NavierStokes* = OBJECT
 	   (e.g., a wall element positioned at 1/3 of the grid size will also be positionened at 1/3 of the downsized grid size)
 	*)
 	
-	PROCEDURE &Init*( VAR u, v, w, p: Grid;  nu, rho, ds: Datatype;  
+	PROCEDURE &Init*( VAR u, v, w, p: Grid; CONST mask:BGrid(* nilMask allowed*);  nu, rho, ds: Datatype;  
 							FlowBoundX, FlowBoundY, FlowBoundZ, 
-							PressureBound, PressureBoundPDT: Boundary; Parallel:=6:INTEGER );  
+							PressureBound, PressureBoundPDT: Boundary; emphasis:=NIL:PDE.Emphasis; Parallel:=6:INTEGER );  
 	BEGIN 
 		threshold := 0.05;  (*desired accuracy; not currently used in implementation*)
 		minsize:=16; (* minimum grid size for multigrid solver *)
@@ -203,11 +206,14 @@ TYPE NavierStokes* = OBJECT
 		SELF.u:=ALIAS OF u; u2:=u; (*u3:=u;*)
 		SELF.v:=ALIAS OF v; v2:=v; (*v3:=v;*)
 		SELF.w:=ALIAS OF w; w2:=w; (*w3:=w;*)
+		SELF.mask:=ALIAS OF mask;
+		
+		SELF.emphasis:=emphasis;
 		
 		len:=LEN(u);
 		
 		IF p=0 THEN(*estimate initial pressure field from pressure boundaries*)
-			NEW(laplace); laplace.SolveMultigrid(p, 0, 16, poissoniterations, smoothingiterations, PressureBound); 
+			NEW(laplace); laplace.SolveMultigrid(p, 0, 16, poissoniterations, smoothingiterations, PressureBound, emphasis); 
 		END;
 		
 		SELF.p:=ALIAS OF p;
@@ -286,9 +292,9 @@ TYPE NavierStokes* = OBJECT
 		(* approach: decompose solution of the problem into advection - diffusion - force application - projection; Solution operator S(u)= P( F( D( A(u) ) ) )  *)
 		(* 1) advection A *) (*units: 'length/time' *)
 		
-		PDE.Advect( u,  u, v, w, u2, dt, ds, BILINEAR );
-		PDE.Advect( v,  u, v, w, v2, dt, ds, BILINEAR );
-		PDE.Advect( w, u, v, w, w2, dt, ds, BILINEAR );
+		PDE.Advect( u,  u, v, w, u2, dt, ds, BILINEAR, mask);
+		PDE.Advect( v,  u, v, w, v2, dt, ds, BILINEAR, mask);
+		PDE.Advect( w, u, v, w, w2, dt, ds, BILINEAR, mask );
 		
 		(*advection.SkewSymmetric(u,v,w, u2,v2,w2);*)
 	
@@ -310,9 +316,9 @@ TYPE NavierStokes* = OBJECT
 		IF lenu3#len THEN NEW(u3,len); NEW(v3,len); NEW (w3,len) END;
 
 		(* 2) diffusion D *) (*result units: length/time *)(* could the boundaries above be taken out of the diffusion multigrid above at limited precision  loss ?? *)
-		diffusionU.SolveMultigrid(u2, u3, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundX ); (*use FlowBoundX vs NIL to speedup by factor 3, but worse boundary behaviour*)
-		diffusionV.SolveMultigrid(v2, v3, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundY ); (*use FlowBoundY NIL to speedup by factor 3*)
-		diffusionW.SolveMultigrid(w2, w3, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundZ ); (*use FlowBoundZ NIL to speedup by factor 3*)
+		diffusionU.SolveMultigrid(u2, u3, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundX, emphasis ); (*use FlowBoundX vs NIL to speedup by factor 3, but worse boundary behaviour*)
+		diffusionV.SolveMultigrid(v2, v3, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundY, emphasis ); (*use FlowBoundY NIL to speedup by factor 3*)
+		diffusionW.SolveMultigrid(w2, w3, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundZ, emphasis ); (*use FlowBoundZ NIL to speedup by factor 3*)
 
 		
 		(* 3) force application F *)
@@ -321,8 +327,8 @@ TYPE NavierStokes* = OBJECT
 				
 		IF UseHeat THEN (*noncompressible version*)
 			IF UseCompressibility THEN heat00:=heat END;
-			PDE.Advect(heat, u,v,w, heat0, dt, ds, BILINEAR);
-			diffusionH.SolveMultigrid(heat0, heat, heatDiffusionCoeff, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, HeatBounds ); 
+			PDE.Advect(heat, u,v,w, heat0, dt, ds, BILINEAR, mask);
+			diffusionH.SolveMultigrid(heat0, heat, heatDiffusionCoeff, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, HeatBounds, emphasis ); 
 			IF UseBuoyancy THEN
 				fy:=heat-temp0; (* ideal gas law: deltaTemp is proportional do deltaVolume, but the latter not implemented, we use constant volume *)
 				fy:=GravityConstant * rho * 1/temp0 *fy; (*upwards force || reduction in density || thermal expansion of air, see ideal gas law *)
@@ -341,13 +347,13 @@ TYPE NavierStokes* = OBJECT
 			heat00:=heat-heat00;
 			div := DECMUL( 1/temp0, heat00);(* div:=div + heatExpansionMap *) 
 		END;(*! experimental; check ! *)
-		poisson.SolveMultigrid( div, pdt, ds, threshold, minsize, poissoniterations, smoothingiterations,PressureBoundPDT); (*pdt: m2/s*)(*units: div = 1/s ; pressure: kg/ms2 oder N/m2*)
+		poisson.SolveMultigrid( div, pdt, ds, threshold, minsize, poissoniterations, smoothingiterations,PressureBoundPDT, emphasis); (*pdt: m2/s*)(*units: div = 1/s ; pressure: kg/ms2 oder N/m2*)
 		
 		(* adjust velocity field to conform to the noncompressibility requirement *) 	
 		k := 1/ds;
 		u := u3 - k * Nabla.dx(pdt, NablaMethod);
 		v := v3 - k * Nabla.dy(pdt, NablaMethod);
-		w := w3- k * Nabla.dz(pdt, NablaMethod);
+		w := w3 - k * Nabla.dz(pdt, NablaMethod);
 
 (*		d:=Nabla.dx(pdt, NablaMethod);
 		d:=k*d;
@@ -364,8 +370,8 @@ TYPE NavierStokes* = OBJECT
 		FlowBoundZ( w );
 
 		IF UseSolutes THEN
-			PDE.Advect(solutes, u,v,w, solutes0, dt, ds, BILINEAR);
-			diffusionS.SolveMultigrid(solutes0, solutes, solDiffusionCoeff, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations,SoluteBounds ); 
+			PDE.Advect(solutes, u,v,w, solutes0, dt, ds, BILINEAR, mask);
+			diffusionS.SolveMultigrid(solutes0, solutes, solDiffusionCoeff, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations,SoluteBounds, emphasis ); 
 		END;
 
 		(* update pressure field *)
@@ -388,25 +394,25 @@ TYPE NavierStokes* = OBJECT
 		(* 1) advection A *) (*units: 'length/time' *)
 		
 		IF Parallel=3 THEN (*three parallel threads*)
-			NEW(advection1, v,  u, v, w, v2, dt, ds, BILINEAR );
-			NEW(advection0, u,  u, v, w, u2, dt, ds, BILINEAR );
-			NEW(advection2, w,  u, v, w, w2, dt, ds, BILINEAR );
+			NEW(advection1, v,  u, v, w, v2, dt, ds, BILINEAR, mask );
+			NEW(advection0, u,  u, v, w, u2, dt, ds, BILINEAR, mask );
+			NEW(advection2, w,  u, v, w, w2, dt, ds, BILINEAR, mask );
 		ELSIF Parallel=6 THEN	(*6 parallel threads. As advection is the speed-limiting step in some applications, this may be beneficial on multicore hardware*)(*TBD: better concept for splitting with common border*)
 			splitZ:=LEN(v,0) DIV 2;
-			NEW(advection1, v,  u, v, w, v2, dt, ds, BILINEAR,0,splitZ-1 ); NEW(advection11, v,  u, v, w, v2, dt, ds, BILINEAR, splitZ,LEN(v,0)-1 );
-			NEW(advection0, u,  u, v, w, u2, dt, ds, BILINEAR,0,splitZ-1 ); NEW(advection00, u,  u, v, w, u2, dt, ds, BILINEAR, splitZ,LEN(u,0)-1 );
-			NEW(advection2, w,  u, v, w, w2, dt, ds, BILINEAR,0,splitZ-1 ); NEW(advection22, w,  u, v, w, w2, dt, ds, BILINEAR, splitZ,LEN(w,0)-1 );
+			NEW(advection1, v,  u, v, w, v2, dt, ds, BILINEAR, mask, 0,splitZ-1 ); NEW(advection11, v,  u, v, w, v2, dt, ds, BILINEAR, mask, splitZ,LEN(v,0)-1 );
+			NEW(advection0, u,  u, v, w, u2, dt, ds, BILINEAR, mask, 0,splitZ-1 ); NEW(advection00, u,  u, v, w, u2, dt, ds, BILINEAR, mask, splitZ,LEN(u,0)-1 );
+			NEW(advection2, w,  u, v, w, w2, dt, ds, BILINEAR, mask, 0,splitZ-1 ); NEW(advection22, w,  u, v, w, w2, dt, ds, BILINEAR, mask, splitZ,LEN(w,0)-1 );
 		ELSE HALT(200)
 		END;
 		
 		IF UseHeat THEN 
 			IF Parallel=1 THEN 
-				NEW(advection3, heat,  u, v, w, heat0, dt, ds, BILINEAR ) 
+				NEW(advection3, heat,  u, v, w, heat0, dt, ds, BILINEAR, mask ) 
 			ELSE 
 				IF ~Util.SameSize(heat,heat0) THEN NEW(heat0,LEN(heat)) END;
 				splitZ:=LEN(heat,0) DIV 2;
-				NEW(advection3, heat,  u, v, w, heat0, dt, ds, BILINEAR, 0, splitZ-1 ); 
-				NEW(advection33, heat,  u, v, w, heat0, dt, ds, BILINEAR, splitZ, LEN(heat,0)-1 ); 
+				NEW(advection3, heat,  u, v, w, heat0, dt, ds, BILINEAR, mask, 0, splitZ-1 ); 
+				NEW(advection33, heat,  u, v, w, heat0, dt, ds, BILINEAR, mask, splitZ, LEN(heat,0)-1 ); 
 			END;
 		END;
 
@@ -432,14 +438,14 @@ TYPE NavierStokes* = OBJECT
 		advection2.WaitReady;	IF advection22#NIL THEN advection22.WaitReady END; NEW(nablaScaleInc2, w2, p, tmpw, -k, Nabla.dz);
 		
 		(* 2) diffusion D *) (*result units: length/time *)(* could the boundaries above be taken out of the diffusion multigrid above at limited precision  loss ?? *)
-		nablaScaleInc1.WaitReady; NEW(diffusion1, diffusionV, v2, v, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundY ); 
-		nablaScaleInc0.WaitReady; NEW(diffusion0, diffusionU, u2, u, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundX ); (*!? could we directly use u instead of u3 as target here ?*)
-		nablaScaleInc2.WaitReady;NEW(diffusion2, diffusionW, w2, w, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundZ ); 
+		nablaScaleInc1.WaitReady; NEW(diffusion1, diffusionV, v2, v, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundY, emphasis); 
+		nablaScaleInc0.WaitReady; NEW(diffusion0, diffusionU, u2, u, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundX, emphasis ); (*!? could we directly use u instead of u3 as target here ?*)
+		nablaScaleInc2.WaitReady; NEW(diffusion2, diffusionW, w2, w, nu, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, FlowBoundZ, emphasis ); 
 
 		IF UseHeat THEN (* velocity used for advection is not yet corrected for divergence here ..*)
 			advection3.WaitReady; 
 			IF advection33#NIL THEN advection33.WaitReady END;
-			NEW(diffusion3, diffusionH, heat0, heat, heatDiffusionCoeff, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, HeatBounds ); 			
+			NEW(diffusion3, diffusionH, heat0, heat, heatDiffusionCoeff, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, HeatBounds, emphasis ); 			
 		END;
 
 		(* 3) force application F *)
@@ -469,7 +475,7 @@ TYPE NavierStokes* = OBJECT
 			div := DECMUL( 1/temp0, heat00);(* div:=div + heatExpansionMap *) (* "hotter" means that default expansion is too little => reduced div induces increased p *)
 		END;(*! experimental; check ! *)
 		
-		poisson.SolveMultigrid( div, pdt, ds, threshold, minsize, poissoniterations, smoothingiterations,PressureBoundPDT); (*pdt: m2/s*)(*units: div = 1/s ; pressure: kg/ms2 oder N/m2*)
+		poisson.SolveMultigrid( div, pdt, ds, threshold, minsize, poissoniterations, smoothingiterations,PressureBoundPDT, emphasis); (*pdt: m2/s*)(*units: div = 1/s ; pressure: kg/ms2 oder N/m2*)
 		
 		(* adjust velocity field to conform to the noncompressibility requirement *) 		
 		k:=1/ds;
@@ -483,9 +489,9 @@ TYPE NavierStokes* = OBJECT
 
 		IF UseSolutes THEN
 			diffusion1.WaitReady; diffusion0.WaitReady; diffusion2.WaitReady; 
-			NEW(advection4, solutes, u,v,w, solutes0, dt, ds, BILINEAR);
+			NEW(advection4, solutes, u,v,w, solutes0, dt, ds, BILINEAR, mask);
 			advection4.WaitReady;
-			NEW(diffusion4, diffusionS, solutes0, solutes, solDiffusionCoeff, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations,SoluteBounds ); 			
+			NEW(diffusion4, diffusionS, solutes0, solutes, solDiffusionCoeff, dt, ds, threshold, minsize, diffusioniterations, smoothingiterations, SoluteBounds, emphasis ); 			
 		END;
 
 		(* update pressure field *)

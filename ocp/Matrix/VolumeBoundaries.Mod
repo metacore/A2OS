@@ -21,7 +21,7 @@ When imposed on an ordinary or a partial differential equation, it is a specific
 *)
 
 
-IMPORT MatrixBase, MatrixUtilities, VolumeMorphology, Files, Streams;
+IMPORT MatrixBase, MatrixUtilities, VolumeBase, VolumeMorphology, Files, Streams;
 
 CONST GridNotFound*=123;
 
@@ -30,6 +30,7 @@ TYPE
 	Volume* = ARRAY [*,*,*] OF MatrixBase.Datatype;
 	VectorField* = ARRAY [*,*,*,*] OF MatrixBase.Datatype;
 	ScalarField* = ARRAY [*,*,*] OF MatrixBase.Datatype;
+	Region*= VolumeBase.Region;
 
 	VolumeContainer* = POINTER TO RECORD
 		v*, outside*: BinaryVolume;   (* volume itself *)
@@ -83,7 +84,7 @@ TYPE
 
 		(** 	Zero gradient perpendicular to wall, by assigning the inner layer value to the outer layer
 		This is not perfect for Nabla operators that take 3 elements into account	*)
-		PROCEDURE ZeroBoundaryGradient*(VAR p: Volume);
+		PROCEDURE ZeroBoundaryGradient*(VAR p: Volume; region:=NIL:Region);
 		VAR
 			k,N0,N1,N2: SIZE;
 			vc: VolumeContainer;
@@ -102,7 +103,7 @@ TYPE
 			HALT(GridNotFound);
 		END ZeroBoundaryGradient;
 
-		PROCEDURE FlowBoundaries*(VAR field: Volume);
+		PROCEDURE FlowBoundaries*(VAR field: Volume; region:=NIL:Region);
 		VAR
 			k,N0,N1,N2: SIZE;
 			vc: VolumeContainer;
@@ -123,14 +124,14 @@ TYPE
 			HALT(GridNotFound);
 		END FlowBoundaries;
 
-		PROCEDURE PressureBoundaries*(VAR p: Volume);
+		PROCEDURE PressureBoundaries*(VAR p: Volume; region:=NIL:Region);
 		BEGIN
 			PressureBoundaries0(p);
 			ZeroBoundaryGradient(p);
 		END PressureBoundaries;
 
 		(** control pressure at inlet and outlet *)
-		PROCEDURE PressureBoundaries0*(VAR p: Volume);
+		PROCEDURE PressureBoundaries0*(VAR p: Volume; region:=NIL:Region);
 		VAR
 			k,k0,k1,N0,N1,N2: SIGNED32;
 			vc: VolumeContainer;
@@ -165,7 +166,7 @@ TYPE
 
 		(*pressure changed per step:
 		-on locations with external pressure boundary conditions, and in solid, no change*)
-		PROCEDURE PressureBoundariesPDT*(VAR pdt: Volume);
+		PROCEDURE PressureBoundariesPDT*(VAR pdt: Volume; region:=NIL:Region);
 		VAR
 			k,N0,N1,N2: SIZE;
 			vc: VolumeContainer;
@@ -190,7 +191,7 @@ TYPE
 		END PressureBoundariesPDT;
 
 
-		PROCEDURE SoluteBoundaries*(VAR field: Volume); (* avoid presence of solute to outside a channel. TO DO: do not suppress, but bring the material diffused outside inwards again, to avoid loss. *)
+		PROCEDURE SoluteBoundaries*(VAR field: Volume; region:=NIL:Region); (* avoid presence of solute to outside a channel. TO DO: do not suppress, but bring the material diffused outside inwards again, to avoid loss. *)
 		VAR
 			i,j,k,N0,N1,N2: SIZE;
 			len:ARRAY[3] OF SIZE;
@@ -222,7 +223,7 @@ TYPE
 			HALT(GridNotFound);
 		END SoluteBoundaries;
 
-		PROCEDURE SoluteBoundaries0*(VAR field: Volume); (* along Z for initialization *)
+		PROCEDURE SoluteBoundaries0*(VAR field: Volume; region:=NIL:Region); (* along Z for initialization *)
 		VAR
 			i,j,k,N0,N1,N2: SIZE;
 		BEGIN

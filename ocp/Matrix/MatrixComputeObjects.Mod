@@ -32,6 +32,7 @@ TYPE
 			(*Objects.SetPriority(priority);*)
 			compute;
 			IF Notify#NIL THEN Notify END;
+	FINALLY
 			IF Cleanup#NIL THEN Cleanup END;
 			DEC(objects);
 			BEGIN {EXCLUSIVE} done:=TRUE; END;

@@ -1,6 +1,6 @@
 MODULE VolumeBase;   (**  AUTHOR "Patrick Hunziker"; PURPOSE "";  **)
 
-IMPORT Out := KernelLog, SYSTEM;
+IMPORT Out := KernelLog;
 
 CONST
 	cachesize* = 256 * 1024;   (* make dynamic *)
@@ -16,6 +16,7 @@ TYPE
 	F3*=PROCEDURE {DELEGATE} (x,y,z:Datatype):Datatype;
 	LineHandler1*=PROCEDURE {DELEGATE} ( CONST lineIn: OneD;
 																		   VAR lineOut: OneD; v:Datatype);
+	Region*= OBJECT VAR x0*,x1*, y0*,y1*, z0*,z1*: REAL END Region;(*parametric description of partial volume*)
 
 
 VAR

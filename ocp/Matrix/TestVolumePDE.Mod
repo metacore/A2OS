@@ -70,7 +70,7 @@ PROCEDURE TestWave*;
 
 PROCEDURE TestAdvection*;
 CONST size=32;
-VAR d,u,v,w,p, p1: Grid; 	D,P:WMMatrix.Window;  i:SIGNED32;
+VAR d,u,v,w,p, p1: Grid; 	D,P:WMMatrix.Window;  i:SIGNED32; nilMap:VolumePDE.VolumeBooleanMap;
 BEGIN
 	NEW(d,size,size,size); (*original data*)
 	NEW(u,size,size,size); NEW(v,size,size,size); NEW(w,size,size,size);  (*3D advection vector*)
@@ -81,7 +81,7 @@ BEGIN
 	NEW( D, d[30], "d" );  D.AddWindow;
 	NEW(P, p1[30],"p"); P.AddWindow;
 	FOR i:=0 TO 7 DO
-		VolumePDE.Advect(p,u,v,w,p1,1,1,TRUE);
+		VolumePDE.Advect(p,u,v,w,p1,1,1,TRUE,nilMap);
 		P.SetImage( p1[30]);
 		p:=p1;
 	END;
@@ -100,7 +100,7 @@ END TestAdvection;
 		NEW(con); con.Set(c,b);
 		NEW( laplace );  laplace.SolveMultigrid( d, threshold, 32, 20, 200, con.Constrain );
 		WMArrayPanel.AddWindow(d,"d");
-		f:=Files.New(TestFileName); Files.OpenWriter(w,f,0); Files.Register(f);
+		f:=Files.New("TestL.MtA"(*TestFileName*)); Files.OpenWriter(w,f,0); Files.Register(f);
 		MatrixUtilities.StoreLR(w,d);
 	END StoreConstrainedLaplace;
 	
@@ -126,7 +126,7 @@ END TestAdvection;
 END TestVolumePDE.
 
 
-SystemTools.Free OFormatter TestVolumePDE PlanarNavierStokes VolumePDE PlanarDoppler PlanarNabla WMMatrix MatrixRaster MatrixPictures.Mod MatrixFigures PlanarTransform.Mod PlanarBase SignalConvolve MatrixAVI MatrixPictures~
+System.Free OFormatter TestVolumePDE PlanarNavierStokes VolumePDE PlanarDoppler PlanarNabla WMMatrix MatrixRaster MatrixPictures.Mod MatrixFigures PlanarTransform.Mod PlanarBase SignalConvolve MatrixAVI MatrixPictures~
 OFormatter.Format *
 fofPC.Compile \f *
 

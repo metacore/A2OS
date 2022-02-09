@@ -100,7 +100,7 @@ END TestAdvection;
 		NEW(con); con.Set(c,b);
 		NEW( laplace );  laplace.SolveMultigrid( d, threshold, 32, 20, 200, con.Constrain );
 		WMArrayPanel.AddWindow(d,"d");
-		f:=Files.New("TestL.MtA"(*TestFileName*)); Files.OpenWriter(w,f,0); Files.Register(f);
+		f:=Files.New("VolumePDE_ConstrainedLaplace.MtA"); Files.OpenWriter(w,f,0); Files.Register(f);
 		MatrixUtilities.StoreLR(w,d);
 	END StoreConstrainedLaplace;
 	

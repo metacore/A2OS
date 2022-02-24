@@ -2371,7 +2371,7 @@ TYPE
 		END ImportList;
 
 		(**
-			TemplateParameter = ("const" | "type") Identifier
+			TemplateParameter = ["const" | "type" | "import"] Identifier
 		**)
 		PROCEDURE TemplateParameter(VAR position: SyntaxTree.Position): SyntaxTree.TemplateParameter;
 		VAR parameter: SyntaxTree.TemplateParameter;

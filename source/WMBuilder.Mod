@@ -503,25 +503,31 @@ TYPE
 		cmWire
 	END;
 
-	CodeGenerator = RECORD
-
+	CodeGenerator* = RECORD
+	
+		verMaj- : UNSIGNED16;
+		verMin- : UNSIGNED16;
+		moduleName- : Files.FileName;
+		
 		form : Repositories.Component;
+		
 		imports : StringCollections.Vector;
-		moduleName, fileName : Files.FileName;
 
-		PROCEDURE Generate(form : Repositories.Component; CONST aFileName : ARRAY OF CHAR) : Strings.String;
-		VAR
-			ext: ARRAY 4 OF CHAR;
+		PROCEDURE Generate(form : Repositories.Component; CONST aModuleName : ARRAY OF CHAR) : Strings.String;
 		BEGIN
+			verMaj := 0;
+			verMin := 1;
+			
 			SELF.form := form;
 
-			Strings.GetExtension(aFileName, moduleName, ext);
-			Strings.Copy(aFileName, 0, Strings.Length(aFileName), fileName);
+			Strings.Copy(aModuleName, 0, Strings.Length(aModuleName), moduleName);
+			
+			imports := NIL;
 
 			VAR buffer := NEW Streams.Buffer(1024);
 			WriteModule(buffer.GetWriter());
 
-			RETURN buffer.GetString();
+			RETURN buffer.GetString()
 		END Generate;
 
 		PROCEDURE WriteModule(w: Streams.Writer);
@@ -530,6 +536,11 @@ TYPE
 			w.String("module ");
 			w.String(moduleName);
 			w.String(\";\n\n"\);
+			
+			w.String("(* A2 Forms Code Generator V ");
+			w.Int(verMaj, 0); w.Char('.'); w.Int(verMin, 0);
+			w.String(\" - DO NOT EDIT OR REMOVE THIS LINE! *)\n"\);
+			w.String(\"(* PUT OWN CODE ONLY IN \"Begin of my ...\" / \"End of my ...\" SECTIONS! *)\n\n"\);
 
 			WriteModuleImports(w);
 
@@ -547,7 +558,7 @@ TYPE
 			w.String(moduleName);
 			w.String("_LookupItem,");
 			w.String(moduleName);
-			w.String(\"_LessLookupItem) ~\n"\);
+			w.String(\"_LessLookupItem) ~\n"\)
 
 		END WriteModule;
 
@@ -567,18 +578,26 @@ TYPE
 			IGNORE imports.Add(Strings.NewString("WMComponents"));
 			IGNORE imports.Add(Strings.NewString("WMWindowManager"));
 
-			IF (form # NIL) THEN
+			IF form # NIL THEN
 				TraverseComponent(form, CodeMode.cmImport, NIL)
 			END;
 
 			imports.SetSorted(TRUE);
 
 			w.String(\"import\n\t"\);
+			
 			FOR i := 0 TO imports.Count() - 1 DO
-				imports.Get(i, module); w.String(module^);
-				IF i # imports.Count() - 1 THEN w.String(", ") ELSE w.Char(';') END
+				imports.Get(i, module); 
+				w.String(module^);
+				IF i # imports.Count() - 1 THEN 
+					w.String(", ") 
+				END
 			END;
-			w.String(\"\n\n"\);
+			
+			w.String(\"\n\t(* Begin of my modules *)\n"\);
+			w.String(\"\t\n"\);
+			w.String(\"\t(* End of my modules *)\n"\);
+			w.String(\"\t;\n\n"\)
 
 		END WriteModuleImports;
 
@@ -586,6 +605,10 @@ TYPE
 		BEGIN
 
 			w.String(\"type\n"\);
+			
+			w.String(\"\t(* Begin of my types *)\n"\);
+			w.String(\"\t\n"\);
+			w.String(\"\t(* End of my types *)\n\n"\);
 
 			WriteWindow(w);
 
@@ -615,7 +638,7 @@ TYPE
 			w.String(\"\t\t\tcomponents.Get(i, rec);\n"\);
 			w.String(\"\t\t\treturn rec.component\n"\);
 			w.String(\"\t\tend GetComponent;\n\n"\);
-			w.String(\"\tend Lookup;\n\n"\);
+			w.String(\"\tend Lookup;\n\n"\)
 
 		END WriteModuleTypes;
 
@@ -632,7 +655,7 @@ TYPE
 
 			w.String(\"\tend "\);
 			w.String(moduleName);
-			w.String(\"Window;\n\n"\);
+			w.String(\"Window;\n\n"\)
 
 		END WriteWindow;
 
@@ -644,23 +667,32 @@ TYPE
 			w.String(\"\t\tlookup : Lookup;\n\n"\);
 
 			VAR buffer := NEW Streams.Buffer(128);
-			IF (form # NIL) THEN
-				TraverseComponent(form, CodeMode.cmVar, buffer.GetWriter());
+			IF form # NIL THEN
+				TraverseComponent(form, CodeMode.cmVar, buffer.GetWriter())
 			END;
-			w.String(buffer.GetString()^); w.Ln;
+			w.String(buffer.GetString()^);
+			w.String(\"\n"\);
+			
+			w.String(\"\t\t(* Begin of my main form variables *)\n"\);
+			w.String(\"\t\t\n"\);
+			w.String(\"\t\t(* End of my main form variables *)\n\n"\);
 
 		END WriteWindowVariables;
 
 		PROCEDURE WriteWindowProcs(w: Streams.Writer);
 		BEGIN
+		
+			w.String(\"\t(* Begin of my main form procedures *)\n"\);
+			w.String(\"\t\n"\);
+			w.String(\"\t(* End of my main form procedures *)\n\n"\);
 
 			w.String(\"\tprocedure &New*;\n"\);
 			w.String(\"\tvar\n"\);
 			w.String(\"\t\tcontent : XML.Content;\n"\);
 			w.String(\"\tbegin\n"\);
 			w.String(\"\t\tcontent := WMComponents.Load(\""\);
-			w.String(fileName);
-			w.String(\"\");\n"\);
+			w.String(moduleName);
+			w.String(\".wm\");\n"\);
 			w.String(\"\t\tif (content # nil) & (content is WMComponents.VisualComponent) then\n\n"\);
 			w.String(\"\t\t\tvc := content(WMComponents.VisualComponent);\n"\);
 			w.String(\"\t\t\tInit(vc.bounds.GetWidth(), vc.bounds.GetHeight(), false);\n"\);
@@ -668,18 +700,27 @@ TYPE
 			w.String(\"\t\t\tnew(lookup, vc);\n\n"\);
 
 			VAR buffer := NEW Streams.Buffer(128);
-			IF (form # NIL) THEN
-				TraverseComponent(form, CodeMode.cmWire, buffer.GetWriter());
+			IF form # NIL THEN
+				TraverseComponent(form, CodeMode.cmWire, buffer.GetWriter())
 			END;
 			w.String(buffer.GetString()^);
 
-			w.String(\"\n\t\tend;\n"\);
-			w.String(\"\tend New;\n\n"\);
+			w.String(\"\n\t\tend;\n\n"\);
+			
+			w.String(\"\t\t(* Begin of my main form creation code *)\n"\);
+			w.String(\"\t\t\n"\);
+			w.String(\"\t\t(* End of my main form creation code *)\n\n"\);			
+			
+			w.String(\"\tend New;\n\n"\)
 
 		END WriteWindowProcs;
 
 		PROCEDURE WriteModuleProcs(w: Streams.Writer);
 		BEGIN
+		
+			w.String(\"(* Begin of my module procedures *)\n"\);
+			w.String(\"\n"\);
+			w.String(\"(* End of my module procedures *)\n\n"\);
 
 			w.String(\"procedure CollectItems(content: XML.Content; data: any);\n"\);
 			w.String(\"var\n"\);
@@ -710,7 +751,7 @@ TYPE
 			w.String(\"begin\n"\);
 			w.String(\"\tnew(w);\n"\);
 			w.String(\"\tWMWindowManager.DefaultAddWindow(w);\n"\);
-			w.String(\"end Do;\n\n"\);
+			w.String(\"end Do;\n\n"\)
 
 		END WriteModuleProcs;
 
@@ -753,7 +794,7 @@ TYPE
 					IF (uid # NIL) & (uid^ # "") THEN
 						w.String(\"\t\t"\); w.String(uid^); w.String(" : ");
 						generator := PostprocessGenerator(generator^);
-						w.String(generator^); w.String(\";\n"\);
+						w.String(generator^); w.String(\";\n"\)
 					END;
 				| CodeMode.cmWire :
 					uid := component(WMComponents.Component).uid.Get();
@@ -762,11 +803,11 @@ TYPE
 						w.String(' := lookup.GetComponent("');
 						generator := PostprocessGenerator(generator^);
 						w.String(uid^); w.String('")(');
-						w.String(generator^); w.String(\");\n"\);
-					END;
+						w.String(generator^); w.String(\");\n"\)
+					END
 				ELSE
 
-				END;
+				END
 
 			END;
 
@@ -774,9 +815,9 @@ TYPE
 			WHILE enum.HasMoreElements() DO
 				p := enum.GetNext();
 				IF (p IS Repositories.Component) THEN
-					TraverseComponent(p(Repositories.Component), mode, w);
-				END;
-			END;
+					TraverseComponent(p(Repositories.Component), mode, w)
+				END
+			END
 		END TraverseComponent;
 
 	END;
@@ -811,8 +852,11 @@ TYPE
 		PROCEDURE Refresh(sender, data : ANY);
 		VAR
 			generator : CodeGenerator;
+			moduleName : Files.FileName;
+			ext : ARRAY 4 OF CHAR;
 		BEGIN
-			editor.SetAsString(generator.Generate(form, fileName)^)
+			Strings.GetExtension(fileName, moduleName, ext);
+			editor.SetAsString(generator.Generate(form, moduleName)^)
 		END Refresh;
 
 	END ComponentCode;
@@ -3454,15 +3498,16 @@ TYPE
 		VAR
 			file, fileMod : Files.File;
 			writer, writerMod : Files.Writer;
-			moduleName : Files.FileName;
+			moduleName, moduleFileName : Files.FileName;
 			ext: ARRAY 4 OF CHAR;
 			generator : CodeGenerator;
 		BEGIN
 			ASSERT(window # NIL);
 			file := Files.New(filename);
 			Strings.GetExtension(filename, moduleName, ext);
-			Strings.Append(moduleName, ".Mod");
-			fileMod := Files.New(moduleName);
+			COPY(moduleName, moduleFileName);
+			Strings.Append(moduleFileName, ".Mod");
+			fileMod := Files.New(moduleFileName);
 			IF (file # NIL) & (fileMod # NIL) THEN
 				window.modified := FALSE;
 
@@ -3473,7 +3518,7 @@ TYPE
 				Files.Register(file);
 
 				NEW(writerMod, fileMod, 0);
-				writerMod.String(generator.Generate(window.editor.panel, filename)^);
+				writerMod.String(generator.Generate(window.editor.panel, moduleName)^);
 				writerMod.Update;
 				Files.Register(fileMod);
 

@@ -2090,6 +2090,16 @@ PACKAGE TrueTypeFonts ARCHIVE "TrueTypeFonts.zip" SOURCE "" DESCRIPTION "True-ty
 	LiberationSans.ttf LiberationSans_bd.ttf LiberationSans_bi.ttf LiberationSans_i.ttf
 	LiberationSerif.ttf LiberationSerif_bd.ttf LiberationSerif_bi.ttf LiberationSerif_i.ttf
 	LiberationFontsLicense.txt
+	
+	PTAstraSans.ttf PTAstraSans_bd.ttf PTAstraSans_bi.ttf PTAstraSans_i.ttf
+	PTAstraSerif.ttf PTAstraSerif_bd.ttf PTAstraSerif_bi.ttf PTAstraSerif_i.ttf
+	PTMono.ttf PTMono_bd.ttf
+	PTSans.ttf PTSans_bd.ttf PTSans_bi.ttf PTSans_i.ttf
+	PTSansCaption.ttf PTSansCaption_bd.ttf
+	PTSansNarrow.ttf PTSansNarrow_bd.ttf
+	PTSerif.ttf PTSerif_bd.ttf PTSerif_bi.ttf PTSerif_i.ttf
+	PTSerifCaption.ttf PTSerifCaption_i.ttf
+	PTFreeFontLicenseEng1.3.txt PTFreeFontLicenseRus1.3.txt
 END
 
 PACKAGE CjkFonts ARCHIVE "CjkFonts.zip" SOURCE "" DESCRIPTION "Chinese, Japanese and Korean Fonts"

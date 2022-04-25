@@ -497,31 +497,47 @@ TYPE
 
 	END ComponentTree;
 
+CONST
+	CT_MOPEN = "(* Begin of my modules *)";
+	CT_MCLOSE = "(* End of my modules *)";
+	CT_TOPEN = "(* Begin of my types *)";
+	CT_TCLOSE = "(* End of my types *)";
+	CT_FVOPEN = "(* Begin of my main form variables *)";
+	CT_FVCLOSE = "(* End of my main form variables *)";
+	CT_FPOPEN = "(* Begin of my main form procedures *)";
+	CT_FPCLOSE = "(* End of my main form procedures *)";
+	CT_FNOPEN = "(* Begin of my main form creation code *)";
+	CT_FNCLOSE = "(* End of my main form creation code *)";
+	CT_MPOPEN = "(* Begin of my module procedures *)";
+	CT_MPCLOSE = "(* End of my module procedures *)";
+
+TYPE
 	CodeMode = ENUM
 		cmImport,
 		cmVar,
 		cmWire
 	END;
 
-	CodeGenerator* = RECORD
-	
-		verMaj- : UNSIGNED16;
-		verMin- : UNSIGNED16;
-		moduleName- : Files.FileName;
-		
+	CodeTag = RECORD
+		open, close : Strings.String;
+		next: PCodeTag;
+	END;
+	PCodeTag = POINTER TO CodeTag;
+
+	CodeGenerator = RECORD
+
+		moduleName : Files.FileName;
+
 		form : Repositories.Component;
-		
+
 		imports : StringCollections.Vector;
 
 		PROCEDURE Generate(form : Repositories.Component; CONST aModuleName : ARRAY OF CHAR) : Strings.String;
 		BEGIN
-			verMaj := 0;
-			verMin := 1;
-			
 			SELF.form := form;
 
 			Strings.Copy(aModuleName, 0, Strings.Length(aModuleName), moduleName);
-			
+
 			imports := NIL;
 
 			VAR buffer := NEW Streams.Buffer(1024);
@@ -536,11 +552,9 @@ TYPE
 			w.String("module ");
 			w.String(moduleName);
 			w.String(\";\n\n"\);
-			
-			w.String("(* A2 Forms Code Generator V ");
-			w.Int(verMaj, 0); w.Char('.'); w.Int(verMin, 0);
-			w.String(\" - DO NOT EDIT OR REMOVE THIS LINE! *)\n"\);
-			w.String(\"(* PUT OWN CODE ONLY IN \"Begin of my ...\" / \"End of my ...\" SECTIONS! *)\n\n"\);
+
+			w.String(\"(* Automatically generated A2 Forms Code *)\n"\);
+			w.String(\"(* Put your own code only within \"Begin of my ...\" / \"End of my ...\" sections! *)\n\n"\);
 
 			WriteModuleImports(w);
 
@@ -585,18 +599,24 @@ TYPE
 			imports.SetSorted(TRUE);
 
 			w.String(\"import\n\t"\);
-			
+
 			FOR i := 0 TO imports.Count() - 1 DO
-				imports.Get(i, module); 
+				imports.Get(i, module);
 				w.String(module^);
-				IF i # imports.Count() - 1 THEN 
-					w.String(", ") 
+				IF i # imports.Count() - 1 THEN
+					w.String(", ")
 				END
 			END;
-			
-			w.String(\"\n\t(* Begin of my modules *)\n"\);
+
+			w.String(\"\n\t"\);
+			(* Begin of my modules *)
+			w.String(CT_MOPEN);
+			w.String(\"\n"\);
 			w.String(\"\t\n"\);
-			w.String(\"\t(* End of my modules *)\n"\);
+			w.String(\"\t"\);
+			(* End of my modules *)
+			w.String(CT_MCLOSE);
+			w.String(\"\n"\);
 			w.String(\"\t;\n\n"\)
 
 		END WriteModuleImports;
@@ -605,10 +625,18 @@ TYPE
 		BEGIN
 
 			w.String(\"type\n"\);
-			
-			w.String(\"\t(* Begin of my types *)\n"\);
+
+			w.String(\"\t"\);
+			(* Begin of my types *)
+			w.String(CT_TOPEN);
+			w.String(\"\n"\);
+
 			w.String(\"\t\n"\);
-			w.String(\"\t(* End of my types *)\n\n"\);
+
+			w.String(\"\t"\);
+			(* End of my types *)
+			w.String(CT_TCLOSE);
+			w.String(\"\n\n"\);
 
 			WriteWindow(w);
 
@@ -672,19 +700,35 @@ TYPE
 			END;
 			w.String(buffer.GetString()^);
 			w.String(\"\n"\);
-			
-			w.String(\"\t\t(* Begin of my main form variables *)\n"\);
+
+			w.String(\"\t\t"\);
+			(* Begin of my main form variables *)
+			w.String(CT_FVOPEN);
+			w.String(\"\n"\);
+
 			w.String(\"\t\t\n"\);
-			w.String(\"\t\t(* End of my main form variables *)\n\n"\);
+
+			w.String(\"\t\t"\);
+			(* End of my main form variables *)
+			w.String(CT_FVCLOSE);
+			w.String(\"\n\n"\);
 
 		END WriteWindowVariables;
 
 		PROCEDURE WriteWindowProcs(w: Streams.Writer);
 		BEGIN
-		
-			w.String(\"\t(* Begin of my main form procedures *)\n"\);
+
+			w.String(\"\t"\);
+			(* Begin of my main form procedures *)
+			w.String(CT_FPOPEN);
+			w.String(\"\n"\);
+
 			w.String(\"\t\n"\);
-			w.String(\"\t(* End of my main form procedures *)\n\n"\);
+
+			w.String(\"\t"\);
+			(* End of my main form procedures *)
+			w.String(CT_FPCLOSE);
+			w.String(\"\n\n"\);
 
 			w.String(\"\tprocedure &New*;\n"\);
 			w.String(\"\tvar\n"\);
@@ -706,21 +750,33 @@ TYPE
 			w.String(buffer.GetString()^);
 
 			w.String(\"\n\t\tend;\n\n"\);
-			
-			w.String(\"\t\t(* Begin of my main form creation code *)\n"\);
+
+			w.String(\"\t\t"\);
+			(* Begin of my main form creation code *)
+			w.String(CT_FNOPEN);
+			w.String(\"\n"\);
+
 			w.String(\"\t\t\n"\);
-			w.String(\"\t\t(* End of my main form creation code *)\n\n"\);			
-			
+
+			w.String(\"\t\t"\);
+			(* End of my main form creation code *)
+			w.String(CT_FNCLOSE);
+			w.String(\"\n\n"\);
+
 			w.String(\"\tend New;\n\n"\)
 
 		END WriteWindowProcs;
 
 		PROCEDURE WriteModuleProcs(w: Streams.Writer);
 		BEGIN
-		
-			w.String(\"(* Begin of my module procedures *)\n"\);
-			w.String(\"\n"\);
-			w.String(\"(* End of my module procedures *)\n\n"\);
+
+			(* Begin of my module procedures *)
+			w.String(CT_MPOPEN);
+			w.String(\"\n\n"\);
+
+			(* End of my module procedures *)
+			w.String(CT_MPCLOSE);
+			w.String(\"\n\n"\);
 
 			w.String(\"procedure CollectItems(content: XML.Content; data: any);\n"\);
 			w.String(\"var\n"\);
@@ -828,6 +884,8 @@ TYPE
 		form : Repositories.Component;
 		fileName : Files.FileName;
 
+		codeTags: PCodeTag;
+
 		PROCEDURE &Init*;
 		BEGIN
 			Init^;
@@ -839,6 +897,9 @@ TYPE
 			editor.tv.textAlignV.Set(WMGraphics.AlignLeft);
 			editor.tv.showBorder.Set(TRUE);
 			AddContent(editor);
+
+			InitCodeTags
+
 		END Init;
 
 		PROCEDURE SetInfo(form : Repositories.Component; fileName : ARRAY OF CHAR);
@@ -854,10 +915,102 @@ TYPE
 			generator : CodeGenerator;
 			moduleName : Files.FileName;
 			ext : ARRAY 4 OF CHAR;
+			codeUser, codeAuto : Strings.String;
+			len : SIZE;
 		BEGIN
 			Strings.GetExtension(fileName, moduleName, ext);
-			editor.SetAsString(generator.Generate(form, moduleName)^)
+			codeAuto := generator.Generate(form, moduleName);
+
+			codeUser := NIL;
+			editor.text.AcquireRead;
+			len := editor.text.GetLength();
+			IF len > 0 THEN
+				 NEW(codeUser, len + 1);
+				 editor.GetAsString(codeUser^)
+			END;
+			editor.text.ReleaseRead;
+
+			IF codeUser # NIL THEN
+				editor.SetAsString(CodeUpdate(codeUser^, codeAuto^)^)
+			ELSE
+				editor.SetAsString(codeAuto^)
+			END
+
 		END Refresh;
+
+		PROCEDURE CodeUpdate(codeUser, codeAuto : ARRAY OF CHAR) : Strings.String;
+		VAR
+			r1, r2 : Streams.StringReader;
+			ln1, ln2, ln3 : ARRAY 2048 OF CHAR;
+		BEGIN
+
+			Streams.OpenStringReader(r1, codeAuto);
+
+			VAR buffer := NEW Streams.Buffer(4096);
+			VAR w := buffer.GetWriter();
+
+			WHILE r1.Available() > 0 DO
+
+				r1.Ln(ln1);
+
+				VAR tag := codeTags, tagFound := NIL : PCodeTag;
+				WHILE (tag # NIL) & (tagFound = NIL) DO
+					IF Strings.Pos(tag.open^, ln1) >= 0 THEN
+						tagFound := tag
+					ELSE
+						tag := tag.next
+					END
+				END;
+
+				IF tagFound = NIL THEN
+
+					w.String(ln1); w.Ln
+
+				ELSE
+					COPY("", ln2);
+					WHILE (r1.Available() > 0) & (Strings.Pos(tagFound.close^, ln2) < 0) DO
+						r1.Ln(ln2)
+					END;
+
+					w.String(ln1); w.Ln;
+
+					VAR iOpen := Strings.Pos(tagFound.open^, codeUser);
+					VAR iClose := Strings.Pos(tagFound.close^, codeUser);
+					IF (iOpen >= 0) & (iClose >= 0) THEN
+
+						Strings.Copy(codeUser, iOpen, iClose - iOpen, ln3);
+						Streams.OpenStringReader(r2, ln3);
+
+						r2.SkipLn;
+						WHILE r2.Available() > 0 DO
+							r2.Ln(ln3);
+							IF r2.Available() > 0 THEN
+								(* If not last line *)
+								w.String(ln3); w.Ln
+							END
+						END
+
+					END;
+
+					w.String(ln2); w.Ln
+
+				END
+
+			END;
+
+			RETURN buffer.GetString()
+
+		END CodeUpdate;
+
+		PROCEDURE InitCodeTags;
+		BEGIN
+			codeTags := NEW CreateCodeTag(CT_MOPEN, CT_MCLOSE,
+				NEW CreateCodeTag(CT_TOPEN, CT_TCLOSE,
+					NEW CreateCodeTag(CT_FVOPEN, CT_FVCLOSE,
+						NEW CreateCodeTag(CT_FPOPEN, CT_FPCLOSE,
+							NEW CreateCodeTag(CT_FNOPEN, CT_FNCLOSE,
+								NEW CreateCodeTag(CT_MPOPEN, CT_MPCLOSE, NIL))))))
+		END InitCodeTags;
 
 	END ComponentCode;
 
@@ -3617,6 +3770,14 @@ VAR
 	(* cursors *)
 	leftLimit, topLeftLimit, topLimit, topRightLimit,
 	rightLimit, bottomRightLimit, bottomLimit, bottomLeftLimit, sizeLimit, crosshair : WMWindowManager.PointerInfo;
+
+PROCEDURE CreateCodeTag(CONST a1, a2: ARRAY OF CHAR; next: PCodeTag): CodeTag;
+BEGIN
+	RESULT.open := Strings.NewString(a1);
+	RESULT.close := Strings.NewString(a2);
+	RESULT.next := next;
+	RETURN RESULT
+END CreateCodeTag;
 
 PROCEDURE CreateIndicator(CONST content : ARRAY OF CHAR; width, alignment : SIGNED32) : Indicator;
 VAR i : Indicator;

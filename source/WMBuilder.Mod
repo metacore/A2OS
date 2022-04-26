@@ -498,18 +498,20 @@ TYPE
 	END ComponentTree;
 
 CONST
-	CT_MOPEN = "(* Begin of my modules *)";
-	CT_MCLOSE = "(* End of my modules *)";
-	CT_TOPEN = "(* Begin of my types *)";
-	CT_TCLOSE = "(* End of my types *)";
+	CT_IOPEN = "(* Begin of my imports *)";
+	CT_ICLOSE = "(* End of my imports *)";
+	CT_TCOPEN = "(* Begin of my types and constants *)";
+	CT_TCCLOSE = "(* End of my types and constants *)";
 	CT_FVOPEN = "(* Begin of my main form variables *)";
 	CT_FVCLOSE = "(* End of my main form variables *)";
 	CT_FPOPEN = "(* Begin of my main form procedures *)";
 	CT_FPCLOSE = "(* End of my main form procedures *)";
-	CT_FNOPEN = "(* Begin of my main form creation code *)";
-	CT_FNCLOSE = "(* End of my main form creation code *)";
-	CT_MPOPEN = "(* Begin of my module procedures *)";
-	CT_MPCLOSE = "(* End of my module procedures *)";
+	CT_FCOPEN = "(* Begin of my main form creation code *)";
+	CT_FCCLOSE = "(* End of my main form creation code *)";
+	CT_MPVOPEN = "(* Begin of my module procedures and variables *)";
+	CT_MPVCLOSE = "(* End of my module procedures and variables *)";
+	CT_MIOPEN = "(* Begin of my module initialization code *)";
+	CT_MICLOSE = "(* End of my module initialization code *)";
 
 TYPE
 	CodeMode = ENUM
@@ -526,24 +528,19 @@ TYPE
 
 	CodeGenerator = RECORD
 
-		moduleName : Files.FileName;
-
 		form : Repositories.Component;
-
-		imports : StringCollections.Vector;
+		moduleName : Files.FileName;
 
 		PROCEDURE Generate(form : Repositories.Component; CONST aModuleName : ARRAY OF CHAR) : Strings.String;
 		BEGIN
-			SELF.form := form;
 
+			SELF.form := form;
 			Strings.Copy(aModuleName, 0, Strings.Length(aModuleName), moduleName);
 
-			imports := NIL;
-
-			VAR buffer := NEW Streams.Buffer(1024);
+			VAR buffer := NEW Streams.Buffer(4096);
 			WriteModule(buffer.GetWriter());
-
 			RETURN buffer.GetString()
+
 		END Generate;
 
 		PROCEDURE WriteModule(w: Streams.Writer);
@@ -553,8 +550,9 @@ TYPE
 			w.String(moduleName);
 			w.String(\";\n\n"\);
 
-			w.String(\"(* Automatically generated A2 Forms Code *)\n"\);
-			w.String(\"(* Put your own code only within \"Begin of my ...\" / \"End of my ...\" sections! *)\n\n"\);
+			w.String(\"(* Automatically generated A2 Forms Code   *)\n"\);
+			w.String(\"(* Put your own code only within sections: *)\n"\);
+			w.String(\"(*   \"Begin of my...\" / \"End of my...\"     *)\n\n"\);
 
 			WriteModuleImports(w);
 
@@ -562,17 +560,21 @@ TYPE
 
 			WriteModuleProcs(w);
 
+			w.String(\"begin\n\n\t"\);
+			(* Begin of my module initialization code *)
+			w.String(CT_MIOPEN);
+			w.String(\"\n\t\n\t"\);
+			(* End of my module initialization code *)
+			w.String(CT_MICLOSE);
+			w.String(\"\n\n"\);
+
 			w.String("end ");
 			w.String(moduleName);
 			w.String(\".Do ~\n\n"\);
 
 			w.String("System.Free ");
 			w.String(moduleName);
-			w.String(" GenericCollections(");
-			w.String(moduleName);
-			w.String("_LookupItem,");
-			w.String(moduleName);
-			w.String(\"_LessLookupItem) ~\n"\)
+			w.String(\" ~\n"\)
 
 		END WriteModule;
 
@@ -580,20 +582,18 @@ TYPE
 		VAR
 			module : Strings.String;
 			i : SIZE;
+			imports : StringCollections.Vector;
 		BEGIN
 
 			NEW(imports);
 
-			IGNORE imports.Add(
-				Strings.NewString("LookupCollections := GenericCollections(LookupItem, LessLookupItem)"));
 			IGNORE imports.Add(Strings.NewString("XML"));
 			IGNORE imports.Add(Strings.NewString("Strings"));
-			IGNORE imports.Add(Strings.NewString("UTF8Strings"));
 			IGNORE imports.Add(Strings.NewString("WMComponents"));
 			IGNORE imports.Add(Strings.NewString("WMWindowManager"));
 
 			IF form # NIL THEN
-				TraverseComponent(form, CodeMode.cmImport, NIL)
+				TraverseComponent(form, CodeMode.cmImport, imports)
 			END;
 
 			imports.SetSorted(TRUE);
@@ -609,64 +609,26 @@ TYPE
 			END;
 
 			w.String(\"\n\t"\);
-			(* Begin of my modules *)
-			w.String(CT_MOPEN);
-			w.String(\"\n"\);
-			w.String(\"\t\n"\);
-			w.String(\"\t"\);
-			(* End of my modules *)
-			w.String(CT_MCLOSE);
-			w.String(\"\n"\);
-			w.String(\"\t;\n\n"\)
+			(* Begin of my imports *)
+			w.String(CT_IOPEN);
+			w.String(\"\n\t\n\t"\);
+			(* End of my imports *)
+			w.String(CT_ICLOSE);
+			w.String(\"\n\t;\n\n"\);
 
 		END WriteModuleImports;
 
 		PROCEDURE WriteModuleTypes(w: Streams.Writer);
 		BEGIN
 
-			w.String(\"type\n"\);
-
-			w.String(\"\t"\);
-			(* Begin of my types *)
-			w.String(CT_TOPEN);
-			w.String(\"\n"\);
-
-			w.String(\"\t\n"\);
-
-			w.String(\"\t"\);
-			(* End of my types *)
-			w.String(CT_TCLOSE);
+			(* Begin of my types and constants *)
+			w.String(CT_TCOPEN);
 			w.String(\"\n\n"\);
+			(* End of my types and constants *)
+			w.String(CT_TCCLOSE);
+			w.String(\"\n\ntype\n"\);
 
 			WriteWindow(w);
-
-			w.String(\"\tLookupItem = record\n"\);
-			w.String(\"\t\tuid : array 32 of char;\n"\);
-			w.String(\"\t\tcomponent : WMComponents.Component;\n"\);
-			w.String(\"\tend;\n\n"\);
-
-			w.String(\"\tLookup = object\n"\);
-			w.String(\"\tvar\n"\);
-			w.String(\"\t\tcomponents : LookupCollections.Vector;\n\n"\);
-			w.String(\"\t\tprocedure &New(vc : WMComponents.VisualComponent);\n"\);
-			w.String(\"\t\tbegin\n"\);
-			w.String(\"\t\t\tnew(components);\n"\);
-			w.String(\"\t\t\tvc.Acquire;\n"\);
-			w.String(\"\t\t\tvc.Traverse(CollectItems, components);\n"\);
-			w.String(\"\t\t\tvc.Release;\n"\);
-			w.String(\"\t\tend New;\n\n"\);
-			w.String(\"\t\tprocedure GetComponent(const uid: array of char): WMComponents.Component;\n"\);
-			w.String(\"\t\tvar\n"\);
-			w.String(\"\t\t\trec: LookupItem;\n"\);
-			w.String(\"\t\t\ti: size;\n"\);
-			w.String(\"\t\tbegin\n"\);
-			w.String(\"\t\t\tcopy(uid, rec.uid);\n"\);
-			w.String(\"\t\t\ti := components.IndexOf(rec);\n"\);
-			w.String(\"\t\t\tassert(i >= 0);\n"\);
-			w.String(\"\t\t\tcomponents.Get(i, rec);\n"\);
-			w.String(\"\t\t\treturn rec.component\n"\);
-			w.String(\"\t\tend GetComponent;\n\n"\);
-			w.String(\"\tend Lookup;\n\n"\)
 
 		END WriteModuleTypes;
 
@@ -692,23 +654,17 @@ TYPE
 
 			w.String(\"\tvar\n"\);
 			w.String(\"\t\tvc : WMComponents.VisualComponent;\n"\);
-			w.String(\"\t\tlookup : Lookup;\n\n"\);
 
 			VAR buffer := NEW Streams.Buffer(128);
 			IF form # NIL THEN
 				TraverseComponent(form, CodeMode.cmVar, buffer.GetWriter())
 			END;
 			w.String(buffer.GetString()^);
-			w.String(\"\n"\);
+			w.String(\"\n\t\t"\);
 
-			w.String(\"\t\t"\);
 			(* Begin of my main form variables *)
 			w.String(CT_FVOPEN);
-			w.String(\"\n"\);
-
-			w.String(\"\t\t\n"\);
-
-			w.String(\"\t\t"\);
+			w.String(\"\n\t\t\n\t\t"\);
 			(* End of my main form variables *)
 			w.String(CT_FVCLOSE);
 			w.String(\"\n\n"\);
@@ -716,16 +672,16 @@ TYPE
 		END WriteWindowVariables;
 
 		PROCEDURE WriteWindowProcs(w: Streams.Writer);
+		VAR
+			wires : StringCollections.Vector;
+			wire : Strings.String;
+			i : SIZE;
 		BEGIN
 
 			w.String(\"\t"\);
 			(* Begin of my main form procedures *)
 			w.String(CT_FPOPEN);
-			w.String(\"\n"\);
-
-			w.String(\"\t\n"\);
-
-			w.String(\"\t"\);
+			w.String(\"\n\t\n\t"\);
 			(* End of my main form procedures *)
 			w.String(CT_FPCLOSE);
 			w.String(\"\n\n"\);
@@ -737,67 +693,74 @@ TYPE
 			w.String(\"\t\tcontent := WMComponents.Load(\""\);
 			w.String(moduleName);
 			w.String(\".wm\");\n"\);
-			w.String(\"\t\tif (content # nil) & (content is WMComponents.VisualComponent) then\n\n"\);
+			w.String(\"\t\tif (content # nil) & (content is WMComponents.VisualComponent) then\n"\);
 			w.String(\"\t\t\tvc := content(WMComponents.VisualComponent);\n"\);
 			w.String(\"\t\t\tInit(vc.bounds.GetWidth(), vc.bounds.GetHeight(), false);\n"\);
 			w.String(\"\t\t\tSetContent(vc);\n"\);
-			w.String(\"\t\t\tnew(lookup, vc);\n\n"\);
 
-			VAR buffer := NEW Streams.Buffer(128);
-			IF form # NIL THEN
-				TraverseComponent(form, CodeMode.cmWire, buffer.GetWriter())
-			END;
-			w.String(buffer.GetString()^);
+			w.String(\"\t\t\tvc.Traverse(WireComponents, nil)\n"\);
 
-			w.String(\"\n\t\tend;\n\n"\);
+			w.String(\"\t\tend;\n\n"\);
 
 			w.String(\"\t\t"\);
 			(* Begin of my main form creation code *)
-			w.String(CT_FNOPEN);
-			w.String(\"\n"\);
-
-			w.String(\"\t\t\n"\);
-
-			w.String(\"\t\t"\);
+			w.String(CT_FCOPEN);
+			w.String(\"\n\t\t\n\t\t"\);
 			(* End of my main form creation code *)
-			w.String(CT_FNCLOSE);
+			w.String(CT_FCCLOSE);
 			w.String(\"\n\n"\);
 
-			w.String(\"\tend New;\n\n"\)
+			w.String(\"\tend New;\n\n"\);
+
+			w.String(\"\tprocedure WireComponents(content: XML.Content; data: any);\n"\);
+			w.String(\"\tvar\n"\);
+			w.String(\"\t\tuid: Strings.String;\n"\);
+			w.String(\"\t\tcomponent: WMComponents.Component;\n"\);
+			w.String(\"\tbegin\n"\);
+			w.String(\"\t\tif content is WMComponents.Component then\n"\);
+			w.String(\"\t\t\tcomponent := content(WMComponents.Component);\n"\);
+			w.String(\"\t\t\tuid := component.uid.Get();\n"\);
+			w.String(\"\t\t\tif uid # nil then\n"\);
+
+			NEW(wires);
+			IF form # NIL THEN
+				TraverseComponent(form, CodeMode.cmWire, wires)
+			END;
+
+			FOR i := 0 TO wires.Count() - 1 DO
+				wires.Get(i, wire);
+				w.String(\"\t\t\t\t"\);
+				IF i = 0 THEN
+					w.String("if ")
+				ELSE
+					w.String("elsif ")
+				END;
+				w.String('uid^ = "');
+				VAR strings := Strings.Split(wire^, ' ');
+				w.String(strings[0]^);
+				w.String(\"\" then\n"\);
+				w.String(\"\t\t\t\t\t"\);
+				w.String(wire^);
+				w.String(\"\n"\);
+			END;
+
+			w.String(\"\t\t\t\tend\n"\);
+			w.String(\"\t\t\tend\n"\);
+			w.String(\"\t\tend\n"\);
+			w.String(\"\tend WireComponents\n\n"\);
 
 		END WriteWindowProcs;
 
 		PROCEDURE WriteModuleProcs(w: Streams.Writer);
 		BEGIN
 
-			(* Begin of my module procedures *)
-			w.String(CT_MPOPEN);
+			(* Begin of my module procedures and variables *)
+			w.String(CT_MPVOPEN);
 			w.String(\"\n\n"\);
 
-			(* End of my module procedures *)
-			w.String(CT_MPCLOSE);
+			(* End of my module procedures and variables *)
+			w.String(CT_MPVCLOSE);
 			w.String(\"\n\n"\);
-
-			w.String(\"procedure CollectItems(content: XML.Content; data: any);\n"\);
-			w.String(\"var\n"\);
-			w.String(\"\tuid: Strings.String;\n"\);
-			w.String(\"\tcomponent: WMComponents.Component;\n"\);
-			w.String(\"\trec: LookupItem;\n"\);
-			w.String(\"begin\n"\);
-			w.String(\"\tif content is WMComponents.Component then\n"\);
-			w.String(\"\t\tcomponent := content(WMComponents.Component);\n"\);
-			w.String(\"\t\tuid := component.uid.Get();\n"\);
-			w.String(\"\t\tif (uid # nil) & (uid^ # \"\") then\n"\);
-			w.String(\"\t\t\tcopy(uid^, rec.uid); rec.component := component;\n"\);
-			w.String(\"\t\t\tignore data(LookupCollections.Vector).Add(rec);\n"\);
-			w.String(\"\t\tend\n"\);
-			w.String(\"\tend\n"\);
-			w.String(\"end CollectItems;\n\n"\);
-
-			w.String(\"procedure LessLookupItem(l, r: LookupItem): boolean;\n"\);
-			w.String(\"begin\n"\);
-			w.String(\"\treturn UTF8Strings.Compare(l.uid, r.uid) < 0\n"\);
-			w.String(\"end LessLookupItem;\n\n"\);
 
 			w.String(\"procedure Do*;\n"\);
 			w.String(\"var\n"\);
@@ -806,7 +769,7 @@ TYPE
 			w.String(\"Window;\n"\);
 			w.String(\"begin\n"\);
 			w.String(\"\tnew(w);\n"\);
-			w.String(\"\tWMWindowManager.DefaultAddWindow(w);\n"\);
+			w.String(\"\tWMWindowManager.DefaultAddWindow(w)\n"\);
 			w.String(\"end Do;\n\n"\)
 
 		END WriteModuleProcs;
@@ -827,53 +790,58 @@ TYPE
 			RETURN RESULT
 		END PostprocessGenerator;
 
-		PROCEDURE TraverseComponent(component : Repositories.Component; mode : CodeMode; w : Streams.Writer);
+		PROCEDURE TraverseComponent(component : Repositories.Component; mode : CodeMode; obj : ANY);
 		VAR
-			uid, generator : Strings.String;
-			enum : XMLObjects.Enumerator;
-			p : ANY;
-			strings : Strings.StringArray;
-
+			uid : Strings.String;
 		BEGIN
 			IF ~((component IS WMComponents.Component) & (component(WMComponents.Component).internal)) THEN
-				generator := component.GetAttributeValue("generator");
+				VAR generator := component.GetAttributeValue("generator");
 				CASE mode OF
 				| CodeMode.cmImport :
 					IF (generator # NIL) & (generator^ # "") THEN
-						strings := Strings.Split(generator^, '.');
-						IF imports.IndexOf(strings[0]) = -1 THEN
-							IGNORE imports.Add(strings[0])
+						VAR strings := Strings.Split(generator^, '.');
+						WITH obj : StringCollections.Vector DO
+							IF obj.IndexOf(strings[0]) = -1 THEN
+								IGNORE obj.Add(strings[0])
+							END
 						END
 					END;
 				| CodeMode.cmVar :
 					uid := component(WMComponents.Component).uid.Get();
 					IF (uid # NIL) & (uid^ # "") THEN
-						w.String(\"\t\t"\); w.String(uid^); w.String(" : ");
-						generator := PostprocessGenerator(generator^);
-						w.String(generator^); w.String(\";\n"\)
+						WITH obj : Streams.Writer DO
+							obj.String(\"\t\t"\); obj.String(uid^); obj.String(" : ");
+							generator := PostprocessGenerator(generator^);
+							obj.String(generator^); obj.String(\";\n"\)
+						END
 					END;
 				| CodeMode.cmWire :
 					uid := component(WMComponents.Component).uid.Get();
 					IF (uid # NIL) & (uid^ # "") THEN
-						w.String(\"\t\t\t"\); w.String(uid^);
-						w.String(' := lookup.GetComponent("');
-						generator := PostprocessGenerator(generator^);
-						w.String(uid^); w.String('")(');
-						w.String(generator^); w.String(\");\n"\)
+						WITH obj : StringCollections.Vector DO
+							VAR buffer := NEW Streams.Buffer(128);
+							VAR w := buffer.GetWriter();
+							w.String(uid^);
+							w.String(' := component(');
+							generator := PostprocessGenerator(generator^);
+							w.String(generator^);
+							w.String(')');
+							IGNORE obj.Add(buffer.GetString())
+						END
 					END
 				ELSE
-
 				END
 
 			END;
 
-			enum := component.GetContents();
+			VAR enum := component.GetContents();
 			WHILE enum.HasMoreElements() DO
-				p := enum.GetNext();
+				VAR p := enum.GetNext();
 				IF (p IS Repositories.Component) THEN
-					TraverseComponent(p(Repositories.Component), mode, w)
+					TraverseComponent(p(Repositories.Component), mode, obj)
 				END
 			END
+
 		END TraverseComponent;
 
 	END;
@@ -941,7 +909,8 @@ TYPE
 		PROCEDURE CodeUpdate(codeUser, codeAuto : ARRAY OF CHAR) : Strings.String;
 		VAR
 			r1, r2 : Streams.StringReader;
-			ln1, ln2, ln3 : ARRAY 2048 OF CHAR;
+			(* This buffers should be enough to hold just one line of source code *)
+			ln1, ln2, ln3 : ARRAY 1024 OF CHAR;
 		BEGIN
 
 			Streams.OpenStringReader(r1, codeAuto);
@@ -976,10 +945,17 @@ TYPE
 
 					VAR iOpen := Strings.Pos(tagFound.open^, codeUser);
 					VAR iClose := Strings.Pos(tagFound.close^, codeUser);
+
 					IF (iOpen >= 0) & (iClose >= 0) THEN
 
-						Strings.Copy(codeUser, iOpen, iClose - iOpen, ln3);
-						Streams.OpenStringReader(r2, ln3);
+						VAR iLen := iClose - iOpen + 1;
+
+						(* User may enter any amount of code
+						within each special code section, so,
+						buffer should be dynamic *)
+						VAR buf := NEW Strings.String(iLen + 1);
+						Strings.Copy(codeUser, iOpen, iLen, buf^);
+						Streams.OpenStringReader(r2, buf^);
 
 						r2.SkipLn;
 						WHILE r2.Available() > 0 DO
@@ -1004,12 +980,14 @@ TYPE
 
 		PROCEDURE InitCodeTags;
 		BEGIN
-			codeTags := NEW CreateCodeTag(CT_MOPEN, CT_MCLOSE,
-				NEW CreateCodeTag(CT_TOPEN, CT_TCLOSE,
-					NEW CreateCodeTag(CT_FVOPEN, CT_FVCLOSE,
-						NEW CreateCodeTag(CT_FPOPEN, CT_FPCLOSE,
-							NEW CreateCodeTag(CT_FNOPEN, CT_FNCLOSE,
-								NEW CreateCodeTag(CT_MPOPEN, CT_MPCLOSE, NIL))))))
+			codeTags :=
+				NEW CreateCodeTag(CT_IOPEN, CT_ICLOSE,
+					NEW CreateCodeTag(CT_TCOPEN, CT_TCCLOSE,
+						NEW CreateCodeTag(CT_FVOPEN, CT_FVCLOSE,
+							NEW CreateCodeTag(CT_FPOPEN, CT_FPCLOSE,
+								NEW CreateCodeTag(CT_FCOPEN, CT_FCCLOSE,
+									NEW CreateCodeTag(CT_MPVOPEN, CT_MPVCLOSE,
+										NEW CreateCodeTag(CT_MIOPEN, CT_MICLOSE, NIL)))))))
 		END InitCodeTags;
 
 	END ComponentCode;
@@ -4025,11 +4003,3 @@ END WMBuilder.
 WMBuilder.Open ~
 
 System.Free WMBuilder WMInspectionComponents GenericCollections(Strings_String,WMBuilder_LessString) ~
-
-PC.Compile \s
-	Repositories.Mod WMRepositories.Mod
-	WMModels.Mod
-	WMInspectionComponents.Mod
-	WMBuilder.Mod
-~
-

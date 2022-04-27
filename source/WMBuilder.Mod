@@ -572,12 +572,15 @@ TYPE
 
 			w.String("end ");
 			w.String(moduleName);
-			w.String(\".Do ~\n\n"\);
+			w.String(\".\n\n"\);
+
+			w.String(moduleName);
+			w.String(\".Do ~\n"\);
 
 			w.String("System.Free ");
 			w.String(moduleName);
 			w.String(\" ~\n\n"\);
-			
+
 			(* ~ Begin of my commands ~ *)
 			w.String(CT_MCOPEN);
 			w.String(\"\n\n\n\n"\);
@@ -798,50 +801,44 @@ TYPE
 		END PostprocessGenerator;
 
 		PROCEDURE TraverseComponent(component : Repositories.Component; mode : CodeMode; obj : ANY);
-		VAR
-			uid : Strings.String;
 		BEGIN
 			IF ~((component IS WMComponents.Component) & (component(WMComponents.Component).internal)) THEN
 				VAR generator := component.GetAttributeValue("generator");
-				CASE mode OF
-				| CodeMode.cmImport :
-					IF (generator # NIL) & (generator^ # "") THEN
+				VAR uid := component(WMComponents.Component).uid.Get();
+				(* For any further processing use only wired
+				components (components with non-empty uid) *)
+				IF (uid # NIL) & (uid^ # "") THEN
+					CASE mode OF
+					| CodeMode.cmImport :
 						VAR strings := Strings.Split(generator^, '.');
 						WITH obj : StringCollections.Vector DO
 							IF obj.IndexOf(strings[0]) = -1 THEN
 								IGNORE obj.Add(strings[0])
 							END
 						END
-					END;
-				| CodeMode.cmVar :
-					uid := component(WMComponents.Component).uid.Get();
-					IF (uid # NIL) & (uid^ # "") THEN
+					| CodeMode.cmVar :
+						generator := PostprocessGenerator(generator^);
 						WITH obj : Streams.Writer DO
 							obj.String(\"\t\t"\);
 							obj.String(uid^);
 							obj.String(" : ");
-							generator := PostprocessGenerator(generator^);
 							obj.String(generator^);
 							obj.String(\";\n"\)
 						END
-					END;
-				| CodeMode.cmWire :
-					uid := component(WMComponents.Component).uid.Get();
-					IF (uid # NIL) & (uid^ # "") THEN
+					| CodeMode.cmWire :
+						generator := PostprocessGenerator(generator^);
 						WITH obj : StringCollections.Vector DO
 							VAR buffer := NEW Streams.Buffer(128);
 							VAR w := buffer.GetWriter();
 							w.String(uid^);
 							w.String(' := component(');
-							generator := PostprocessGenerator(generator^);
 							w.String(generator^);
 							w.String(')');
 							IGNORE obj.Add(buffer.GetString())
 						END
+					ELSE
 					END
-				ELSE
 				END
-
 			END;
 
 			VAR enum := component.GetContents();
@@ -888,7 +885,7 @@ TYPE
 		BEGIN
 			SELF.form := form;
 			Strings.GetExtension(fileName, name, ext);
-			
+
 			COPY(SELF.name, moduleName);
 			Strings.Append(moduleName, ".Mod");
 			VAR file := Files.Old(moduleName);
@@ -903,7 +900,7 @@ TYPE
 			Refresh(NIL, NIL);
 			Invalidate;
 		END SetInfo;
-		
+
 		PROCEDURE GetCode() : Strings.String;
 		BEGIN
 			RESULT := NIL;
@@ -3624,7 +3621,7 @@ TYPE
 		END UpdateFramePosition;
 
 		PROCEDURE Load(CONST filename : ARRAY OF CHAR; VAR res : INTEGER);
-		VAR 
+		VAR
 			window : EditWindow; content : XML.Content; panel : WMComponents.VisualComponent; width, height : SIZE;
 			ext : ARRAY 4 OF CHAR;
 			name : Files.FileName;
@@ -3632,7 +3629,7 @@ TYPE
 
 			Strings.GetExtension(filename, name, ext);
 			Strings.Append(name, ".wm");
-			
+
 			content := WMComponents.Load(name);
 			IF (content # NIL) & (content IS WMComponents.VisualComponent) THEN
 				panel := content (WMComponents.VisualComponent);
@@ -3669,10 +3666,10 @@ TYPE
 			ext: ARRAY 4 OF CHAR;
 		BEGIN
 			ASSERT(window # NIL);
-			
+
 			Strings.GetExtension(filename, name, ext);
 			Strings.Append(name, ".wm");
-			
+
 			file := Files.New(name);
 			Strings.GetExtension(name, moduleName, ext);
 			COPY(moduleName, moduleFileName);

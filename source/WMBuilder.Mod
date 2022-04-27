@@ -614,7 +614,7 @@ TYPE
 			w.String(\"\n\t\n\t"\);
 			(* End of my imports *)
 			w.String(CT_ICLOSE);
-			w.String(\"\n\t;\n\n"\);
+			w.String(\"\n\t;\n\n"\)
 
 		END WriteModuleImports;
 
@@ -628,7 +628,7 @@ TYPE
 			w.String(CT_TCCLOSE);
 			w.String(\"\n\ntype\n"\);
 
-			WriteWindow(w);
+			WriteWindow(w)
 
 		END WriteModuleTypes;
 
@@ -655,11 +655,9 @@ TYPE
 			w.String(\"\tvar\n"\);
 			w.String(\"\t\tvc : WMComponents.VisualComponent;\n"\);
 
-			VAR buffer := NEW Streams.Buffer(128);
 			IF form # NIL THEN
-				TraverseComponent(form, CodeMode.cmVar, buffer.GetWriter())
+				TraverseComponent(form, CodeMode.cmVar, w)
 			END;
-			w.String(buffer.GetString()^);
 			w.String(\"\n\t\t"\);
 
 			(* Begin of my main form variables *)
@@ -667,7 +665,7 @@ TYPE
 			w.String(\"\n\t\t\n\t\t"\);
 			(* End of my main form variables *)
 			w.String(CT_FVCLOSE);
-			w.String(\"\n\n"\);
+			w.String(\"\n\n"\)
 
 		END WriteWindowVariables;
 
@@ -697,9 +695,7 @@ TYPE
 			w.String(\"\t\t\tvc := content(WMComponents.VisualComponent);\n"\);
 			w.String(\"\t\t\tInit(vc.bounds.GetWidth(), vc.bounds.GetHeight(), false);\n"\);
 			w.String(\"\t\t\tSetContent(vc);\n"\);
-
 			w.String(\"\t\t\tvc.Traverse(WireComponents, nil)\n"\);
-
 			w.String(\"\t\tend;\n\n"\);
 
 			w.String(\"\t\t"\);
@@ -741,13 +737,15 @@ TYPE
 				w.String(\"\" then\n"\);
 				w.String(\"\t\t\t\t\t"\);
 				w.String(wire^);
-				w.String(\"\n"\);
+				w.String(\"\n"\)
 			END;
-
-			w.String(\"\t\t\t\tend\n"\);
+			IF wires.Count() > 0 THEN
+				w.String(\"\t\t\t\tend\n"\)
+			END;
+			
 			w.String(\"\t\t\tend\n"\);
 			w.String(\"\t\tend\n"\);
-			w.String(\"\tend WireComponents\n\n"\);
+			w.String(\"\tend WireComponents\n\n"\)
 
 		END WriteWindowProcs;
 
@@ -810,9 +808,12 @@ TYPE
 					uid := component(WMComponents.Component).uid.Get();
 					IF (uid # NIL) & (uid^ # "") THEN
 						WITH obj : Streams.Writer DO
-							obj.String(\"\t\t"\); obj.String(uid^); obj.String(" : ");
+							obj.String(\"\t\t"\);
+							obj.String(uid^);
+							obj.String(" : ");
 							generator := PostprocessGenerator(generator^);
-							obj.String(generator^); obj.String(\";\n"\)
+							obj.String(generator^);
+							obj.String(\";\n"\)
 						END
 					END;
 				| CodeMode.cmWire :

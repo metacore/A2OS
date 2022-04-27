@@ -512,6 +512,8 @@ CONST
 	CT_MPVCLOSE = "(* End of my module procedures and variables *)";
 	CT_MIOPEN = "(* Begin of my module initialization code *)";
 	CT_MICLOSE = "(* End of my module initialization code *)";
+	CT_MCOPEN = "~ Begin of my commands ~";
+	CT_MCCLOSE = "~ End of my commands ~";
 
 TYPE
 	CodeMode = ENUM
@@ -574,7 +576,14 @@ TYPE
 
 			w.String("System.Free ");
 			w.String(moduleName);
-			w.String(\" ~\n"\)
+			w.String(\" ~\n\n"\);
+			
+			(* ~ Begin of my commands ~ *)
+			w.String(CT_MCOPEN);
+			w.String(\"\n\n\n\n"\);
+			(* ~ End of my commands ~ *)
+			w.String(CT_MCCLOSE);
+			w.String(\"\n\n"\)
 
 		END WriteModule;
 
@@ -742,7 +751,7 @@ TYPE
 			IF wires.Count() > 0 THEN
 				w.String(\"\t\t\t\tend\n"\)
 			END;
-			
+
 			w.String(\"\t\t\tend\n"\);
 			w.String(\"\t\tend\n"\);
 			w.String(\"\tend WireComponents\n\n"\)
@@ -851,13 +860,13 @@ TYPE
 	VAR
 		editor : WMEditors.Editor;
 		form : Repositories.Component;
-		fileName : Files.FileName;
-
+		name : Files.FileName;
 		codeTags: PCodeTag;
 
 		PROCEDURE &Init*;
 		BEGIN
 			Init^;
+
 			NEW(editor);
 			editor.alignment.Set(WMComponents.AlignClient);
 			editor.fillColor.Set(WMGraphics.White);
@@ -872,32 +881,50 @@ TYPE
 		END Init;
 
 		PROCEDURE SetInfo(form : Repositories.Component; fileName : ARRAY OF CHAR);
+		VAR
+			ext : ARRAY 4 OF CHAR;
+			moduleName : Files.FileName;
+			r : Files.Reader;
 		BEGIN
 			SELF.form := form;
-			Strings.Copy(fileName, 0, Strings.Length(fileName), SELF.fileName);
+			Strings.GetExtension(fileName, name, ext);
+			
+			COPY(SELF.name, moduleName);
+			Strings.Append(moduleName, ".Mod");
+			VAR file := Files.Old(moduleName);
+			IF file # NIL THEN
+				VAR len := file.Length() : SIZE;
+				VAR buf := NEW Strings.String(len + 1);
+				Files.OpenReader(r, file, 0);
+				r.Bytes(buf^, 0, len, len);
+				editor.SetAsString(buf^)
+			END;
+
 			Refresh(NIL, NIL);
 			Invalidate;
 		END SetInfo;
+		
+		PROCEDURE GetCode() : Strings.String;
+		BEGIN
+			RESULT := NIL;
+			editor.text.AcquireRead;
+			VAR len := editor.text.GetLength();
+			IF len > 0 THEN
+				 NEW(RESULT, len + 1);
+				 editor.GetAsString(RESULT^)
+			END;
+			editor.text.ReleaseRead;
+			RETURN RESULT
+		END GetCode;
 
 		PROCEDURE Refresh(sender, data : ANY);
 		VAR
 			generator : CodeGenerator;
-			moduleName : Files.FileName;
-			ext : ARRAY 4 OF CHAR;
 			codeUser, codeAuto : Strings.String;
-			len : SIZE;
 		BEGIN
-			Strings.GetExtension(fileName, moduleName, ext);
-			codeAuto := generator.Generate(form, moduleName);
 
-			codeUser := NIL;
-			editor.text.AcquireRead;
-			len := editor.text.GetLength();
-			IF len > 0 THEN
-				 NEW(codeUser, len + 1);
-				 editor.GetAsString(codeUser^)
-			END;
-			editor.text.ReleaseRead;
+			codeAuto := generator.Generate(form, name);
+			codeUser := GetCode();
 
 			IF codeUser # NIL THEN
 				editor.SetAsString(CodeUpdate(codeUser^, codeAuto^)^)
@@ -988,7 +1015,8 @@ TYPE
 							NEW CreateCodeTag(CT_FPOPEN, CT_FPCLOSE,
 								NEW CreateCodeTag(CT_FCOPEN, CT_FCCLOSE,
 									NEW CreateCodeTag(CT_MPVOPEN, CT_MPVCLOSE,
-										NEW CreateCodeTag(CT_MIOPEN, CT_MICLOSE, NIL)))))))
+										NEW CreateCodeTag(CT_MIOPEN, CT_MICLOSE,
+											NEW CreateCodeTag(CT_MCOPEN, CT_MCCLOSE, NIL))))))))
 		END InitCodeTags;
 
 	END ComponentCode;
@@ -3596,20 +3624,27 @@ TYPE
 		END UpdateFramePosition;
 
 		PROCEDURE Load(CONST filename : ARRAY OF CHAR; VAR res : INTEGER);
-		VAR window : EditWindow; content : XML.Content; panel : WMComponents.VisualComponent; width, height : SIZE;
+		VAR 
+			window : EditWindow; content : XML.Content; panel : WMComponents.VisualComponent; width, height : SIZE;
+			ext : ARRAY 4 OF CHAR;
+			name : Files.FileName;
 		BEGIN
-			content := WMComponents.Load(filename);
+
+			Strings.GetExtension(filename, name, ext);
+			Strings.Append(name, ".wm");
+			
+			content := WMComponents.Load(name);
 			IF (content # NIL) & (content IS WMComponents.VisualComponent) THEN
 				panel := content (WMComponents.VisualComponent);
 				width := panel.bounds.GetWidth(); height := panel.bounds.GetHeight();
 				IF (width > 0) & (height > 0) THEN
 					NEW(window, SELF, width, height, FALSE);
 					window.SetIcon(WMGraphics.LoadImage("WMBuilder.tar://edit.png", TRUE));
-					window.SetTitle(Strings.NewString(filename));
+					window.SetTitle(Strings.NewString(name));
 					WMWindowManager.AddWindow(window, 160, 100);
 					windowList.Add(window);
 					window.editor.SetPanel(panel);
-					COPY(filename, window.filename);
+					COPY(name, window.filename);
 					SetActiveEditor(window);
 				ELSE
 					WMDialogs.Error("Error", "Expected valid width and height");
@@ -3618,9 +3653,9 @@ TYPE
 			ELSE
 				NEW(window, SELF, EditWindowWidth, EditWindowHeight, FALSE);
 				window.SetIcon(WMGraphics.LoadImage("WMBuilder.tar://edit.png", TRUE));
-				window.SetTitle(Strings.NewString(filename));
+				window.SetTitle(Strings.NewString(name));
 				WMWindowManager.AddWindow(window, 160, 100);
-				COPY(filename, window.filename);
+				COPY(name, window.filename);
 				windowList.Add(window);
 				SetActiveEditor(window);
 			END;
@@ -3630,13 +3665,16 @@ TYPE
 		VAR
 			file, fileMod : Files.File;
 			writer, writerMod : Files.Writer;
-			moduleName, moduleFileName : Files.FileName;
+			name, moduleName, moduleFileName : Files.FileName;
 			ext: ARRAY 4 OF CHAR;
-			generator : CodeGenerator;
 		BEGIN
 			ASSERT(window # NIL);
-			file := Files.New(filename);
-			Strings.GetExtension(filename, moduleName, ext);
+			
+			Strings.GetExtension(filename, name, ext);
+			Strings.Append(name, ".wm");
+			
+			file := Files.New(name);
+			Strings.GetExtension(name, moduleName, ext);
 			COPY(moduleName, moduleFileName);
 			Strings.Append(moduleFileName, ".Mod");
 			fileMod := Files.New(moduleFileName);
@@ -3645,12 +3683,12 @@ TYPE
 
 				NEW(writer, file, 0);
 				window.editor.panel.Write(writer, NIL, 0);
-				COPY(filename, window.filename);
+				COPY(name, window.filename);
 				writer.Update;
 				Files.Register(file);
 
 				NEW(writerMod, fileMod, 0);
-				writerMod.String(generator.Generate(window.editor.panel, moduleName)^);
+				writerMod.String(componentCode.GetCode()^);
 				writerMod.Update;
 				Files.Register(fileMod);
 
@@ -3675,7 +3713,7 @@ TYPE
 						s := e.GetAttributeValue("t"); IF (s # NIL) THEN Strings.StrToSize(s^, bounds.t); END;
 						s := e.GetAttributeValue("r"); IF (s # NIL) THEN Strings.StrToSize(s^, bounds.r); END;
 						s := e.GetAttributeValue("b"); IF (s # NIL) THEN Strings.StrToSize(s^, bounds.b); END;
-						s := e.GetAttributeValue("file"); IF (s # NIL) THEN COPY(s^, filename); ELSE filename := "Unknown.wm"; END;
+						s := e.GetAttributeValue("file"); IF (s # NIL) THEN COPY(s^, filename); ELSE filename := "untitled"; END;
 					END;
 					Load(filename, res);
 				END;
@@ -3922,7 +3960,7 @@ BEGIN
 	WHILE context.arg.GetString(filename) DO
 		window.Load(filename, ignoreRes); INC(count)
 	END;
-	IF count = 0 THEN window.Load("untitled.wm", ignoreRes); END;
+	IF count = 0 THEN window.Load("untitled", ignoreRes); END;
 END Open;
 
 PROCEDURE GenComponentEditor*(): XML.Element;

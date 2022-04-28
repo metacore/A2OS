@@ -2099,7 +2099,7 @@ PACKAGE TrueTypeFonts ARCHIVE "TrueTypeFonts.zip" SOURCE "" DESCRIPTION "True-ty
 	PTSansNarrow.ttf PTSansNarrow_bd.ttf
 	PTSerif.ttf PTSerif_bd.ttf PTSerif_bi.ttf PTSerif_i.ttf
 	PTSerifCaption.ttf PTSerifCaption_i.ttf
-	PTFreeFontLicenseEng1.3.txt PTFreeFontLicenseRus1.3.txt
+	PTFreeFontOFL.txt
 END
 
 PACKAGE CjkFonts ARCHIVE "CjkFonts.zip" SOURCE "" DESCRIPTION "Chinese, Japanese and Korean Fonts"

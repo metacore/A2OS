@@ -890,7 +890,7 @@ TYPE
 			Strings.Append(moduleName, ".Mod");
 			VAR file := Files.Old(moduleName);
 			IF file # NIL THEN
-				VAR len := file.Length() : SIZE;
+				VAR len := SIZE(file.Length());
 				VAR buf := NEW Strings.String(len + 1);
 				Files.OpenReader(r, file, 0);
 				r.Bytes(buf^, 0, len, len);

@@ -4,7 +4,7 @@ IMPORT
 	Modules, Kernel, KernelLog, Streams, Commands, Inputs, Strings, UTF8Strings, Files, XML, XMLObjects, XMLScanner, XMLParser,
 	Math, Repositories, WMRepositories, WMUtilities,
 	WMRectangles, WMGraphics, WMMessages, WMWindowManager, WMRestorable, WMProperties, WMComponents, WMStandardComponents, WMEditors,
-	WMTrees, WMInspectionComponents, WMDialogs, Models,
+	WMTrees, WMInspectionComponents, WMDialogs, Models, Configuration,
 	StringCollections := GenericCollections(Strings.String, LessString);
 
 CONST
@@ -858,7 +858,8 @@ TYPE
 		editor : WMEditors.Editor;
 		form : Repositories.Component;
 		name : Files.FileName;
-		codeTags: PCodeTag;
+		syntaxHighlighterName : ARRAY 32 OF CHAR;
+		codeTags : PCodeTag;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -872,6 +873,11 @@ TYPE
 			editor.tv.textAlignV.Set(WMGraphics.AlignLeft);
 			editor.tv.showBorder.Set(TRUE);
 			AddContent(editor);
+			
+			GetSyntaxHighlighterName(".Mod", syntaxHighlighterName);
+			IF (syntaxHighlighterName # "") THEN
+				editor.highlighting.SetAOC(syntaxHighlighterName)
+			END;			
 
 			InitCodeTags
 
@@ -3792,6 +3798,25 @@ BEGIN
 	RESULT.next := next;
 	RETURN RESULT
 END CreateCodeTag;
+
+PROCEDURE GetSyntaxHighlighterName*(fullname : ARRAY OF CHAR; VAR name : ARRAY OF CHAR);
+VAR filename, extension, config : Files.FileName; res : INTEGER; tries: SIGNED32;
+BEGIN
+	name := "";
+	tries := 0;
+	REPEAT (* try with case as is first *)
+		Strings.GetExtension(fullname, filename, extension);
+		IF (extension # "") THEN
+			config := "Applications.PET.SyntaxHighlighter.";
+			Strings.AppendX(config, extension);
+			Configuration.Get(config, name, res);
+			IF (res # Configuration.Ok) THEN name := ""; END;
+		END;
+		Strings.UpperCase(fullname);
+		INC(tries);
+	UNTIL (res = Configuration.Ok) OR (tries >1);
+
+END GetSyntaxHighlighterName;
 
 PROCEDURE CreateIndicator(CONST content : ARRAY OF CHAR; width, alignment : SIGNED32) : Indicator;
 VAR i : Indicator;

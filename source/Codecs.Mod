@@ -49,7 +49,7 @@ TYPE
 			IF len >= min THEN res := Streams.Ok ELSE res := Streams.EOF (* end of file *) END
 		END Receive;
 
-		PROCEDURE &InitFileReader*(f : Files.File; pos: SIGNED32);
+		PROCEDURE &InitFileReader*(f : Files.File; pos: Streams.Position);
 		BEGIN
 			InitReader(SELF.Receive, 4096);
 			SELF.f := f;

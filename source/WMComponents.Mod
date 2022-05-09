@@ -93,7 +93,7 @@ CONST
 	CanYield = TRUE;
 
 	(*temporary - to be removed*)
-	FlagDirty=13;
+	FlagDirty = WM.FlagDirty;
 
 TYPE
 	(** Installable event preview handlers. Are called by the components sequencer thread *)

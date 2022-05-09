@@ -12,9 +12,12 @@ CONST
 	MsgInvokeEvent* = 8;
 	MsgResized* = 9;
 	MsgSetLanguage* = 10;
-	MsgInvalidate*= 11;
-	MsgSerialize*=12;
-	MsgMerged*=15;
+	MsgInvalidate* = 11;
+	MsgSerialize* =12;
+	MsgMerged* = 15;
+	MsgMinimize* = 16;
+	MsgMaximize* = 17;
+	MsgRestore* = 18;
 
 	MsgSubPointerMove* = 0; MsgSubPointerDown* = 1; MsgSubPointerUp* = 2; MsgSubPointerLeave* = 3;
 	MsgSubFocusGot* = 0; MsgSubFocusLost* = 1; MsgSubMasterFocusGot* = 2; MsgSubMasterFocusLost* = 3;
@@ -577,6 +580,9 @@ BEGIN
 	MsgName[MsgPointer] := "MsgPointer";
 	MsgName[MsgKey] := "MsgKey";
 	MsgName[MsgClose] := "MsgClose";
+	MsgName[MsgMinimize] := "MsgMinimize";
+	MsgName[MsgMaximize] := "MsgMaximize";
+	MsgName[MsgRestore] := "MsgRestore";
 	MsgName[MsgStyleChanged] := "MsgStyleChanged";
 	MsgName[MsgFocus] := "MsgFocus";
 	MsgName[MsgExt] := "MsgExt";

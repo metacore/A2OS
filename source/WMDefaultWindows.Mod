@@ -2,7 +2,7 @@ MODULE WMDefaultWindows;	(** AUTHOR "TF"; PURPOSE "Decoration windows, backgroun
 
 IMPORT
 	Strings, WM := WMWindowManager, WMRectangles, Raster, Graphics := WMGraphics,
-	Messages := WMMessages, Inputs, KernelLog, WMGraphicUtilities;
+	Messages := WMMessages, Inputs, WMGraphicUtilities;
 
 CONST
 	DraggingSnapRangeBase = 40;
@@ -15,6 +15,7 @@ CONST
 	BottomRight = 4;
 
 TYPE
+	WindowState = WM.WindowState;
 	Window = WM.Window;
 	Message = Messages.Message;
 	String = Strings.String;
@@ -130,6 +131,9 @@ TYPE
 				lastX := lastX + dx; lastY := lastY + dy;
 				IF (dx # 0) OR (dy # 0) THEN
 
+					IF (master # NIL) & (master.windowState = WindowState.Maximized) THEN
+						master.SetWindowState(WindowState.Normal);
+					END;
 					moveX := 0; moveY := 0;
 					IF (mode = 0) & mode0Move THEN (* move the window *)
 						moveX := dx; moveY := dy;
@@ -191,11 +195,15 @@ TYPE
 							IF (moveY # 0) THEN moveY := moveY - (newHeight - draggingHeight); END;
 							draggingHeight := newHeight;
 						END;
-						resized := TRUE
+						resized := TRUE;
+						master.normalBounds.r := master.bounds.r;
+						master.normalBounds.b := master.bounds.b;
 					END;
 
 					IF (moveX # 0) OR (moveY # 0) THEN
 						manager.SetWindowPos(SELF, bounds.l + moveX, bounds.t + moveY);
+						master.normalBounds.l := master.bounds.l;
+						master.normalBounds.t := master.bounds.t;
 					END;
 				END;
 			END;
@@ -258,7 +266,7 @@ TYPE
 				m.msgType := Messages.MsgResized;
 				m.x := master.bounds.r - master.bounds.l;
 				m.y := master.bounds.b - master.bounds.t;
-				IF ~master.sequencer.Add(m) THEN KernelLog.String(" resized message was not queued") END;
+				IF ~master.sequencer.Add(m) THEN TRACE(" resized message was not queued") END;
 				resized := FALSE;
 			END;
 			dragging := FALSE;
@@ -287,38 +295,68 @@ CONST
 	NoButton = 0;
 	CloseButton = 1;
 	MinimizeButton = 2;
+	MaximizeButton = 3;
+	RestoreButton = 4;
+	HelpButton = 5;
+	MenuButton = 6;
+	UserButton = 7;
+	Spacer = 8;
 
 TYPE
 
 	TopWindow* = OBJECT(DecorWindow)
 	VAR
-		closeInactive*, closeActive*, closeSelected*, closeHover*,
-		minimizeInactive*, minimizeActive*, minimizeHover*,  titleImg : Graphics.Image;
+		closeInactive*, closeActive*, closeSelected*, closeHover*, closeHoverInactive*,
+		minimizeInactive*, minimizeActive*, minimizeHover*, minimizeHoverInactive*,
+		maximizeInactive*, maximizeActive*, maximizeHover*, maximizeHoverInactive*,
+		restoreInactive*, restoreActive*, restoreHover*, restoreHoverInactive*,
+		titleImg : Graphics.Image;
 		minimizeOffset, spaceBetweenButtons : SIGNED32;
 		titleCanvas : Graphics.BufferCanvas;
 		down, hover : SIGNED32;
 		tac, tic, tax, tix, tay, tiy : SIGNED32;
 
 		PROCEDURE CheckButtons(x, y : SIZE; VAR button : SIGNED32);
-		VAR img : Graphics.Image; closeImageWidth : SIZE;
+		VAR img : Graphics.Image;
+		VAR style := manager.GetStyle();
+		VAR offsetX := GetWidth() IF style.version = 1 ELSE GetWidth() - style.rw - style.buttonRightMargin;
+		VAR offsetY := 0, th := style.th, bm := style.buttonTopMargin : SIZE;
 		BEGIN
 			button := NoButton;
 			(* check close button *)
 			IF (master # NIL) & (WM.FlagClose IN master.flags) THEN
 				IF hasFocus THEN img := closeActive ELSE img := closeInactive END;
 				IF (img # NIL) THEN
-					IF Graphics.IsBitmapHit(x - (GetWidth() - img.width), y, 64, img) THEN button := CloseButton; END;
-					closeImageWidth := img.width;
+					offsetX := offsetX - img.width;
+					offsetY := 0 IF style.version = 1 ELSE (th - img.height) DIV 2 + bm;
+					IF Graphics.IsBitmapHit(x - offsetX, y - offsetY, 64, img) THEN button := CloseButton; END;
 				ELSE
-					IF (x > GetWidth() - 20) & (y > 2) THEN button := CloseButton; END;
-					closeImageWidth := 20;
+					DEC(offsetX, 20);
+					IF (x > offsetX) & (y > 2) THEN button := CloseButton; END;
 				END;
 			END;
+
+			(* check maximize button *)
+			IF (master # NIL) & (WM.FlagMaximize IN master.flags) & (button = NoButton) THEN
+				IF master.windowState = WindowState.Maximized THEN
+					IF hasFocus THEN img := restoreActive ELSE img := restoreInactive END;
+				ELSE
+					IF hasFocus THEN img := maximizeActive ELSE img := maximizeInactive END;
+				END;
+				IF (img # NIL) THEN
+					offsetX := offsetX - (img.width + spaceBetweenButtons);
+					offsetY := 0 IF style.version = 1 ELSE (th - img.height) DIV 2 + bm;
+					IF Graphics.IsBitmapHit(x - offsetX, y - offsetY, 64, img) THEN button := RestoreButton IF master.windowState = WindowState.Maximized ELSE MaximizeButton END;
+				END;
+			END;
+
 			(* check minimize button *)
 			IF (master # NIL) & (WM.FlagMinimize IN master.flags) & (button = NoButton) THEN
-				IF hasFocus THEN img := minimizeActive; ELSE img := minimizeInactive; END;
+				IF hasFocus THEN img := minimizeActive ELSE img := minimizeInactive END;
 				IF (img # NIL) THEN
-					IF Graphics.IsBitmapHit(x - (GetWidth() - closeImageWidth + minimizeOffset - img.width - spaceBetweenButtons), y, 64, img) THEN button := MinimizeButton; END;
+					offsetX := offsetX + minimizeOffset - (img.width + spaceBetweenButtons);
+					offsetY := 0 IF style.version = 1 ELSE (th - img.height) DIV 2 + bm;
+					IF Graphics.IsBitmapHit(x - offsetX, y - offsetY, 64, img) THEN button := MinimizeButton; END;
 				END;
 			END;
 		END CheckButtons;
@@ -354,15 +392,22 @@ TYPE
 		END PointerDown;
 
 		PROCEDURE PointerUp*(x, y:SIZE; keys:SET);
-		VAR temp : SIGNED32;
+		VAR temp : SIGNED32; l, t, w, h: SIZE;
 		BEGIN
 			IF (down # NoButton) THEN
 				CheckButtons(x, y, temp);
-				IF (temp = CloseButton) THEN CloseDispatch(SELF, NIL);
+				IF (temp = CloseButton) THEN
+					CloseDispatch(SELF, NIL);
+					(*IF master # NIL THEN master.Close; END;*)
 				ELSIF (temp = MinimizeButton) THEN
-					IF (master # NIL) THEN
-						manager.SetIsVisible(master, ~master.isVisible);
-					END;
+					MinimizeDispatch(SELF, NIL);
+					(*IF master # NIL THEN master.Minimize; END;*)
+				ELSIF (temp = MaximizeButton) THEN
+					MaximizeDispatch(SELF, NIL);
+					(*IF master # NIL THEN master.Maximize; END;*)
+				ELSIF (temp = RestoreButton) THEN
+					RestoreDispatch(SELF, NIL);
+					(*IF master # NIL THEN master.Restore; END;*)
 				ELSE
 					PointerUp^(x, y, keys);
 				END;
@@ -385,7 +430,10 @@ TYPE
 		VAR
 			color, tc, sw : SIGNED32; tx, ty, dx, dy : SIZE; fw, fh : FLOAT32; a, b, c, img : Graphics.Image; title : String;
 			f : Graphics.Font;
-			iconSize, closeImageWidth : SIZE;
+			iconSize, closeImageWidth, offsetX := 0, imgWidth := 0: SIZE;
+			VAR style := manager.GetStyle();
+			VAR offsetY := 0: SIZE;
+			VAR th := style.th, rw := style.rw + style.buttonRightMargin, btm := style.buttonTopMargin : SIZE;
 		BEGIN
 			fw := w / GetWidth(); fh := h / GetHeight();
 			IF hasFocus THEN
@@ -402,27 +450,56 @@ TYPE
 
 			(* Close button *)
 			IF (master # NIL) & (WM.FlagClose IN master.flags) THEN
-				IF (hover = CloseButton) & (closeHover # NIL) THEN img := closeHover;
-				ELSIF hasFocus THEN img := closeActive ELSE img := closeInactive END;
+				img := closeHoverInactive IF ~hasFocus & (hover = CloseButton) & (closeHoverInactive # NIL)
+					ELSE closeHover	IF (hover = CloseButton) & (closeHover # NIL)
+						ELSE closeActive IF hasFocus ELSE closeInactive;
 
 				IF img # NIL THEN
+					offsetX := img.width IF style.version = 1 ELSE img.width + rw;
+					offsetY := 0 IF style.version = 1 ELSE ENTIER((th - img.height) DIV 2 * fh) + btm;
 					canvas.ScaleImage(img, WMRectangles.MakeRect(0, 0, img.width, img.height),
-						WMRectangles.MakeRect(w - ENTIER(img.width * fw), 0, w, ENTIER(img.height * fh)), Graphics.ModeSrcOverDst, q);
-					closeImageWidth := img.width;
+						WMRectangles.MakeRect(w - ENTIER(offsetX * fw), offsetY, w IF style.version = 1 ELSE w - ENTIER(rw * fw), offsetY + ENTIER(img.height * fh)), Graphics.ModeSrcOverDst, q);
 				ELSE
-					canvas.Fill(WMRectangles.MakeRect(w - ENTIER(20 * fw), ENTIER(2 * fh), w, h), SIGNED32(0FF0000C0H), Graphics.ModeSrcOverDst);
-					closeImageWidth := 20;
+					offsetX := 20 IF style.version = 1 ELSE rw + 20;
+					canvas.Fill(WMRectangles.MakeRect(w - ENTIER(offsetX * fw), ENTIER(2 * fh), w IF style.version = 1 ELSE w - ENTIER(rw * fw), h), SIGNED32(0FF0000C0H), Graphics.ModeSrcOverDst);
+				END;
+			END;
+
+			(* Maximize button *)
+			IF (master # NIL) & (WM.FlagMaximize IN master.flags) THEN
+				IF master.windowState = WindowState.Maximized THEN
+					img := restoreHoverInactive IF ~hasFocus & (hover = RestoreButton) & (restoreHoverInactive # NIL)
+						ELSE restoreHover IF (hover = RestoreButton) & (restoreHover # NIL)
+							ELSE restoreActive IF hasFocus ELSE restoreInactive;
+				ELSE
+					img := maximizeHoverInactive IF ~hasFocus & (hover = MaximizeButton) & (maximizeHoverInactive # NIL)
+						ELSE maximizeHover IF (hover = MaximizeButton) & (maximizeHover # NIL)
+							ELSE maximizeActive IF hasFocus ELSE maximizeInactive;
+				END;
+				IF img # NIL THEN
+					imgWidth := img.width;
+					INC(offsetX, spaceBetweenButtons);
+					offsetY := 0 IF style.version = 1 ELSE ENTIER((th - img.height) DIV 2 * fh) + btm;
+					canvas.ScaleImage(img, WMRectangles.MakeRect(0, 0, imgWidth, img.height),
+						WMRectangles.MakeRect(w - ENTIER((offsetX + imgWidth) * fw), offsetY, w - ENTIER(offsetX * fw), offsetY + ENTIER(img.height * fh)), Graphics.ModeSrcOverDst, q);
+					INC(offsetX, imgWidth);
+				ELSE
+
 				END;
 			END;
 
 			(* Minimize button *)
 			IF (master # NIL) & (WM.FlagMinimize IN master.flags) THEN
-				IF (hover = MinimizeButton) & (minimizeHover # NIL) THEN img := minimizeHover;
-				ELSIF hasFocus THEN img := minimizeActive ELSE img := minimizeInactive END;
+				img := minimizeHoverInactive IF ~hasFocus & (hover = MinimizeButton) & (minimizeHoverInactive # NIL)
+					ELSE minimizeHover IF (hover = MinimizeButton) & (minimizeHover # NIL)
+					ELSE minimizeActive IF hasFocus ELSE minimizeInactive;
 
 				IF img # NIL THEN
-					canvas.ScaleImage(img, WMRectangles.MakeRect(0, 0, img.width, img.height),
-						WMRectangles.MakeRect(w - ENTIER((img.width + closeImageWidth - minimizeOffset + spaceBetweenButtons) * fw), 0, w - ENTIER((closeImageWidth - minimizeOffset + spaceBetweenButtons) * fw), ENTIER(img.height * fh)), Graphics.ModeSrcOverDst, q)
+					INC(offsetX, spaceBetweenButtons - minimizeOffset);
+					imgWidth := img.width;
+					offsetY := 0 IF style.version = 1 ELSE ENTIER((th - img.height) DIV 2 * fh) + btm;
+					canvas.ScaleImage(img, WMRectangles.MakeRect(0, 0, imgWidth, img.height),
+						WMRectangles.MakeRect(w - ENTIER((offsetX + imgWidth) * fw), offsetY, w - ENTIER(offsetX * fw), offsetY + ENTIER(img.height * fh)), Graphics.ModeSrcOverDst, q)
 				ELSE
 				(*	canvas.Fill(WMRectangles.MakeRect(w - ENTIER(20 * fw), ENTIER(2 * fh), w, h), SIGNED32(0FF0000C0H), Graphics.ModeSrcOverDst);  *)
 				END;
@@ -471,10 +548,48 @@ TYPE
 			IF master = NIL THEN RETURN END;
 			m.msgType := Messages.MsgClose;
 			IF master.sequencer # NIL THEN
-				IF ~master.sequencer.Add(m) THEN KernelLog.String("Close message could not be queued."); KernelLog.Ln END
-			ELSE master.Handle(m)
+				IF ~master.sequencer.Add(m) THEN TRACE("Close message could not be queued."); END
+			ELSE
+				master.Handle(m);
 			END;
 		END CloseDispatch;
+
+		PROCEDURE MinimizeDispatch*(sender, data : ANY);
+		VAR m : Message;
+		BEGIN
+			IF master = NIL THEN RETURN END;
+			m.msgType := Messages.MsgMinimize;
+			IF master.sequencer # NIL THEN
+				IF ~master.sequencer.Add(m) THEN TRACE("Maximize message could not be queued."); END;
+			ELSE
+				master.Handle(m);
+			END;
+		END MinimizeDispatch;
+
+		PROCEDURE MaximizeDispatch*(sender, data : ANY);
+		VAR m : Message;
+		BEGIN
+			IF master = NIL THEN RETURN END;
+			m.msgType := Messages.MsgMaximize;
+			m.ext := sender;
+			IF master.sequencer # NIL THEN
+				IF ~master.sequencer.Add(m) THEN TRACE("Maximize message could not be queued."); END;
+			ELSE
+				master.Handle(m);
+			END;
+		END MaximizeDispatch;
+
+		PROCEDURE RestoreDispatch*(sender, data : ANY);
+		VAR m : Message;
+		BEGIN
+			IF master = NIL THEN RETURN END;
+			m.msgType := Messages.MsgRestore;
+			IF master.sequencer # NIL THEN
+				IF ~master.sequencer.Add(m) THEN TRACE("Maximize message could not be queued."); END;
+			ELSE
+				master.Handle(m);
+			END;
+		END RestoreDispatch;
 
 		PROCEDURE StyleChanged*;
 		VAR s : WM.WindowStyle; r : WMRectangles.Rectangle;
@@ -490,7 +605,9 @@ TYPE
 			tay := s.atextY; tiy := s.itextY;
 
 			closeActive := s.ca; closeInactive := s.ci; closeHover := s.closeHover;
-			minimizeActive := s.ma; minimizeInactive := s.mi; minimizeHover := s.minimizeHover;
+			minimizeActive := s.ma; minimizeInactive := s.mi; minimizeHover := s.minimizeHover; minimizeHoverInactive := s.minimizeHoverInactive;
+			maximizeActive := s.maximizeActive; maximizeInactive := s.maximizeInactive; maximizeHover := s.maximizeHover; maximizeHoverInactive := s.maximizeHoverInactive;
+			restoreActive := s.restoreActive; restoreInactive := s.restoreInactive; restoreHover := s.restoreHover; restoreHoverInactive := s.restoreHoverInactive;
 			minimizeOffset := s.minimizeOffset;
 			spaceBetweenButtons := s.spaceBetweenButtons;
 			manager.lock.AcquireWrite;
@@ -733,3 +850,5 @@ BEGIN
 END RepeatMiddleHorizontal;
 
 END WMDefaultWindows.
+
+Release.Rebuild -b Win64 WMMessages.Mod WMWindowManager.Mod SkinLanguage.Mod SkinEngine.Mod WMDefaultWindows.Mod WMComponents~ 

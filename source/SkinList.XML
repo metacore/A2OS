@@ -8,6 +8,7 @@ Available Skins: Displayed name and file name per skin
 	<Look name="Reptile" file="reptile.skin"/>
 	<Look name="Traditional" file="traditional.skin"/>
 	<Look name="XP" file="winxp.skin"/>
+	<Look name="XPEmbedded" file="xpe.skin"/>
 	<Look name="OSX" file="aqua.skin"/>
 	<Look name="Christmas" file="xmas.skin"/>
 	<Look name="Glass" file="glass.skin"/>

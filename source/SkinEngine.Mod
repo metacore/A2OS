@@ -123,18 +123,80 @@ BEGIN
 						ELSIF ss^ = "InactiveCloseBitmap" THEN
 							ts := GetCharContent(y);
 							IF ts # NIL THEN LoadImg(ts^, desc.ci) END
-						ELSIF ss^ = "HoverCloseBitmap" THEN
+						ELSIF (ss^ = "HoverCloseBitmap") OR (ss^ = "ActiveHoverCloseBitmap") THEN
 							ts := GetCharContent(y);
 							IF ts # NIL THEN LoadImg(ts^, desc.closeHover); END;
+						ELSIF ss^ = "InactiveHoverCloseBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.closeHoverInactive); END;
+						ELSIF ss^ = "PressedCloseBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.closePressed); END;
+
 						ELSIF ss^ = "ActiveMinimizeBitmap" THEN
 							ts := GetCharContent(y);
 							IF ts # NIL THEN LoadImg(ts^, desc.ma); END;
 						ELSIF ss^ = "InactiveMinimizeBitmap" THEN
 							ts := GetCharContent(y);
 							IF ts # NIL THEN LoadImg(ts^, desc.mi); END;
-						ELSIF ss^ = "HoverMinimizeBitmap" THEN
+						ELSIF (ss^ = "HoverMinimizeBitmap") OR (ss^ = "ActiveHoverMinimizeBitmap") THEN
 							ts := GetCharContent(y);
 							IF ts # NIL THEN LoadImg(ts^, desc.minimizeHover); END;
+						ELSIF (ss^ = "InactiveHoverMinimizeBitmap") THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.minimizeHoverInactive); END;
+						ELSIF (ss^ = "PressedHoverMinimizeBitmap") THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.minimizePressed); END;
+
+						ELSIF ss^ = "ActiveMaximizeBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.maximizeActive); END;
+						ELSIF ss^ = "InactiveMaximizeBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.maximizeInactive); END;
+						ELSIF (ss^ = "HoverMaximizeBitmap") OR (ss^ = "ActiveHoverMaximizeBitmap") THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.maximizeHover); END;
+						ELSIF ss^ = "InactiveHoverMaximizeBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.maximizeHoverInactive); END;
+						ELSIF ss^ = "PressedMaximizeBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.maximizePressed); END;
+
+						ELSIF ss^ = "ActiveRestoreBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.restoreActive); END;
+						ELSIF ss^ = "InactiveRestoreBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.restoreInactive); END;
+						ELSIF (ss^ = "HoverRestoreBitmap") OR (ss^ = "ActiveHoverRestoreBitmap") THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.restoreHover); END;
+						ELSIF ss^ = "InactiveHoverRestoreBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.restoreHoverInactive); END;
+						ELSIF ss^ = "PressedRestoreBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.restorePressed); END;
+
+						ELSIF ss^ = "ActiveUserBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.userActive); END;
+						ELSIF ss^ = "InactiveUserBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.userInactive); END;
+						ELSIF (ss^ = "HoverUserBitmap") OR (ss^ = "ActiveHoverUserBitmap") THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.userHover); END;
+						ELSIF ss^ = "InactiveHoverUserBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.userHoverInactive); END;
+						ELSIF ss^ = "PressedUserBitmap" THEN
+							ts := GetCharContent(y);
+							IF ts # NIL THEN LoadImg(ts^, desc.userPressed); END;
+
 						ELSIF ss^ = "ActiveTopMargin" THEN
 							ts := GetCharContent(y);
 							IF ts # NIL THEN Strings.StrToInt(ts^, desc.atextY) END
@@ -147,19 +209,49 @@ BEGIN
 						ELSIF ss^ = "InactiveLeftMargin" THEN
 							ts := GetCharContent(y);
 							IF ts = NIL THEN desc.itextY := desc.atextY ELSE Strings.StrToInt(ts^, desc.itextX) END
+
 						ELSIF ss^ = "ActiveColor" THEN
 							ts := GetCharContent(y);
 							IF ts # NIL THEN Strings.HexStrToInt(ts^, desc.atextColor, res) END
 						ELSIF ss^ = "InactiveColor" THEN
 							ts := GetCharContent(y);
 							IF ts = NIL THEN desc.itextColor := desc.atextColor ELSE Strings.HexStrToInt(ts^, desc.itextColor, res) END;
+
 						ELSIF ss^ = "MinimizeOffset" THEN
 							ts := GetCharContent(y);
 							IF (ts = NIL) THEN desc.minimizeOffset := 0; ELSE Strings.StrToInt(ts^, desc.minimizeOffset); END;
 						ELSIF ss^ = "SpaceBetweenButtons" THEN
 							ts := GetCharContent(y);
 							IF (ts = NIL) THEN desc.spaceBetweenButtons:= 0; ELSE Strings.StrToInt(ts^, desc.spaceBetweenButtons); END;
-						END;
+						ELSIF ss^ = "ButtonLeftMargin" THEN
+							ts := GetCharContent(y);
+							IF (ts = NIL) THEN desc.buttonLeftMargin:= 0; ELSE Strings.StrToInt(ts^, desc.buttonLeftMargin); END;
+						ELSIF ss^ = "ButtonTopMargin" THEN
+							ts := GetCharContent(y);
+							IF (ts = NIL) THEN desc.buttonTopMargin:= 0; ELSE Strings.StrToInt(ts^, desc.buttonTopMargin); END;
+						ELSIF ss^ = "ButtonRightMargin" THEN
+							ts := GetCharContent(y);
+							IF (ts = NIL) THEN desc.buttonRightMargin := 0; ELSE Strings.StrToInt(ts^, desc.buttonRightMargin); END;
+						ELSIF s^ = "ButtonAlignedToTop" THEN
+							ts := GetCharContent(y);
+							IF (ts # NIL) THEN
+								Strings.Trim(s^, " ");
+								Strings.LowerCase(s^);
+								desc.buttonAlignedToTop := (s^ = "true");
+							ELSE
+								desc.buttonAlignedToTop := FALSE;
+							END;
+						ELSIF s^ = "ButtonAlignedToLeft" THEN
+							ts := GetCharContent(y);
+							IF (ts # NIL) THEN
+								Strings.Trim(s^, " ");
+								Strings.LowerCase(s^);
+								desc.buttonAlignedToLeft := (s^ = "true");
+							ELSE
+								desc.buttonAlignedToLeft := FALSE;
+							END;
+						END
+
 					END
 				END
 			ELSIF s^ = "Top" THEN
@@ -342,8 +434,9 @@ END SetZeroSkin;
 
 (* install skin specified by xml-doc *)
 PROCEDURE SetXmlSkinInternal(doc : XML.Document);
-VAR p : ANY; cont : Objects.Enumerator; root: XML.Element;
+VAR p : ANY; cont : Objects.Enumerator; root: XML.Element; ts: XML.String;
 	el : XML.Content; s : Strings.String; desc : WM.WindowStyle;
+	version := 1: SIGNED32;
 BEGIN
 	SetZeroSkin(FALSE);
 	root := doc.GetRoot();
@@ -354,9 +447,13 @@ BEGIN
 			el := p(XML.Element);
 			s := el(XML.Element).GetName();
 			LowerCase(s);
-			IF s^ = "window" THEN
+			IF s^ = "version" THEN
+				ts := GetCharContent(el(XML.Element));
+				IF ts # NIL THEN Strings.StrToInt(ts^, version);END;
+			ELSIF s^ = "window" THEN
 				(* default window frame *)
-				desc := LoadWindow(el(XML.Element))
+				desc := LoadWindow(el(XML.Element));
+				desc.version := version;
 			ELSIF s^ = "cursors" THEN
 				(* cursors *)
 				LoadCursors(el(XML.Element), manager)

@@ -17,6 +17,10 @@ CONST
 	FlagNoResizing* = 10; (** If set, window resizing is disabled *)
 	FlagNoPointer*=11; (* if set, in window there will be no pointer visible --> touch screens *)
 	FlagStorable*=12; (* window storable*)
+	FlagDirty* = 13; (*see WMComponents *);
+	FlagMaximize* = 14; (** The window offers a maximize/restore button; only frame windows *)
+(*	FlagHelp* = 15; (** The window offers a help button; only frame windows *) *)
+(*	FlagMenu* = 16; (** The window offers a menu button; only frame windows *) *)
 
 	SizeMinHeight = 3; (* Minimum height of a window *)
 	SizeMinWidth = 3; (* Minimum width of a window *)
@@ -46,6 +50,8 @@ TYPE
 		Most of the information is used by WMDefaultWindows.Mod *)
 	WindowStyle* = OBJECT
 	VAR
+		version* : SIGNED32;
+
 		(** use bitmaps for frame windows? *)
 		useBitmaps* : BOOLEAN;
 
@@ -68,12 +74,17 @@ TYPE
 		raa*, rab*, rac*, ria*, rib*, ric*,
 		baa*, bab*, bac*, bia*, bib*, bic* : Graphics.Image;
 
-		(** Close and minimize button images (a = active, i = inactive) *)
-		ca*, ci*, closeHover*,
-		ma*, mi*, minimizeHover* : Graphics.Image;
+		(** System (Close, minimize etc) buttons images (a = active, i = inactive) *)
+		ca*, ci*, closeHover*, closeHoverInactive*, closePressed*,
+		ma*, mi*, minimizeHover*, minimizeHoverInactive*, minimizePressed*,
+		maximizeActive*, maximizeInactive*, maximizeHover*, maximizeHoverInactive*, maximizePressed*,
+		restoreActive*, restoreInactive*, restoreHover*, restoreHoverInactive*, restorePressed*,
+		userActive*, userInactive*, userHover*, userHoverInactive*, userPressed* : Graphics.Image;
 
+		buttonLeftMargin*, buttonTopMargin*, buttonRightMargin*,
 		spaceBetweenButtons*,
 		minimizeOffset* : SIGNED32; (** offset correction for minimize button *)
+		buttonAlignedToTop*, buttonAlignedToLeft* : BOOLEAN;
 
 		(** Window title position and color (a = active, i = inactive) *)
 		atextX*, atextY*, atextColor*, itextX*, itextY*, itextColor* : SIGNED32;
@@ -86,6 +97,7 @@ TYPE
 		(* Initialize/reset to zero-style for windows *)
 		PROCEDURE &Init*;
 		BEGIN
+			version := 1; (* old style engine *)
 			useBitmaps := FALSE;
 			baCol := 0FFFFH; biCol := 0FF40H;
 			basw := 4; bisw := 3;
@@ -98,20 +110,26 @@ TYPE
 			baa := NIL; bab := NIL; bac := NIL; bia := NIL; bib := NIL; bic := NIL;
 			ca := Graphics.LoadImage("ZeroSkin.zip://aclose.png", TRUE);
 			ci := Graphics.LoadImage("ZeroSkin.zip://iclose.png", TRUE);
-			closeHover := NIL;
-			ma := NIL; mi := NIL; minimizeHover := NIL;
+			closeHover := NIL; closeHoverInactive := NIL; closePressed := NIL;
+			ma := NIL; mi := NIL; minimizeHover := NIL; minimizeHoverInactive := NIL; minimizePressed := NIL;
+			maximizeActive := NIL; maximizeInactive := NIL; maximizeHover := NIL; maximizeHoverInactive := NIL; maximizePressed := NIL;
+			restoreActive := NIL; restoreInactive := NIL; restoreHover := NIL;  restoreHoverInactive := NIL; restorePressed := NIL;
+			userActive := NIL; userInactive := NIL; userHover := NIL; userHoverInactive := NIL; userPressed := NIL;
+
 			minimizeOffset := 0;
 			spaceBetweenButtons := 0;
+			buttonLeftMargin := 0; buttonTopMargin := 0; buttonRightMargin := 0;
+			buttonAlignedToTop := FALSE; buttonAlignedToLeft := FALSE;
 
 			(* window caption *)
-			atextX := 5; atextY := 15; atextColor := SIGNED32(0FFFF00FFH);
-			itextX := 5; itextY := 15; itextColor := 04444FFH;
+			atextX := 5; atextY := 15; atextColor := Graphics.Color(0FFFF00FFH);
+			itextX := 5; itextY := 15; itextColor := Graphics.Color(04444FFH);
 
 			(* desktop *)
-			bgColor := SIGNED32(08080FFFFH);
-			fgColor := 0000000FFH;
-			selectCol := 0FFFFH;
-			desktopColor := SIGNED32(08080FFFFH);
+			bgColor := Graphics.Color(08080FFFFH);
+			fgColor := Graphics.Color(0000000FFH);
+			selectCol := Graphics.Color(0FFFFH);
+			desktopColor := Graphics.Color(08080FFFFH);
 
 			topFocusThreshold := 0; topThreshold := 0;
 			bottomFocusThreshold := 0; bottomThreshold := 0;
@@ -173,16 +191,20 @@ TYPE
 
 	WindowInfoPtr = POINTER TO WindowInfo;
 
+	WindowState* = ENUM Normal*, Minimized*, Maximized* (*, FullScreen* *) END;
+
 	Window* = OBJECT
 	VAR
 		id- : SIGNED32;
 
 		timestamp* : SIGNED32; (* incremented at each call of procedure Draw *)
 
+		windowState-, windowStateSaved- : WindowState;
+
 		(** Ranges in global coordinates *)
 		bounds* : Rectangle; (** current range *)
 		initialBounds* : Rectangle; (** range at window creation *)
-		normalBounds* : Rectangle; (** range before toggling to fullscreen *)
+		normalBounds* : Rectangle; (** range before toggling to fullscreen/maximize *)
 
 		manager* : WindowManager;
 		sequencer* : Messages.MsgSequencer;
@@ -224,6 +246,8 @@ TYPE
 			pointerInfo := NIL;
 			acceptDrag := FALSE;
 			reduceQuality := FALSE;
+			windowState := WindowState.Normal;
+			windowStateSaved := WindowState.Normal;
 		END Init;
 
 		PROCEDURE IsCallFromSequencer*() : BOOLEAN;
@@ -289,6 +313,14 @@ TYPE
 				RETURN (infoPtr # NIL);
 			END;
 		END GetInfo;
+
+		PROCEDURE {FINAL} SetWindowState*(value: WindowState);
+		BEGIN
+			IF windowState # value THEN
+				windowStateSaved := windowState;
+				windowState := value;
+			END;
+		END SetWindowState;
 
 		(** Resize is called by the WM if it wants to resize the window.
 			width and height contain the desired new size. The Window should set width and height to acceptable
@@ -422,6 +454,68 @@ TYPE
 			IF manager # NIL THEN manager.Remove(SELF) END;
 		END Close;
 
+(** Minimize *)
+
+		PROCEDURE CanMinimize*(): BOOLEAN;
+		BEGIN
+			RETURN (manager # NIL) & isVisible & (flags * {FlagNavigation, FlagHidden, FlagNoResizing} = {}) & (windowState # WindowState.Minimized);
+		END CanMinimize;
+
+		(** Minimize is called via the generic message handler. *)
+		PROCEDURE Minimize*;
+		BEGIN
+			IF CanMinimize() THEN
+				manager.SetIsVisible(SELF, FALSE);
+				SetWindowState(WindowState.Minimized);
+			END;
+		END Minimize;
+
+(** Maximize *)
+
+		PROCEDURE CanMaximize*(): BOOLEAN;
+		BEGIN
+			RETURN (manager # NIL) & (flags * {FlagNavigation, FlagHidden, FlagNoResizing} = {}) & (windowState # WindowState.Maximized);
+		END CanMaximize;
+
+		(** Maximize is called via the generic message handler. *)
+		PROCEDURE Maximize*;
+		BEGIN
+			IF CanMaximize() THEN
+				normalBounds := bounds;
+				VAR view := manager.viewRegistry.Await(""); (*!*)
+				WITH view: ViewPort DO
+					VAR style := manager.GetStyle();
+					VAR th := style.th - style.buttonTopMargin - 1 IF FlagFrame IN flags ELSE 0;
+					VAR vw := SIZE(ENTIER(view.range.r - view.range.l));
+					VAR vh := SIZE(ENTIER(view.range.b - view.range.t) - th);
+					manager.SetWindowSize(SELF, vw, vh);
+					manager.SetWindowPos(SELF, SIZE(view.range.l), SIZE(view.range.t) + th);
+					Resized(vw, vh);
+				END;
+				SetWindowState(WindowState.Maximized);
+			END;
+		END Maximize;
+
+(** Restore *)
+
+		PROCEDURE CanRestore*(): BOOLEAN;
+		BEGIN
+			RETURN (manager # NIL) & (flags * {FlagNavigation, FlagHidden, FlagNoResizing} = {}) & (windowState # WindowState.Normal);
+		END CanRestore;
+
+		(** Restore is called via the generic message handler. *)
+		PROCEDURE Restore*;
+		BEGIN
+			IF CanRestore() THEN
+				VAR vw := normalBounds.r - normalBounds.l;
+				VAR vh := normalBounds.b - normalBounds.t;
+				manager.SetWindowPos(SELF, normalBounds.l, normalBounds.t);
+				manager.SetWindowSize(SELF, vw, vh);
+				Resized(vw, vh);
+				SetWindowState(WindowState.Normal);
+			END;
+		END Restore;
+
 		(** Return true if the window is hit at the coordinates x and y (in window coordinates). Use
 			this to generate non-rectangular windows.
 			This Method will be called directly by the window manager. __> Don't block, don't crash !!
@@ -467,6 +561,9 @@ TYPE
 					END
 				END
 			ELSIF m.msgType = Messages.MsgClose THEN Close
+			ELSIF m.msgType = Messages.MsgMinimize THEN Minimize
+			ELSIF m.msgType = Messages.MsgMaximize THEN Maximize
+			ELSIF m.msgType = Messages.MsgRestore THEN Restore
 			ELSIF m.msgType = Messages.MsgFocus THEN
 				IF m.msgSubType = Messages.MsgSubFocusGot THEN FocusGot
 				ELSIF m.msgSubType = Messages.MsgSubFocusLost THEN FocusLost
@@ -862,6 +959,7 @@ TYPE
 			lock.AcquireWrite;
 			w.icon := icon;
 			tw := w.topW;
+			TRACE(tw);
 			IF tw # NIL THEN AddVisibleDirty(tw, tw.bounds) END;
 			lock.ReleaseWrite;
 			IncOTimestamp;
@@ -1165,7 +1263,7 @@ BEGIN
 	manager := GetDefaultManager();
 	view := GetDefaultView();
 	GetNextPosition(w, manager, view, dx, dy);
-	manager.Add(ENTIER(view.range.l) + dx, ENTIER(view.range.t) + dy, w, {FlagFrame, FlagClose, FlagMinimize});
+	manager.Add(ENTIER(view.range.l) + dx, ENTIER(view.range.t) + dy, w, {FlagFrame, FlagClose, FlagMinimize, FlagMaximize});
 	manager.SetFocus(w)
 END DefaultAddWindow;
 
@@ -1174,7 +1272,7 @@ VAR manager : WindowManager; view : ViewPort;
 BEGIN
 	manager := GetDefaultManager();
 	view := GetDefaultView();
-	manager.Add(ENTIER(view.range.l) + dx, ENTIER(view.range.t) + dy, w, {FlagFrame, FlagClose, FlagMinimize})
+	manager.Add(ENTIER(view.range.l) + dx, ENTIER(view.range.t) + dy, w, {FlagFrame, FlagClose, FlagMinimize, FlagMaximize})
 END AddWindow;
 
 PROCEDURE ExtAddWindow*(w : Window; dx, dy : SIZE; flags : SET);

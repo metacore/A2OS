@@ -14,23 +14,58 @@
 <!-- 	WARNING : Only modify this file if you know what you are doing!
 		Only implementors of new visual components should modify this file	-->
 
-<!-- window -->
 <config>
+<!-- window -->
 	<component name="title">
 		<property name="activeLeftMargin" type="int32" mandatory="false"/>
-				<property name="activeTopMargin" type="int32" mandatory="false" />
-		<property name="activeColor" type="color" mandatory="false" />
-		<property name="activeCloseBitmap" type="resource" mandatory="false" />
-		<property name="activeMinimizeBitmap" type="resource" mandatory="false" />
-		<property name="inactiveLeftMargin" type="int32" mandatory="false" />
+		<property name="inactiveLeftMargin" type="int32" mandatory="false"/>
+		<property name="activeTopMargin" type="int32" mandatory="false" />
 		<property name="inactiveTopMargin" type="int32" mandatory="false" />
+		<property name="activeColor" type="color" mandatory="false" />
 		<property name="inactiveColor" type="color" mandatory="false" />
-		<property name="inactiveCloseBitmap" type="resource" mandatory="false" />
-		<property name="inactiveMinimizeBitmap" type="resource" mandatory="false" />
-		<property name="hoverCloseBitmap" type="resource" mandatory ="false"/>
-		<property name="hoverMinimizeBitmap" type="resource" mandatory="false"/>
-		<property name="minimizeOffset" type="int32" mandatory="false"/>
+		
+		<property name="buttonAlignedToTop" type="boolean" mandatory="false"/>
+		<property name="buttonAlignedToLeft" type="boolean" mandatory="false"/>
 		<property name="spaceBetweenButtons" type="int32" mandatory="false"/>
+		<property name="buttonLeftMargin" type="int32" mandatory="false"/>
+		<property name="buttonTopMargin" type="int32" mandatory="false" />
+		<property name="buttonRightMargin" type="int32" mandatory="false" />
+
+		<property name="activeCloseBitmap" type="resource" mandatory="false" />
+		<property name="inactiveCloseBitmap" type="resource" mandatory="false" />
+		<property name="hoverCloseBitmap" type="resource" mandatory ="false"/>
+		<property name="activeHoverCloseBitmap" type="resource" mandatory ="false"/>
+		<property name="inactiveHoverCloseBitmap" type="resource" mandatory ="false"/>
+		<property name="pressedCloseBitmap" type="resource" mandatory ="false"/>
+
+		<property name="activeMinimizeBitmap" type="resource" mandatory="false" />
+		<property name="inactiveMinimizeBitmap" type="resource" mandatory="false" />
+		<property name="hoverMinimizeBitmap" type="resource" mandatory="false"/>
+		<property name="activeHoverMinimizeBitmap" type="resource" mandatory="false"/>
+		<property name="inactiveHoverMinimizeBitmap" type="resource" mandatory="false"/>
+		<property name="pressedMinimizeBitmap" type="resource" mandatory="false"/>
+		<property name="minimizeOffset" type="int32" mandatory="false"/>
+
+		<property name="activeMaximizeBitmap" type="resource" mandatory="false" />
+		<property name="inactiveMaximizeBitmap" type="resource" mandatory="false" />
+		<property name="hoverMaximizeBitmap" type="resource" mandatory="false"/>		
+		<property name="activeHoverMaximizeBitmap" type="resource" mandatory="false"/>		
+		<property name="inactiveHoverMaximizeBitmap" type="resource" mandatory="false"/>		
+		<property name="pressedMaximizeBitmap" type="resource" mandatory="false"/>		
+		
+		<property name="activeRestoreBitmap" type="resource" mandatory="false" />
+		<property name="inactiveRestoreBitmap" type="resource" mandatory="false" />
+		<property name="hoverRestoreBitmap" type="resource" mandatory="false"/>
+		<property name="activeHoverRestoreBitmap" type="resource" mandatory="false"/>
+		<property name="inactiveHoverRestoreBitmap" type="resource" mandatory="false"/>
+		<property name="pressedRestoreBitmap" type="resource" mandatory="false"/>
+
+		<property name="activeUserBitmap" type="resource" mandatory="false" />
+		<property name="inactiveUserBitmap" type="resource" mandatory="false" />
+		<property name="hoverUserBitmap" type="resource" mandatory="false"/>
+		<property name="activeHoverUserBitmap" type="resource" mandatory="false"/>
+		<property name="inactiveHoverUserBitmap" type="resource" mandatory="false"/>
+		<property name="pressedUserBitmap" type="resource" mandatory="false"/>
 	</component>
 	<component name="top">
 		<property name="activeLeft" type="resource" mandatory="false"/>
@@ -142,9 +177,11 @@
 		<property name="clDefault" type="color" mandatory="false" />
 		<property name="clHover" type="color" mandatory="false" />
 		<property name="clPressed" type="color" mandatory="false" />
+		<property name="clDisabled" type="color" mandatory="false" />
 		<property name="clTextDefault" type="color" mandatory="false" />
 		<property name="clTextHover" type="color" mandatory="false" />
 		<property name="clTextPressed" type="color" mandatory="false" />
+		<property name="clTextDisabled" type="color" mandatory="false" />
 		<property name="fontHeight" type="int32" mandatory="false" />
 		<property name="effect3d" type="int32" mandatory="false" />
 		<property name="useBgBitmaps" type="boolean" mandatory="false" />
@@ -158,14 +195,19 @@
 		<property name="bgLeftPressed" type="resource" mandatory="false" />
 		<property name="bgRightPressed" type="resource" mandatory="false" />
 		<property name="bgMiddlePressed" type="resource" mandatory="false" />
+		<property name="bgLeftDisabled" type="resource" mandatory="false" />
+		<property name="bgRightDisabled" type="resource" mandatory="false" />
+		<property name="bgMiddleDisabled" type="resource" mandatory="false" />
 		<property name="bgTopDefault" type="resource" mandatory="false" />
 		<property name="bgDefault" type="resource" mandatory="false" />
 		<property name="bgPressed" type="resource" mandatory="false" />
 		<property name="bgHover" type="resource" mandatory="false" />
+		<property name="bgDisabled" type="resource" mandatory="false" />
 		<property name="useDeco" type="boolean" mandatory="false" />
 		<property name="decoDefault" type="resource" mandatory="false" />
 		<property name="decoHover" type="resource" mandatory="false" />
 		<property name="decoPressed" type="resource" mandatory ="false" />
+		<property name="decoDasabled" type="resource" mandatory ="false" />
 	</component>
 	<component name="scrollbar">
 		<property name="width" type="int32" mandatory="false" />

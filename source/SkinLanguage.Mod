@@ -39,7 +39,7 @@ TYPE
 			NEW(p, e.GetAttributeValue("name"), e.GetAttributeValue("type"));
 			s := e.GetAttributeValue("mandatory");
 			IF s # NIL THEN
-				LowerCase(s); p.mandatory := (s^ # "false")
+				Strings.LowerCase(s^); p.mandatory := (s^ # "false")
 			END;
 			p.next := first; first := p
 		END Add;
@@ -75,7 +75,7 @@ TYPE
 			result := TRUE; p := properties.first;
 			WHILE p # NIL DO
 				IF p.mandatory & ~p.succeeded THEN
-					re(Append(NewString("Missing mandatory property : "), p.name^));
+					re(Strings.NewString("Missing mandatory property : ") + p.name^);
 					result := FALSE
 				END;
 				p := p.next
@@ -264,14 +264,27 @@ TYPE
 
 		(* parse skin elements *)
 		PROCEDURE ParseSkin() : XML.Element;
-		VAR x, y : XML.Element;
+		VAR x, y : XML.Element; s: String;
 		BEGIN
 			IF FailToParse("{") THEN RETURN NIL END;
 			NEW(x);
 			x.SetName("Skin");
-				(* meta information *)
-			IF FailToParse("meta") THEN RETURN NIL END;
-			IF ParseMeta() = NIL THEN RETURN NIL END;
+
+			s := scanner.Get();
+			IF (s # NIL) & (s^ = "version") THEN
+			  y := ParseInt32Property();
+			  IF y # NIL THEN
+				y.SetName("version");
+				x.AddContent(y);
+			  END;
+			END;
+
+			(* meta information *)
+			IF (s # NIL) & (s^ = "meta") OR ~FailToParse("meta") THEN
+			  IF ParseMeta() = NIL THEN RETURN NIL END;
+			ELSE
+			  RETURN NIL;
+			END;
 				(* window-style*)
 			IF FailToParse("window") THEN RETURN NIL END;
 			y := ParseWindow();
@@ -304,7 +317,7 @@ TYPE
 			WHILE (s # NIL) & (s^ # "}") DO
 				c := components.Find(s);
 				IF c = NIL THEN
-					ErrorString(Append(NewString("Unknown cursor : "), s^));
+					ErrorString(Strings.NewString("Unknown cursor : ") + s^);
 					RETURN NIL
 				ELSE
 					sub := ParseComponent(c);
@@ -334,7 +347,7 @@ TYPE
 			x.AddContent(sub);
 				(* title*)
 			IF FailToParse("title") THEN RETURN NIL END;
-			c := components.Find(NewString("title"));
+			c := components.Find(Strings.NewString("title"));
 			ASSERT(c # NIL);
 			sub := ParseComponent(c);
 			IF sub = NIL THEN RETURN NIL END;
@@ -342,28 +355,28 @@ TYPE
 			IF useBitmaps THEN
 					(* top *)
 				IF FailToParse("top") THEN RETURN NIL END;
-				c := components.Find(NewString("top"));
+				c := components.Find(Strings.NewString("top"));
 				ASSERT(c # NIL);
 				sub := ParseComponent(c);
 				IF sub = NIL THEN RETURN NIL END;
 				x.AddContent(sub);
 					(* bottom *)
 				IF FailToParse("bottom") THEN RETURN NIL END;
-				c := components.Find(NewString("bottom"));
+				c := components.Find(Strings.NewString("bottom"));
 				ASSERT(c # NIL);
 				sub := ParseComponent(c);
 				IF sub = NIL THEN RETURN NIL END;
 				x.AddContent(sub);
 					(* left *)
 				IF FailToParse("left") THEN RETURN NIL END;
-				c := components.Find(NewString("left"));
+				c := components.Find(Strings.NewString("left"));
 				ASSERT(c # NIL);
 				sub := ParseComponent(c);
 				IF sub = NIL THEN RETURN NIL END;
 				x.AddContent(sub);
 					(* right *)
 				IF FailToParse("right") THEN RETURN NIL END;
-				c := components.Find(NewString("right"));
+				c := components.Find(Strings.NewString("right"));
 				ASSERT(c # NIL);
 				sub := ParseComponent(c);
 				IF sub = NIL THEN RETURN NIL END;
@@ -371,7 +384,7 @@ TYPE
 			ELSE
 				(* border *)
 				IF FailToParse("border") THEN RETURN NIL END;
-				c := components.Find(NewString("border"));
+				c := components.Find(Strings.NewString("border"));
 				ASSERT(c # NIL);
 				sub := ParseComponent(c);
 				IF sub = NIL THEN RETURN NIL END;
@@ -379,7 +392,7 @@ TYPE
 			END;
 				(* desktop *)
 			IF FailToParse("desktop") THEN RETURN NIL END;
-			c := components.Find(NewString("desktop"));
+			c := components.Find(Strings.NewString("desktop"));
 			ASSERT(c # NIL);
 			sub := ParseComponent(c);
 			IF sub = NIL THEN RETURN NIL END;
@@ -429,7 +442,7 @@ TYPE
 			WHILE (s # NIL) & (s^ # "}") DO
 				c := components.Find(s);
 				IF c = NIL THEN
-					ErrorString(Append(NewString("Unknown component : "), s^));
+					ErrorString(Strings.NewString("Unknown component : ") + s^);
 					error := TRUE;
 					s := scanner.Get();
 					IF (s # NIL) & (s^ = "{") THEN
@@ -467,7 +480,7 @@ TYPE
 			WHILE (s # NIL) & (s^ # "}") DO
 				p := c.properties.Find(s);
 				IF p = NIL THEN
-					ErrorString(Append(NewString("Unknown property : "), s^));
+					ErrorString(Strings.NewString("Unknown property : ") + s^);
 					RETURN NIL;
 				END;
 				sub := ParseProperty(p);
@@ -643,7 +656,7 @@ TYPE
 		PROCEDURE CheckImage(CONST name : ARRAY OF CHAR);
 		BEGIN
 			IF WMGraphics.LoadImage(name, TRUE) = NIL THEN
-				ErrorString(Append(NewString("Warning, no valid image : "), name))
+				ErrorString(Strings.NewString("Warning, no valid image : ") + name)
 			END
 		END CheckImage;
 
@@ -652,7 +665,7 @@ TYPE
 		BEGIN
 			s := scanner.Get();
 			IF (s = NIL) OR (s^ # a) THEN
-				ErrorString(Append(Append(NewString("Failed to parse, expected '"), a), "'"));
+				ErrorString(Strings.NewString("Failed to parse, expected '") + a + "'");
 				RETURN TRUE
 			ELSE
 				RETURN FALSE
@@ -675,7 +688,7 @@ TYPE
 		(* return FALSE if LOW(s) equals either 'true' or 'false'. s := LOW(s) *)
 		PROCEDURE NoBoolean(s : String) : BOOLEAN;
 		BEGIN
-			LowerCase(s);
+			Strings.LowerCase(s^);
 			IF (s^ # "true") & (s^ # "false") THEN
 				Error("Expected 'true' or 'false'.");
 				RETURN TRUE
@@ -714,7 +727,7 @@ TYPE
 
 		PROCEDURE Error(CONST msg : ARRAY OF CHAR);
 		BEGIN
-			reportError(scanner.oldpos, scanner.line, scanner.col, NewString(msg));
+			reportError(scanner.oldpos, scanner.line, scanner.col, Strings.NewString(msg));
 		END Error;
 
 		PROCEDURE ErrorString(msg :String);
@@ -735,14 +748,9 @@ END DefaultReportError;
 
 (* ---- helpers ---------------------------------------------------------------*)
 
-PROCEDURE NewString(CONST x : ARRAY OF CHAR) : String;
-VAR t : String;
-BEGIN
-	NEW(t, LEN(x)); COPY(x, t^); RETURN t
-END NewString;
-
+(*
 (* result := a || b *)
-PROCEDURE Append(a : String; CONST b : ARRAY OF CHAR) : String;
+PROCEDURE Strings.Append(a : String; CONST b : ARRAY OF CHAR) : String;
 VAR s : String;
 	i, al, bl : SIZE;
 BEGIN
@@ -751,13 +759,15 @@ BEGIN
 	FOR i := 0 TO al-1 DO s^[i] := a^[i] END;
 	FOR i := 0 TO bl-1 DO s^[al+i-1] := b[i] END;
 	RETURN s
-END Append;
-
+END Strings.Append;
+*)
+(*
 PROCEDURE LowerCase(s : String);
 VAR i : SIZE;
 BEGIN
 	FOR i := 0 TO LEN(s^)-1 DO s^[i] := Strings.LOW(s^[i]) END
 END LowerCase;
-
+*)
 END SkinLanguage.
 
+Release.Rebuild -b Win64 SkinLanguage.Mod SkinEngine.Mod~

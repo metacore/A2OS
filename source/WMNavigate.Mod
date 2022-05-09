@@ -720,8 +720,10 @@ TYPE
 					IF keys * {0,1} # {} THEN
 						IF same & window.isVisible THEN
 							manager.SetIsVisible(window, FALSE);
+							window.SetWindowState(WMWindowManager.WindowState.Minimized);
 						ELSE
 							GoToWindow(window, 0 IN keys);
+							IF window.windowState = WMWindowManager.WindowState.Minimized THEN window.SetWindowState(window.windowStateSaved); END;
 						END;
 					ELSIF keys * {2} # {} THEN
 						IF (menuLocation.Get() = Top) THEN

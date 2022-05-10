@@ -145,7 +145,7 @@ BEGIN
 						ELSIF (ss^ = "InactiveHoverMinimizeBitmap") THEN
 							ts := GetCharContent(y);
 							IF ts # NIL THEN LoadImg(ts^, desc.minimizeHoverInactive); END;
-						ELSIF (ss^ = "PressedHoverMinimizeBitmap") THEN
+						ELSIF (ss^ = "PressedMinimizeBitmap") THEN
 							ts := GetCharContent(y);
 							IF ts # NIL THEN LoadImg(ts^, desc.minimizePressed); END;
 

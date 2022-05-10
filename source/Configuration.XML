@@ -466,6 +466,7 @@ To update: Configuration.Init ~
 		</Section>
 		<Section name="zip">
 			<Setting name="Extract" value="ZipTool.ExtractAll"/>
+			<Setting name="Open" value="WMArchives.Open"/>
 		</Section>
 	</Section>
 

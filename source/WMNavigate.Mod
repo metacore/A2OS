@@ -41,6 +41,7 @@ CONST
 	Terminated = 2;
 
 TYPE
+	WindowState = WMWindowManager.WindowState;
 
 	Layout = OBJECT
 	VAR
@@ -639,14 +640,16 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE GoToWindow(window : WMWindowManager.Window; moveViewport : BOOLEAN);
+		PROCEDURE GoToWindow(window : WMWindowManager.Window; moveViewport, restored := FALSE : BOOLEAN);
 		VAR rect : WMRectangles.Rectangle; px, py : SIZE;
 		BEGIN
 			ASSERT(window # NIL);
 			manager.lock.AcquireWrite;
-			manager.SetIsVisible(window, TRUE);
-			manager.SetFocus(window);
-			manager.ToFront(window);
+			IF ~restored THEN
+				manager.SetIsVisible(window, TRUE);
+				manager.SetFocus(window);
+				manager.ToFront(window);
+			END;
 			IF (viewport # NIL) THEN
 				rect := WMRectangles.MakeRect(ENTIER(viewport.range.l), ENTIER(viewport.range.t), ENTIER(viewport.range.r), ENTIER(viewport.range.b));
 				IF ~WMRectangles.IsContained(rect, window.bounds) THEN
@@ -718,12 +721,13 @@ TYPE
 					same := lastWindow = window;
 					IF 0 IN keys THEN lastWindow := window; ELSE lastWindow := NIL; END;
 					IF keys * {0,1} # {} THEN
-						IF same & window.isVisible THEN
-							manager.SetIsVisible(window, FALSE);
-							window.SetWindowState(WMWindowManager.WindowState.Minimized);
+						IF same & ((window.windowState # WindowState.Minimized) OR window.isVisible) THEN
+							window.Minimize;
+						ELSIF window.windowState = WindowState.Minimized THEN
+							window.Restore;
+							GoToWindow(window, 0 IN keys, TRUE);
 						ELSE
 							GoToWindow(window, 0 IN keys);
-							IF window.windowState = WMWindowManager.WindowState.Minimized THEN window.SetWindowState(window.windowStateSaved); END;
 						END;
 					ELSIF keys * {2} # {} THEN
 						IF (menuLocation.Get() = Top) THEN
@@ -762,6 +766,7 @@ TYPE
 									window.Handle(msg);
 							ELSIF (index2 = SystemCommand_Frame) THEN
 									manager.SetWindowFlag(window, WMWindowManager.FlagFrame, ~(WMWindowManager.FlagFrame IN window.flags));
+									(*? maximized -> normal *)
 								END;
 							END;
 						END;

@@ -306,10 +306,10 @@ TYPE
 
 	TopWindow* = OBJECT(DecorWindow)
 	VAR
-		closeInactive*, closeActive*, closeSelected*, closeHover*, closeHoverInactive*,
-		minimizeInactive*, minimizeActive*, minimizeHover*, minimizeHoverInactive*,
-		maximizeInactive*, maximizeActive*, maximizeHover*, maximizeHoverInactive*,
-		restoreInactive*, restoreActive*, restoreHover*, restoreHoverInactive*,
+		closeInactive*, closeActive*, closeSelected*, closeHover*, closeHoverInactive*, closePressed*,
+		minimizeInactive*, minimizeActive*, minimizeHover*, minimizeHoverInactive*, minimizePressed*,
+		maximizeInactive*, maximizeActive*, maximizeHover*, maximizeHoverInactive*, maximizePressed*,
+		restoreInactive*, restoreActive*, restoreHover*, restoreHoverInactive*, restorePressed*,
 		titleImg : Graphics.Image;
 		minimizeOffset, spaceBetweenButtons : SIGNED32;
 		titleCanvas : Graphics.BufferCanvas;
@@ -367,6 +367,7 @@ TYPE
 			IF ~dragging THEN
 				oldHover := hover;
 				CheckButtons(x, y, hover);
+				IF (hover = NoButton) THEN down := NoButton END;
 				IF (hover # oldHover) THEN Invalidate(WMRectangles.MakeRect(0, 0, GetWidth(), GetHeight())); END;
 				IF (hover # NoButton) THEN
 					SetPointerInfo(manager.pointerStandard);
@@ -388,7 +389,10 @@ TYPE
 		BEGIN
 			CheckButtons(x, y, down);
 			PointerDown^(x, y, keys);
-			IF (down # NoButton) THEN dragging := FALSE; END;
+			IF (down # NoButton) THEN
+				dragging := FALSE;
+				Invalidate(WMRectangles.MakeRect(0, 0, GetWidth(), GetHeight()));
+			END;
 		END PointerDown;
 
 		PROCEDURE PointerUp*(x, y:SIZE; keys:SET);
@@ -450,9 +454,10 @@ TYPE
 
 			(* Close button *)
 			IF (master # NIL) & (WM.FlagClose IN master.flags) THEN
-				img := closeHoverInactive IF ~hasFocus & (hover = CloseButton) & (closeHoverInactive # NIL)
-					ELSE closeHover	IF (hover = CloseButton) & (closeHover # NIL)
-						ELSE closeActive IF hasFocus ELSE closeInactive;
+				img := closePressed IF (down = CloseButton) & (closePressed # NIL)
+					ELSE closeHoverInactive IF ~hasFocus & (hover = CloseButton) & (closeHoverInactive # NIL)
+						ELSE closeHover	IF (hover = CloseButton) & (closeHover # NIL)
+							ELSE closeActive IF hasFocus ELSE closeInactive;
 
 				IF img # NIL THEN
 					offsetX := img.width IF style.version = 1 ELSE img.width + rw;
@@ -468,13 +473,15 @@ TYPE
 			(* Maximize button *)
 			IF (master # NIL) & (WM.FlagMaximize IN master.flags) THEN
 				IF master.windowState = WindowState.Maximized THEN
-					img := restoreHoverInactive IF ~hasFocus & (hover = RestoreButton) & (restoreHoverInactive # NIL)
-						ELSE restoreHover IF (hover = RestoreButton) & (restoreHover # NIL)
-							ELSE restoreActive IF hasFocus ELSE restoreInactive;
+					img := restorePressed IF (down = RestoreButton) & (restorePressed # NIL)
+						ELSE restoreHoverInactive IF ~hasFocus & (hover = RestoreButton) & (restoreHoverInactive # NIL)
+							ELSE restoreHover IF (hover = RestoreButton) & (restoreHover # NIL)
+								ELSE restoreActive IF hasFocus ELSE restoreInactive;
 				ELSE
-					img := maximizeHoverInactive IF ~hasFocus & (hover = MaximizeButton) & (maximizeHoverInactive # NIL)
-						ELSE maximizeHover IF (hover = MaximizeButton) & (maximizeHover # NIL)
-							ELSE maximizeActive IF hasFocus ELSE maximizeInactive;
+					img := maximizePressed IF (down = MaximizeButton) & (maximizePressed # NIL)
+						ELSE maximizeHoverInactive IF ~hasFocus & (hover = MaximizeButton) & (maximizeHoverInactive # NIL)
+							ELSE maximizeHover IF (hover = MaximizeButton) & (maximizeHover # NIL)
+								ELSE maximizeActive IF hasFocus ELSE maximizeInactive;
 				END;
 				IF img # NIL THEN
 					imgWidth := img.width;
@@ -490,9 +497,10 @@ TYPE
 
 			(* Minimize button *)
 			IF (master # NIL) & (WM.FlagMinimize IN master.flags) THEN
-				img := minimizeHoverInactive IF ~hasFocus & (hover = MinimizeButton) & (minimizeHoverInactive # NIL)
-					ELSE minimizeHover IF (hover = MinimizeButton) & (minimizeHover # NIL)
-					ELSE minimizeActive IF hasFocus ELSE minimizeInactive;
+				img := minimizePressed IF (down = MinimizeButton) & (minimizePressed # NIL)
+					ELSE minimizeHoverInactive IF ~hasFocus & (hover = MinimizeButton) & (minimizeHoverInactive # NIL)
+						ELSE minimizeHover IF (hover = MinimizeButton) & (minimizeHover # NIL)
+							ELSE minimizeActive IF hasFocus ELSE minimizeInactive;
 
 				IF img # NIL THEN
 					INC(offsetX, spaceBetweenButtons - minimizeOffset);
@@ -604,10 +612,10 @@ TYPE
 			tax := s.atextX; tix := s.itextX;
 			tay := s.atextY; tiy := s.itextY;
 
-			closeActive := s.ca; closeInactive := s.ci; closeHover := s.closeHover;
-			minimizeActive := s.ma; minimizeInactive := s.mi; minimizeHover := s.minimizeHover; minimizeHoverInactive := s.minimizeHoverInactive;
-			maximizeActive := s.maximizeActive; maximizeInactive := s.maximizeInactive; maximizeHover := s.maximizeHover; maximizeHoverInactive := s.maximizeHoverInactive;
-			restoreActive := s.restoreActive; restoreInactive := s.restoreInactive; restoreHover := s.restoreHover; restoreHoverInactive := s.restoreHoverInactive;
+			closeActive := s.ca; closeInactive := s.ci; closeHover := s.closeHover; closeHoverInactive := s.closeHoverInactive; closePressed := s.closePressed;
+			minimizeActive := s.ma; minimizeInactive := s.mi; minimizeHover := s.minimizeHover; minimizeHoverInactive := s.minimizeHoverInactive; minimizePressed := s.minimizePressed;
+			maximizeActive := s.maximizeActive; maximizeInactive := s.maximizeInactive; maximizeHover := s.maximizeHover; maximizeHoverInactive := s.maximizeHoverInactive; maximizePressed := s.maximizePressed;
+			restoreActive := s.restoreActive; restoreInactive := s.restoreInactive; restoreHover := s.restoreHover; restoreHoverInactive := s.restoreHoverInactive; restorePressed := s.restorePressed;
 			minimizeOffset := s.minimizeOffset;
 			spaceBetweenButtons := s.spaceBetweenButtons;
 			manager.lock.AcquireWrite;
@@ -851,4 +859,4 @@ END RepeatMiddleHorizontal;
 
 END WMDefaultWindows.
 
-Release.Rebuild -b Win64 WMMessages.Mod WMWindowManager.Mod SkinLanguage.Mod SkinEngine.Mod WMDefaultWindows.Mod WMComponents~ 
+Release.Rebuild -b Win64 WMMessages.Mod WMWindowManager.Mod SkinLanguage.Mod SkinEngine.Mod WMDefaultWindows.Mod WMComponents.Mod~ 

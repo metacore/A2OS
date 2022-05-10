@@ -458,7 +458,7 @@ TYPE
 
 		PROCEDURE CanMinimize*(): BOOLEAN;
 		BEGIN
-			RETURN (manager # NIL) & isVisible & (flags * {FlagNavigation, FlagHidden, FlagNoResizing} = {}) & (windowState # WindowState.Minimized);
+			RETURN (manager # NIL) & isVisible & (flags * {FlagNavigation, FlagHidden} = {}) & (windowState # WindowState.Minimized);
 		END CanMinimize;
 
 		(** Minimize is called via the generic message handler. *)
@@ -466,7 +466,9 @@ TYPE
 		BEGIN
 			IF CanMinimize() THEN
 				manager.SetIsVisible(SELF, FALSE);
-				SetWindowState(WindowState.Minimized);
+
+				windowStateSaved := windowState;
+				windowState := WindowState.Minimized;
 			END;
 		END Minimize;
 
@@ -485,14 +487,22 @@ TYPE
 				VAR view := manager.viewRegistry.Await(""); (*!*)
 				WITH view: ViewPort DO
 					VAR style := manager.GetStyle();
-					VAR th := style.th - style.buttonTopMargin - 1 IF FlagFrame IN flags ELSE 0;
+					VAR th := (style.th - style.buttonTopMargin - 1) IF FlagFrame IN flags ELSE 0;
 					VAR vw := SIZE(ENTIER(view.range.r - view.range.l));
 					VAR vh := SIZE(ENTIER(view.range.b - view.range.t) - th);
+
 					manager.SetWindowSize(SELF, vw, vh);
 					manager.SetWindowPos(SELF, SIZE(view.range.l), SIZE(view.range.t) + th);
 					Resized(vw, vh);
+
+	(*?
+					manager.SetFocus(SELF);
+					manager.ToFront(SELF);
+	*)
+					windowStateSaved := windowState;
+					windowState := WindowState.Maximized;
 				END;
-				SetWindowState(WindowState.Maximized);
+
 			END;
 		END Maximize;
 
@@ -500,19 +510,35 @@ TYPE
 
 		PROCEDURE CanRestore*(): BOOLEAN;
 		BEGIN
-			RETURN (manager # NIL) & (flags * {FlagNavigation, FlagHidden, FlagNoResizing} = {}) & (windowState # WindowState.Normal);
+			RETURN (manager # NIL) & (flags * {FlagNavigation, FlagHidden} = {}) & (windowState # WindowState.Normal);
 		END CanRestore;
 
 		(** Restore is called via the generic message handler. *)
 		PROCEDURE Restore*;
 		BEGIN
 			IF CanRestore() THEN
-				VAR vw := normalBounds.r - normalBounds.l;
-				VAR vh := normalBounds.b - normalBounds.t;
-				manager.SetWindowPos(SELF, normalBounds.l, normalBounds.t);
-				manager.SetWindowSize(SELF, vw, vh);
-				Resized(vw, vh);
-				SetWindowState(WindowState.Normal);
+				IF windowState = WindowState.Maximized THEN
+					VAR vw := normalBounds.r - normalBounds.l;
+					VAR vh := normalBounds.b - normalBounds.t;
+
+					manager.SetWindowPos(SELF, normalBounds.l, normalBounds.t);
+					manager.SetWindowSize(SELF, vw, vh);
+					Resized(vw, vh);
+	(*?
+					manager.SetFocus(SELF);
+					manager.ToFront(SELF);
+	*)
+					windowStateSaved := windowState;
+					windowState := WindowState.Normal;
+				ELSIF windowState = WindowState.Minimized THEN
+					manager.SetIsVisible(SELF, TRUE);
+					windowState := windowStateSaved;
+					windowStateSaved := WindowState.Minimized;
+	(*!
+					manager.SetFocus(SELF);
+					manager.ToFront(SELF);
+	*)
+				END;
 			END;
 		END Restore;
 

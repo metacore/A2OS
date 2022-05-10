@@ -179,6 +179,7 @@ TYPE
 		VAR
 			res: INTEGER;
 		BEGIN
+			f.GetName(name);
 			arc := OpenArchiveFile(f, res);
 			NEW(lock)
 		END Init;

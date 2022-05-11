@@ -199,7 +199,7 @@ TYPE
 
 		timestamp* : SIGNED32; (* incremented at each call of procedure Draw *)
 
-		windowState-, windowStateSaved- : WindowState;
+		windowState*, windowStateSaved- : WindowState;
 
 		(** Ranges in global coordinates *)
 		bounds* : Rectangle; (** current range *)
@@ -313,14 +313,6 @@ TYPE
 				RETURN (infoPtr # NIL);
 			END;
 		END GetInfo;
-
-		PROCEDURE {FINAL} SetWindowState*(value: WindowState);
-		BEGIN
-			IF windowState # value THEN
-				windowStateSaved := windowState;
-				windowState := value;
-			END;
-		END SetWindowState;
 
 		(** Resize is called by the WM if it wants to resize the window.
 			width and height contain the desired new size. The Window should set width and height to acceptable
@@ -534,7 +526,7 @@ TYPE
 					manager.SetIsVisible(SELF, TRUE);
 					windowState := windowStateSaved;
 					windowStateSaved := WindowState.Minimized;
-	(*!
+	(*?
 					manager.SetFocus(SELF);
 					manager.ToFront(SELF);
 	*)

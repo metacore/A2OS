@@ -130,10 +130,6 @@ TYPE
 				curX := bounds.l + x; curY := bounds.t + y; dx := curX - lastX; dy := curY - lastY;
 				lastX := lastX + dx; lastY := lastY + dy;
 				IF (dx # 0) OR (dy # 0) THEN
-
-					IF (master # NIL) & (master.windowState = WindowState.Maximized) THEN
-						master.SetWindowState(WindowState.Normal);
-					END;
 					moveX := 0; moveY := 0;
 					IF (mode = 0) & mode0Move THEN (* move the window *)
 						moveX := dx; moveY := dy;
@@ -196,14 +192,15 @@ TYPE
 							draggingHeight := newHeight;
 						END;
 						resized := TRUE;
-						master.normalBounds.r := master.bounds.r;
-						master.normalBounds.b := master.bounds.b;
 					END;
 
 					IF (moveX # 0) OR (moveY # 0) THEN
 						manager.SetWindowPos(SELF, bounds.l + moveX, bounds.t + moveY);
-						master.normalBounds.l := master.bounds.l;
-						master.normalBounds.t := master.bounds.t;
+					END;
+
+					IF (master # NIL) & (master.windowState = WindowState.Maximized) THEN
+						master.normalBounds := master.bounds;
+						master.windowState := WindowState.Normal;
 					END;
 				END;
 			END;

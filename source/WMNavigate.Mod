@@ -640,16 +640,14 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE GoToWindow(window : WMWindowManager.Window; moveViewport, restored := FALSE : BOOLEAN);
+		PROCEDURE GoToWindow(window : WMWindowManager.Window; moveViewport : BOOLEAN);
 		VAR rect : WMRectangles.Rectangle; px, py : SIZE;
 		BEGIN
 			ASSERT(window # NIL);
 			manager.lock.AcquireWrite;
-			IF ~restored THEN
-				manager.SetIsVisible(window, TRUE);
-				manager.SetFocus(window);
-				manager.ToFront(window);
-			END;
+			manager.SetIsVisible(window, TRUE);
+			manager.SetFocus(window);
+			manager.ToFront(window);
 			IF (viewport # NIL) THEN
 				rect := WMRectangles.MakeRect(ENTIER(viewport.range.l), ENTIER(viewport.range.t), ENTIER(viewport.range.r), ENTIER(viewport.range.b));
 				IF ~WMRectangles.IsContained(rect, window.bounds) THEN
@@ -725,7 +723,7 @@ TYPE
 							window.Minimize;
 						ELSIF window.windowState = WindowState.Minimized THEN
 							window.Restore;
-							GoToWindow(window, 0 IN keys, TRUE);
+							GoToWindow(window, 0 IN keys);
 						ELSE
 							GoToWindow(window, 0 IN keys);
 						END;

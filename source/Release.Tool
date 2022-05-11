@@ -1240,7 +1240,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 	# Skins
 	BluePlastic.skin
 	reptile.skin pklook.skin redlook.skin traditional.skin
-	winxp.skin aqua.skin xmas.skin glass.skin stijn.skin stijnbw.skin
+	winxp.skin aqua.skin xmas.skin glass.skin stijn.skin stijnbw.skin xpe.skin
 
 	SkinEditor.Mod SkinTutorial.Text
 

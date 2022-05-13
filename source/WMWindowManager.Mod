@@ -977,7 +977,6 @@ TYPE
 			lock.AcquireWrite;
 			w.icon := icon;
 			tw := w.topW;
-			TRACE(tw);
 			IF tw # NIL THEN AddVisibleDirty(tw, tw.bounds) END;
 			lock.ReleaseWrite;
 			IncOTimestamp;

@@ -399,16 +399,12 @@ TYPE
 				CheckButtons(x, y, temp);
 				IF (temp = CloseButton) THEN
 					CloseDispatch(SELF, NIL);
-					(*IF master # NIL THEN master.Close; END;*)
 				ELSIF (temp = MinimizeButton) THEN
-					MinimizeDispatch(SELF, NIL);
-					(*IF master # NIL THEN master.Minimize; END;*)
+					MinimizeDispatch(master, NIL);
 				ELSIF (temp = MaximizeButton) THEN
-					MaximizeDispatch(SELF, NIL);
-					(*IF master # NIL THEN master.Maximize; END;*)
+					MaximizeDispatch(master, NIL);
 				ELSIF (temp = RestoreButton) THEN
-					RestoreDispatch(SELF, NIL);
-					(*IF master # NIL THEN master.Restore; END;*)
+					RestoreDispatch(master, NIL);
 				ELSE
 					PointerUp^(x, y, keys);
 				END;

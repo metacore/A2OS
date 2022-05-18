@@ -197,11 +197,6 @@ TYPE
 					IF (moveX # 0) OR (moveY # 0) THEN
 						manager.SetWindowPos(SELF, bounds.l + moveX, bounds.t + moveY);
 					END;
-
-					IF (master # NIL) & (master.windowState = WindowState.Maximized) THEN
-						master.normalBounds := master.bounds;
-						master.windowState := WindowState.Normal;
-					END;
 				END;
 			END;
 		END PointerMove;

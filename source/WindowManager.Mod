@@ -741,6 +741,11 @@ TYPE
 			dx := x - w.bounds.l; dy := y - w.bounds.t;
 			IF (w.master # NIL) THEN w := w.master END;
 			rect := w.bounds; Rect.MoveRel(w.bounds, dx, dy); Rect.ExtendRect(rect, w.bounds);
+			IF w.windowState = WM.WindowState.Maximized THEN
+				w.normalBounds.l := w.bounds.l;
+				w.normalBounds.t := w.bounds.t;
+				w.windowState := WM.WindowState.Normal;
+			END;
 			cur := w.decor;
 			WHILE cur # NIL DO
 				Rect.ExtendRect(rect, cur.w.bounds);Rect.MoveRel(cur.w.bounds, dx, dy); Rect.ExtendRect(rect, cur.w.bounds);
@@ -754,7 +759,7 @@ TYPE
 
 		PROCEDURE SetWindowSize*(w : Window; VAR width, height : SIZE);
 		VAR
-			rect : Rectangle;
+			rect : Rectangle; mw : Window;
 			cw, ch, t, nw : SIZE;
 
 			PROCEDURE Set(win : Window; w, h  : SIZE);
@@ -772,6 +777,14 @@ TYPE
 			IF (cw # width) OR (ch # height) THEN
 				w.bounds.r := w.bounds.l + width;
 				w.bounds.b := w.bounds.t + height;
+
+				mw := w IF w.master = NIL ELSE w.master;
+				IF mw.windowState = WM.WindowState.Maximized THEN
+					mw.normalBounds.r := mw.normalBounds.l + width;
+					mw.normalBounds.b := mw.normalBounds.t + height;
+					mw.windowState := WM.WindowState.Normal;
+				END;
+				
 				IF cw # width THEN
 					IF w.topW # NIL THEN
 						nw := width + (w.topW.GetWidth() - cw);

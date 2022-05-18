@@ -469,8 +469,6 @@ TYPE
 				VAR view := manager.viewRegistry.Await(""); (*!*)
 				WITH view: ViewPort DO
 					w.normalBounds := w.bounds;
-					w.windowStateSaved := w.windowState;
-					w.windowState := WindowState.Maximized;
 
 					VAR style := manager.GetStyle();
 					VAR th := (style.th - style.buttonTopMargin - 1) IF (style # NIL) & (FlagFrame IN w.flags) ELSE 0;
@@ -479,6 +477,9 @@ TYPE
 
 					manager.SetWindowSize(w, vw, vh);
 					manager.SetWindowPos(w, SIZE(view.range.l), SIZE(view.range.t) + th);
+
+					w.windowStateSaved := w.windowState;
+					w.windowState := WindowState.Maximized;
 					w.Resized(vw, vh);
 
 	(*?

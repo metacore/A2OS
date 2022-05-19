@@ -395,11 +395,11 @@ TYPE
 				IF (temp = CloseButton) THEN
 					CloseDispatch(SELF, NIL);
 				ELSIF (temp = MinimizeButton) THEN
-					MinimizeDispatch(master, NIL);
+					manager.Minimize(master);
 				ELSIF (temp = MaximizeButton) THEN
-					MaximizeDispatch(master, NIL);
+					manager.Maximize(master);
 				ELSIF (temp = RestoreButton) THEN
-					RestoreDispatch(master, NIL);
+					manager.Restore(master);
 				ELSE
 					PointerUp^(x, y, keys);
 				END;
@@ -549,43 +549,6 @@ TYPE
 				master.Handle(m);
 			END;
 		END CloseDispatch;
-
-		PROCEDURE MinimizeDispatch*(sender, data : ANY);
-		VAR m : Message;
-		BEGIN
-			IF master = NIL THEN RETURN END;
-			m.msgType := Messages.MsgMinimize;
-			IF master.sequencer # NIL THEN
-				IF ~master.sequencer.Add(m) THEN TRACE("Maximize message could not be queued."); END;
-			ELSE
-				master.Handle(m);
-			END;
-		END MinimizeDispatch;
-
-		PROCEDURE MaximizeDispatch*(sender, data : ANY);
-		VAR m : Message;
-		BEGIN
-			IF master = NIL THEN RETURN END;
-			m.msgType := Messages.MsgMaximize;
-			m.ext := sender;
-			IF master.sequencer # NIL THEN
-				IF ~master.sequencer.Add(m) THEN TRACE("Maximize message could not be queued."); END;
-			ELSE
-				master.Handle(m);
-			END;
-		END MaximizeDispatch;
-
-		PROCEDURE RestoreDispatch*(sender, data : ANY);
-		VAR m : Message;
-		BEGIN
-			IF master = NIL THEN RETURN END;
-			m.msgType := Messages.MsgRestore;
-			IF master.sequencer # NIL THEN
-				IF ~master.sequencer.Add(m) THEN TRACE("Maximize message could not be queued."); END;
-			ELSE
-				master.Handle(m);
-			END;
-		END RestoreDispatch;
 
 		PROCEDURE StyleChanged*;
 		VAR s : WM.WindowStyle; r : WMRectangles.Rectangle;

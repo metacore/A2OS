@@ -720,9 +720,9 @@ TYPE
 					IF 0 IN keys THEN lastWindow := window; ELSE lastWindow := NIL; END;
 					IF keys * {0,1} # {} THEN
 						IF same & ((window.windowState # WindowState.Minimized) OR window.isVisible) THEN
-							window.Minimize;
+							manager.Minimize(window);
 						ELSIF window.windowState = WindowState.Minimized THEN
-							window.Restore;
+							manager.Restore(window);
 							GoToWindow(window, 0 IN keys);
 						ELSE
 							GoToWindow(window, 0 IN keys);

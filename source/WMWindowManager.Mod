@@ -199,7 +199,7 @@ TYPE
 
 		timestamp* : SIGNED32; (* incremented at each call of procedure Draw *)
 
-		windowState*, windowStateSaved- : WindowState;
+		windowState*, windowStateSaved* : WindowState;
 
 		(** Ranges in global coordinates *)
 		bounds* : Rectangle; (** current range *)
@@ -446,78 +446,6 @@ TYPE
 			IF manager # NIL THEN manager.Remove(SELF) END;
 		END Close;
 
-(** Minimize *)
-
-		(** Minimize is called via the generic message handler. *)
-		PROCEDURE Minimize*;
-		VAR w := SELF IF master = NIL ELSE master;
-		BEGIN
-			IF (w.windowState # WindowState.Minimized) & w.isVisible & (w.flags * {FlagNavigation, FlagHidden} = {}) & (manager # NIL) THEN
-				w.windowStateSaved := w.windowState;
-				w.windowState := WindowState.Minimized;
-				manager.SetIsVisible(w, FALSE);
-			END;
-		END Minimize;
-
-(** Maximize *)
-
-		(** Maximize is called via the generic message handler. *)
-		PROCEDURE Maximize*;
-		VAR w := SELF IF master = NIL ELSE master;
-		BEGIN
-			IF (w.windowState # WindowState.Maximized) & (w.flags * {FlagNavigation, FlagHidden, FlagNoResizing} = {}) & (manager # NIL) THEN
-				VAR view := manager.viewRegistry.Await(""); (*!*)
-				WITH view: ViewPort DO
-					w.normalBounds := w.bounds;
-
-					VAR style := manager.GetStyle();
-					VAR th := (style.th - style.buttonTopMargin - 1) IF (style # NIL) & (FlagFrame IN w.flags) ELSE 0;
-					VAR vw := SIZE(view.range.r - view.range.l);
-					VAR vh := SIZE(view.range.b - view.range.t) - th;
-
-					manager.SetWindowSize(w, vw, vh);
-					manager.SetWindowPos(w, SIZE(view.range.l), SIZE(view.range.t) + th);
-
-					w.windowStateSaved := w.windowState;
-					w.windowState := WindowState.Maximized;
-					w.Resized(vw, vh);
-
-	(*?
-					manager.SetFocus(w);
-					manager.ToFront(w);
-	*)
-				END;
-
-			END;
-		END Maximize;
-
-(** Restore *)
-
-		(** Restore is called via the generic message handler. *)
-		PROCEDURE Restore*;
-		VAR w := SELF IF master = NIL ELSE master;
-		BEGIN
-			IF (w.windowState # WindowState.Normal) & (w.flags * {FlagNavigation, FlagHidden} = {}) & (manager # NIL) THEN
-				IF w.windowState = WindowState.Maximized THEN
-					w.windowState := WindowState.Normal;
-
-					VAR vw := w.normalBounds.r - w.normalBounds.l;
-					VAR vh := w.normalBounds.b - w.normalBounds.t;
-
-					manager.SetWindowSize(w, vw, vh);
-					manager.SetWindowPos(w, normalBounds.l, normalBounds.t);
-					w.Resized(vw, vh);
-				ELSIF w.windowState = WindowState.Minimized THEN
-					w.windowState := w.windowStateSaved;
-					manager.SetIsVisible(w, TRUE);
-				END;
-	(*?
-				manager.SetFocus(SELF);
-				manager.ToFront(SELF);
-	*)
-			END;
-		END Restore;
-
 		(** Return true if the window is hit at the coordinates x and y (in window coordinates). Use
 			this to generate non-rectangular windows.
 			This Method will be called directly by the window manager. __> Don't block, don't crash !!
@@ -563,9 +491,6 @@ TYPE
 					END
 				END
 			ELSIF m.msgType = Messages.MsgClose THEN Close
-			ELSIF m.msgType = Messages.MsgMinimize THEN Minimize
-			ELSIF m.msgType = Messages.MsgMaximize THEN Maximize
-			ELSIF m.msgType = Messages.MsgRestore THEN Restore
 			ELSIF m.msgType = Messages.MsgFocus THEN
 				IF m.msgSubType = Messages.MsgSubFocusGot THEN FocusGot
 				ELSIF m.msgSubType = Messages.MsgSubFocusLost THEN FocusLost
@@ -1023,6 +948,24 @@ TYPE
 			ASSERT(w # NIL);
 			ASSERT((flag = FlagFrame) OR (flag = FlagStayOnTop) OR (flag = FlagStayOnBottom) OR (flag = FlagHidden) OR (flag = FlagStorable));
 		END SetWindowFlag;
+
+		(** Minimize window. *)
+		PROCEDURE Minimize*(w: Window);
+		BEGIN
+			ASSERT(w # NIL);
+		END Minimize;
+
+		(** Maximize window. *)
+		PROCEDURE Maximize*(w: Window);
+		BEGIN
+			ASSERT(w # NIL);
+		END Maximize;
+
+		(** Restore window. *)
+		PROCEDURE Restore*(w: Window);
+		BEGIN
+			ASSERT(w # NIL);
+		END Restore;
 
 		(** Set if the window is willing to accept a dropped item *)
 		PROCEDURE SetAcceptDrag*(w : Window; accept : BOOLEAN);

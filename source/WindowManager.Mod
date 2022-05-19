@@ -12,6 +12,7 @@ CONST
 	ZF = 0.90; ZD = 0.1;
 
 TYPE
+	WindowState = WM.WindowState;
 	Window = WM.Window;
 	Rectangle = Rect.Rectangle;
 
@@ -824,6 +825,85 @@ TYPE
 			END;
 			lock.ReleaseWrite
 		END SetWindowSize;
+
+		(** Minimize is called via the generic message handler. *)
+		PROCEDURE Minimize*(w: Window);
+		BEGIN
+			IF w = NIL THEN RETURN END;
+			lock.AcquireWrite;
+			IF w.master # NIL THEN w := w.master; END;
+			IF (w.windowState # WindowState.Minimized) & w.isVisible & (w.flags * {WM.FlagNavigation, WM.FlagHidden} = {}) THEN
+				w.windowStateSaved := w.windowState;
+				w.windowState := WindowState.Minimized;
+				SetIsVisible(w, FALSE);
+			END;
+			lock.ReleaseWrite;
+		END Minimize;
+
+		(** Maximize is called via the generic message handler. *)
+		PROCEDURE Maximize*(w: Window);
+		BEGIN
+			IF w = NIL THEN RETURN END;
+			lock.AcquireWrite;
+			IF w.master # NIL THEN w := w.master; END;
+			IF (w.windowState # WindowState.Maximized) & (w.flags * {WM.FlagNavigation, WM.FlagHidden, WM.FlagNoResizing} = {}) THEN
+				VAR view := viewRegistry.Await("")(ViewPort);
+				w.normalBounds := w.bounds;
+
+				VAR style := GetStyle();
+				VAR th := (style.th - style.buttonTopMargin - 1) IF (style # NIL) & (WM.FlagFrame IN w.flags) ELSE 0;
+				VAR vw := SIZE(view.range.r - view.range.l);
+				VAR vh := SIZE(view.range.b - view.range.t) - th;
+
+				SetWindowSize(w, vw, vh);
+				SetWindowPos(w, SIZE(view.range.l), SIZE(view.range.t) + th);
+
+				w.windowStateSaved := w.windowState;
+				w.windowState := WindowState.Maximized;
+
+				VAR m: Messages.Message;
+				m.msgType := Messages.MsgResized;
+				m.x := vw;
+				m.y := vh;
+				IF (w.sequencer # NIL) & w.sequencer.Add(m) THEN
+				ELSE
+					TRACE("Resized message could not be queued.");
+				END;
+			END;
+			lock.ReleaseWrite;
+		END Maximize;
+
+		(** Restore is called via the generic message handler. *)
+		PROCEDURE Restore*(w: Window);
+		BEGIN
+			IF w = NIL THEN RETURN END;
+			lock.AcquireWrite;
+			IF w.master # NIL THEN w := w.master; END;
+			IF w.flags * {WM.FlagNavigation, WM.FlagHidden} = {} THEN
+				IF w.windowState = WindowState.Maximized THEN
+					w.windowState := WindowState.Normal;
+
+					VAR vw := w.normalBounds.r - w.normalBounds.l;
+					VAR vh := w.normalBounds.b - w.normalBounds.t;
+
+					SetWindowSize(w, vw, vh);
+					SetWindowPos(w, w.normalBounds.l, w.normalBounds.t);
+
+					VAR m : Messages.Message;
+					m.msgType := Messages.MsgResized;
+					m.x := vw;
+					m.y := vh;
+					IF (w.sequencer # NIL) & w.sequencer.Add(m) THEN
+					ELSE
+						TRACE("Resized message could not be queued.");
+					END;
+				ELSIF w.windowState = WindowState.Minimized THEN
+					w.windowState := w.windowStateSaved;
+					SetIsVisible(w, TRUE);
+				END;
+			END;
+			lock.ReleaseWrite;
+		END Restore;
 
 	(** View management *)
 		(** Add a view *)

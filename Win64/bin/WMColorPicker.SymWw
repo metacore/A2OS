@@ -1,0 +1,143 @@
+MODULE WMColorPicker;
+	IMPORT KernelLog, Strings, Math, Texts, UTF8Strings, WMRectangles, WMWindowManager, WMProperties, WMComponents, WMStandardComponents, WMEditors, WMGraphics, WMGraphicUtilities, WMEvents, WM := WMWindowManager, WMDialogs, WMColorComponents;
+CONST 
+	stRed* = 0; 
+	stGreen* = 1; 
+	stBlue* = 2; 
+	stHue* = 3; 
+	stSat* = 4; 
+	stLum* = 5; 
+	Cap = \"RGBHSLLab"\; 
+	K1d3 = 3.33333333333333E-1; 
+	K16d116 = 1.37931034482759E-1; 
+	K1d2p4 = 4.16666666666667E-1; 
+	CustomCount = 24; 
+	StdPalette = [[4286611711, 4294934783, 2164228351, 16744703, 2164260863, 8454143, 4286628095, 4286644223], [4278190335, 4294902015, 2164195583, 16728319, 16777215, 8438015, 2155921663, 4278255615], [2151710975, 4286595327, 16711935, 8421631, 4227327, 2155937791, 2147500287, 4278223103], [2147483903, 4286578943, 8388863, 8405247, 65535, 41215, 2147516671, 2147549183], [1073742079, 2151678207, 4194559, 4210943, 33023, 16639, 1073758463, 1073774847], [255, 2155872511, 2155888895, 2155905279, 1082163455, 3233857791, 1073758463, 4294967295]]; 
+TYPE 
+	TextField = OBJECT {EXCLUSIVE} (WMEditors.TextField)
+	VAR 
+		owner: PickColorDlg; 
+
+		PROCEDURE ^ FocusReceived*; 
+	END TextField; 
+
+	ColorInd* = OBJECT {EXCLUSIVE} (WMColorComponents.ColorPot)
+	VAR 
+		updatePanels, updateEditors: BOOLEAN; 
+		owner: PickColorDlg; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY ); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END ColorInd; 
+
+	ColorBut = OBJECT {EXCLUSIVE} (WMColorComponents.ColorPot)
+	VAR 
+		onSelect-: WMEvents.EventSource; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
+	END ColorBut; 
+
+	Gradient* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		gRect: WMRectangles.Rectangle; 
+		gw, gh: SIZE; 
+		position-: SIZE; 
+		down: BOOLEAN; 
+		posX-, posY-: SIZE; 
+		spec: Spectrum; 
+		owner: PickColorDlg; 
+
+		PROCEDURE ^ SetPosition*(val: SIZE); 
+		PROCEDURE ^ UpdateCur; 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ DrawGradientS(canvas: WMGraphics.Canvas; H, L: FLOAT32); 
+		PROCEDURE ^ DrawGradientH(canvas: WMGraphics.Canvas; S, L: FLOAT32); 
+		PROCEDURE ^ DrawGradientL(canvas: WMGraphics.Canvas; S, H: FLOAT32); 
+		PROCEDURE ^ DrawGradientR(canvas: WMGraphics.Canvas; G, B: WMGraphics.Color); 
+		PROCEDURE ^ DrawGradientG(canvas: WMGraphics.Canvas; R, B: WMGraphics.Color); 
+		PROCEDURE ^ DrawGradientB(canvas: WMGraphics.Canvas; R, G: WMGraphics.Color); 
+		PROCEDURE ^ DrawGradientLL(canvas: WMGraphics.Canvas; a, b: FLOAT32); 
+		PROCEDURE ^ DrawGradienta(canvas: WMGraphics.Canvas; L, b: FLOAT32); 
+		PROCEDURE ^ DrawGradientb(canvas: WMGraphics.Canvas; L, a: FLOAT32); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END Gradient; 
+
+	Spectrum* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		down: BOOLEAN; 
+		pointer: WM.PointerInfo; 
+		CurX, CurY: SIZE; 
+		gw, gh: SIZE; 
+		gRect: WMRectangles.Rectangle; 
+		grad: Gradient; 
+		owner: PickColorDlg; 
+
+		PROCEDURE ^ SetPosition(x, y: SIZE); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ UpdateCur; 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ DrawSpectrumSL(canvas: WMGraphics.Canvas; H: FLOAT32); 
+		PROCEDURE ^ DrawSpectrumHS(canvas: WMGraphics.Canvas; L: FLOAT32); 
+		PROCEDURE ^ DrawSpectrumHL(canvas: WMGraphics.Canvas; S: FLOAT32); 
+		PROCEDURE ^ DrawSpectrumGB(canvas: WMGraphics.Canvas; R: WMGraphics.Color); 
+		PROCEDURE ^ DrawSpectrumRB(canvas: WMGraphics.Canvas; G: WMGraphics.Color); 
+		PROCEDURE ^ DrawSpectrumRG(canvas: WMGraphics.Canvas; B: WMGraphics.Color); 
+		PROCEDURE ^ DrawSpectrumab(canvas: WMGraphics.Canvas; L: FLOAT32); 
+		PROCEDURE ^ DrawSpectrumLb(canvas: WMGraphics.Canvas; a: FLOAT32); 
+		PROCEDURE ^ DrawSpectrumLa(canvas: WMGraphics.Canvas; b: FLOAT32); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END Spectrum; 
+
+	PickColorDlg* = OBJECT {EXCLUSIVE} (WMDialogs.Dialog)
+	VAR 
+		colorInd-: ColorInd; 
+		spec: Spectrum; 
+		grad: Gradient; 
+		palette: ARRAY CustomCount OF ColorBut; 
+		palettei: SIZE; 
+		coledit: WMEditors.TextField; 
+		editorial: ARRAY 9 OF WMEditors.TextField; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ Ok*(sender, data: ANY ); 
+		PROCEDURE ^ Abort*(sender, data: ANY ); 
+		PROCEDURE ^ SetColor(sender, data: ANY ); 
+		PROCEDURE ^ AddToColors(sender, data: ANY ); 
+		PROCEDURE ^ UpdateColors(sender, data: ANY ); 
+		PROCEDURE ^ CopyToClip(sender, data: ANY ); 
+		PROCEDURE ^ CopyToText(sander, data: ANY ); 
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ OnEditColorChange(sander, data: ANY ); 
+	END PickColorDlg; 
+VAR 
+	selected: ColorBut; 
+	manager: WMWindowManager.WindowManager; 
+	userPalette*: ARRAY CustomCount OF WMGraphics.Color; 
+	ListFilterProt: WMProperties.StringProperty; 
+	imgArrR, imgArrL: WMGraphics.Image; 
+	imgMouse: WMGraphics.Image; 
+	imgCursor: WMGraphics.Image; 
+	ActiveGrad: SIZE; 
+
+	PROCEDURE ^ DrawBevel*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; down: BOOLEAN; mode: INTEGER); 
+	PROCEDURE ^ ColorToRGB*(color: WMGraphics.Color; VAR r, g, b: WMGraphics.Color); 
+	PROCEDURE ^ RGBToColor*(r, g, b: WMGraphics.Color): WMGraphics.Color; 
+	PROCEDURE ^ HSLToColor(H, S, L: FLOAT32): WMGraphics.Color; 
+	PROCEDURE ^ ColorToHSL(color: WMGraphics.Color; VAR H, S, L: FLOAT32); 
+	PROCEDURE ^ ColorToLab(color: WMGraphics.Color; VAR L, a, b: FLOAT32); 
+	PROCEDURE ^ LabToColor(L, a, b: FLOAT32): WMGraphics.Color; 
+	PROCEDURE ^ InitPrototypes; 
+	PROCEDURE ^ PickColorXY*(x, y: SIZE; VAR color: WMGraphics.Color): WMGraphics.Color; 
+	PROCEDURE ^ PickColor*(VAR color: WMGraphics.Color): WMGraphics.Color; 
+	PROCEDURE ^ Open*; 
+BEGIN
+END WMColorPicker.

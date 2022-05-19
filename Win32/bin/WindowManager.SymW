@@ -7,6 +7,8 @@ CONST
 	ZF = 9.E-1; 
 	ZD = 1.E-1; 
 TYPE 
+	WindowState = WM.WindowState; 
+
 	Window = WM.Window; 
 
 	Rectangle = Rect.Rectangle; 
@@ -89,6 +91,9 @@ TYPE
 		PROCEDURE ^ SetWindowFlag*(w: Window; flag: SIGNED32; include: BOOLEAN); 
 		PROCEDURE ^ SetWindowPos*(w: Window; x, y: SIZE); 
 		PROCEDURE ^ SetWindowSize*(w: Window; VAR width, height: SIZE); 
+		PROCEDURE ^ Minimize*(w: Window); 
+		PROCEDURE ^ Maximize*(w: Window); 
+		PROCEDURE ^ Restore*(w: Window); 
 		PROCEDURE ^ AddView*(v: WM.ViewPort); 
 		PROCEDURE ^ RefreshView*(v: WM.ViewPort); 
 		PROCEDURE ^ RefreshViews; 

@@ -40,7 +40,7 @@ TYPE
 		streamInfo*: AVStreamInfo; 
 
 		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
-		PROCEDURE ^  & InitFileReader*(f: Files.File; pos: SIGNED32); 
+		PROCEDURE ^  & InitFileReader*(f: Files.File; pos: Streams.Position); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 	END FileInputStream; 

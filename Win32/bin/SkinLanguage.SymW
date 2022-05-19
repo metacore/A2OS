@@ -101,8 +101,5 @@ TYPE
 	END Parser; 
 
 	PROCEDURE ^ DefaultReportError(pos, line, col: SIGNED32; msg: String); 
-	PROCEDURE ^ NewString(CONST x: ARRAY OF CHAR): String; 
-	PROCEDURE ^ Append(a: String; CONST b: ARRAY OF CHAR): String; 
-	PROCEDURE ^ LowerCase(s: String); 
 BEGIN
 END SkinLanguage.

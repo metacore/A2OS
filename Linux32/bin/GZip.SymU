@@ -1,9 +1,7 @@
 MODULE GZip;
-	IMPORT Streams, Files, Strings, ZlibInflate, ZlibDeflate, Zlib, ZlibBuffers, Commands;
+	IMPORT Streams, Files, Strings, ZlibInflate, ZlibDeflate, Zlib, ZlibBuffers, Commands, Random;
 CONST 
 	WriteError = 2907; 
-	DefaultWriterSize = 4096; 
-	DefaultReaderSize = 4096; 
 	BufSize = 16384; 
 	FileError =  -1; 
 	DefaultCompression* = ZlibDeflate.DefaultCompression; 
@@ -47,9 +45,24 @@ TYPE
 		PROCEDURE ^ CheckHeader; 
 	END Inflator; 
 
+	DeflateWriter* = OBJECT (Streams.Writer)
+	VAR 
+		deflator: Deflator; 
+
+		PROCEDURE ^  & Initialize*(out: Streams.Writer; compression:= DefaultCompression: SIGNED8; strategy:= DefaultStrategy: SIGNED8; flush:= SyncFlush: SIGNED8); 
+	END DeflateWriter; 
+
+	InflateReader* = OBJECT (Streams.Reader)
+	VAR 
+		inflator: Inflator; 
+
+		PROCEDURE ^  & Initialize*(in: Streams.Reader; size:= BufSize: SIZE); 
+	END InflateReader; 
+
 	PROCEDURE ^ Deflate*(in, out: Files.File; level, strategy, flush: SIGNED8); 
 	PROCEDURE ^ Inflate*(in, out: Files.File); 
 	PROCEDURE ^ GZip*(context: Commands.Context); 
 	PROCEDURE ^ UnGZip*(context: Commands.Context); 
+	PROCEDURE ^ TestStream*(context: Commands.Context); 
 BEGIN
 END GZip.

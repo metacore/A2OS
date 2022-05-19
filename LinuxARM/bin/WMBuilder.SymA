@@ -1,5 +1,5 @@
 MODULE WMBuilder;
-	IMPORT Modules, Kernel, KernelLog, Streams, Commands, Inputs, Strings, UTF8Strings, Files, XML, XMLObjects, XMLScanner, XMLParser, Math, Repositories, WMRepositories, WMUtilities, WMRectangles, WMGraphics, WMMessages, WMWindowManager, WMRestorable, WMProperties, WMComponents, WMStandardComponents, WMEditors, WMTrees, WMInspectionComponents, WMDialogs, Models, StringCollections := GenericCollections(Strings.String,LessString);
+	IMPORT Modules, Kernel, KernelLog, Streams, Commands, Inputs, Strings, UTF8Strings, Files, XML, XMLObjects, XMLScanner, XMLParser, Math, Repositories, WMRepositories, WMUtilities, WMRectangles, WMGraphics, WMMessages, WMWindowManager, WMRestorable, WMProperties, WMComponents, WMStandardComponents, WMEditors, WMTrees, WMInspectionComponents, WMDialogs, Models, Configuration, StringCollections := GenericCollections(Strings.String,LessString);
 CONST 
 	WindowWidth = 130; 
 	WindowHeight = 320; 
@@ -33,6 +33,22 @@ CONST
 	DarkYellow = 1347420415; 
 	ColorLocked = DarkYellow; 
 	ColorSelected = WMGraphics.Red; 
+	CT_IOPEN = \"(* Begin of my imports *)"\; 
+	CT_ICLOSE = \"(* End of my imports *)"\; 
+	CT_TCOPEN = \"(* Begin of my types and constants *)"\; 
+	CT_TCCLOSE = \"(* End of my types and constants *)"\; 
+	CT_FVOPEN = \"(* Begin of my main form variables *)"\; 
+	CT_FVCLOSE = \"(* End of my main form variables *)"\; 
+	CT_FPOPEN = \"(* Begin of my main form procedures *)"\; 
+	CT_FPCLOSE = \"(* End of my main form procedures *)"\; 
+	CT_FCOPEN = \"(* Begin of my main form creation code *)"\; 
+	CT_FCCLOSE = \"(* End of my main form creation code *)"\; 
+	CT_MPVOPEN = \"(* Begin of my module procedures and variables *)"\; 
+	CT_MPVCLOSE = \"(* End of my module procedures and variables *)"\; 
+	CT_MIOPEN = \"(* Begin of my module initialization code *)"\; 
+	CT_MICLOSE = \"(* End of my module initialization code *)"\; 
+	CT_MCOPEN = \"~ Begin of my commands ~"\; 
+	CT_MCCLOSE = \"~ End of my commands ~"\; 
 TYPE 
 	KillerMsg = OBJECT 
 	END KillerMsg; 
@@ -93,12 +109,18 @@ TYPE
 
 	CodeMode = ENUM cmImport = 0, cmVar = 1, cmWire = 2 END; 
 
+	CodeTag = RECORD 
+		open, close: Strings.String; 
+		next: PCodeTag; 
+	END; 
+
+	PCodeTag = POINTER TO CodeTag; 
+
 	CodeGenerator = RECORD 
 		form: Repositories.Component; 
-		imports: StringCollections.Vector; 
-		moduleName, fileName: Files.FileName; 
+		moduleName: Files.FileName; 
 
-		PROCEDURE ^ Generate(form: Repositories.Component; CONST aFileName: ARRAY OF CHAR): Strings.String; 
+		PROCEDURE ^ Generate(form: Repositories.Component; CONST aModuleName: ARRAY OF CHAR): Strings.String; 
 		PROCEDURE ^ WriteModule(w: Streams.Writer); 
 		PROCEDURE ^ WriteModuleImports(w: Streams.Writer); 
 		PROCEDURE ^ WriteModuleTypes(w: Streams.Writer); 
@@ -107,7 +129,7 @@ TYPE
 		PROCEDURE ^ WriteWindowProcs(w: Streams.Writer); 
 		PROCEDURE ^ WriteModuleProcs(w: Streams.Writer); 
 		PROCEDURE ^ PostprocessGenerator(CONST generator: ARRAY OF CHAR): Strings.String; 
-		PROCEDURE ^ TraverseComponent(component: Repositories.Component; mode: CodeMode; w: Streams.Writer); 
+		PROCEDURE ^ TraverseComponent(component: Repositories.Component; mode: CodeMode; obj: ANY ); 
 	END
 	; 
 
@@ -115,11 +137,16 @@ TYPE
 	VAR 
 		editor: WMEditors.Editor; 
 		form: Repositories.Component; 
-		fileName: Files.FileName; 
+		name: Files.FileName; 
+		syntaxHighlighterName: ARRAY 32 OF CHAR; 
+		codeTags: PCodeTag; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetInfo(form: Repositories.Component; fileName: ARRAY OF CHAR); 
+		PROCEDURE ^ GetCode(): Strings.String; 
 		PROCEDURE ^ Refresh(sender, data: ANY ); 
+		PROCEDURE ^ CodeUpdate(codeUser, codeAuto: ARRAY OF CHAR): Strings.String; 
+		PROCEDURE ^ InitCodeTags; 
 	END ComponentCode; 
 
 	Indicator = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
@@ -409,6 +436,8 @@ VAR
 	StrComponentEditor: Strings.String; 
 	leftLimit, topLeftLimit, topLimit, topRightLimit, rightLimit, bottomRightLimit, bottomLimit, bottomLeftLimit, sizeLimit, crosshair: WMWindowManager.PointerInfo; 
 
+	PROCEDURE ^ CreateCodeTag(CONST a1, a2: ARRAY OF CHAR; next: PCodeTag): CodeTag; 
+	PROCEDURE ^ GetSyntaxHighlighterName*(fullname: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ CreateIndicator(CONST content: ARRAY OF CHAR; width, alignment: SIGNED32): Indicator; 
 	PROCEDURE ^ Distance(x0, y0, x1, y1: SIZE): FLOAT32; 
 	PROCEDURE ^ DrawDashedLine(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color0, color1, width0, width1: SIGNED32); 

@@ -40,6 +40,8 @@ CONST
 	Document = 1; 
 	MenuSize = 10; 
 TYPE 
+	WindowState = WMWindowManager.WindowState; 
+
 	Layout = OBJECT 
 	VAR 
 		width, height: SIZE; 

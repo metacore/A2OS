@@ -508,7 +508,7 @@ TYPE
 					manager.SetWindowPos(w, normalBounds.l, normalBounds.t);
 					w.Resized(vw, vh);
 				ELSIF w.windowState = WindowState.Minimized THEN
-					w.windowState := windowStateSaved;
+					w.windowState := w.windowStateSaved;
 					manager.SetIsVisible(w, TRUE);
 				END;
 	(*?

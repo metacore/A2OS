@@ -693,6 +693,7 @@ TYPE
 
 		PROCEDURE PointerDown*(x, y:SIZE; keys:SET);
 		VAR
+			m : WMMessages.Message;
 			index : SIZE; window : WMWindowManager.Window;
 			info2 : WMWindowManager.WindowInfo;
 			gx, gy: SIZE;
@@ -720,9 +721,17 @@ TYPE
 					IF 0 IN keys THEN lastWindow := window; ELSE lastWindow := NIL; END;
 					IF keys * {0,1} # {} THEN
 						IF same & ((window.windowState # WindowState.Minimized) OR window.isVisible) THEN
-							manager.Minimize(window);
+							m.msgType := WMMessages.MsgMinimize;
+							m.ext := window;
+							IF (manager.sequencer = NIL) OR ~manager.sequencer.Add(m) THEN
+								manager.Handle(m);
+							END;
 						ELSIF window.windowState = WindowState.Minimized THEN
-							manager.Restore(window);
+							m.msgType := WMMessages.MsgRestore;
+							m.ext := window;
+							IF (manager.sequencer = NIL) OR ~manager.sequencer.Add(m) THEN
+								manager.Handle(m);
+							END;
 							GoToWindow(window, 0 IN keys);
 						ELSE
 							GoToWindow(window, 0 IN keys);

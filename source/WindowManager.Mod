@@ -785,7 +785,7 @@ TYPE
 					mw.normalBounds.b := mw.normalBounds.t + height;
 					mw.windowState := WM.WindowState.Normal;
 				END;
-				
+
 				IF cw # width THEN
 					IF w.topW # NIL THEN
 						nw := width + (w.topW.GetWidth() - cw);
@@ -825,85 +825,6 @@ TYPE
 			END;
 			lock.ReleaseWrite
 		END SetWindowSize;
-
-		(** Minimize is called via the generic message handler. *)
-		PROCEDURE Minimize*(w: Window);
-		BEGIN
-			IF w = NIL THEN RETURN END;
-			lock.AcquireWrite;
-			IF w.master # NIL THEN w := w.master; END;
-			IF (w.windowState # WindowState.Minimized) & w.isVisible & (w.flags * {WM.FlagNavigation, WM.FlagHidden} = {}) THEN
-				w.windowStateSaved := w.windowState;
-				w.windowState := WindowState.Minimized;
-				SetIsVisible(w, FALSE);
-			END;
-			lock.ReleaseWrite;
-		END Minimize;
-
-		(** Maximize is called via the generic message handler. *)
-		PROCEDURE Maximize*(w: Window);
-		BEGIN
-			IF w = NIL THEN RETURN END;
-			lock.AcquireWrite;
-			IF w.master # NIL THEN w := w.master; END;
-			IF (w.windowState # WindowState.Maximized) & (w.flags * {WM.FlagNavigation, WM.FlagHidden, WM.FlagNoResizing} = {}) THEN
-				VAR view := viewRegistry.Await("")(ViewPort);
-				w.normalBounds := w.bounds;
-
-				VAR style := GetStyle();
-				VAR th := (style.th - style.buttonTopMargin - 1) IF (style # NIL) & (WM.FlagFrame IN w.flags) ELSE 0;
-				VAR vw := SIZE(view.range.r - view.range.l);
-				VAR vh := SIZE(view.range.b - view.range.t) - th;
-
-				SetWindowSize(w, vw, vh);
-				SetWindowPos(w, SIZE(view.range.l), SIZE(view.range.t) + th);
-
-				w.windowStateSaved := w.windowState;
-				w.windowState := WindowState.Maximized;
-
-				VAR m: Messages.Message;
-				m.msgType := Messages.MsgResized;
-				m.x := vw;
-				m.y := vh;
-				IF (w.sequencer # NIL) & w.sequencer.Add(m) THEN
-				ELSE
-					TRACE("Resized message could not be queued.");
-				END;
-			END;
-			lock.ReleaseWrite;
-		END Maximize;
-
-		(** Restore is called via the generic message handler. *)
-		PROCEDURE Restore*(w: Window);
-		BEGIN
-			IF w = NIL THEN RETURN END;
-			lock.AcquireWrite;
-			IF w.master # NIL THEN w := w.master; END;
-			IF w.flags * {WM.FlagNavigation, WM.FlagHidden} = {} THEN
-				IF w.windowState = WindowState.Maximized THEN
-					w.windowState := WindowState.Normal;
-
-					VAR vw := w.normalBounds.r - w.normalBounds.l;
-					VAR vh := w.normalBounds.b - w.normalBounds.t;
-
-					SetWindowSize(w, vw, vh);
-					SetWindowPos(w, w.normalBounds.l, w.normalBounds.t);
-
-					VAR m : Messages.Message;
-					m.msgType := Messages.MsgResized;
-					m.x := vw;
-					m.y := vh;
-					IF (w.sequencer # NIL) & w.sequencer.Add(m) THEN
-					ELSE
-						TRACE("Resized message could not be queued.");
-					END;
-				ELSIF w.windowState = WindowState.Minimized THEN
-					w.windowState := w.windowStateSaved;
-					SetIsVisible(w, TRUE);
-				END;
-			END;
-			lock.ReleaseWrite;
-		END Restore;
 
 	(** View management *)
 		(** Add a view *)
@@ -1241,10 +1162,100 @@ TYPE
 		END KeyEvent;
 
 		PROCEDURE HandleInternal*(VAR msg : Messages.Message);
+		VAR w: ANY POINTER;
+			PROCEDURE Minimize(w: Window);
+			BEGIN
+				IF w = NIL THEN RETURN END;
+				lock.AcquireWrite;
+				IF w.master # NIL THEN w := w.master; END;
+				IF (w.windowState # WindowState.Minimized) & w.isVisible & (w.flags * {WM.FlagNavigation, WM.FlagHidden} = {}) THEN
+					w.windowStateSaved := w.windowState;
+					w.windowState := WindowState.Minimized;
+					SetIsVisible(w, FALSE);
+				END;
+				lock.ReleaseWrite;
+			END Minimize;
+	
+			PROCEDURE Maximize(w: Window);
+			VAR m: Messages.Message; view: WM.ViewPort; style: WM.WindowStyle;
+				th := 0, vw := 0, vh := 0: SIZE;
+			BEGIN
+				IF w = NIL THEN RETURN END;
+				lock.AcquireWrite;
+				IF w.master # NIL THEN w := w.master; END;
+				IF (w.windowState # WindowState.Maximized) & (w.flags * {WM.FlagNavigation, WM.FlagHidden, WM.FlagNoResizing} = {}) THEN
+					view := viewRegistry.Await("")(WM.ViewPort);
+					style := GetStyle();
+					w.normalBounds := w.bounds;
+					IF (WM.FlagFrame IN w.flags) THEN th := style.th - style.buttonTopMargin; END;
+					vw := SIZE(view.range.r - view.range.l);
+					vh := SIZE(view.range.b - view.range.t) - th;
+	
+					SetWindowSize(w, vw, vh);
+					SetWindowPos(w, SIZE(view.range.l), SIZE(view.range.t) + th);
+	
+					w.windowStateSaved := w.windowState;
+					w.windowState := WindowState.Maximized;
+	
+					m.msgType := Messages.MsgResized;
+					m.x := vw;
+					m.y := vh;
+					IF (w.sequencer = NIL) OR ~w.sequencer.Add(m) THEN
+						TRACE("Resized message could not be queued.");
+					END;
+				END;
+				lock.ReleaseWrite;
+			END Maximize;
+	
+			PROCEDURE Restore(w: Window);
+			VAR m : Messages.Message;
+				vw := 0, vh := 0: SIZE;
+			BEGIN
+				IF w = NIL THEN RETURN END;
+				lock.AcquireWrite;
+				IF w.master # NIL THEN w := w.master; END;
+				IF w.flags * {WM.FlagNavigation, WM.FlagHidden} = {} THEN
+					IF w.windowState = WindowState.Maximized THEN
+						w.windowState := WindowState.Normal;
+	
+						vw := w.normalBounds.r - w.normalBounds.l;
+						vh := w.normalBounds.b - w.normalBounds.t;
+	
+						SetWindowSize(w, vw, vh);
+						SetWindowPos(w, w.normalBounds.l, w.normalBounds.t);
+	
+						m.msgType := Messages.MsgResized;
+						m.x := vw;
+						m.y := vh;
+						IF (w.sequencer = NIL) OR ~w.sequencer.Add(m) THEN
+							TRACE("Resized message could not be queued.");
+						END;
+					ELSIF w.windowState = WindowState.Minimized THEN
+						w.windowState := w.windowStateSaved;
+						SetIsVisible(w, TRUE);
+					END;
+				END;
+				lock.ReleaseWrite;
+			END Restore;
 		BEGIN
 			HandleInternal^(msg);
 			IF msg.msgType = Messages.MsgKey THEN KeyEvent(msg)
 			ELSIF msg.msgType = Messages.MsgPointer THEN PointerEvent(msg)
+			ELSIF msg.msgType = Messages.MsgMinimize THEN
+				w := msg.ext;
+				IF (w # NIL) & (w IS WM.Window) THEN
+					Minimize(w(WM.Window));
+				END;
+			ELSIF msg.msgType = Messages.MsgMaximize THEN
+				w := msg.ext;
+				IF (w # NIL) & (w IS WM.Window) THEN
+					Maximize(w(WM.Window));
+				END;
+			ELSIF msg.msgType = Messages.MsgRestore THEN
+				w := msg.ext;
+				IF (w # NIL) & (w IS WM.Window) THEN
+					Restore(w(WM.Window));
+				END;
 			END
 		END HandleInternal;
 

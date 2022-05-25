@@ -389,17 +389,30 @@ TYPE
 
 		PROCEDURE PointerUp*(x, y:SIZE; keys:SET);
 		VAR temp : SIGNED32; l, t, w, h: SIZE;
+			m : Messages.Message;
 		BEGIN
 			IF (down # NoButton) THEN
 				CheckButtons(x, y, temp);
 				IF (temp = CloseButton) THEN
 					CloseDispatch(SELF, NIL);
 				ELSIF (temp = MinimizeButton) THEN
-					manager.Minimize(master);
+					m.msgType := Messages.MsgMinimize;
+					m.ext := master;
+					IF (manager.sequencer = NIL) OR ~manager.sequencer.Add(m) THEN
+						manager.Handle(m);
+					END;
 				ELSIF (temp = MaximizeButton) THEN
-					manager.Maximize(master);
+					m.msgType := Messages.MsgMaximize;
+					m.ext := master;
+					IF (manager.sequencer = NIL) OR ~manager.sequencer.Add(m) THEN
+						manager.Handle(m);
+					END;
 				ELSIF (temp = RestoreButton) THEN
-					manager.Restore(master);
+					m.msgType := Messages.MsgRestore;
+					m.ext := master;
+					IF (manager.sequencer = NIL) OR ~manager.sequencer.Add(m) THEN
+						manager.Handle(m);
+					END;
 				ELSE
 					PointerUp^(x, y, keys);
 				END;

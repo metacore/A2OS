@@ -2374,8 +2374,8 @@ TYPE
 			form.Reset(SELF, NIL);
 			r := form.GetClientRect();
 			m.msgType := Messages.MsgInvalidate;
-			m.msgSubType := Messages.MsgSubRectangle;
-			m.x := r.l; m.y := r.t; m.dx := r.r; m.dy := r.b; m.sender := form;
+			m.msgSubType := Messages.MsgSubAll;
+			m.sender := form;
 			form.Release;
 			EnableUpdate;
 			IF (form.sequencer = NIL) OR ~form.sequencer.Add(m) THEN form.Handle(m) END;

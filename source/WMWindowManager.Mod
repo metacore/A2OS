@@ -949,24 +949,6 @@ TYPE
 			ASSERT((flag = FlagFrame) OR (flag = FlagStayOnTop) OR (flag = FlagStayOnBottom) OR (flag = FlagHidden) OR (flag = FlagStorable));
 		END SetWindowFlag;
 
-		(** Minimize window. *)
-		PROCEDURE Minimize*(w: Window);
-		BEGIN
-			ASSERT(w # NIL);
-		END Minimize;
-
-		(** Maximize window. *)
-		PROCEDURE Maximize*(w: Window);
-		BEGIN
-			ASSERT(w # NIL);
-		END Maximize;
-
-		(** Restore window. *)
-		PROCEDURE Restore*(w: Window);
-		BEGIN
-			ASSERT(w # NIL);
-		END Restore;
-
 		(** Set if the window is willing to accept a dropped item *)
 		PROCEDURE SetAcceptDrag*(w : Window; accept : BOOLEAN);
 		BEGIN

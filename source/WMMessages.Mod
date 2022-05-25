@@ -56,8 +56,8 @@ TYPE
 	(** AsyncToken can be used to synchronize asynchronous method invocation *)
 	AsyncToken* = OBJECT
 	VAR
-		ready : BOOLEAN;
-		result* : ANY;
+		ready  := FALSE: BOOLEAN;
+		result* := NIL: ANY;
 
 		(** Reset is called in case the token was recycled *)
 		PROCEDURE Reset*;

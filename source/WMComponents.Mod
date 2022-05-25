@@ -598,10 +598,8 @@ TYPE
 
 		(* Initialize is called by Reset() and is required to render components responsive *)
 		PROCEDURE Initialize*; (** PROTECTED *)
-		BEGIN
-			BEGIN{EXCLUSIVE}
+		BEGIN{EXCLUSIVE}
 			initialized := TRUE
-			END;
 		END Initialize;
 
 		(** Internal interface of the message handler. This method may only be called via the Handle method.
@@ -2247,7 +2245,7 @@ TYPE
 			IF sequencer # NIL THEN sequencer.WaitFree() END;
 			BEGIN{EXCLUSIVE}
 				INC(disableUpdate);
-				INCL(flags, 13); (* render windows background non-displayed*)
+				INCL(flags, FlagDirty); (* render windows background non-displayed*)
 				IF form # NIL THEN form.Finalize; form.sequencer.Stop; content:=NIL END;
 				IF x IS Form THEN
 					form := x(Form);
@@ -2369,12 +2367,18 @@ TYPE
 		END LanguageChanged;
 
 		PROCEDURE CSChanged*;
+		VAR m : Messages.Message; r : Rectangles.Rectangle;
 		BEGIN
 			DisableUpdate; (* the components are going to redraw like crazy *)
 			form.Acquire;
 			form.Reset(SELF, NIL);
+			r := form.GetClientRect();
+			m.msgType := Messages.MsgInvalidate;
+			m.msgSubType := Messages.MsgSubRectangle;
+			m.x := r.l; m.y := r.t; m.dx := r.r; m.dy := r.b; m.sender := form;
 			form.Release;
 			EnableUpdate;
+			IF (form.sequencer = NIL) OR ~form.sequencer.Add(m) THEN form.Handle(m) END;
 		END CSChanged;
 
 		PROCEDURE Close*;

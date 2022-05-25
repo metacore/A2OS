@@ -211,7 +211,6 @@ BUILDS
 		INCLUDE "LINUX UNIX I386"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Unix32"
-		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -227,7 +226,6 @@ BUILDS
 		INCLUDE "LINUX UNIX AMD64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Unix64"
-		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -235,7 +233,6 @@ BUILDS
 		INCLUDE "LINUX UNIX ARM"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=UnixARM"
-		PATH "./NewAos/"
 		EXCLUDEPACKAGES "EFI Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}

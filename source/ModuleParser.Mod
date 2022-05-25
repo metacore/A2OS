@@ -885,9 +885,11 @@ TYPE
 				identList.identDef := identDef;
 				AppendLast(var.identList, identList);
 			END;
-			Check(FoxScanner.Colon);
-			NEW(var.type, var);
-			TypeP(var.type);
+			IF token.symbol = FoxScanner.Colon THEN
+				NextToken;
+				NEW(var.type, var);
+				TypeP(var.type);
+			END;
 		END VarDeclP;
 
 		PROCEDURE ProcDeclP(proc: ProcDecl);
@@ -1417,7 +1419,7 @@ TYPE
 				END;
 				NextToken;
 				(* urgh, what an ugly condition ... *)
-			UNTIL (((token.symbol = delimiter1) OR (token.symbol = delimiter2)) & (paren = 0) & (brace = 0) & (brak = 0)) OR (token.symbol = FoxScanner.EndOfText);
+			UNTIL (((token.symbol = delimiter1) OR (token.symbol = delimiter2) OR (token.symbol = FoxScanner.Semicolon)) & (paren = 0) & (brace = 0) & (brak = 0)) OR (token.symbol = FoxScanner.EndOfText);
 			IF (longExprStr = NIL) THEN
 				expr.name := Strings.NewString(exprStr);
 			ELSE

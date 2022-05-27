@@ -1175,38 +1175,41 @@ TYPE
 				END;
 				lock.ReleaseWrite;
 			END Minimize;
-	
+
 			PROCEDURE Maximize(w: Window);
-			VAR m: Messages.Message; view: WM.ViewPort; style: WM.WindowStyle;
+			VAR m: Messages.Message; view: WM.ViewPort; style: WM.WindowStyle; plugin : Plugins.Plugin;
 				th := 0, vw := 0, vh := 0: SIZE;
 			BEGIN
 				IF w = NIL THEN RETURN END;
 				lock.AcquireWrite;
-				IF w.master # NIL THEN w := w.master; END;
-				IF (w.windowState # WindowState.Maximized) & (w.flags * {WM.FlagNavigation, WM.FlagHidden, WM.FlagNoResizing} = {}) THEN
-					view := viewRegistry.Await("")(WM.ViewPort);
-					style := GetStyle();
-					w.normalBounds := w.bounds;
-					IF (WM.FlagFrame IN w.flags) THEN th := style.th - style.buttonTopMargin; END;
-					vw := SIZE(view.range.r - view.range.l);
-					vh := SIZE(view.range.b - view.range.t) - th;
-	
-					SetWindowSize(w, vw, vh);
-					SetWindowPos(w, SIZE(view.range.l), SIZE(view.range.t) + th);
-	
-					w.windowStateSaved := w.windowState;
-					w.windowState := WindowState.Maximized;
-	
-					m.msgType := Messages.MsgResized;
-					m.x := vw;
-					m.y := vh;
-					IF (w.sequencer = NIL) OR ~w.sequencer.Add(m) THEN
-						TRACE("Resized message could not be queued.");
+				plugin := viewRegistry.Get("");
+				IF (plugin # NIL) & (plugin IS WM.ViewPort) THEN
+					view := plugin(WM.ViewPort);
+					IF w.master # NIL THEN w := w.master; END;
+					IF (w.windowState # WindowState.Maximized) & (w.flags * {WM.FlagNavigation, WM.FlagHidden, WM.FlagNoResizing} = {}) THEN
+						w.normalBounds := w.bounds;
+						style := GetStyle();
+						IF (style # NIL) & (WM.FlagFrame IN w.flags) THEN th := style.th - style.buttonTopMargin; END;
+						vw := SIZE(view.range.r - view.range.l);
+						vh := SIZE(view.range.b - view.range.t) - th;
+
+						SetWindowSize(w, vw, vh);
+						SetWindowPos(w, SIZE(view.range.l), SIZE(view.range.t) + th);
+
+						w.windowStateSaved := w.windowState;
+						w.windowState := WindowState.Maximized;
+
+						m.msgType := Messages.MsgResized;
+						m.x := vw;
+						m.y := vh;
+						IF (w.sequencer = NIL) OR ~w.sequencer.Add(m) THEN
+							TRACE("Resized message could not be queued.");
+						END;
 					END;
 				END;
 				lock.ReleaseWrite;
 			END Maximize;
-	
+
 			PROCEDURE Restore(w: Window);
 			VAR m : Messages.Message;
 				vw := 0, vh := 0: SIZE;
@@ -1217,13 +1220,13 @@ TYPE
 				IF w.flags * {WM.FlagNavigation, WM.FlagHidden} = {} THEN
 					IF w.windowState = WindowState.Maximized THEN
 						w.windowState := WindowState.Normal;
-	
+
 						vw := w.normalBounds.r - w.normalBounds.l;
 						vh := w.normalBounds.b - w.normalBounds.t;
-	
+
 						SetWindowSize(w, vw, vh);
 						SetWindowPos(w, w.normalBounds.l, w.normalBounds.t);
-	
+
 						m.msgType := Messages.MsgResized;
 						m.x := vw;
 						m.y := vh;

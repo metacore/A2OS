@@ -1002,9 +1002,9 @@ VAR w : WMWindowManager.BufferWindow;
 	i : SIGNED32;
 BEGIN
 	NEW(t);
-	a := LoadImage("Reto01.png");
-	b := LoadImage("Reto02.png");
-	m := WMGraphics.LoadImage("M_Art1.png", TRUE);
+	a := LoadImage("SlideShowData.tar://Reto01.png");
+	b := LoadImage("SlideShowData.tar://Reto02.png");
+	m := WMGraphics.LoadImage("SlideShowData.tar://RetoWMTransMask01.png", TRUE);
 	t.Init(a.width, a.height);
 	NEW(w, a.width, a.height, FALSE);
 	WMWindowManager.DefaultAddWindow(w);
@@ -1022,8 +1022,8 @@ VAR w : WMWindowManager.BufferWindow;
 	i : SIGNED32;
 BEGIN
 	NEW(t);
-	a := LoadImage("Reto01.png");
-	b := LoadImage("Reto02.png");
+	a := LoadImage("SlideShowData.tar://Reto01.png");
+	b := LoadImage("SlideShowData.tar://Reto02.png");
 	t.Init(a.width, a.height);
 	NEW(w, a.width, a.height, FALSE);
 	WMWindowManager.DefaultAddWindow(w);

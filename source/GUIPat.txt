@@ -10,6 +10,10 @@ A number of programming examples	are stored in archive ]]></Span><Span style="Bo
 
 Tar.Extract GUIPat.tar ~
 
+]]></Span><Span style="Normal"><![CDATA[Open in archiver]]></Span><Span style="Normal"><![CDATA[:
+
+]]></Span><Span style="Normal"><![CDATA[WMArchives.Open GUIPat.tar~]]></Span><Span style="Normal"><![CDATA[
+
 The programming examples are aimed at introducing a Bluebottle neophyte without going to a detailed theoretical presentation
 of the subject matter Active Oberon (Aos). Some of the principles of operation of the Bluebottle GUI should become clear after
 having studied and practiced them. The sometimes complex operations taking place behind the scene are not exposed.

@@ -111,9 +111,15 @@ TYPE
 			ca := Graphics.LoadImage("ZeroSkin.zip://aclose.png", TRUE);
 			ci := Graphics.LoadImage("ZeroSkin.zip://iclose.png", TRUE);
 			closeHover := NIL; closeHoverInactive := NIL; closePressed := NIL;
-			ma := NIL; mi := NIL; minimizeHover := NIL; minimizeHoverInactive := NIL; minimizePressed := NIL;
-			maximizeActive := NIL; maximizeInactive := NIL; maximizeHover := NIL; maximizeHoverInactive := NIL; maximizePressed := NIL;
-			restoreActive := NIL; restoreInactive := NIL; restoreHover := NIL;  restoreHoverInactive := NIL; restorePressed := NIL;
+			ma := Graphics.LoadImage("ZeroSkin.zip://aminimize.png", TRUE);
+			mi := Graphics.LoadImage("ZeroSkin.zip://iminimize.png", TRUE);
+			minimizeHover := NIL; minimizeHoverInactive := NIL; minimizePressed := NIL;
+			maximizeActive := Graphics.LoadImage("ZeroSkin.zip://amaximize.png", TRUE);
+			maximizeInactive := Graphics.LoadImage("ZeroSkin.zip://imaximize.png", TRUE);
+			maximizeHover := NIL; maximizeHoverInactive := NIL; maximizePressed := NIL;
+			restoreActive := Graphics.LoadImage("ZeroSkin.zip://arestore.png", TRUE);
+			restoreInactive := Graphics.LoadImage("ZeroSkin.zip://irestore.png", TRUE);
+			restoreHover := NIL;  restoreHoverInactive := NIL; restorePressed := NIL;
 			userActive := NIL; userInactive := NIL; userHover := NIL; userHoverInactive := NIL; userPressed := NIL;
 
 			minimizeOffset := 0;

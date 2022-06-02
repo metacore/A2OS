@@ -755,11 +755,11 @@ TYPE
 			LoadCursor("ZeroSkin.zip://hand.png", 6, 0, pointerLink);
 		END InitCursors;
 
-		PROCEDURE ZeroSkin*;
+		PROCEDURE ZeroSkin*(broadcast := TRUE: BOOLEAN);
 		BEGIN
 			lock.AcquireWrite;
 			style.Init;
-			SetStyle(style);
+			IF broadcast THEN SetStyle(style); END;
 			InitCursors;
 			lock.ReleaseWrite
 		END ZeroSkin;

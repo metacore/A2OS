@@ -429,7 +429,7 @@ BEGIN
 	msg.msgType := Messages.MsgExt; msg.ext := WMComponents.componentStyleMsg;
 	IF broadcast THEN manager.Broadcast(msg) END;
 	(* default-window and cursors *)
-	manager.ZeroSkin
+	manager.ZeroSkin(broadcast);
 END SetZeroSkin;
 
 (* install skin specified by xml-doc *)

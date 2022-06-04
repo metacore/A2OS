@@ -67,6 +67,12 @@ TYPE
 		PROCEDURE ReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			error := TRUE;
+			IF Debug THEN
+				KernelLog.String('XMLParser error: "'); KernelLog.String(msg);
+				KernelLog.String('", pos: '); KernelLog.Int(pos, 0);
+				KernelLog.String(', line: '); KernelLog.Int(line, 0);
+				KernelLog.String(', col: '); KernelLog.Int(col, 0); KernelLog.Ln
+			END
 		END ReportError;
 
 		(* open the decoder on an InputStream *)
@@ -287,3 +293,5 @@ BEGIN
 END GenDecoder;
 
 END AnimationCodec.
+
+System.Free AnimationCodec ~

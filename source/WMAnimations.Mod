@@ -36,6 +36,7 @@ TYPE
 		BEGIN
 			Init^;
 			SetNameAsString(StrAnimation);
+			SetGenerator("WMAnimations.GenAnimation");
 			NEW(imageName, PrototypeImageName, NIL, NIL); properties.Add(imageName);
 			NEW(isRepeating, PrototypeIsRepeating, NIL, NIL); properties.Add(isRepeating);
 			NEW(scaleImage, PrototypeScaleImage, NIL, NIL); properties.Add(scaleImage);

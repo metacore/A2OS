@@ -285,7 +285,7 @@ TYPE
 		VAR
 			images, w, h, left, top : SIGNED16;
 			label, ch, transPix, idFlags : CHAR;
-			n, size : SIGNED32;
+			n : SIGNED32;
 			error : BOOLEAN;
 		BEGIN
 			NEW(img);
@@ -318,8 +318,8 @@ TYPE
 
 					(* local color table *)
 					IF ODD(ASH(ORD(idFlags), -7)) THEN
-						n := 0; size := ASH(1, 1 + ORD(idFlags) MOD 8);
-						WHILE n < size DO
+						n := 0; pal.used := ASH(1, 1 + ORD(idFlags) MOD 8);
+						WHILE n < pal.used DO
 							r.Char(pal.col[n, Raster.r]); r.Char(pal.col[n, Raster.g]); r.Char(pal.col[n, Raster.b]);
 							INC(n)
 						END;
@@ -328,9 +328,6 @@ TYPE
 					(* create image and load image data *)
 					Raster.Create(img, w, h, Raster.BGRA8888);
 					IF transparent THEN
-						pal.col[ORD(transPix), Raster.b] := 0X;
-						pal.col[ORD(transPix), Raster.g] := 0X;
-						pal.col[ORD(transPix), Raster.r] := 0X;
 						pal.col[ORD(transPix), Raster.a] := 0X
 					END;
 					LoadData(r, pal, img, interlaced, error);
@@ -375,7 +372,7 @@ TYPE
 		VAR
 			header : Header;
 			ch : CHAR;
-			n, size: SIGNED32;
+			n : SIGNED32;
 			length: SIZE;
 			w, h : SIGNED16;
 		BEGIN
@@ -406,8 +403,8 @@ TYPE
 			END;
 			(* global color table *)
 			IF ODD(ASH(ORD(lcdFlags), -7)) THEN
-				n := 0; size := ASH(1, 1 + ORD(lcdFlags) MOD 8);
-				WHILE n < size DO
+				n := 0; globalPal.used := ASH(1, 1 + ORD(lcdFlags) MOD 8);
+				WHILE n < globalPal.used DO
 					r.Char(globalPal.col[n, Raster.r]); r.Char(globalPal.col[n, Raster.g]);
 					r.Char(globalPal.col[n, Raster.b]); globalPal.col[n, Raster.a] := 0FFX;
 					INC(n)
@@ -424,7 +421,7 @@ TYPE
 		VAR
 			first, last, current : Codecs.ImageDescriptor;
 			label, ch, transPix, idFlags : CHAR;
-			n, size : SIGNED32;
+			n : SIGNED32;
 			temp, delayTime, disposeMode : SIGNED16;
 			valid, userInput, error : BOOLEAN;
 		BEGIN
@@ -478,8 +475,8 @@ TYPE
 
 					(* local color table *)
 					IF ODD(ASH(ORD(idFlags), -7)) THEN
-						n := 0; size := ASH(1, 1 + ORD(idFlags) MOD 8);
-						WHILE n < size DO
+						n := 0; localPal.used := ASH(1, 1 + ORD(idFlags) MOD 8);
+						WHILE n < localPal.used DO
 							r.Char(localPal.col[n, Raster.r]); r.Char(localPal.col[n, Raster.g]); r.Char(localPal.col[n, Raster.b]);
 							INC(n)
 						END;
@@ -490,11 +487,14 @@ TYPE
 
 					(* create image and load image data *)
 					Raster.Create(current.image, current.width, current.height, Raster.BGRA8888);
-					IF transparent THEN
-						pal.col[ORD(transPix), Raster.b] := 0X;
-						pal.col[ORD(transPix), Raster.g] := 0X;
-						pal.col[ORD(transPix), Raster.r] := 0X;
-						pal.col[ORD(transPix), Raster.a] := 0X
+					n := 0;
+					WHILE n < pal.used DO
+						IF transparent & (n = ORD(transPix)) THEN
+							pal.col[n, Raster.a] := 0X
+						ELSE
+							pal.col[n, Raster.a] := 0FFX
+						END;
+						INC(n)
 					END;
 					LoadData(r, pal, current.image, interlaced, error);
 					IF error THEN Error("no enough image data"); RETURN; END;
@@ -513,12 +513,15 @@ VAR
 	red, green, blue : ARRAY 256 OF SIGNED16;
 
 PROCEDURE LoadData (r : Streams.Reader; pal : Raster.Palette; img: Raster.Image; interlaced: BOOLEAN; VAR error : BOOLEAN);
+CONST
+	GIFBitsMax = 12;
+	GIFCodeMax = ASH(1, GIFBitsMax) - 1;
 VAR
 	ch: CHAR;
 	codeBits, clearCode, endCode, curBits, maxCode, nextCode, bits, x, y, lines, prevCode, curCode, seq, len: SIGNED16;
 	n, buf, blkPos, blkSize, ptr: SIGNED32; bytesRead: SIZE;
-	pix, run: ARRAY 1000H OF CHAR;
-	prev: ARRAY 1000H OF SIGNED16;
+	pix, run: ARRAY GIFCodeMax + 1 OF CHAR;
+	prev: ARRAY GIFCodeMax + 1 OF SIGNED16;
 	block: ARRAY 255 OF CHAR;
 
 	PROCEDURE Dot (pix: CHAR);
@@ -596,10 +599,13 @@ BEGIN
 			END;
 
 			(* the sequence just output gets a new code *)
-			pix[nextCode] := pix[seq]; prev[nextCode] := prevCode; INC(nextCode);
-			IF (nextCode = maxCode) & (curBits < 12) THEN
-				INC(curBits); maxCode := SIGNED16(ASH(1, curBits))
+			IF nextCode <= GIFCodeMax THEN
+				pix[nextCode] := pix[seq]; prev[nextCode] := prevCode; INC(nextCode);
+				IF (nextCode = maxCode) & (curBits < GIFBitsMax) THEN
+					INC(curBits); maxCode := SIGNED16(ASH(1, curBits))
+				END
 			END
+
 		END;
 		prevCode := curCode
 	END;

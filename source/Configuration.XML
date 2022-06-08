@@ -411,6 +411,12 @@ To update: Configuration.Init ~
 		<Section name="obj">
 			<Setting name="Open" value="Decoder.Open"/>
 		</Section>
+		<Section name="ob2">
+			<Setting name="Open" value="PET.Open"/>
+		</Section>
+		<Section name="ob07">
+			<Setting name="Open" value="PET.Open"/>
+		</Section>
 		<Section name="ogg">
 			<Setting name="Open" value="OGGVorbisPlayer.Play"/>
 		</Section>
@@ -559,7 +565,7 @@ To update: Configuration.Init ~
 				</Section>
 				<Section name="Fox">
 					<Setting name="caption" value="Compile"/>
-						<Setting name="options" value="--cellsAreObjects"/>
+					<Setting name="options" value="--cellsAreObjects"/>
 					<Setting name="fileExtension" value="MDF"/>
 					<Setting name="loadmodule" value="TextCompiler"/>
 					<Setting name="genTree" value="PETModuleTree.GenModuleTree"/>
@@ -611,9 +617,11 @@ To update: Configuration.Init ~
 				<Setting name="MOD" value="Oberon"/>
 				<Setting name="mod" value="oberon"/>
 				<Setting name ="MDF" value="DataflowOberon"/>
-					<Setting name="MOS" value="Oberon"/>
+				<Setting name="MOS" value="Oberon"/>
+				<Setting name="Ob2" value="Oberon"/>
+				<Setting name="Ob07" value="Oberon"/>
 				<Setting name="XML" value="XML"/>
-					<Setting name="ASM" value="Assembler"/>
+				<Setting name="ASM" value="Assembler"/>
 				<Setting name="TOOL" value="ReleaseTool"/>
 				<Setting name="C" value="C"/>
 			</Section>

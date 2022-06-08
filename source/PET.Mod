@@ -103,7 +103,7 @@ CONST
 	SearchStringMaxLen = 128;
 
 	MaxNbrOfTabs = 100;
-	MaxNbrOfCompilers = 8;
+	MaxNbrOfCompilers = 16;
 
 	WindowTitle = "Programmer's Editing Tool v2.1";
 

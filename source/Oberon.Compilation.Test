@@ -39665,3 +39665,28 @@ positive: variable with initializer and correctly declared as of type pointer to
 
 	END Test.
 	
+negative: initializer assigned with type
+	MODULE Test;
+
+	VAR 	a := INTEGER;
+	END Test.
+
+negative: initializer assigned with type in body
+	MODULE Test;
+	BEGIN
+	VAR 	a := INTEGER;
+	END Test.
+
+
+positive: initializer assigned with type conversion
+	MODULE Test;
+
+	VAR 	a := INTEGER (3);
+	VAR 	b := SIZE (3);
+	BEGIN
+	VAR 	c := INTEGER (3);
+	VAR 	d := SIZE (3);
+
+	END Test.
+
+	

@@ -6324,7 +6324,7 @@ TYPE
 					variable.SetType(qualifiedType);
 					qualifiedType.SetResolved(SyntaxTree.invalidType); (* for cycle detection *)
 					variable.SetInitializer (ResolveExpression(variable.initializer));
-					qualifiedType.SetResolved(variable.initializer.type.resolvedType);
+					qualifiedType.SetResolved(RegularType(variable.position, variable.initializer.type));
 				ELSE
 					variable.SetType(ResolveType(variable.type));
 				END;
@@ -7236,7 +7236,7 @@ TYPE
 					initializer := ResolveExpression(initializer);
 					x.initializers.SetExpression(i,initializer);
 					qualifiedType := SyntaxTree.NewQualifiedType(variable.position, NIL, NIL);
-					qualifiedType.SetResolved(initializer.type.resolvedType);
+					qualifiedType.SetResolved(RegularType(initializer.position, initializer.type.resolvedType));
 					qualifiedType.SetState(SyntaxTree.Resolved);
 					variable.SetType(qualifiedType);
 				ELSE
@@ -7259,8 +7259,10 @@ TYPE
 					Error(variable.position, "duplicate variable");
 				END;
 			END;
- 			ASSERT(system.GenerateVariableOffsets(currentScope));
-
+			IF ~error THEN
+				VAR success := system.GenerateVariableOffsets(currentScope);
+				ASSERT(success);
+	 		END;
 			RETURN x;
 		END ResolveDeclarationStatement;
 
@@ -10183,5 +10185,4 @@ TYPE
 END FoxSemanticChecker.
 
 System.FreeDownTo FoxSemanticChecker ~
-a
 System.FreeDownTo FoxIntermediateBackend ~

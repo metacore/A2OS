@@ -1,7 +1,7 @@
 MODULE GenericsUse; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT
-	Commands, SIZE_Containers := G(SIZE, L);
+	Commands, SIZE_Containers := GenericCollections(SIZE, Less);
 	
 PROCEDURE TestQueue(context: Commands.Context);
 VAR
@@ -55,14 +55,13 @@ BEGIN
 	TestVector(context)
 END Do;
 
-PROCEDURE L(l, r: SIZE): BOOLEAN;
+PROCEDURE Less(l, r: SIZE): BOOLEAN;
 BEGIN
 	RETURN l < r
-END L;
+END Less;
 
 BEGIN
-
 END GenericsUse.
 
 GenericsUse.Do ~
-System.Free GenericsUse ~
+System.Free GenericsUse GenericCollections(@Size64,GenericsUse_Less) ~

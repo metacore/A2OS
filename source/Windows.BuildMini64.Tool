@@ -5,7 +5,7 @@ System.DoCommands
 System.Timer start ~
 
 System.Show Create ramdisk and format with FAT file system... ~ System.Ln ~
-VirtualDisks.InstallRamdisk RAMDISK 240000 ~
+VirtualDisks.InstallRamdisk RAMDISK 300000 ~
 Partitions.WriteMBR RAMDISK#0 OBEMBR.Bin ~
 Partitions.Create RAMDISK#1 12 1000 ~
 Partitions.Format RAMDISK#1 FatFS  ~

@@ -2,7 +2,7 @@ MODULE WMMixer;	(** AUTHOR "TF"; PURPOSE "Control the mixer of the default Sound
 
 IMPORT
 	Modules,
-	SoundDevices, Strings, Plugins, WMComponents, WMStandardComponents, WMMessages, WMWindowManager, WMProperties;
+	SoundDevices, Strings, Plugins, WMGraphics, WMComponents, WMStandardComponents, WMMessages, WMWindowManager, WMProperties;
 
 VAR
 	device : SoundDevices.Driver;
@@ -30,15 +30,20 @@ TYPE
 			NEW(deviceName, PrototypedeviceName, NIL, NIL); properties.Add(deviceName);
 			NEW(channelName, PrototypechannelName, NIL, NIL); properties.Add(channelName);
 			NEW(name); name.alignment.Set(WMComponents.AlignTop); name.bounds.SetHeight(20);
+			name.alignV.Set(WMGraphics.AlignCenter); name.alignH.Set(WMGraphics.AlignCenter);
+			name.bearing.SetTop(0); name.bearing.SetBottom(0);
 			AddContent(name);
 
 			NEW(mute); mute.alignment.Set(WMComponents.AlignBottom); mute.bounds.SetHeight(20);
+			mute.bearing.SetTop(8); mute.bearing.SetBottom(8);
+			mute.bearing.SetLeft(30); mute.bearing.SetRight(30);
 			mute.caption.SetAOC("Mute");
 			mute.onClick.Add(MuteChanged);
 			AddContent(mute);
 
 			NEW(value); value.alignment.Set(WMComponents.AlignClient);
-			value.bearing.SetLeft(20); value.bearing.SetRight(20);
+			value.bearing.SetLeft(30); value.bearing.SetRight(30);
+			value.bearing.SetTop(8); value.bearing.SetBottom(0);
 			value.onPositionChanged.Add(VolChanged);
 			value.max.Set(255);
 			AddContent(value);
@@ -141,11 +146,12 @@ TYPE
 			ch : SoundDevices.MixerChannel;
 			name : ARRAY 128 OF CHAR;
 			m : Mixer;
-		CONST MWidth = 60;
+		CONST MWidth = 80;
 		BEGIN
 			dev := SoundDevices.GetDefaultDevice();
 
-			NEW(panel); panel.bounds.SetExtents(MWidth * dev.GetNofMixerChannels(), 200); panel.fillColor.Set(SIGNED32(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
+			NEW(panel); panel.bounds.SetExtents(MWidth * dev.GetNofMixerChannels(), 250);
+			panel.fillColor.Set(SIGNED32(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
 
 			IF dev # NIL THEN
 				FOR i := 0 TO dev.GetNofMixerChannels() - 1 DO

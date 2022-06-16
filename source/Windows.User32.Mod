@@ -448,6 +448,8 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		SetMenu-: PROCEDURE {WINAPI} (hWnd: HWND; hMenu: HMenu): Kernel32.BOOL;
 		(** The SetMenuItemInfo function changes information about a menu item. *)
 		SetMenuItemInfo-: PROCEDURE {WINAPI} (hMenu: HMenu; uItem: SIGNED32; fyByPosition: Kernel32.BOOL; VAR lpmii: MenuItemInfo): Kernel32.BOOL;
+		(** The SetProcessDPIAware function sets the process-default DPI awareness to system-DPI awareness. *)
+		SetProcessDPIAware-: PROCEDURE {WINAPI} (): Kernel32.BOOL;
 		(** The SetProp function adds a new entry or changes an existing entry in the property list of the specified window. *)
 		SetProp-: PROCEDURE {WINAPI} (hWnd: HWND; lpString, hData: SIGNED32): Kernel32.BOOL;
 		(** The SetWindowsHookEx function installs an application-defined hook procedure into a hook chain. *)
@@ -583,6 +585,7 @@ BEGIN
 	Kernel32.GetProcAddress(mod, "SetForegroundWindow", SYSTEM.VAL(ADDRESS,SetForegroundWindow ));
 	Kernel32.GetProcAddress(mod, "SetMenu", SYSTEM.VAL(ADDRESS,SetMenu ));
 	Kernel32.GetProcAddress(mod, "SetMenuItemInfoA", SYSTEM.VAL(ADDRESS,SetMenuItemInfo ));
+	Kernel32.GetProcAddress(mod, "SetProcessDPIAware", SYSTEM.VAL(ADDRESS,SetProcessDPIAware ));
 	Kernel32.GetProcAddress(mod, "SetPropA", SYSTEM.VAL(ADDRESS,SetProp ));
 	Kernel32.GetProcAddress(mod, "SetWindowsHookExA", SYSTEM.VAL(ADDRESS,SetWindowsHookEx ));
 	Kernel32.GetProcAddress(mod, "SetWindowLongA", SYSTEM.VAL(ADDRESS,SetWindowLong ));

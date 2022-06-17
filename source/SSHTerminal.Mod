@@ -1,10 +1,10 @@
 MODULE SSHTerminal; 	(* GF  10.12.2020 *)
 
 (* derived from WMVT100.Mod by ejz, modified to use an SSH connection instead of telnet *)
-
+(* 10.06.2022	added support for iso8859-1 characters *)
 
 IMPORT
-	Kernel, Commands, Files, Inputs, Streams, Log := KernelLog, Beep,
+	Kernel, Commands, Files, Inputs, Streams, Log := KernelLog, Beep, UTF8Strings,
 	WMWindowManager, WMComponents, WMStandardComponents, WMG := WMGraphics,
 	WMMessages, WMEditors, WMRectangles, 
 	
@@ -379,9 +379,9 @@ TYPE
 			VAR f: Files.File;
 			BEGIN
 				NEW(attr); attr.special := {};
-				f := Files.Old( "PTMono_bd.ttf" );
+				f := Files.Old( "LiberationMono_bd.ttf" );
 				IF f # NIL THEN
-					attr.fnt := WMG.GetFont( "PTMono", 13, {0} )
+					attr.fnt := WMG.GetFont( "LiberationMono", 13, {0} )
 				ELSE
 					attr.fnt := WMG.GetFont( "Courier", 12, {} )
 				END;
@@ -617,7 +617,25 @@ Log.Ln;
 					END
 				END
 			END ESCSequence;
-
+			
+			PROCEDURE Iso8859char( c1: CHAR; r: Streams.Reader; VAR n: SIZE ): CHAR;
+			(* Get next iso 8859-1 character from UTF8 stream *)
+			VAR 
+				len, ucs: INTEGER; c2: CHAR;
+			BEGIN
+				IF ORD(c1) < 128 THEN  
+					RETURN c1
+				ELSE
+					len := ORD( UTF8Strings.CodeLength[ORD( c1 )] );
+					IF (len # 2) OR (n < 1) THEN
+						ucs := 0xBF
+					ELSE
+						r.Char( c2 );  DEC( n );
+						ucs := (ORD( c1 ) MOD 32)*64 + ORD( c2 ) MOD 64
+					END
+				END;
+				RETURN CHR( ucs )
+			END Iso8859char;
 
 			PROCEDURE Consume( ch: CHAR; r: Streams.Reader );
 			VAR buf: ARRAY 256 OF CHAR; i, n: SIZE;
@@ -639,13 +657,13 @@ Log.Ln;
 				|ESC: ESCSequence( ch, r )
 				|DEL: Delete()
 				ELSE (* iso-8859-1 *)
-					buf[0] := ch;  i := 1;  n := r.Available();
+					n := r.Available();
+					buf[0] := Iso8859char( ch, r, n );  i := 1;  
 					IF n > 0 THEN
-						IF n > 127 THEN  n := 127  END;
 						ch := r.Peek();
-						WHILE (n > 0) & (ch >= ' ') & (ch <= '~') DO
+						WHILE (n > 0) & (ch >= ' ') & (i < 128) DO
 							r.Char( ch ); DEC( n );
-							buf[i] := ch; INC( i );
+							buf[i] := Iso8859char( ch, r, n );  INC( i );
 							IF n > 0 THEN  ch := r.Peek()  END
 						END
 					END;
@@ -737,15 +755,22 @@ Log.Ln;
 				END;
 				w.Update()
 			END CursorKey;
+			
+			PROCEDURE WriteUcs( ucs: SIZE );
+			BEGIN
+				IF ucs >= 80H THEN
+					w.Char( CHR( ucs DIV 64 + 192 ) );
+					w.Char( CHR( ucs MOD 64 + 128 ) )
+				ELSE
+					IF ucs > 0 THEN  w.Char( CHR( ucs ) )  END
+				END;
+			END WriteUcs;
 
 			PROCEDURE KeyEvent*( ucs: SIZE; flags: SET; VAR keySym: SIZE );
 			BEGIN
 				IF chan = NIL THEN  RETURN  END;
-
-				IF ~(Inputs.Release IN flags) & hasFocus THEN
-					IF (keySym DIV 256) = 0 THEN
-						w.Char( CHR( keySym ) );  w.Update()
-					ELSIF (keySym DIV 256) = 0FFH THEN
+				IF ~(Inputs.Release IN flags) & hasFocus THEN		
+					IF (keySym DIV 256) = 0FFH THEN
 						CASE keySym OF
 						|0FF51H .. 0FF54H:
 							CursorKey(keySym)
@@ -755,24 +780,20 @@ Log.Ln;
 						|0FF57H: (* End *)
 						|0FF63H: (* Insert *)
 						|0FFFFH: (* Delete *)
-						|0FF08H:
-							w.Char( DEL );  w.Update()
-						|0FF09H:
-							w.Char( 9X );  w.Update()
-						|0FF0DH:
-							w.Char( CR );  w.Update()
-						|0FF1BH:
-							w.Char( ESC );  w.Update()
+						|0FF08H: w.Char( DEL )
 						|0FF8DH:
 							IF AppKeypadMode IN mode THEN
 								w.Char( ESC ); w.Char( "O" ); w.Char( "M" )
 							ELSE
 								w.Char( CR )
 							END;
-							w.Update()
 						ELSE
+							WriteUcs( ucs )
 						END
-					END
+					ELSE
+						WriteUcs( ucs )
+					END;
+					w.Update
 				END
 			END KeyEvent;
 
@@ -861,9 +882,9 @@ Log.Ln;
 				SetScrollRegion;
 				cursor.line := top;  cursor.ofs := 0;
 				boxW := 0;  boxH := 0;  dX := 0;  dY := 0;
-				NEW( tabs, cols + 1 );
+				NEW( tabs, 256 );
 				tabs[0] := FALSE;  i := 1;
-				WHILE i <= cols DO  tabs[i] := (i MOD 8) = 0;  INC( i )  END;
+				WHILE i < 256 DO  tabs[i] := (i MOD 8) = 0;  INC( i )  END;
 			END New;
 
 			PROCEDURE Setup;
@@ -876,7 +897,7 @@ Log.Ln;
 				r: Streams.Reader;
 			BEGIN
 				Streams.OpenReader( r, chan.Receive );
-				r.Char( ch ); 
+				r.Char( ch );
 				WHILE ch # 0X DO
 					Consume( ch, r );
 					r.Char( ch );

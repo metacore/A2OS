@@ -299,7 +299,7 @@ VAR
 	PROCEDURE GetKeyState( key: SIGNED32;  what: SIGNED16 ): BOOLEAN;
 	VAR state: SIGNED16;
 	BEGIN
-		state := User32.GetKeyState( key );  RETURN what IN SYSTEM.VAL( SET, state );
+		state := User32.GetKeyState( key );  RETURN what IN SYSTEM.VAL( SET16, state );
 	END GetKeyState;
 
 (* Common base handler for all variants of windows provided by this module. *)

@@ -7786,7 +7786,6 @@ TYPE
 					IF constructor # NIL THEN
 						CallConstructor(constructor, recordType, pointer, parameters, firstPar, len-1);
 					END;
-					ReleaseIntermediateOperand(pointer);
 
 					(* call bodies *)
 					CallBodies(pointer,type);
@@ -7982,7 +7981,7 @@ TYPE
 				ELSE
 					dim := 0;
 					IntermediateCode.InitOperand(reg);
-					IF p[1] # NIL THEN
+					IF p[firstPar] # NIL THEN
 						FOR i := firstPar TO len-1 DO
 							type := type(SyntaxTree.ArrayType).arrayBase.resolvedType;
 							parameter := x.parameters.GetExpression(i);
@@ -7992,7 +7991,7 @@ TYPE
 								TrapC(BrgeL,r.op,tmp,ArraySizeTrap);
 							END;
 							Emit(Push(position,r.op));
-							IF i=1 THEN
+							IF i=firstPar THEN
 								CopyInt(reg,r.op);
 							ELSE
 								MulInt(reg, reg, r.op);
@@ -8029,7 +8028,7 @@ TYPE
 						ReleaseIntermediateOperand(reg);
 						CallThis(position,"Runtime","New", 1);
 
-						pointer := NewRegisterOperand(IntermediateCode.GetType(system, p[0].type));
+						pointer := NewRegisterOperand(IntermediateCode.GetType(system, t0));
 						Emit(Result(position, pointer));
 						exit := NewLabel();
 						else := NewLabel();
@@ -8059,14 +8058,25 @@ TYPE
 							Emit(Pop(position,IntermediateCode.Memory(addressType,pointer,ToMemoryUnits(system,(BaseArrayTypeSize + i)* system.addressSize))));
 						END;
 
-						needsTrace := p[0].NeedsTrace();
+						IF x.type # NIL THEN 
+							needsTrace := TRUE;
+						ELSE
+							needsTrace := p[0].NeedsTrace();
+						END;
+						
 						IF needsTrace THEN ModifyAssignments(true) END;
-						IF ~p[0].type.resolvedType(SyntaxTree.PointerType).isDisposable THEN
+						IF t0(SyntaxTree.PointerType).isDisposable THEN
 							Emit(Push(position, pointer));
 							CallThisChecked(position,"GarbageCollector","Watch",0,FALSE);
 							Emit(Pop(position, pointer));
 						END;
-						Designate(p[0],l);
+						IF x.type # NIL THEN 
+							temporaryVariable := GetTemporaryVariable(SyntaxTree.ValueParameter,x.type, FALSE, FALSE (* untraced *));
+							Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
+							result := l;
+						ELSE
+							Designate(p[0],l);
+						END;
 						IF needsTrace THEN
 							CallAssignPointer(l.op, pointer);
 							ModifyAssignments(false);
@@ -8080,9 +8090,15 @@ TYPE
 
 						SetLabel(else);
 						Emit(Add(position,sp,sp,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,(openDim+1)*system.addressSize))));
-						Designate(p[0],l);
+						
+						IF x.type # NIL THEN 
+							Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
+							result := l;
+						ELSE
+							Designate(p[0],l);
+						END;
 						IF needsTrace THEN
-							CallResetProcedure(l.op,l.tag,p[0].type.resolvedType);
+							CallResetProcedure(l.op,l.tag,t0);
 						ELSE
 							ToMemory(l.op,addressType,0);
 							Emit(Mov(position,l.op,pointer));

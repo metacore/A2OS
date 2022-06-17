@@ -1177,6 +1177,7 @@ VAR
 		options.Add("x","xOffset",Options.Integer);
 		options.Add("y","yOffset",Options.Integer);
 		options.Add("n","noMouseCursor",Options.Flag);
+		options.Add("d","dpiAwareness",Options.Flag);
 		IF ~options.Parse(context.arg, context.error) THEN
 			w := 0; h := 0; x := 0; y := 0;
 		ELSE
@@ -1187,6 +1188,7 @@ VAR
 			IF ~options.GetInteger("w", w) THEN w := 0 END;
 			IF ~options.GetInteger("h", h) THEN h := 0 END;
 			IF options.GetFlag("n") THEN DisableCursor END;
+			IF options.GetFlag("d") THEN IGNORE User32.SetProcessDPIAware() END;
 		END;
 		closeRequests := 0;
 

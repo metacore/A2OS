@@ -1509,11 +1509,18 @@ BEGIN
 
 	NEW(defaultAttributes);
 	defaultFontName := "";	defaultFontSize := 0;
-	Configuration.Get("WindowManager.FontManager.DefaultFont.Name", defaultFontName, res);
-	IF (res # Configuration.Ok) OR  (defaultFontName = "") THEN defaultFontName := "Vera"; END;
-	Configuration.GetInteger("WindowManager.FontManager.DefaultFont.Size", defaultFontSize, res);
-	IF (res # Configuration.Ok) OR (defaultFontSize < 1) THEN defaultFontSize := 14; END;
-	Configuration.Get("WindowManager.FontManager.DefaultFont.Style", fontStyleName, res);
+	Configuration.Get("WindowManager.FontManager.SystemFonts.Default.Name", defaultFontName, res);
+	IF (res = Configuration.Ok) & (defaultFontName # "") THEN
+		Configuration.GetInteger("WindowManager.FontManager.SystemFonts.Default.Size", defaultFontSize, res);
+		IF (res # Configuration.Ok) OR (defaultFontSize < 1) THEN defaultFontSize := 14; END;
+		Configuration.Get("WindowManager.FontManager.SystemFonts.Default.Style", fontStyleName, res);
+	ELSE
+		Configuration.Get("WindowManager.FontManager.DefaultFont.Name", defaultFontName, res);
+		IF (res # Configuration.Ok) OR (defaultFontName = "") THEN defaultFontName := "Vera"; END;
+		Configuration.GetInteger("WindowManager.FontManager.DefaultFont.Size", defaultFontSize, res);
+		IF (res # Configuration.Ok) OR (defaultFontSize < 1) THEN defaultFontSize := 14; END;
+		Configuration.Get("WindowManager.FontManager.DefaultFont.Style", fontStyleName, res);
+	END;
 	IF (res = Configuration.Ok) THEN
 		IF fontStyleName = "Bold" THEN
 			defaultFontStyle := {FontBold};

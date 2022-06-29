@@ -49,7 +49,7 @@ TYPE
 
 		(* default font settings specified in Configuration.XML, read by procedure GetConfig *)
 		defaultFontName : ARRAY 256 OF CHAR;
-		defaultFontSize : SIGNED32;
+		defaultFontSize : SIZE;
 		defaultFontStyle : SET;
 
 		systemFontInfo : FontInfoArray;
@@ -122,24 +122,6 @@ TYPE
 			END Error;
 
 		BEGIN { EXCLUSIVE }
-			section := Configuration.GetSection("WindowManager.FontManager.FontLoaders");
-			IF section # NIL THEN
-				enum := section.GetContents();
-				WHILE enum.HasMoreElements() DO
-					p := enum.GetNext();
-					IF p IS XML.Element THEN
-						e := Configuration.GetNamedElement(p(XML.Element), "Setting", "Exact");
-						IF e # NIL THEN AddExact(e.GetAttributeValue("value")) END;
-						e := Configuration.GetNamedElement(p(XML.Element), "Setting", "Approximate");
-						IF e # NIL THEN AddApproximate(e.GetAttributeValue("value")) END;
-					END;
-				END;
-				Configuration.Get("WindowManager.FontManager.DefaultFont.Name", defaultFontName, res);
-				Configuration.Get("WindowManager.FontManager.DefaultFont.Size", string, res);
-				IF (res = Configuration.Ok) THEN Strings.StrToInt(string, defaultFontSize); END;
-			ELSE Error;
-			END;
-
 			section := Configuration.GetSection("WindowManager.FontManager.SystemFonts");
 			IF (section # NIL) THEN
 				enum := section.GetContents();
@@ -154,6 +136,26 @@ TYPE
 						AddSystemFont(SELF, p(XML.Element));
 					END;
 				END;
+			END;
+
+			section := Configuration.GetSection("WindowManager.FontManager.FontLoaders");
+			IF section # NIL THEN
+				enum := section.GetContents();
+				WHILE enum.HasMoreElements() DO
+					p := enum.GetNext();
+					IF p IS XML.Element THEN
+						e := Configuration.GetNamedElement(p(XML.Element), "Setting", "Exact");
+						IF e # NIL THEN AddExact(e.GetAttributeValue("value")) END;
+						e := Configuration.GetNamedElement(p(XML.Element), "Setting", "Approximate");
+						IF e # NIL THEN AddApproximate(e.GetAttributeValue("value")) END;
+					END;
+				END;
+			ELSE Error;
+			END;
+			IF ~GetSystemFontInfo("Default", defaultFontName, defaultFontSize, defaultFontStyle) THEN
+				Configuration.Get("WindowManager.FontManager.DefaultFont.Name", defaultFontName, res);
+				Configuration.Get("WindowManager.FontManager.DefaultFont.Size", string, res);
+				IF (res = Configuration.Ok) THEN Strings.StrToSize(string, defaultFontSize); END;
 			END;
 		END GetConfig;
 
@@ -317,6 +319,15 @@ VAR fm : FontManager;
 								ELSE
 									EXCL(fontInfo.style, WMGraphics.FontBold);
 (*!									fontInfo.weight := WMGraphics.FontWeight.Normal; *)
+								END;
+							ELSIF (stringValue = "STYLE") THEN
+								GetStringValue(setting, "value", stringValue);
+								IF stringValue = "BOLD" THEN
+									fontInfo.style := {WMGraphics.FontBold};
+								ELSIF stringValue = "ITALIC" THEN
+									fontInfo.style := {WMGraphics.FontItalic};
+								ELSIF stringValue = "BOLDITALIC" THEN
+									fontInfo.style := {WMGraphics.FontBold, WMGraphics.FontItalic};
 								END;
 							END;
 						END;

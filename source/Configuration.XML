@@ -92,6 +92,7 @@ To update: Configuration.Init ~
 				<Section name="Default">
 					<Setting name="Name" value="LiberationSans"/>
 					<Setting name="Size" value="14"/>
+					<Setting name="Style" value=""/>
 					<!-- Setting name="Italic" value="" / -->  <!-- italic - <empty>|TRUE|FALSE -->
 					<!-- Setting name="FontWeight" value / --> <!-- font weight - <empty>|Regular|Bold -->
 				</Section>

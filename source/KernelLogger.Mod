@@ -116,7 +116,7 @@ BEGIN {EXCLUSIVE}
 		IF Modules.ModuleByName (OberonSystem) # NIL THEN
 			GETPROCEDURE (OberonSystem, "StopLog", systemStopLog);
 		END;
-		IF (kernelLockOberon # NIL) & (kernelUnlockOberon # NIL) &(systemStopLog # NIL) THEN
+		IF (kernelLockOberon # NIL) & (kernelUnlockOberon # NIL) & (systemStopLog # NIL) THEN
 			kernelLockOberon; systemStopLog; kernelUnlockOberon;
 			KernelLog.CloseBuffer; 	IF KernelLog.OpenBuffer(ADDRESSOF(buf[0]), LEN(buf)) THEN
 				KernelLog.Enter; KernelLog.String("Oberon KernelLog stopped. New buffer installed"); KernelLog.Exit
@@ -148,6 +148,9 @@ BEGIN
 	Configuration.Get("WindowManager.FontManager.SystemFonts.Default.Name", default, res);
 	IF (res # Configuration.Ok) OR (default = "") THEN
 		Configuration.Get("WindowManager.FontManager.DefaultFont.Name", default, res);
+		IF (res # Configuration.Ok) OR (default = "") THEN
+			default := "Vera";
+		END;
 	END;
 	Configuration.Get("WindowManager.FontManager.SystemFonts.Monospace.Name", monospace, res);
 	IF (res # Configuration.Ok) OR (monospace = "") THEN monospace := default; END;

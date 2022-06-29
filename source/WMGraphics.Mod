@@ -2,7 +2,7 @@ MODULE WMGraphics;	(** AUTHOR "TF"; PURPOSE "Generic Graphic Support"; *)
 
 IMPORT
 	Kernel, Rectangles := WMRectangles, Raster, KernelLog, UTF8Strings, Strings, RasterScale := WMRasterScale,
-	Codecs, Files, Streams, Reals, Configuration;
+	Codecs, Files, Streams, Reals;
 
 CONST
 	(** Copy Modes *)
@@ -156,6 +156,11 @@ TYPE
 		BEGIN
 			RETURN NIL;
 		END GetSystemFont;
+		
+		PROCEDURE GetSystemFontInfo*(CONST systemName : ARRAY OF CHAR; VAR name : ARRAY OF CHAR; VAR size: SIZE; VAR style: SET) : BOOLEAN;
+		BEGIN
+			RETURN FALSE;
+		END GetSystemFontInfo;
 	END FontManager;
 
 	CanvasState* = RECORD
@@ -758,6 +763,88 @@ BEGIN
 	RETURN r * 1000000H + g * 10000H + b * 100H + a
 END RGBAToColor;
 
+PROCEDURE RGBtoHSL*(r, g, b: SIGNED32; VAR h, s, l: SIGNED32);
+VAR delta, maxC, minC, HL: SIGNED32;
+BEGIN
+	h := 0; s := 0;
+	maxC := MAX(r, MAX(g, b));
+	minC := MIN(r, MIN(g, b));
+	l := (maxC + minC) DIV 2;
+	IF maxC # minC THEN
+		delta := (maxC - minC) * 255;
+		s := (delta DIV (maxC + minC) IF l <= 127 ELSE delta DIV (255 * 2 - maxC - minC)) MOD 256;
+
+		delta := delta * 6;
+		HL := (g - b) * 255 * 255 DIV delta IF r = maxC
+			ELSE 255 * 2 DIV 6 + (b - r) * 255 * 255 DIV delta IF g = maxC
+				ELSE 255 * 4 DIV 6 + (r - g) * 255 * 255 DIV delta;
+		h := (HL + 255 * 2 IF HL < 0 ELSE HL) MOD 256;
+	END;
+END RGBtoHSL;
+
+PROCEDURE HSLtoRGB*(h, s, l: SIGNED32; VAR r, g, b: SIGNED32);
+VAR v, vsf, m, m1, m2: SIGNED32;
+BEGIN
+	r := 0; g := 0; b := 0;
+	v := l * (256 + s) DIV 256 IF l <= 127 ELSE l + s - l * s DIV 255;
+	IF v > 0 THEN
+		m := l * 2 - v;
+		h := h * 6;
+		vsf := (v - m) * (h MOD 256) DIV 256;
+		m1 := (m + vsf) MOD 256;
+		m2 := (v - vsf) MOD 256;
+		m := m MOD 256;
+		CASE h DIV 256 OF
+			|0: r := v; g := m1; b := m;
+		 	|1: r := m2; g := v; b := m;
+		 	|2: r := m; g := v; b := m1;
+		 	|3: r := m; g := m2; b := v;
+		 	|4: r := m1; g := m; b := v;
+		 	|5: r := v; g := m; b := m2;
+		END;
+	END;
+END HSLtoRGB;
+
+PROCEDURE ComplementaryRGB*(r, g, b: SIGNED32; VAR R, G, B: SIGNED32);
+VAR h, s, l: SIGNED32;
+BEGIN
+  RGBtoHSL(r, g, b, h, s, l);
+  h := h + 128;
+  IF h > 255 THEN h := h - 255 END;
+  HSLtoRGB(h, s, l, R, G, B);
+END ComplementaryRGB;
+
+PROCEDURE DominantRGB*(r, g, b: SIGNED32; VAR R, G, B: SIGNED32);
+VAR maxValue: SIGNED32;
+BEGIN
+	maxValue := MAX(r, MAX(b, g));
+	IF r = maxValue THEN
+		r := 255;
+		b := 64;
+		g := 64;
+	ELSIF b = maxValue THEN
+		r := 64;
+		g := 64;
+		b := 255;
+	ELSIF g = maxValue THEN
+		r := 64;
+		g := 255;
+		b := 64;
+	END;
+	R := r;
+	G := g;
+	B := b;
+END DominantRGB;
+
+PROCEDURE ChangeBrightnessHSL*(r, g, b: SIGNED32; VAR R, G, B: SIGNED32; amount: SIGNED32);
+VAR h, s, l: SIGNED32;
+BEGIN
+  RGBtoHSL(r, g, b, h, s, l);
+  l := l + amount;
+  l := MIN(MAX(l, 0), 255);
+  HSLtoRGB(h, s, l, R, G, B);
+END ChangeBrightnessHSL;
+
 PROCEDURE Dark*(color:Color):Color;
 VAR c:Color;
 BEGIN
@@ -929,35 +1016,22 @@ BEGIN { EXCLUSIVE }
 	END
 END InstallFontManager;
 
-CONST pathToFonts = "WindowManager.FontManager.SystemFonts";
-PROCEDURE GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR family: ARRAY OF CHAR): BOOLEAN;
-VAR key: ARRAY 256 OF CHAR; res: INTEGER;
+PROCEDURE GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN;
+VAR size: SIZE; style: SET;
 BEGIN
-	family := "";
-	COPY(pathToFonts, key);
-	Strings.Append(key, ".");
-	Strings.Append(key, systemName);
-	Strings.Append(key, ".Name");
-	Configuration.Get(key, family, res);
-	IF (res = Configuration.Ok) & (family # "") THEN RETURN TRUE;	END;
-	RETURN FALSE;
+	RETURN (fontManager # NIL) & fontManager.GetSystemFontInfo(systemName, name, size, style);
 END GetSystemFontFamily;
 
 PROCEDURE GetSystemFontSize*(CONST systemName: ARRAY OF CHAR; VAR size: SIZE) : BOOLEAN;
-VAR key: ARRAY 256 OF CHAR; int: SIGNED32; res: INTEGER;
+VAR name: ARRAY 256 OF CHAR; style: SET;
 BEGIN
-	size := 0;
-	COPY(pathToFonts, key);
-	Strings.Append(key, ".");
-	Strings.Append(key, systemName);
-	Strings.Append(key, ".Size");
-	Configuration.GetInteger(key, int, res);
-	IF (res = Configuration.Ok) & (int # 0) THEN
-		size := int;
-		RETURN TRUE;
-	END;
-	RETURN FALSE;
+	RETURN (fontManager # NIL) & fontManager.GetSystemFontInfo(systemName, name, size, style);
 END GetSystemFontSize;
+
+PROCEDURE GetSystemFontInfo*(CONST systemName : ARRAY OF CHAR; VAR name : ARRAY OF CHAR; VAR size: SIZE; VAR style: SET) : BOOLEAN;
+BEGIN
+	RETURN (fontManager # NIL) & fontManager.GetSystemFontInfo(systemName, name, size, style);
+END GetSystemFontInfo;
 
 PROCEDURE GetSystemFont*(CONST name: ARRAY OF CHAR; VAR font: Font): BOOLEAN;
 BEGIN { EXCLUSIVE }
@@ -971,10 +1045,12 @@ END GetSystemFont;
 	For example: GetFont( "IBMPlexSans-SemiBold", 24, {} );
 *)
 PROCEDURE GetFont*(CONST name : ARRAY OF CHAR; size : SIZE; style : SET) : Font;
-VAR f : Font;
+VAR f := NIL: Font; fontName: ARRAY 256 OF CHAR;
 BEGIN { EXCLUSIVE }
-	f := NIL;
-	IF fontManager # NIL THEN f := fontManager.GetFont(name, size, style) END;
+	IF ~GetSystemFontFamily(name, fontName) THEN
+		COPY(name, fontName);
+	END;
+	IF fontManager # NIL THEN f := fontManager.GetFont(fontName, size, style) END;
 	IF f = NIL THEN AWAIT(defaultFont # NIL); f := defaultFont END;
 	RETURN f
 END GetFont;
@@ -1050,3 +1126,5 @@ BEGIN
 	nofFallbackFonts := 3;
 	NEW(imgCache)
 END WMGraphics.
+
+Release.Rebuild -b Win64 WMGraphics.Mod WMFontManager.Mod~

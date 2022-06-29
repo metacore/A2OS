@@ -220,13 +220,12 @@ TYPE
 			RETURN font
 		END GetFont;
 
-		PROCEDURE GetSystemFont*(CONST alias : ARRAY OF CHAR) : WMGraphics.Font;
-		VAR i : SIZE; fontInfo: FontInfo;
+		PROCEDURE GetSystemFont*(CONST systemName : ARRAY OF CHAR) : WMGraphics.Font;
+		VAR i := 0: SIZE; fontInfo: FontInfo;
 		BEGIN
 			IF nofSystemFonts > 0 THEN
-				i := 0;
 				WHILE (i < nofSystemFonts) DO
-					IF systemFontAlias[i] = alias THEN
+					IF systemFontAlias[i] = systemName THEN
 						fontInfo := systemFontInfo[i];
 						RETURN GetFont(fontInfo.name^, fontInfo.size, fontInfo.style);
 					END;
@@ -236,6 +235,23 @@ TYPE
 			RETURN NIL;
 		END GetSystemFont;
 
+		PROCEDURE GetSystemFontInfo*(CONST systemName : ARRAY OF CHAR; VAR name : ARRAY OF CHAR; VAR size: SIZE; VAR style: SET) : BOOLEAN;
+		VAR i := 0: SIZE; fontInfo: FontInfo;
+		BEGIN
+			IF nofSystemFonts > 0 THEN
+				WHILE (i < nofSystemFonts) DO
+					IF systemFontAlias[i] = systemName THEN
+						fontInfo := systemFontInfo[i];
+						COPY(fontInfo.name^, name);
+						size := fontInfo.size;
+						style := fontInfo.style;
+						RETURN TRUE;
+					END;
+					INC(i);
+				END;
+			END;
+			RETURN FALSE;
+		END GetSystemFontInfo;
 	END FontManager;
 
 VAR fm : FontManager;

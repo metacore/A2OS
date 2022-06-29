@@ -2893,17 +2893,24 @@ BEGIN
 END GetDefaultAttributes;
 
 
-CONST pathToFonts = "WindowManager.FontManager.SystemFonts";
-PROCEDURE GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR family: ARRAY OF CHAR): BOOLEAN;
+CONST pathToFonts = "WindowManager.FontManager.";
+PROCEDURE GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN;
 VAR key: ARRAY 256 OF CHAR; res: INTEGER;
 BEGIN
-	family := "";
+	name := "";
 	COPY(pathToFonts, key);
-	Strings.Append(key, ".");
+	Strings.Append(key, "SystemFonts.");
 	Strings.Append(key, systemName);
 	Strings.Append(key, ".Name");
-	Configuration.Get(key, family, res);
-	IF (res = Configuration.Ok) & (family # "") THEN RETURN TRUE;	END;
+	Configuration.Get(key, name, res);
+	IF (res = Configuration.Ok) & (name # "") THEN RETURN TRUE;
+	ELSIF systemName = "Default" THEN
+		COPY(pathToFonts, key);
+		Strings.Append(key, "DefaultFont");
+		Strings.Append(key, ".Name");
+		Configuration.Get(key, name, res);
+		IF (res = Configuration.Ok) & (name # "") THEN RETURN TRUE; END;
+	END;
 	RETURN FALSE;
 END GetSystemFontFamily;
 
@@ -2912,13 +2919,22 @@ VAR key: ARRAY 256 OF CHAR; int: SIGNED32; res: INTEGER;
 BEGIN
 	size := 0;
 	COPY(pathToFonts, key);
-	Strings.Append(key, ".");
+	Strings.Append(key, "SystemFonts.");
 	Strings.Append(key, systemName);
 	Strings.Append(key, ".Size");
 	Configuration.GetInteger(key, int, res);
 	IF (res = Configuration.Ok) & (int # 0) THEN
 		size := int;
 		RETURN TRUE;
+	ELSIF systemName = "Default" THEN
+		COPY(pathToFonts, key);
+		Strings.Append(key, "DefaultFont");
+		Strings.Append(key, ".Size");
+		Configuration.GetInteger(key, int, res);
+		IF (res = Configuration.Ok) & (int # 0) THEN
+			size := int;
+			RETURN TRUE;
+		END;
 	END;
 	RETURN FALSE;
 END GetSystemFontSize;

@@ -156,7 +156,7 @@ TYPE
 		BEGIN
 			RETURN NIL;
 		END GetSystemFont;
-		
+
 		PROCEDURE GetSystemFontInfo*(CONST systemName : ARRAY OF CHAR; VAR name : ARRAY OF CHAR; VAR size: SIZE; VAR style: SET) : BOOLEAN;
 		BEGIN
 			RETURN FALSE;
@@ -277,7 +277,7 @@ TYPE
 		(** draw a line within the current clipping rectangle *)
 		(** Override for improved speed *)
 		PROCEDURE Line*(x0, y0, x1, y1 : SIZE; color : Color; mode : INTEGER);
-		VAR t, xi, mi, xf, mf, dt2, ds2 : SIZE; r: Rectangles.Rectangle;
+		VAR t (*, xi, mi, xf, mf, dt2, ds2*) : SIZE; r: Rectangles.Rectangle;
 
 
 			(* clipped bresenham algorithm according to
@@ -1023,7 +1023,7 @@ BEGIN
 END GetSystemFontFamily;
 
 PROCEDURE GetSystemFontSize*(CONST systemName: ARRAY OF CHAR; VAR size: SIZE) : BOOLEAN;
-VAR name: ARRAY 256 OF CHAR; style: SET;
+VAR name(*unused*): ARRAY 2 OF CHAR; style: SET;
 BEGIN
 	RETURN (fontManager # NIL) & fontManager.GetSystemFontInfo(systemName, name, size, style);
 END GetSystemFontSize;
@@ -1047,9 +1047,9 @@ END GetSystemFont;
 PROCEDURE GetFont*(CONST name : ARRAY OF CHAR; size : SIZE; style : SET) : Font;
 VAR f := NIL: Font; fontName: ARRAY 256 OF CHAR;
 BEGIN { EXCLUSIVE }
-	IF ~GetSystemFontFamily(name, fontName) THEN
-		COPY(name, fontName);
-	END;
+	COPY(name, fontName);
+	REPEAT
+	UNTIL ~GetSystemFontFamily(fontName, fontName);
 	IF fontManager # NIL THEN f := fontManager.GetFont(fontName, size, style) END;
 	IF f = NIL THEN AWAIT(defaultFont # NIL); f := defaultFont END;
 	RETURN f

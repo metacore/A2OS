@@ -3,6 +3,12 @@ MODULE WMFontManager;	(** AUTHOR "TF"; PURPOSE "Default implementation of a simp
 IMPORT
 	KernelLog, Kernel, Modules, Commands, WMGraphics, WMDefaultFont, Strings, Configuration, XML, XMLObjects;
 
+CONST
+	FontName* = 0;
+	FontSize* = 1;
+	FontStyle* = 2;
+
+
 TYPE
 	String = XML.String;
 
@@ -11,12 +17,14 @@ TYPE
 		name* : String;
 		size* : SIZE;
 		style* : SET;
+		defined : SET; (*{FontName, FontSize, FontStyle}*)
 
 		PROCEDURE &Init*;
 		BEGIN
 			name := NIL;
 			size := 0;
 			style := {};
+			defined := {};
 		END Init;
 	END FontInfo;
 
@@ -223,16 +231,30 @@ TYPE
 		END GetFont;
 
 		PROCEDURE GetSystemFont*(CONST systemName : ARRAY OF CHAR) : WMGraphics.Font;
-		VAR i := 0: SIZE; fontInfo: FontInfo;
-		BEGIN
-			IF nofSystemFonts > 0 THEN
+		VAR count := 0, i: SIZE; fontInfo: FontInfo; name: ARRAY 256 OF CHAR; size: SIZE; style: SET; defined := {}: SET;
+			PROCEDURE GetAlias(CONST key: ARRAY OF CHAR; VAR value: ARRAY OF CHAR): BOOLEAN;
+			BEGIN
+				i := 0;
 				WHILE (i < nofSystemFonts) DO
-					IF systemFontAlias[i] = systemName THEN
+					IF systemFontAlias[i] = key THEN
+						COPY(systemFontInfo[i].name^, value);
 						fontInfo := systemFontInfo[i];
-						RETURN GetFont(fontInfo.name^, fontInfo.size, fontInfo.style);
+						RETURN TRUE;
 					END;
 					INC(i);
 				END;
+				RETURN FALSE;
+			END GetAlias;
+		BEGIN
+			COPY(systemName, name);
+			IF GetAlias(name, name) THEN
+				IF FontSize IN fontInfo.defined THEN size := fontInfo.size; INCL(defined, FontSize); END;
+				IF FontStyle IN fontInfo.defined THEN style := fontInfo.style; INCL(defined, FontStyle); END;
+				WHILE GetAlias(name, name) DO
+				  IF ~(FontSize IN defined)  & (FontSize IN fontInfo.defined)  THEN INCL(defined, FontSize);  size := fontInfo.size; END;
+				  IF ~(FontStyle IN defined) & (FontStyle IN fontInfo.defined) THEN INCL(defined, FontStyle); style := fontInfo.style; END;
+				END;
+				RETURN GetFont(name, size, style);
 			END;
 			RETURN NIL;
 		END GetSystemFont;
@@ -294,15 +316,14 @@ VAR fm : FontManager;
 									RETURN;
 								END;
 								fontInfo.name := Strings.NewString(string^);
+								INCL(fontInfo.defined, FontName);
 							ELSIF (stringValue = "SIZE") THEN
 								GetStringValue(setting, "value", stringValue);
 								IF stringValue # "*" THEN
 									Strings.StrToSize(stringValue, fontInfo.size);
+									INCL(fontInfo.defined, FontSize);
 								ELSE
 									(*! not implemented  *)
-								END;
-								IF fontInfo.size < 1 THEN
-									fontInfo.size := manager.defaultFontSize;
 								END;
 							ELSIF (stringValue = "ITALIC") THEN
 								GetStringValue(setting, "value", stringValue);
@@ -311,6 +332,7 @@ VAR fm : FontManager;
 								ELSE
 									EXCL(fontInfo.style, WMGraphics.FontItalic);
 								END;
+								INCL(fontInfo.defined, FontStyle);
 							ELSIF (stringValue = "FONTWEIGHT") THEN
 								GetStringValue(setting, "value", stringValue);
 								IF stringValue = "BOLD" THEN
@@ -320,6 +342,7 @@ VAR fm : FontManager;
 									EXCL(fontInfo.style, WMGraphics.FontBold);
 (*!									fontInfo.weight := WMGraphics.FontWeight.Normal; *)
 								END;
+								INCL(fontInfo.defined, FontStyle);
 							ELSIF (stringValue = "STYLE") THEN
 								GetStringValue(setting, "value", stringValue);
 								IF stringValue = "BOLD" THEN
@@ -329,6 +352,7 @@ VAR fm : FontManager;
 								ELSIF stringValue = "BOLDITALIC" THEN
 									fontInfo.style := {WMGraphics.FontBold, WMGraphics.FontItalic};
 								END;
+								INCL(fontInfo.defined, FontStyle);
 							END;
 						END;
 					END;

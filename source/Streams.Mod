@@ -167,6 +167,30 @@ TYPE
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8 )
 		END RawHInt;
 
+	(** Write a UNSIGNED8. *)
+		PROCEDURE RawUInt8*( x: UNSIGNED8 );
+		BEGIN
+			Char( SYSTEM.VAL( CHAR, x ) )
+		END RawUInt8;
+
+	(** Write an UNSIGNED16. *)
+		PROCEDURE RawUInt16*( x: UNSIGNED16 );
+		BEGIN
+			Bytes( SYSTEM.VAL( Bytes2, x ), 0, 2 )
+		END RawUInt16;
+
+	(** Write a UNSIGNED32. *)
+		PROCEDURE RawUInt32*( x: UNSIGNED32 );
+		BEGIN
+			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4 )
+		END RawUInt32;
+
+	(** Write a UNSIGNED64. *)
+		PROCEDURE RawUInt64*( x: UNSIGNED64 );
+		BEGIN
+			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8 )
+		END RawUInt64;
+
 	(** Write a 64 bit value in network byte order (most significant byte first) *)
 		PROCEDURE Net64*( x: SIGNED64 );
 		BEGIN
@@ -675,6 +699,33 @@ TYPE
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
 		END RawHInt;
+
+	(** Read a UNSIGNED8. *)
+		PROCEDURE RawUInt8*( VAR x: UNSIGNED8 );
+		BEGIN
+			x := SYSTEM.VAL( UNSIGNED8, Get() )
+		END RawUInt8;
+
+	(** Read an UNSIGNED16. *)
+		PROCEDURE RawUInt16*( VAR x: UNSIGNED16 );
+		VAR ignore: SIZE;
+		BEGIN
+			Bytes( SYSTEM.VAL( Bytes2, x ), 0, 2, ignore )
+		END RawUInt16;
+
+	(** Read a UNSIGNED32. *)
+		PROCEDURE RawUInt32*( VAR x: UNSIGNED32 );
+		VAR ignore: SIZE;
+		BEGIN
+			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
+		END RawUInt32;
+
+	(** Read a UNSIGNED64. *)
+		PROCEDURE RawUInt64*( VAR x: UNSIGNED64 );
+		VAR ignore: SIZE;
+		BEGIN
+			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
+		END RawUInt64;
 
 		(** Read a 64 bit value in network byte order (most significant byte first) *)
 		PROCEDURE Net64*( ): SIGNED64;

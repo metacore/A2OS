@@ -708,7 +708,12 @@ TYPE
 			w.String(\"\t\t\tInit(vc.bounds.GetWidth(), vc.bounds.GetHeight(), false);\n"\);
 			w.String(\"\t\t\tSetContent(vc);\n"\);
 			w.String(\"\t\t\tvc.Traverse(WireComponents, nil)\n"\);
-			w.String(\"\t\tend;\n\n"\);
+			w.String(\"\t\tend;\n"\);
+			
+			w.String(\"\t\tSetTitle(Strings.NewString(""\);
+			w.String(moduleName);
+			w.String(\""));\n\n"\);
+			
 
 			w.String(\"\t\t"\);
 			(* Begin of my main form creation code *)

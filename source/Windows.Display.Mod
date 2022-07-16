@@ -1194,7 +1194,7 @@ VAR
 			IF options.GetFlag("d") THEN IGNORE User32.SetProcessDPIAware() END;
 		END;
 		closeRequests := 0;
-
+		InitMod();
 		DoInstall( w, h, x, y);
 	END Install;
 
@@ -1208,7 +1208,7 @@ VAR traceDisplay: BOOLEAN;
 BEGIN
 	traceDisplay := FALSE;
 	format := Displays.color8888;
-	InitMod();  Modules.InstallTermHandler( Shutdown );  KeyHandled := FALSE;
+	Modules.InstallTermHandler( Shutdown );  KeyHandled := FALSE;
 END Display.
 
 Aos.Call Display.Install 1024 768 ~

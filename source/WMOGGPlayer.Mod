@@ -4,7 +4,7 @@ IMPORT
 	Commands, Files, Modules,
 	Strings, WMMessages, WMComponents, WMStandardComponents,
 	WMGrids, WMStringGrids, OGGVorbisPlayer,
-	WM := WMWindowManager;
+	WM := WMWindowManager, WMRestorable;
 
 TYPE
 	KillerMsg = OBJECT
@@ -16,14 +16,14 @@ TYPE
 
 	Player = OBJECT
 	VAR url : Strings.String;
-		dummy : BOOLEAN;
-		PROCEDURE &Init*(url : Strings.String);
+
+		PROCEDURE &Init(url : Strings.String);
 		BEGIN
 			SELF.url := url
 		END Init;
 
 	BEGIN {ACTIVE}
-		dummy := OGGVorbisPlayer.PlayURL(url);
+		IGNORE OGGVorbisPlayer.PlayURL(url);
 	END Player;
 
 	Window* = OBJECT (WMComponents.FormWindow)
@@ -56,7 +56,7 @@ TYPE
 			RETURN panel
 		END CreateForm;
 
-		PROCEDURE &New*(filename : Files.FileName);
+		PROCEDURE &New*(filename : Files.FileName; c : WMRestorable.Context);
 		VAR vc : WMComponents.VisualComponent;
 		BEGIN
 			IncCount;
@@ -79,7 +79,12 @@ TYPE
 
 			FillList(filename);
 
-			 WM.DefaultAddWindow(SELF);
+			IF c # NIL THEN
+				(* restore the desktop *)
+				WMRestorable.AddByContext(SELF, c)
+			ELSE WM.DefaultAddWindow(SELF)
+			END;
+
 			SetTitle(Strings.NewString("OGG Player"));
 		END New;
 
@@ -148,7 +153,12 @@ TYPE
 
 		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		BEGIN
-			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN Close
+			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
+				IF (x.ext IS KillerMsg) THEN Close
+				ELSIF (x.ext IS WMRestorable.Storage) THEN
+					x.ext(WMRestorable.Storage).Add("WMOGGPlayer", "WMOGGPlayer.Restore", SELF, NIL);
+				ELSE Handle^(x)
+				END
 			ELSE Handle^(x)
 			END
 		END Handle;
@@ -162,8 +172,14 @@ PROCEDURE Open*(context : Commands.Context);
 VAR win : Window; filename : Files.FileName;
 BEGIN
 	IF ~context.arg.GetString(filename) THEN filename := "OGGRadios.Text" END;
-	NEW(win, filename);
+	NEW(win, filename, NIL);
 END Open;
+
+PROCEDURE Restore*(context : WMRestorable.Context);
+VAR winstance : Window;
+BEGIN
+	NEW(winstance, "OGGRadios.Text", context);
+END Restore;
 
 PROCEDURE IncCount;
 BEGIN {EXCLUSIVE}

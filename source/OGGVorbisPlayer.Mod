@@ -6,7 +6,7 @@ MODULE OGGVorbisPlayer;
 IMPORT
 	SYSTEM, Strings, KernelLog, Streams, Files, Commands, SoundDevices, BIT, Math,
 	OGGUtilities, Modules, Kernel,
-	TCP, WebHTTP, WebHTTPClient;
+	TCP, WebHTTP, NewHTTPClient;
 
 CONST
 	(* Debugging Set *)
@@ -14,6 +14,9 @@ CONST
 	Error = 2;
 	Codec = 3;
 	Debug = {Error};
+	
+	(* Use HTTP 1.1 *)
+	http11 = TRUE;
 
 	(* oggstream-types, are also recognition-pattern for calling the correct decoder *)
 	Vorbis = "vorbis";
@@ -3418,6 +3421,7 @@ InverseDBLookupReal[255] := 1;
 		con : TCP.Connection;
 		outputFilename: ARRAY 64 OF CHAR;
 		timer: Kernel.Timer;
+		httpCon: NewHTTPClient.HTTPConnection;
 	BEGIN
 		IF playing THEN
 			(* if it's already playing sth, stop old song and start new one *)
@@ -3435,23 +3439,25 @@ InverseDBLookupReal[255] := 1;
 			NEW(output, nrOfBuffers, volume);
 
 			IF IsWebStream(url) THEN
+			
+				NEW(httpCon);
 				(* streaming from the internet *)
 				IF IsM3UPlaylist(url) THEN
-					GetURLFromM3U(url)
-				END;
-
-				(* if interpretation failed (it's still a m3u) for some reason exit *)
-				IF IsM3UPlaylist(url) THEN
-					KernelLog.String("can not interpret m3u-playlist - exiting"); KernelLog.Ln;
-					RETURN FALSE
+					IF ~GetURLFromM3U(httpCon, url) THEN
+						(* if interpretation failed (it's still a m3u) for some reason exit *)
+						KernelLog.String("can not interpret m3u-playlist - exiting"); KernelLog.Ln;
+						RETURN FALSE						
+					END
 				END;
 
 				KernelLog.String("playing ogg-radio: "); KernelLog.String(url^); KernelLog.Ln;
 				isWebStream := TRUE;
 				rh.useragent := "Bluebottle OGG Player/0.1";
-				WebHTTPClient.Get(url^, rh, con, h, r, res);
+
+				httpCon.Get(url^, http11, r, res);
 				IF res # 0 THEN
-					KernelLog.String("Could not open stream");
+					KernelLog.String("Could not open stream, res: ");
+					KernelLog.Int(res, 0);
 					KernelLog.Ln;
 					RETURN FALSE
 				END
@@ -3536,15 +3542,17 @@ InverseDBLookupReal[255] := 1;
 		RETURN Strings.Pos(".m3u", url^) > -1
 	END IsM3UPlaylist;
 
-	PROCEDURE GetURLFromM3U(VAR url: Strings.String);
+	PROCEDURE GetURLFromM3U(httpCon: NewHTTPClient.HTTPConnection; VAR url: Strings.String): BOOLEAN;
 	VAR res: INTEGER;
-		rh : WebHTTP.RequestHeader;
-		h : WebHTTP.ResponseHeader;
-		con : TCP.Connection;
 		r : Streams.Reader;
 	BEGIN
-		WebHTTPClient.Get(url^, rh, con, h, r, res);
-		r.Token(url^)
+		httpCon.Get(url^, http11, r, res);
+		IF res = 0 THEN
+			r.Token(url^);
+			RETURN TRUE
+		ELSE
+			RETURN FALSE
+		END
 	END GetURLFromM3U;
 
 	PROCEDURE Cleanup;
@@ -3575,7 +3583,7 @@ BEGIN
 	OGGUtilities.InitLogger;
 END OGGVorbisPlayer.
 
-System.Free WMOGGPlayer OGGVorbisPlayer OGGUtilities ~
+System.Free WMOGGPlayer OGGVorbisPlayer OGGUtilities NewHTTPClient WebHTTP ~
 MixerComponents.MasterIncVol ~
 MixerComponents.MasterDecVol ~
 OGGVorbisPlayer.Stop ~

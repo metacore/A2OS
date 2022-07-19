@@ -114,7 +114,7 @@ TYPE
 			DEC(num);
 			RETURN x
 		END Remove;
-		
+
 		PROCEDURE Preview(delta:SIZE): VideoBuffer;
 		VAR x: VideoBuffer;
 		BEGIN {EXCLUSIVE}
@@ -124,7 +124,7 @@ TYPE
 				RETURN x
 			ELSE RETURN NIL
 			END;
-		END Preview;		
+		END Preview;
 
 		PROCEDURE NofBuffers(): SIZE;
 		BEGIN {EXCLUSIVE}
@@ -380,7 +380,7 @@ TYPE
 
 		PROCEDURE GetFrame(): SIGNED32;
 		BEGIN {EXCLUSIVE}
-			 RETURN videoDecoder.GetCurrentFrame()
+			RETURN videoDecoder.GetCurrentFrame()
 		END GetFrame;
 
 		PROCEDURE SeekAndGetFrame(pos: SIGNED32; VAR f : WMGraphics.Image; VAR res : SIGNED32);
@@ -619,7 +619,10 @@ TYPE
 			END;
 			RequestState(Ready, context);
 			IF Trace * TraceOpen # {} THEN KernelLog.String("MediaPlayer: Opened "); KernelLog.String(uri); KernelLog.Ln; END;
-			KernelLog.String("MediaPlayer.filler.GetFrame"); KernelLog.Int(current.filler.GetFrame(),0);KernelLog.Ln;
+			IF current.filler # NIL THEN
+				KernelLog.String("MediaPlayer.filler.GetFrame");
+				KernelLog.Int(current.filler.GetFrame(),0); KernelLog.Ln;
+			END
 		END Open;
 
 		PROCEDURE Play*;
@@ -741,9 +744,9 @@ TYPE
 			END;
 			RETURN res;
 		END GetFrame;
-		
+
 		(*preview preloaded frame [current+delta] if already done by filler process*)
-		PROCEDURE PreviewFrame*(delta: SIZE): VideoBuffer; 
+		PROCEDURE PreviewFrame*(delta: SIZE): VideoBuffer;
 		BEGIN {EXCLUSIVE}
 			IF (current#NIL)&(current.filler#NIL)&(current.filler.NofFullBuffers()>=delta) THEN
 				RETURN current.filler.readyBufferPool.Preview(delta);
@@ -765,7 +768,7 @@ TYPE
 
 		(* Set position *)
 		PROCEDURE SetPos*(pos: SIGNED32);
-		VAR current : Context;  audioPos, res : SIGNED32; img : WMGraphics.Image; 
+		VAR current : Context;  audioPos, res : SIGNED32; img : WMGraphics.Image;
 		BEGIN {EXCLUSIVE}
 			IF pos < 0 THEN
 				IF Debug THEN KernelLog.String("MediaPlayer: Warning: Setpos to "); KernelLog.Int(pos, 0); KernelLog.String("!?!"); KernelLog.Ln; END;
@@ -799,7 +802,7 @@ TYPE
 					current.oldPos := current.pos-1;
 				END;
 				(* IF update # NIL THEN update(state, pos, current.maxFrames, pos) END *)
-			
+
 			ELSIF (current # NIL) & ~current.canSeek THEN
 				IF Debug THEN KernelLog.String("MediaPlayer: Warning: can not set position "); KernelLog.Int(pos, 0); KernelLog.String("!?!"); KernelLog.Ln; END;
 			END;
@@ -820,7 +823,9 @@ TYPE
 			 	soundDevice := SoundDevices.GetDefaultDevice();
 				(* set mixerchannel to max output *)
 				soundDevice.GetMixerChannel(0, mixerChannel); (* global mixer channel *)
-				mixerChannel.SetVolume(255);
+				IF mixerChannel # NIL THEN
+					mixerChannel.SetVolume(255);
+				END;
 				(* find PCM MixerChannel *)
 				FOR i := 0 TO soundDevice.GetNofMixerChannels() - 1 DO
 					soundDevice.GetMixerChannel(i, mChannel);

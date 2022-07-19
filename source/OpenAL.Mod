@@ -6,17 +6,18 @@ VAR oalib-: HostLibs.LibHandle;
 
 CONST
 	debug = FALSE;
-	
+
 #IF UNIX THEN
 	libname = "libopenal.so.1";
-#ELSE
+#ELSIF WIN THEN
 	libname = "OpenAL32.dll";
+#ELSE
+	UNIMPLEMENTED
 #END
-	
-	
+
 TYPE
 	StringArray* = Strings.StringArray;
-	
+
 	ALboolean* = BOOLEAN; (* 8-bit boolean *)
 	ALchar* = CHAR;
 	ALbyte* = SIGNED8;  (* signed 8-bit 2's complement integer *)
@@ -56,9 +57,9 @@ CONST
 	 * Default: AL_FALSE
 	 *
 	 * Specifies if the Source has relative coordinates.
-	 *)	
+	 *)
 	AL_SOURCE_RELATIVE* = 202H;
-	
+
 	(* Inner cone angle, in degrees.
 	 * Type:    ALint, ALfloat
 	 * Range:   [0 - 360]
@@ -75,7 +76,7 @@ CONST
 	 *
 	 * The angle covered by the outer cone, where the source will be fully
 	 * attenuated.
-	 *)	 
+	 *)
 	AL_CONE_OUTER_ANGLE* = 1002H;
 
 	(**
@@ -183,18 +184,18 @@ CONST
 	 * Effectively two three dimensional vectors. The first vector is the front (or
 	 * "at") and the second is the top (or "up").
 	 *
-	 * Both vectors are in local space.	
+	 * Both vectors are in local space.
 	  *)
 	AL_ORIENTATION* = 100FH;
 
-	(** 
+	(**
 	* Source state (query only).
 	 * Type:  ALint
-	 * Range: [AL_INITIAL, AL_PLAYING, AL_PAUSED, AL_STOPPED]	
+	 * Range: [AL_INITIAL, AL_PLAYING, AL_PAUSED, AL_STOPPED]
 	 *)
 	AL_SOURCE_STATE* = 1010H;
 
-	(** Source state value. *)	
+	(** Source state value. *)
 	AL_INITIAL* = 1011H;
 	AL_PLAYING* = 1012H;
 	AL_PAUSED* = 1013H;
@@ -219,7 +220,7 @@ CONST
 	 *
 	 * Looping sources will never fully process buffers because they will be set to
 	 * play again for when the source loops.
-	 *)	
+	 *)
 	AL_BUFFERS_PROCESSED* = 1016H;
 
 	(**
@@ -315,7 +316,7 @@ CONST
 	AL_CHANNELS* = 2003H;
 	(** Buffer data size (query only).*)
 	AL_SIZE* = 2004H;
-	
+
 	(**
 	 * Buffer state.
 	 * Not for public use.
@@ -334,7 +335,7 @@ CONST
 	AL_INVALID_OPERATION* = 0A004H; (**  Illegal AL call. *)
 	AL_OUT_OF_MEMORY* = 0A005H; (** Not enough memory. *)
 
-	
+
 	AL_VENDOR* = 0B001H; (** Context strings: Vendor ID. *)
 	AL_VERSION* = 0B002H; (** Context string: Version. *)
 	AL_RENDERER* = 0B003H; (** Context string: Renderer ID. *)
@@ -354,7 +355,7 @@ CONST
 	 * Doppler velocity (deprecated).
 	 *
 	 * A multiplier applied to the Speed of Sound.
-	 *) 	
+	 *)
 	AL_DOPPLER_VELOCITY* = 0C001H;
 
 	(**
@@ -365,7 +366,7 @@ CONST
 	 *
 	 * The speed at which sound waves are assumed to travel, when calculating the
 	 * doppler effect.
-	 *)	
+	 *)
 	AL_SPEED_OF_SOUND* = 0C003H;   (** Speed of Sound in units per second *)
 
 
@@ -389,7 +390,7 @@ CONST
 	 *)
 	AL_DISTANCE_MODEL* = 0D000H;
 
-	(** Distance model value. *)	
+	(** Distance model value. *)
 	AL_INVERSE_DISTANCE* = 0D001H;
 	AL_INVERSE_DISTANCE_CLAMPED* = 0D002H;
 	AL_LINEAR_DISTANCE* = 0D003H;
@@ -401,7 +402,7 @@ CONST
 
 TYPE
 	ALCboolean* = ALboolean; (* 8-bit boolean *)
-	ALCchar* = ALchar;	
+	ALCchar* = ALchar;
 	ALCbyte* = ALbyte;  (* signed 8-bit 2's complement integer *)
 	ALCubyte* = ALubyte;     (* 1-byte unsigned *)
 	ALCshort* = ALshort;  (* signed 16-bit 2's complement integer *)
@@ -449,7 +450,7 @@ CONST
 	(** Runtime ALC version. *)
 	ALC_MAJOR_VERSION* = 1000H;
 	ALC_MINOR_VERSION* = 1001H;
-	(** Context attribute list properties. *)	
+	(** Context attribute list properties. *)
 	ALC_ATTRIBUTES_SIZE* = 1002H;
 	ALC_ALL_ATTRIBUTES* = 1003H;
 	(** String for the default device specifier. *)
@@ -462,7 +463,7 @@ CONST
 	 * strings of known device specifiers (list ends with an empty string).
 	 *)
 	ALC_DEVICE_SPECIFIER* = 1005H;
-	(** String for space-separated list of ALC extensions. *)	
+	(** String for space-separated list of ALC extensions. *)
 	ALC_EXTENSIONS* = 1006H;
 
 	 (** Capture extension *)
@@ -471,7 +472,7 @@ CONST
 	 *
 	 * If device handle is NULL, it is instead a null-char separated list of
 	 * strings of known capture device specifiers (list ends with an empty string).
-	 *)	 
+	 *)
 	ALC_CAPTURE_DEVICE_SPECIFIER* = 310H;
 
 	(** String for the default capture device specifier. *)
@@ -498,7 +499,7 @@ VAR
 	alDopplerFactor-: PROCEDURE{PlatformCC}(value : ALfloat);
 	alSpeedOfSound-: PROCEDURE{PlatformCC}(value : ALfloat);
 	alDopplerVelocity-: PROCEDURE{PlatformCC}(value : ALfloat);
-	
+
 	(* Renderer State management *)
 	alEnable-: PROCEDURE{PlatformCC}(capability : ALenum);
 	alDisable -: PROCEDURE{PlatformCC}(capability : ALenum);
@@ -515,7 +516,7 @@ VAR
 	alGetInteger-: PROCEDURE{PlatformCC}(param : ALenum) : ALint;
 	alGetFloat-: PROCEDURE{PlatformCC}(param : ALenum) : ALfloat;
 	alGetDouble-: PROCEDURE{PlatformCC}(param : ALenum) : ALdouble;
-	
+
 	(**
 	* Error retrieval.
 	 * Obtain the first error generated in the AL context since the last check.
@@ -528,7 +529,7 @@ VAR
 	 * function pointers and enum values.
 	 *)
 	alIsExtensionPresent-: PROCEDURE{PlatformCC}(CONST fname : ARRAY OF CHAR) : ALboolean;
-	
+
 	XalGetProcAddress-: PROCEDURE{PlatformCC}(CONST fname : ARRAY OF CHAR): ADDRESS;
 	alGetEnumValue-: PROCEDURE{PlatformCC}(CONST ename: ARRAY OF CHAR): ALenum;
 
@@ -609,7 +610,7 @@ VAR
 	alSourcefv-: PROCEDURE{PlatformCC}(source : ALuint; param : ALenum; values : PALfloat);
 	(*! type check error, there is an inconsistency when using
 		alSourcei ( source, AL.AL_BUFFER, buffer);
-		
+
 		so, value type is changed to ALuint.
 	*)
 (*	alSourcei-: PROCEDURE{PlatformCC}(source : ALuint; param : ALenum; value : ALint); *)
@@ -630,7 +631,7 @@ VAR
 	(* Play, replay, or resume (if paused) a list of Sources *)
 	alSourcePlayv-: PROCEDURE{PlatformCC}(n : ALsizei; sources : PALuint);
 	(* Stop a list of Sources *)
-	alSourceStopv-: PROCEDURE{PlatformCC}(n : ALsizei;  sources : PALuint);	
+	alSourceStopv-: PROCEDURE{PlatformCC}(n : ALsizei;  sources : PALuint);
 	(* Rewind a list of Sources *)
 	alSourceRewindv-: PROCEDURE{PlatformCC}(n : ALsizei;  sources : PALuint);
 	(* Pause a list of Sources *)
@@ -643,10 +644,10 @@ VAR
 	alSourceStop-: PROCEDURE{PlatformCC}(source : ALuint);
 	(* Rewind a Source (set playback postiton to beginning)  *)
 	alSourceRewind-: PROCEDURE{PlatformCC} (source : ALuint);
-		
+
 	(* Pause a Source *)
 	alSourcePause-: PROCEDURE{PlatformCC}( source : ALuint);
-	
+
 	(*  Queue buffers onto a source  *)
 	alSourceQueueBuffers-: PROCEDURE{PlatformCC}(source : ALuint; n : ALsizei; buffers : PALuint);
 	alSourceUnqueueBuffers-: PROCEDURE{PlatformCC}(source : ALuint; n : ALsizei; buffers : PALuint);
@@ -727,7 +728,7 @@ VAR
 	alcCaptureStart-:  PROCEDURE{PlatformCC}(device: ALCdevice);
 	alcCaptureStop-: PROCEDURE{PlatformCC}(device: ALCdevice);
 	alcCaptureSamples-: PROCEDURE{PlatformCC}(device: ALCdevice; buffer: ALCvoid; samples: ALCsizei);
-	
+
 (** Wrapper for Unix.Dlsym *)
 PROCEDURE GetProcAddress* (lib: HostLibs.LibHandle; CONST procName: ARRAY OF CHAR; adr: ADDRESS );
 VAR res: BOOLEAN;
@@ -826,7 +827,7 @@ BEGIN
 	GetProcAddress( oalib, "alDopplerFactor", ADDRESSOF( alDopplerFactor));
 	GetProcAddress( oalib, "alSpeedOfSound", ADDRESSOF( alSpeedOfSound));
 	GetProcAddress( oalib, "alDopplerVelocity", ADDRESSOF( alDopplerVelocity));
-	
+
 	(* ALC *)
 	GetProcAddress( oalib, "alcOpenDevice", ADDRESSOF( alcOpenDevice));
 	GetProcAddress( oalib, "alcCloseDevice", ADDRESSOF( alcCloseDevice));
@@ -917,16 +918,16 @@ BEGIN
 END alcGetString;
 
 PROCEDURE GetDevStringFromAddr*(adr: ADDRESS): Strings.String;
-VAR 
+VAR
 	pstr : POINTER {UNSAFE} TO ARRAY MAX(SIZE) OF CHAR;
 	str: Strings.String;
-	pos: SIGNED32; 
+	pos: SIGNED32;
 BEGIN
 	pstr := adr;
 	pos := 0;
 		WHILE pstr[pos] # 0X DO INC(pos); END;
 		IF pos = 0 THEN RETURN NIL END;
-		
+
 		NEW(str, pos + 1);
 		pos := 0;
 		WHILE pstr[pos] # 0X DO str[pos] := pstr[pos]; 	INC(pos); END;
@@ -938,10 +939,10 @@ END GetDevStringFromAddr;
 
 (** go through device list,  (each device terminated with a single NULL, list terminated with double NULL *)
 PROCEDURE ALCGetDeviceList*(device: ALCdevice; name: ALCenum): StringArray;
-VAR  
+VAR
 	dynstr: StringArray;
 	pstr : POINTER {UNSAFE} TO ARRAY MAX(SIZE) OF CHAR;
-	size: SIGNED32; 
+	size: SIGNED32;
 	adr: ADDRESS;
 	str : Strings.String;
 BEGIN
@@ -952,24 +953,24 @@ BEGIN
 	IF pstr = NIL THEN RETURN NIL END;
 	adr := pstr;
 	str := GetDevStringFromAddr(pstr);
-	WHILE (str # NIL) & (size < 10) DO		
+	WHILE (str # NIL) & (size < 10) DO
 		adr := adr + Strings.Length(str^) + 1;
 		str := GetDevStringFromAddr(adr);
 		INC(size)
-	END;	
+	END;
 
 	NEW(dynstr, size);
-	
+
 	(* copy data *)
 	size := 0;
 	adr := pstr;
 	str := GetDevStringFromAddr(pstr);
 	WHILE (str # NIL) & (size < 10) DO
-		dynstr[size] := str;	
+		dynstr[size] := str;
 		adr := adr + Strings.Length(str^) + 1;
 		str := GetDevStringFromAddr(adr);
 		INC(size)
-	END;	
+	END;
 
 	RETURN dynstr;
 END ALCGetDeviceList;

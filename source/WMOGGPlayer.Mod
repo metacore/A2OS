@@ -39,7 +39,7 @@ TYPE
 			button : WMStandardComponents.Button;
 
 		BEGIN
-			NEW(panel); panel.bounds.SetExtents(200, 700); panel.fillColor.Set(SIGNED32(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
+			NEW(panel); panel.bounds.SetExtents(200, 500); panel.fillColor.Set(SIGNED32(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
 			NEW(toolbar); toolbar.fillColor.Set(SIGNED32(0A0A0A0FFH)); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			panel.AddContent(toolbar);
 			NEW(button); button.alignment.Set(WMComponents.AlignLeft); button.caption.SetAOC("Play");
@@ -193,5 +193,5 @@ BEGIN
 END WMOGGPlayer.
 
 WMOGGPlayer.Open OGGRadios.Text ~
-System.Free WMOGGPlayer OGGVorbisPlayer OGGUtilities ~
+System.Free WMOGGPlayer OGGVorbisPlayer OGGUtilities NewHTTPClient WebHTTP ~
 System.Free EnsoniqSound ~

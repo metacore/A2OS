@@ -494,7 +494,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	# TV card interface
 	TVDriver.Mod
-	
+
 	# Generics
 	GenericCollections.Mod
 
@@ -517,8 +517,8 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 
 	NATIVE & ~BIOS { Beep.Mod }
 
-	# Pseudo sound driver for UnixAos
-	UNIX { Unix.OpenAL.Mod OpenALSound.Mod }
+	# Pseudo sound driver for LinuxA2 and WinA2
+	UNIX, WIN { OpenAL.Mod OpenALSound.Mod }
 
 	WIN { Windows.WinDisks.Mod } # direct windows disk access, implements Disks interface
 
@@ -1201,9 +1201,9 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 
 	# ssh
 	SSH.Tool  SSH.Configuration.Text
-	SSHGlobals.Mod  SSHPackets.Mod  SSHKeys.Mod  
-	SSHTransport.Mod  SSHAuthorize.Mod  SSHChannels.Mod   
-	SSHTerminal.Mod  SSH.Mod 
+	SSHGlobals.Mod  SSHPackets.Mod  SSHKeys.Mod
+	SSHTransport.Mod  SSHAuthorize.Mod  SSHChannels.Mod
+	SSHTerminal.Mod  SSH.Mod
 END
 
 PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc.zip" DESCRIPTION "Window Manager and Graphical Applications"
@@ -1505,8 +1505,8 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	srTexVox.Mod srThermoCell.Mod srTree.Mod sr3DTexture.Mod srLifeVox.Mod
 	srRotaVox.Mod srvoxels.Mod srRender.Mod
 	recticle.png
-	} 
-	
+	}
+
 	MenuPages.Mod # generate MenuPageXX.XML files
 
 	# Video for Windows
@@ -2087,7 +2087,7 @@ PACKAGE TrueTypeFonts ARCHIVE "TrueTypeFonts.zip" SOURCE "" DESCRIPTION "True-ty
 	LiberationSans.ttf LiberationSans_bd.ttf LiberationSans_bi.ttf LiberationSans_i.ttf
 	LiberationSerif.ttf LiberationSerif_bd.ttf LiberationSerif_bi.ttf LiberationSerif_i.ttf
 	LiberationFontsLicense.txt
-	
+
 	PTAstraSans.ttf PTAstraSans_bd.ttf PTAstraSans_bi.ttf PTAstraSans_i.ttf
 	PTAstraSerif.ttf PTAstraSerif_bd.ttf PTAstraSerif_bi.ttf PTAstraSerif_i.ttf
 	PTMono.ttf PTMono_bd.ttf

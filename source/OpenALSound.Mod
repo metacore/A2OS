@@ -1,8 +1,8 @@
 
 MODULE OpenALSound; (** AUTHOR "g.f."; PURPOSE "OpenAL sound driver"; *)
 
-IMPORT S := SYSTEM, Modules, SoundDevices, AL := OpenAL, Objects, Files,
-			Strings, Streams, Log := KernelLog;
+IMPORT Modules, SoundDevices, AL := OpenAL, Files,
+			Strings, Streams, Kernel, Log := KernelLog;
 
 CONST
 		(* States for channel *)
@@ -10,8 +10,6 @@ CONST
 		StatePaused = 3;
 		StateStoped = 4;
 		StateClosed = 5;
-
-
 
 		Debug = TRUE;
 
@@ -30,7 +28,7 @@ TYPE
 			PROCEDURE & Initialize;
 			BEGIN
 				SetName("OpenAL sound driver");
-				desc := "Sound driver for UnixAos";
+				desc := "Cross-platform OpenAL sound driver";
 				enabled := FALSE;
 				playChannel := NIL
 			END Initialize;
@@ -190,18 +188,22 @@ TYPE
 
 			bufferListener: SoundDevices.BufferListener;
 
-			frequency: AL.ALuint;
+			frequency: AL.ALsizei;
 			format: AL.ALenum;
 			count: SIGNED32;
 
 			volume: SIGNED32;
 			state: SIGNED32;
+			
+			timer: Kernel.Timer;
 
 			driver: Driver;
 
 			PROCEDURE &Initialize*( driver: Driver;  samplingRate, bitsPerSample, nofChannels : SIGNED32 );
 			BEGIN
 				SELF.driver := driver;
+				
+				NEW(timer);
 
 				AL.alGenBuffers( NumBuffers, ADDRESSOF( buffers[0] ) );
 				AL.alGenSources( 1, ADDRESSOF( source ) );
@@ -261,7 +263,7 @@ TYPE
 				ELSE
 					REPEAT
 						AL.alGetSourcei( source, AL.AL_BUFFERS_PROCESSED, freeBuffers );
-						IF freeBuffers <= 0 THEN  Objects.Sleep( 5 )  END;
+						IF freeBuffers <= 0 THEN  timer.Sleep( 5 )  END;
 					UNTIL freeBuffers > 0;
 					AL.alSourceUnqueueBuffers( source, 1, ADDRESSOF( buffer ) );
 					DEC( freeBuffers );
@@ -326,7 +328,7 @@ TYPE
 			PROCEDURE Close*;
 			BEGIN
 				Stop;
-				AL.alDeleteSources( 1, source );
+				AL.alDeleteSources( 1, ADDRESSOF( source ));
 				AL.alDeleteBuffers( NumBuffers, ADDRESSOF( buffers[0] ) );
 				driver.DestroyALContext;
 				driver.playChannel := NIL;
@@ -416,6 +418,7 @@ END OpenALSound.
  System.Free MP3Player OpenALSound ~
 
  OpenALSound.Install ~
+ System.ListPlugins ~
 
  OpenALSound.Disable ~
  OpenALSound.Enable ~

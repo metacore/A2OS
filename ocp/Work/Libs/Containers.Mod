@@ -26,12 +26,12 @@ CONST
 
 TYPE
 	
-	LongintArray = POINTER TO ARRAY OF LONGINT;
+	LongintArray = POINTER TO ARRAY OF SIGNED32;
 	
 	SetArray = POINTER TO ARRAY OF SET;
 	
 	LongintItem* = POINTER TO RECORD
-		value*: LONGINT;
+		value*: SIGNED32;
 	END;
 	
 	StringItem* = POINTER TO RECORD
@@ -45,7 +45,7 @@ TYPE
 			-1	if the first Object is "smaller" then the second Object
 			0	if both Objects are "equal"
 			1	if the first Object is "greater" then the second Object. *)
-	CompareMethod* = PROCEDURE {DELEGATE} (first, second: ANY): LONGINT;
+	CompareMethod* = PROCEDURE {DELEGATE} (first, second: ANY): SIGNED32;
 	
 	(** EqualityCompareMethod defines a Method that compares two Objects.
 		The Methods then returns:
@@ -55,7 +55,7 @@ TYPE
 	(** HashMethod defines a Method that returns hash code for Object.
 		The Methods then returns:
 			hash code. *)
-	HashMethod* = PROCEDURE {DELEGATE} (item: ANY): LONGINT;
+	HashMethod* = PROCEDURE {DELEGATE} (item: ANY): SIGNED32;
 
 	(** Base Vector container *)	
 	Vector* = OBJECT
@@ -63,7 +63,7 @@ TYPE
 		VAR
 			array: AnyArray;
 			
-			nCount, nReadLock: LONGINT;
+			nCount, nReadLock: SIGNED32;
 			
 			compare: CompareMethod;
 			
@@ -96,7 +96,7 @@ TYPE
 		PROCEDURE Grow;
 		VAR
 			old: AnyArray;
-			nLen, i: LONGINT;
+			nLen, i: SIZE;
 		BEGIN
 			old := array;
 			nLen := LEN(old);
@@ -126,9 +126,9 @@ TYPE
 			END
 		END Grow;
 		
-		PROCEDURE FindSequentially(x: ANY): LONGINT;
+		PROCEDURE FindSequentially(x: ANY): SIGNED32;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE i < nCount DO
@@ -141,10 +141,10 @@ TYPE
 		END FindSequentially;
 
 		(*
-		PROCEDURE FindPosition(x: ANY): LONGINT;
+		PROCEDURE FindPosition(x: ANY): SIGNED32;
 		VAR
-			lower, middle, upper: LONGINT;
-			value: LONGINT;
+			lower, middle, upper: SIGNED32;
+			value: SIGNED32;
 		BEGIN
 			IF count = 0 THEN RETURN 0 END;
 			IF compare(list[0], x) > 0 THEN RETURN 0 END;
@@ -171,10 +171,10 @@ TYPE
 		END FindPosition;
 		*)
 		
-		PROCEDURE FindPosition(x: ANY; VAR bFound: BOOLEAN): LONGINT;
+		PROCEDURE FindPosition(x: ANY; VAR bFound: BOOLEAN): SIGNED32;
 		VAR
-			lower, middle, upper: LONGINT;
-			value: LONGINT;
+			lower, middle, upper: SIGNED32;
+			value: SIGNED32;
 		BEGIN
 			bFound := FALSE;
 			IF nCount = 0 THEN RETURN 0 END;
@@ -202,9 +202,9 @@ TYPE
 		(** return the index of an object. In a multi-process situation, the process calling the IndexOf method should
 			call Lock before IndexOf and Unlock after the last use of an index based on IndexOf.
 			If the object is not found, -1 is returned *)
-		PROCEDURE IndexOf*(x: ANY): LONGINT;
+		PROCEDURE IndexOf*(x: ANY): SIGNED32;
 		VAR
-			pos: LONGINT;
+			pos: SIGNED32;
 			bFound: BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			IF bSorted THEN
@@ -222,13 +222,13 @@ TYPE
 		(** return the number of objects in the list. If count is used for indexing elements (e.g. FOR - Loop) in a multi-process
 			situation, the process calling the GetCount method should call Lock before GetCount and Unlock after the
 			last use of an index based on GetCount *)
-		PROCEDURE GetCount*():LONGINT;
+		PROCEDURE GetCount*():SIGNED32;
 		BEGIN
 			RETURN nCount
 		END GetCount;
 		
 		(** return an object based on an index. In a multi-process situation, GetItem is only safe in a locked region Lock / Unlock *)
-		PROCEDURE GetItem*(pos: LONGINT): ANY;
+		PROCEDURE GetItem*(pos: SIGNED32): ANY;
 		BEGIN
 			ASSERT((pos >= 0) & (pos < nCount), 101);
 			RETURN array[pos]
@@ -242,7 +242,7 @@ TYPE
 			IF bSorted THEN AddUnlocked(x) ELSE AppendUnlocked(x) END
 		END Add;
 		
-		PROCEDURE Insert*(pos: LONGINT; x: ANY);
+		PROCEDURE Insert*(pos: SIGNED32; x: ANY);
 		BEGIN {EXCLUSIVE}
 			AWAIT(nReadLock = 0);
 			ASSERT((pos >= 0) & (pos < nCount), 101);
@@ -253,7 +253,7 @@ TYPE
 			have been done by the caller) *)
 		PROCEDURE AddUnlocked(x: ANY);
 		VAR
-			i, pos: LONGINT;
+			i, pos: SIGNED32;
 			bFound: BOOLEAN;
 		BEGIN
 			pos := FindPosition(x, bFound);
@@ -280,9 +280,9 @@ TYPE
 			INC(nCount)
 		END AppendUnlocked;
 		
-		PROCEDURE InsertUnlocked(pos: LONGINT; x: ANY);
+		PROCEDURE InsertUnlocked(pos: SIGNED32; x: ANY);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			IF bNoDuplicates THEN
 				ASSERT(FindSequentially(x) = -1)
@@ -298,7 +298,7 @@ TYPE
 		END InsertUnlocked;
 
 		(** Remove an object from the list. Remove may block if number of calls to Lock is bigger than the number of calls to Unlock *)
-		PROCEDURE Remove*(pos: LONGINT);
+		PROCEDURE Remove*(pos: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			AWAIT(nReadLock = 0);
 			ASSERT((pos >= 0) & (pos < nCount), 101);
@@ -306,7 +306,7 @@ TYPE
 		END Remove;
 
 		(* Does the actual Removing without locking (should already have been done by the caller) *)
-		PROCEDURE RemoveUnlocked(pos: LONGINT);
+		PROCEDURE RemoveUnlocked(pos: SIGNED32);
 		BEGIN
 			WHILE pos < nCount - 1 DO
 				array[pos] := array[pos + 1];
@@ -318,7 +318,7 @@ TYPE
 		
 		PROCEDURE Clear*;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			AWAIT(nReadLock = 0);
 			FOR i := 0 TO nCount - 1 DO
@@ -352,12 +352,12 @@ TYPE
 			vector.Unlock
 		END Unlock;
 		
-		PROCEDURE Remove*(i: LONGINT);
+		PROCEDURE Remove*(i: SIGNED32);
 		BEGIN
 			vector.Remove(i)
 		END Remove;
 		
-		PROCEDURE GetCount*(): LONGINT;
+		PROCEDURE GetCount*(): SIGNED32;
 		BEGIN
 			RETURN vector.GetCount()
 		END GetCount;
@@ -369,7 +369,7 @@ TYPE
 			
 	END CustomVector;
 	
-	(** Vector of LONGINTs *)
+	(** Vector of SIGNED32s *)
 	LongintVector* = OBJECT(CustomVector)
 			
 		PROCEDURE &New*(options: SET);
@@ -377,9 +377,9 @@ TYPE
 			NEW(vector, Compare, options)
 		END New;
 		
-		PROCEDURE Compare(first, second: ANY): LONGINT;
+		PROCEDURE Compare(first, second: ANY): SIGNED32;
 		VAR
-			nFirst, nSecond: LONGINT;
+			nFirst, nSecond: SIGNED32;
 		BEGIN
 			nFirst := first(LongintItem).value;
 			nSecond := second(LongintItem).value;
@@ -392,7 +392,7 @@ TYPE
 			END
 		END Compare;
 		
-		PROCEDURE Add*(x: LONGINT);
+		PROCEDURE Add*(x: SIGNED32);
 		VAR
 			item: LongintItem;
 		BEGIN
@@ -401,7 +401,7 @@ TYPE
 			vector.Add(item)
 		END Add;
 		
-		PROCEDURE Insert*(pos: LONGINT; x: LONGINT);
+		PROCEDURE Insert*(pos: SIGNED32; x: SIGNED32);
 		VAR
 			item: LongintItem;
 		BEGIN
@@ -410,7 +410,7 @@ TYPE
 			vector.Insert(pos, item)
 		END Insert;
 		
-		PROCEDURE IndexOf*(x: LONGINT): LONGINT;
+		PROCEDURE IndexOf*(x: SIGNED32): SIGNED32;
 		VAR
 			item: LongintItem;
 		BEGIN
@@ -419,14 +419,14 @@ TYPE
 			RETURN vector.IndexOf(item)
 		END IndexOf;
 		
-		PROCEDURE GetItem*(i: LONGINT): LONGINT;
+		PROCEDURE GetItem*(i: SIGNED32): SIGNED32;
 		BEGIN
 			RETURN vector.GetItem(i)(LongintItem).value
 		END GetItem;
 			
 	END LongintVector;
 
-	(** Vector of LONGINT vectors *)	
+	(** Vector of SIGNED32 vectors *)	
 	LongintVectorVector* = OBJECT(CustomVector)
 			
 		PROCEDURE &New*(options: SET);
@@ -434,7 +434,7 @@ TYPE
 			NEW(vector, Compare, options)
 		END New;
 		
-		PROCEDURE Compare(first, second: ANY): LONGINT;
+		PROCEDURE Compare(first, second: ANY): SIGNED32;
 		BEGIN
 			RETURN CompareLongintVectors(first(LongintVector), second(LongintVector))
 		END Compare;
@@ -444,17 +444,17 @@ TYPE
 			vector.Add(x)
 		END Add;
 		
-		PROCEDURE Insert*(pos: LONGINT; x: LongintVector);
+		PROCEDURE Insert*(pos: SIGNED32; x: LongintVector);
 		BEGIN
 			vector.Insert(pos, x)
 		END Insert;
 		
-		PROCEDURE IndexOf*(x: LongintVector): LONGINT;
+		PROCEDURE IndexOf*(x: LongintVector): SIGNED32;
 		BEGIN
 			RETURN vector.IndexOf(x)
 		END IndexOf;
 		
-		PROCEDURE GetItem*(i: LONGINT): LongintVector;
+		PROCEDURE GetItem*(i: SIGNED32): LongintVector;
 		BEGIN
 			RETURN vector.GetItem(i)(LongintVector)
 		END GetItem;
@@ -469,7 +469,7 @@ TYPE
 			NEW(vector, Compare, options)
 		END New;
 		
-		PROCEDURE Compare(first, second: ANY): LONGINT;
+		PROCEDURE Compare(first, second: ANY): SIGNED32;
 		BEGIN
 			RETURN UTF8Strings.Compare(first(StringItem).value^,
 				second(StringItem).value^)
@@ -484,7 +484,7 @@ TYPE
 			vector.Add(item)
 		END Add;
 		
-		PROCEDURE Insert*(pos: LONGINT; CONST x: ARRAY OF CHAR);
+		PROCEDURE Insert*(pos: SIGNED32; CONST x: ARRAY OF CHAR);
 		VAR
 			item: StringItem;
 		BEGIN
@@ -493,7 +493,7 @@ TYPE
 			vector.Insert(pos, item)
 		END Insert;
 		
-		PROCEDURE IndexOf*(CONST x: ARRAY OF CHAR): LONGINT;
+		PROCEDURE IndexOf*(CONST x: ARRAY OF CHAR): SIGNED32;
 		VAR
 			item: StringItem;
 		BEGIN
@@ -502,7 +502,7 @@ TYPE
 			RETURN vector.IndexOf(item)
 		END IndexOf;
 		
-		PROCEDURE GetItem*(i: LONGINT): Strings.String;
+		PROCEDURE GetItem*(i: SIGNED32): Strings.String;
 		BEGIN
 			RETURN vector.GetItem(i)(StringItem).value
 		END GetItem;
@@ -518,7 +518,7 @@ TYPE
 		
 		iterator*: DictionaryIterator;
 		
-		nCount, iPrime-, nCollisions-: LONGINT;
+		nCount, iPrime-, nCollisions-: SIGNED32;
 		
 		equal: EqualityCompareMethod;
 		hash: HashMethod;
@@ -536,7 +536,8 @@ TYPE
 		
 		PROCEDURE InitArrays;
 		VAR
-			i, prime: LONGINT;
+			i: SIZE;
+			prime: SIGNED32;
 		BEGIN
 			prime := PRIMES[iPrime];
 			NEW(array, prime);
@@ -555,11 +556,11 @@ TYPE
 			oldArray: AnyArray;
 			oldHashes: LongintArray;
 			oldDeleted: SetArray;
-			i: LONGINT;
+			i: SIZE;
 			
-			PROCEDURE Deleted(i: LONGINT): BOOLEAN;
+			PROCEDURE Deleted(i: SIGNED32): BOOLEAN;
 			VAR
-				iDiv, iMod: LONGINT;
+				iDiv, iMod: SIGNED32;
 			BEGIN
 				iDiv := i DIV BASE_DWORD;
 				iMod := i MOD BASE_DWORD;
@@ -576,38 +577,38 @@ TYPE
 			iterator.Init(SELF);
 
 			FOR i := 0 TO LEN(oldArray) - 1 DO
-				IF (oldArray[i] # NIL) & ~Deleted(i) THEN
+				IF (oldArray[i] # NIL) & ~Deleted(SIGNED32(i)) THEN
 					ASSERT(~hashSearch(oldArray[i], TRUE, TRUE, oldHashes[i]))
 				END
 			END
 		END Grow;
 		
-		PROCEDURE Delete(i: LONGINT);
+		PROCEDURE Delete(i: SIGNED32);
 		VAR
-			iDiv, iMod: LONGINT;
+			iDiv, iMod: SIGNED32;
 		BEGIN
 			iDiv := i DIV BASE_DWORD;
 			iMod := i MOD BASE_DWORD;
 			deleted[iDiv] := deleted[iDiv] + {iMod}
 		END Delete;
 		
-		PROCEDURE Deleted(i: LONGINT): BOOLEAN;
+		PROCEDURE Deleted(i: SIGNED32): BOOLEAN;
 		VAR
-			iDiv, iMod: LONGINT;
+			iDiv, iMod: SIGNED32;
 		BEGIN
 			iDiv := i DIV BASE_DWORD;
 			iMod := i MOD BASE_DWORD;
 			RETURN deleted[iDiv] * {iMod} # {}
 		END Deleted;
 		
-		PROCEDURE GetCount(): LONGINT;
+		PROCEDURE GetCount(): SIGNED32;
 		BEGIN
 			RETURN nCount
 		END GetCount;
 		
 		PROCEDURE Add*(item: ANY);
 		VAR
-			nHashCode: LONGINT;
+			nHashCode: SIGNED32;
 		BEGIN
 			ASSERT(~hashSearch(item, TRUE, FALSE, nHashCode));
 			INC(nCount);
@@ -619,14 +620,14 @@ TYPE
 		
 		PROCEDURE Contains*(item: ANY): BOOLEAN;
 		VAR
-			nHashCode: LONGINT;
+			nHashCode: SIGNED32;
 		BEGIN
 			RETURN hashSearch(item, FALSE, FALSE, nHashCode);
 		END Contains;
 		
 		PROCEDURE Get*(item: ANY): ANY;
 		VAR
-			nHashCode: LONGINT;
+			nHashCode: SIGNED32;
 			itemResult: ANY;
 		BEGIN
 			itemResult := NIL;
@@ -638,7 +639,7 @@ TYPE
 		
 		PROCEDURE Remove*(item: ANY);
 		VAR
-			nHashCode: LONGINT;
+			nHashCode: SIGNED32;
 		BEGIN
 			IF hashSearch(item, FALSE, FALSE, nHashCode) THEN
 				Delete(nHashCode);
@@ -646,9 +647,9 @@ TYPE
 			END;
 		END Remove;
 		
-		PROCEDURE hashSearch(item: ANY; bAddAllowed: BOOLEAN; bGrowOperation: BOOLEAN; VAR nHashCode: LONGINT): BOOLEAN;
+		PROCEDURE hashSearch(item: ANY; bAddAllowed: BOOLEAN; bGrowOperation: BOOLEAN; VAR nHashCode: SIGNED32): BOOLEAN;
 		VAR
-			d, nHash, h, prime: LONGINT;
+			d, nHash, h, prime: SIGNED32;
 			bFound, bExit, bOverflow: BOOLEAN;
 		BEGIN
 		
@@ -706,7 +707,7 @@ TYPE
 	(** Iterator for sequental access to the Dictionary *)
 	DictionaryIterator* = OBJECT
 	VAR 
-		iCurrentPos: LONGINT;
+		iCurrentPos: SIGNED32;
 		dictionary: Dictionary;
 		
 		PROCEDURE &New*(dictionary: Dictionary);
@@ -727,7 +728,7 @@ TYPE
 
 		PROCEDURE HasNext*(): BOOLEAN;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			i := iCurrentPos;
 			REPEAT
@@ -759,7 +760,7 @@ TYPE
 	VAR 
 		dictionary*: Dictionary;
 		
-		PROCEDURE GetCount*(): LONGINT;
+		PROCEDURE GetCount*(): SIGNED32;
 		BEGIN
 			RETURN dictionary.GetCount()
 		END GetCount;
@@ -781,7 +782,7 @@ TYPE
 		
 	END CustomSet;
 	
-	(** Set of LONGINTs *)
+	(** Set of SIGNED32s *)
 	LongintSet* = OBJECT(CustomSet)
 		
 		PROCEDURE LongintItemsEqual(first, second: ANY): BOOLEAN;
@@ -789,7 +790,7 @@ TYPE
 			RETURN first(LongintItem).value = second(LongintItem).value
 		END LongintItemsEqual;
 		
-		PROCEDURE LongintItemHash(item: ANY): LONGINT;
+		PROCEDURE LongintItemHash(item: ANY): SIGNED32;
 		BEGIN
 			RETURN item(LongintItem).value
 		END LongintItemHash;
@@ -799,7 +800,7 @@ TYPE
 			NEW(dictionary, LongintItemsEqual, LongintItemHash);
 		END Init;
 		
-		PROCEDURE Add*(x: LONGINT);
+		PROCEDURE Add*(x: SIGNED32);
 		VAR
 			item: LongintItem;
 		BEGIN
@@ -808,7 +809,7 @@ TYPE
 			dictionary.Add(item)
 		END Add;
 		
-		PROCEDURE Remove*(x: LONGINT);
+		PROCEDURE Remove*(x: SIGNED32);
 		VAR
 			item: LongintItem;
 		BEGIN
@@ -817,7 +818,7 @@ TYPE
 			dictionary.Remove(item)
 		END Remove;
 		
-		PROCEDURE Contains*(x: LONGINT): BOOLEAN;
+		PROCEDURE Contains*(x: SIGNED32): BOOLEAN;
 		VAR
 			item: LongintItem;
 		BEGIN
@@ -826,7 +827,7 @@ TYPE
 			RETURN dictionary.Contains(item)
 		END Contains;
 
-		PROCEDURE GetNext*(): LONGINT;
+		PROCEDURE GetNext*(): SIGNED32;
 		BEGIN
 			RETURN dictionary.iterator.GetNext()(LongintItem).value
 		END GetNext;
@@ -859,7 +860,7 @@ TYPE
 			RETURN first(StringItem).value^ = second(StringItem).value^
 		END StringsEqual;
 		
-		PROCEDURE StringHash(item: ANY): LONGINT;
+		PROCEDURE StringHash(item: ANY): SIGNED32;
 		BEGIN
 			RETURN HashString(item(StringItem).value)
 		END StringHash;
@@ -903,7 +904,7 @@ TYPE
 
 	END StringSet;
 	
-	(** Set of LONGINT sets *)
+	(** Set of SIGNED32 sets *)
 	LongintSetSet* = OBJECT(CustomSet)
 			
 		PROCEDURE LongintSetsEqual(first, second: ANY): BOOLEAN;
@@ -911,7 +912,7 @@ TYPE
 			RETURN EqualityCompareLongintSets(first(LongintSet), second(LongintSet))
 		END LongintSetsEqual;
 		
-		PROCEDURE LongintSetHash(item: ANY): LONGINT;
+		PROCEDURE LongintSetHash(item: ANY): SIGNED32;
 		BEGIN
 			RETURN HashLongintSet(item(LongintSet))
 		END LongintSetHash;
@@ -943,7 +944,7 @@ TYPE
 		
 	END LongintSetSet;
 	
-	(** Vector of LONGINT sets *)	
+	(** Vector of SIGNED32 sets *)	
 	LongintSetVector* = OBJECT(CustomVector)
 			
 		PROCEDURE &New*(options: SET);
@@ -951,7 +952,7 @@ TYPE
 			NEW(vector, Compare, options)
 		END New;
 		
-		PROCEDURE Compare(first, second: ANY): LONGINT;
+		PROCEDURE Compare(first, second: ANY): SIGNED32;
 		BEGIN
 			RETURN CompareLongintSets(first(LongintSet), second(LongintSet))
 		END Compare;
@@ -961,17 +962,17 @@ TYPE
 			vector.Add(x)
 		END Add;
 		
-		PROCEDURE Insert*(pos: LONGINT; x: LongintSet);
+		PROCEDURE Insert*(pos: SIGNED32; x: LongintSet);
 		BEGIN
 			vector.Insert(pos, x)
 		END Insert;
 		
-		PROCEDURE IndexOf*(x: LongintSet): LONGINT;
+		PROCEDURE IndexOf*(x: LongintSet): SIGNED32;
 		BEGIN
 			RETURN vector.IndexOf(x)
 		END IndexOf;
 		
-		PROCEDURE GetItem*(i: LONGINT): LongintSet;
+		PROCEDURE GetItem*(i: SIGNED32): LongintSet;
 		BEGIN
 			RETURN vector.GetItem(i)(LongintSet)
 		END GetItem;
@@ -983,7 +984,7 @@ TYPE
 	
 		VAR
 			array: AnyArray;
-			nCount, nReadLock: LONGINT;
+			nCount, nReadLock: SIGNED32;
 			compare: CompareMethod;
 
 		PROCEDURE &Init*(compare: CompareMethod);
@@ -1011,7 +1012,7 @@ TYPE
 		PROCEDURE Grow;
 		VAR
 			old: AnyArray;
-			i: LONGINT;
+			i: SIZE;
 		BEGIN
 			old := array;
 			NEW(array, LEN(array) * 2);
@@ -1023,7 +1024,7 @@ TYPE
 		(** return the number of objects in the list. If count is used for indexing elements (e.g. FOR - Loop) in a multi-process
 			situation, the process calling the GetCount method should call Lock before GetCount and Unlock after the
 			last use of an index based on GetCount *)
-		PROCEDURE GetCount*():LONGINT;
+		PROCEDURE GetCount*():SIGNED32;
 		BEGIN
 			RETURN nCount
 		END GetCount;
@@ -1040,7 +1041,7 @@ TYPE
 			have been done by the caller) *)
 		PROCEDURE AddUnlocked(x: ANY);
 		VAR
-			i, pos: LONGINT;
+			i, pos: SIGNED32;
 			tmp: ANY;
 		BEGIN
 			IF LEN(array) = nCount + 1 THEN Grow END;
@@ -1059,9 +1060,9 @@ TYPE
 			END
 		END AddUnlocked;
 		
-		PROCEDURE FindSequentially(x: ANY): LONGINT;
+		PROCEDURE FindSequentially(x: ANY): SIGNED32;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			i := 1;
 			WHILE (i <= nCount) & (array[i] # x) DO
@@ -1076,8 +1077,8 @@ TYPE
 		
 		PROCEDURE Update*(x: ANY);
 		VAR
-			pos: LONGINT;
-			i: LONGINT;
+			pos: SIGNED32;
+			i: SIGNED32;
 			tmp: ANY;
 		BEGIN
 			pos := FindSequentially(x);
@@ -1112,7 +1113,7 @@ TYPE
 		(* Does the actual Removing without locking (should already have been done by the caller) *)
 		PROCEDURE RemoveUnlocked(): ANY;
 		VAR
-			i1, i2, u, v: LONGINT;
+			i1, i2, u, v: SIGNED32;
 			x, tmp: ANY;
 		BEGIN
 			v := 1;
@@ -1156,7 +1157,7 @@ TYPE
 			heap.Unlock
 		END Unlock;
 		
-		PROCEDURE GetCount*(): LONGINT;
+		PROCEDURE GetCount*(): SIGNED32;
 		BEGIN
 			RETURN heap.GetCount()
 		END GetCount;
@@ -1175,9 +1176,9 @@ TYPE
 			NEW(heap, Compare)
 		END New;
 		
-		PROCEDURE Compare(first, second: ANY): LONGINT;
+		PROCEDURE Compare(first, second: ANY): SIGNED32;
 		VAR
-			nFirst, nSecond: LONGINT;
+			nFirst, nSecond: SIGNED32;
 		BEGIN
 			nFirst := first(LongintItem).value;
 			nSecond := second(LongintItem).value;
@@ -1190,7 +1191,7 @@ TYPE
 			END
 		END Compare;
 		
-		PROCEDURE Add*(x: LONGINT);
+		PROCEDURE Add*(x: SIGNED32);
 		VAR
 			item: LongintItem;
 		BEGIN
@@ -1199,7 +1200,7 @@ TYPE
 			heap.Add(item);
 		END Add;
 		
-		PROCEDURE Remove*(): LONGINT;
+		PROCEDURE Remove*(): SIGNED32;
 		BEGIN
 			RETURN heap.Remove()(LongintItem).value
 		END Remove;
@@ -1207,11 +1208,11 @@ TYPE
 	END LongintHeap;
 	
 	VAR
-		PRIMES: ARRAY 27 OF LONGINT;
+		PRIMES: ARRAY 27 OF SIGNED32;
 	
-	PROCEDURE CompareLongintVectors*(first, second: LongintVector): LONGINT;
+	PROCEDURE CompareLongintVectors*(first, second: LongintVector): SIGNED32;
 	VAR
-		n, i, nRes: LONGINT;
+		n, i, nRes: SIGNED32;
 	BEGIN
 		n := MIN(first.GetCount(), second.GetCount());
 		IF n = 0 THEN
@@ -1246,9 +1247,9 @@ TYPE
 		END
 	END CompareLongintVectors;
 	
-	PROCEDURE CompareLongintSets*(first, second: LongintSet): LONGINT;
+	PROCEDURE CompareLongintSets*(first, second: LongintSet): SIGNED32;
 	VAR
-		n, i, nRes, iF, iS: LONGINT;
+		n, i, nRes, iF, iS: SIGNED32;
 	BEGIN
 		n := MIN(first.GetCount(), second.GetCount());
 		IF n = 0 THEN
@@ -1299,9 +1300,9 @@ TYPE
 		RETURN bResult
 	END EqualityCompareLongintSets;
 	
-	PROCEDURE HashLongintSet*(item: LongintSet): LONGINT;
+	PROCEDURE HashLongintSet*(item: LongintSet): SIGNED32;
 	VAR
-		i, iValue, iDivSum, iModSum, n: LONGINT;
+		i, iValue, iDivSum, iModSum, n: SIGNED32;
 	BEGIN
 		iDivSum := 0;
 		iModSum := 0;
@@ -1322,9 +1323,10 @@ TYPE
 		RETURN iDivSum + iModSum DIV n
 	END HashLongintSet;
 	
-	PROCEDURE HashString*(item: Strings.String): LONGINT;
+	PROCEDURE HashString*(item: Strings.String): SIGNED32;
 	VAR
-		i, iValue, iDivSum, iModSum, n: LONGINT;
+		i, iValue: SIGNED32;
+		n, iDivSum, iModSum: SIZE;
 	BEGIN
 		iDivSum := 0;
 		iModSum := 0;
@@ -1341,7 +1343,7 @@ TYPE
 			INC(iModSum, iValue MOD n);
 			INC(i)
 		END;
-		RETURN iDivSum + iModSum DIV n
+		RETURN SIGNED32(iDivSum + iModSum DIV n)
 	END HashString;
 	
 	PROCEDURE InitPrimes;
@@ -1381,7 +1383,7 @@ TYPE
 	VAR
 		vec: StringVector;
 		set: StringSet;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		context.out.Ln;
 		NEW(vec, {});

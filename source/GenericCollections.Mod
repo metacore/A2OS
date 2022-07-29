@@ -3,22 +3,22 @@
 (*
 
 	Module implements the base generic collection objects:
-		
+
 		Queue - simple (L)ast (I)n (F)irst (O)ut stack;
-		
+
 		DEQue - Double Ended Queue or (F)irst (I)n (F)irst (O)ut stack;
-		
+
 		Vector - simple linear container with possibilities of out of order elements' insertions and removal.
 			Also sorting and searching of elements are supported.
-	
+
 	Parameters of this module are:
-		
+
 		T - any type;
-		
+
 		Less - procedure, that returns result of "less than" comparison,
 			with signature "(l, r: T): BOOLEAN". Less procedure are present
 			mostly for Vector's sorting and searching functionality.
-		
+
 *)
 
 MODULE GenericCollections(TYPE T, CONST Less);
@@ -34,17 +34,17 @@ TYPE
 		PROCEDURE Count*(): SIZE;
 		BEGIN HALT(301)
 		END Count;
-		
+
 		PROCEDURE Empty*(): BOOLEAN;
 		BEGIN HALT(301)
 		END Empty;
-		
+
 		PROCEDURE Reset*();
 		BEGIN HALT(301)
 		END Reset;
-		
+
 	END Container;
-	
+
 	PArrayT* = POINTER TO ARRAY OF T;
 
 	(** Abstract Linear Container, based on dynamic array of T *)
@@ -52,7 +52,7 @@ TYPE
 	VAR
 		m_iSize : SIZE;
 		m_pArray : PArrayT;
-		
+
 		PROCEDURE Grow();
 		VAR
 			pOldArray : PArrayT;
@@ -66,22 +66,22 @@ TYPE
 				m_pArray[i] := pOldArray[i]
 			END
 		END Grow;
-		
+
 		PROCEDURE &New*();
 		BEGIN
 			m_iSize := INITIAL_SIZE;
 			NewStorage;
 			Reset
 		END New;
-		
+
 		(** Allocation of new storage of size set in m_iSize *)
 		PROCEDURE NewStorage();
 		BEGIN
 			NEW(m_pArray, m_iSize)
 		END NewStorage;
-		
+
 	END LinearContainer;
-	
+
 	(** Abstract stack *)
 	Stack* = OBJECT(LinearContainer)
 
@@ -96,7 +96,7 @@ TYPE
 		PROCEDURE Top*(VAR t: T): BOOLEAN;
 		BEGIN HALT(301)
 		END Top;
-		
+
 	END Stack;
 
 	(** Simple Queue or LIFO stack *)
@@ -113,12 +113,12 @@ TYPE
 		BEGIN
 			RETURN m_iPos
 		END Count;
-		
+
 		PROCEDURE Empty*(): BOOLEAN;
 		BEGIN
 			RETURN m_iPos = 0
 		END Empty;
-		
+
 		PROCEDURE Pop*(VAR t: T): BOOLEAN;
 		VAR
 			bOk: BOOLEAN;
@@ -147,7 +147,7 @@ TYPE
 		END Top;
 
 	END Queue;
-	
+
 	(** Double Ended Queue or FIFO stack *)
 	DEQue* = OBJECT(Stack)
 	VAR
@@ -163,7 +163,7 @@ TYPE
 		BEGIN
 			RETURN m_iTail - m_iHead
 		END Count;
-		
+
 		PROCEDURE Empty*(): BOOLEAN;
 		BEGIN
 			RETURN m_iTail - m_iHead = 0
@@ -200,7 +200,7 @@ TYPE
 			END;
 			RETURN bOk
 		END Pop;
-		
+
 		PROCEDURE Push*(CONST t: T);
 		BEGIN
 			IF m_iTail = m_iSize THEN Grow END;
@@ -223,7 +223,7 @@ TYPE
 	VAR
 		m_iPos: SIZE;
 		f_bSorted: BOOLEAN;
-		
+
 		PROCEDURE Add*(CONST t: T): SIZE;
 		VAR
 			pos: SIZE;
@@ -247,12 +247,12 @@ TYPE
 		BEGIN
 			RETURN m_iPos
 		END Count;
-		
+
 		PROCEDURE Empty*(): BOOLEAN;
 		BEGIN
 			RETURN m_iPos = 0
 		END Empty;
-		
+
 		PROCEDURE FindBinary(CONST t: T; VAR bFound: BOOLEAN): SIZE;
 		VAR
 			lower, middle, upper: SIZE;
@@ -292,7 +292,7 @@ TYPE
 			END;
 			RETURN -1
 		END FindSequentially;
-		
+
 		PROCEDURE Get*(pos: SIZE; VAR t: T);
 		BEGIN
 			ASSERT((pos >= 0) & (pos < m_iPos), 101);
@@ -303,7 +303,7 @@ TYPE
 		BEGIN
 			RETURN f_bSorted
 		END GetSorted;
-		
+
 		PROCEDURE IndexOf*(CONST t: T): SIZE;
 		VAR
 			pos: SIZE;
@@ -341,7 +341,7 @@ TYPE
 			m_pArray[pos] := t;
 			INC(m_iPos)
 		END Insert;
-		
+
 		PROCEDURE QuickSort(l, r: SIZE);
 		VAR
 			i, j, x: SIZE;
@@ -412,8 +412,8 @@ TYPE
 		END SetSorted;
 
 	END Vector;
-	
+
 BEGIN
-	
+
 END GenericCollections.
 

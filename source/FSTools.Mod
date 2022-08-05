@@ -500,35 +500,58 @@ BEGIN
 	END;
 END CreateFile;
 
-PROCEDURE CopyTo*(context : Commands.Context); (** targetpath sourcepath {filename} ~ *)
-VAR targetPath, sourcePath, targetFullname, sourceFullname,  filename : Files.FileName; overwrite : BOOLEAN; nofFilesCopied, nofErrors: SIGNED32; res : INTEGER;
+PROCEDURE CopyTo*(context : Commands.Context); (** [-i|--ignore] targetpath sourcepath {filename} ~ *)
+VAR options : Options.Options; targetPath, sourcePath, targetFullname, sourceFullname,  filename : Files.FileName;
+	stopOnError, overwrite : BOOLEAN; nofFilesCopied, nofErrors: SIGNED32; res : INTEGER;
 BEGIN
-	context.arg.SkipWhitespace; context.arg.String(targetPath);
-	context.arg.SkipWhitespace; context.arg.String(sourcePath);
+	NEW(options);
+	options.Add("i", "ignore", Options.Flag);
+	
+	IF options.Parse(context.arg, context.error) THEN
 
-	nofFilesCopied := 0; nofErrors := 0;
-	WHILE context.arg.GetString(filename) DO
-		COPY(targetPath, targetFullname); Strings.Append(targetFullname, filename);
-		COPY(sourcePath, sourceFullname); Strings.Append(sourceFullname, filename);
-		overwrite := TRUE;
-		Files.CopyFile(sourceFullname, targetFullname, overwrite, res);
-		IF (res = Files.Ok) THEN
-			INC(nofFilesCopied);
-		ELSE
-			INC(nofErrors);
-			context.error.String("Error: Could not copy file "); context.error.String(sourceFullname);
-			context.error.String(" to "); context.error.String(targetFullname); context.error.String(", res: ");
-			context.error.Int(res, 0); context.error.Ln;
-			context.result := Commands.CommandError;
-			RETURN;
+		stopOnError := ~options.GetFlag("ignore");
+
+		context.arg.SkipWhitespace; context.arg.String(targetPath);
+		context.arg.SkipWhitespace; context.arg.String(sourcePath);
+
+		nofFilesCopied := 0; nofErrors := 0;
+		WHILE context.arg.GetString(filename) DO
+			COPY(targetPath, targetFullname); Strings.Append(targetFullname, filename);
+			COPY(sourcePath, sourceFullname); Strings.Append(sourceFullname, filename);
+			overwrite := TRUE;
+			Files.CopyFile(sourceFullname, targetFullname, overwrite, res);
+			IF (res = Files.Ok) THEN
+				INC(nofFilesCopied);
+			ELSE
+				INC(nofErrors);
+
+				IF stopOnError THEN 
+					context.result := Commands.CommandError;
+					context.error.String("Error: Could not copy file "); context.error.String(sourceFullname);
+					context.error.String(" to "); context.error.String(targetFullname); context.error.String(", res: ");
+					context.error.Int(res, 0); context.error.Ln;					
+					RETURN 
+				ELSE 
+					context.result := Commands.Ok;
+					context.out.String("Error: Could not copy file "); context.out.String(sourceFullname);
+					context.out.String(" to "); context.out.String(targetFullname); context.out.String(", res: ");
+					context.out.Int(res, 0); context.out.Ln;					
+				END
+			END;
 		END;
-	END;
-	context.out.Int(nofFilesCopied, 0); context.out.String(" files copied");
-	IF (nofErrors > 0) THEN
-		context.out.String(" ("); context.out.Int(nofErrors, 0); context.out.String(" errors)");
-		context.result := Commands.CommandError;
-	END;
-	context.out.Ln;
+		context.out.Int(nofFilesCopied, 0); context.out.String(" files copied");
+		IF (nofErrors > 0) THEN
+			context.out.String(" ("); context.out.Int(nofErrors, 0); context.out.String(" errors)");
+			IF stopOnError THEN 
+				context.result := Commands.CommandError; 
+			ELSE 
+				context.result := Commands.Ok 
+			END
+		END;
+		context.out.Ln;
+	ELSE
+		context.result := Commands.CommandParseError;
+	END
 END CopyTo;
 
 (** Copy files *)

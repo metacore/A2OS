@@ -474,7 +474,11 @@ BEGIN
 			IF (nofErrors > 0) THEN
 				context.out.String(" ("); context.out.Int(nofErrors, 0);
 				IF (nofErrors = 1) THEN context.out.String(" error)"); ELSE context.out.String(" errors)"); END;
-				context.result := Commands.CommandError;
+				IF stopOnError THEN
+					context.result := Commands.CommandError
+				ELSE
+					context.result := Commands.Ok
+				END
 			END;
 			IF (nofAdded > 1) OR (nofErrors > 0) THEN context.out.Ln; END;
 		ELSE
@@ -537,7 +541,11 @@ BEGIN
 				IF (nofErrors = 1) THEN context.out.String("error)");
 				ELSE context.out.String(" errors)");
 				END;
-				context.result := Commands.CommandError;
+				IF stopOnError THEN
+					context.result := Commands.CommandError
+				ELSE
+					context.result := Commands.Ok
+				END
 			END;
 			IF (nofDeleted > 1) OR (nofErrors > 0) THEN context.out.Ln; END;
 		END;

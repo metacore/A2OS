@@ -518,6 +518,10 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	NATIVE & ~BIOS { Beep.Mod }
 
 	# Pseudo sound driver for LinuxA2 and WinA2
+	
+	WIN { Windows.HostLibs.Mod }
+	UNIX { Unix.HostLibs.Mod }
+	
 	UNIX, WIN { OpenAL.Mod OpenALSound.Mod }
 
 	WIN { Windows.WinDisks.Mod } # direct windows disk access, implements Disks interface

@@ -5,17 +5,38 @@
 #
 # To create the CD image, do the following three steps:
 
-# Step 1: Compile modules and generate ZIP packages
+######################################################
+# Step 1: Compile modules and generate ZIP packages  #
+######################################################
 
 Release.Build --path="../Test/" --build --zip --xml Bios32 ~
 
+# or
 
-# Step 2:  Link boot files
+Release.Build --path="../Test/" --build --zip --xml Bios64 ~
+
+######################################################
+# Step 2: Link boot files                            #
+######################################################
 
 System.DoCommands
-Linker.Link \P../Test/ \.Obx ../Test/IDE.Bin 0100000H 1000H Kernel Traps
-	ATADisks DiskVolumes DiskFS Loader BootConsole ~
-~
+
+	FSTools.DeleteFiles -i ../Test/CD.Bin ../Test/IDE.Bin ../Test/USB.Bin  ~
+
+	Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/CD.Bin
+		Kernel Traps ATADisks DiskVolumes RAMVolumes DiskFS Loader BootConsole ~
+
+	Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/IDE.Bin
+		Kernel Traps ATADisks DiskVolumes DiskFS Loader BootConsole ~
+
+	Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/USB.Bin
+		Kernel Traps ATADisks UsbHubDriver UsbEhci UsbEhciPCI UsbStorageBoot
+		DiskVolumes DiskFS Loader BootConsole ~
+
+	FSTools.CloseFiles ../Test/CD.Bin ../Test/CD.log
+		../Test/IDE.Bin ../Test/IDE.log ../Test/USB.Bin ../Test/USB.log ~
+
+~~
 
 # These boot images can't be built anymore because they get to large in terms of size
 Linker.Link \P../Test/ \.Obx ../Test/USB.Bin 0100000H 1000H Kernel Traps
@@ -23,220 +44,277 @@ Linker.Link \P../Test/ \.Obx ../Test/USB.Bin 0100000H 1000H Kernel Traps
 	DiskVolumes DiskFS Loader BootConsole ~
 Linker.Link \P../Test/ \.Obx ../Test/SCSI.Bin 0100000H 1000H Kernel Traps
 	Adaptec7 NCR810Disks  DiskVolumes DiskFS Loader BootConsole ~
-~
-
 # Note:
 # Since USB.Bin gets too large when including all three host controller drivers,
 # USB.Bin only contains the host controller driver for high-speed USB (UsbEhci.Mod), assuming that the host supports it.
 # The low-/full-speed drivers (UsbUhci.Mod, UsbOhci.Mod) can be loaded later on-demand.
 # If you want to boot from a computer that does not support high-speed USB, use
-
 Linker.Link \P../Test/ \.Obx ../Test/USBSLOW.Bin 0100000H 1000H Kernel Traps
 	UsbHubDriver UsbOhci UsbUhci UsbStorageBoot
 	DiskVolumes DiskFS Loader BootConsole ~
 
-# Step 3a: Create image for bootable CD (A2.iso)
+######################################################
+# Step 3a: Create image for bootable CD (A2.iso)     #
+######################################################
 
 System.DoCommands
 
-System.Timer start ~
+	System.Timer start ~
 
-FSTools.DeleteFiles -i ../Test/A2.iso ../Test/CD.Bin ../Test/IDE.Bin  ~
+	FSTools.DeleteFiles -i ../Test/A2.iso ~
 
-PCAAMD64.Assemble OBLUnreal.Asm ~
-PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
+	PCAAMD64.Assemble OBLUnreal.Asm ~
+	PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
 
-FSTools.Mount RAMDISK RamFS 100000 4096 ~
-FSTools.DeleteFiles -i RAMDISK:A2.Dsk ~
+	FSTools.Mount RAMDISK RamFS 100000 4096 ~
+	FSTools.DeleteFiles -i RAMDISK:A2.Dsk ~
 
-VirtualDisks.Create RAMDISK:A2.Dsk 400000 512 ~
-VirtualDisks.Install -c=80 -h=2 -s=18 -b=512 VDISK0 RAMDISK:A2.Dsk  ~
+	VirtualDisks.Create RAMDISK:A2.Dsk 400000 512 ~
+	VirtualDisks.Install -c=80 -h=2 -s=18 -b=512 VDISK0 RAMDISK:A2.Dsk  ~
 
-(* Linker.Link \P../Test/ \.Obx ../Test/CD.Bin 0100000H 1000H
-	Kernel Traps ATADisks DiskVolumes RAMVolumes DiskFS Loader BootConsole ~ *)
+	Partitions.Format VDISK0#0 AosFS -1 ../Test/CD.Bin ~ (* -1 makes sure that actual boot file size is taken as offset for AosFS *)
+	FSTools.Mount TEMP AosFS VDISK0#0 ~
 
-Linker.Link --path=../Test/ --platform=Bios32 --fileName=../Test/CD.Bin
-	Kernel Traps ATADisks DiskVolumes RAMVolumes DiskFS Loader BootConsole ~
+	ZipTool.Delete -i ../Test/Applications.zip InstallerPackages.XML ~
+	ZipTool.Add -i --nopath ../Test/Applications.zip ../Test/InstallerPackages.XML ~
 
-(* Needed for further system installation *)
-Linker.Link --path=../Test/ --platform=Bios32 --fileName=../Test/IDE.Bin
-	Kernel Traps ATADisks DiskVolumes DiskFS Loader BootConsole ~
+	ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
+		Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip CompilerSrc.zip
+		GuiApplicationsMini.zip GuiApplications.zip Fun.zip Contributions.zip Build.zip EFI.zip
+		Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
+		KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip
+		GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip FunSrc.zip BuildSrc.zip
+		ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
 
-Partitions.Format VDISK0#0 AosFS -1 ../Test/CD.Bin ~
-FSTools.Mount TEMP AosFS VDISK0#0 ~
+	System.Show Copy ZIP archives to TEMP:  ~
+	FSTools.CopyTo -i TEMP: ../Test/
+		Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip
+		GuiApplicationsMini.zip GuiApplications.zip
+		Fun.zip Testing.zip Build.zip EFI.zip Contributions.zip
+		KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip CompilerSrc.zip
+		GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip
+		FunSrc.zip TestingSrc.zip BuildSrc.zip EFISrc.zip ContributionsSrc.zip
+		Education.zip EducationSrc.zip
+		Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
+		ScreenFonts.zip TrueTypeFonts.zip CjkFonts.zip
+		OberonSrc.zip OberonApplicationsSrc.zip OberonGadgetsSrc.zip
+		OberonVoyager.zip OberonVoyagerSrc.zip OberonAnts.zip OberonAntsSrc.zip
+		Pr3Fonts.zip Pr6Fonts.zip
+		IDE.Bin CompileCommand.Tool ~
 
-ZipTool.Delete -i ../Test/Applications.zip InstallerPackages.XML ~
-ZipTool.Add -i --nopath ../Test/Applications.zip ../Test/InstallerPackages.XML ~
+	FSTools.Watch TEMP ~
+	FSTools.Unmount TEMP ~
 
-ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
-	Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip CompilerSrc.zip
-	GuiApplicationsMini.zip GuiApplications.zip Fun.zip Contributions.zip Build.zip EFI.zip
-	Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
-	KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip FunSrc.zip BuildSrc.zip
-	ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
+	Partitions.SetConfig VDISK0#0
+		TraceMode="0" TracePort="1" TraceBPS="19200" TraceMem="0B8000H,2,80,25"
+		BootVol1="RAM RamFS 8000 4096"
+		BootVol2="CD AosFS #0,R"
+		RamFS="RAMVolumes.New DiskFS.NewFS"
+		AosFS="DiskVolumes.New DiskFS.NewFS"
+		Boot1="Keyboard.Install;MousePS2.Install"
+		Boot2="DriverDatabase.Enable;UsbHubDriver.Install;UsbEhciPCI.Install;UsbUhci.Install;UsbOhci.Install"
+		Boot3="WindowManager.Install"
+		Boot4="Loopback.Install;Ethernet3Com90x.Install;RTL8139.Install;Intel8255x.Install;AM79C970.Install"
+		Boot5="Autostart.Run"
+		Boot6="InitNetwork.Init"
+		Boot="DisplayLinear.Install"
+		Init="117"
+		CacheSize="1000"
+		AutoNetConfig="1"
+		ATAPIForcePIO="1"
+		~
+	VirtualDisks.Uninstall VDISK0 ~
+	IsoImages.Make ../Test/A2.iso RAMDISK:A2.Dsk ~
+	FSTools.Unmount RAMDISK ~
 
-System.Show Copy ZIP archives to TEMP:  ~
-FSTools.CopyTo -i TEMP: ../Test/
-	Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip
-	GuiApplicationsMini.zip GuiApplications.zip
-	Fun.zip Testing.zip Build.zip EFI.zip Contributions.zip
-	KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip CompilerSrc.zip
-	GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip
-	FunSrc.zip TestingSrc.zip BuildSrc.zip EFISrc.zip ContributionsSrc.zip
-	Education.zip EducationSrc.zip
-	Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
-	ScreenFonts.zip TrueTypeFonts.zip CjkFonts.zip
-	OberonSrc.zip OberonApplicationsSrc.zip OberonGadgetsSrc.zip
-	OberonVoyager.zip OberonVoyagerSrc.zip OberonAnts.zip OberonAntsSrc.zip
-	Pr3Fonts.zip Pr6Fonts.zip
-	IDE.Bin CompileCommand.Tool ~
+	FSTools.CloseFiles ../Test/A2.iso ~
 
-FSTools.Watch TEMP ~
-FSTools.Unmount TEMP ~
+	System.Show CD image build time:  ~ System.Timer elapsed ~
 
-Partitions.SetConfig VDISK0#0
-	TraceMode="0" TracePort="1" TraceBPS="19200" TraceMem="0B8000H,2,80,25"
-	BootVol1="RAM RamFS 8000 4096"
-	BootVol2="CD AosFS #0,R"
-	RamFS="RAMVolumes.New DiskFS.NewFS"
-	AosFS="DiskVolumes.New DiskFS.NewFS"
-	Boot1="Keyboard.Install;MousePS2.Install"
-	Boot2="DriverDatabase.Enable;UsbHubDriver.Install;UsbEhciPCI.Install;UsbUhci.Install;UsbOhci.Install"
-	Boot3="WindowManager.Install"
-	Boot4="Loopback.Install;Ethernet3Com90x.Install;RTL8139.Install;Intel8255x.Install;AM79C970.Install"
-	Boot5="Autostart.Run"
-	Boot6="InitNetwork.Init"
-	Boot="DisplayLinear.Install"
-	Init="117"
-	CacheSize="1000"
-	AutoNetConfig="1"
-	ATAPIForcePIO="1"
-	~
-VirtualDisks.Uninstall VDISK0 ~
-IsoImages.Make ../Test/A2.iso RAMDISK:A2.Dsk ~
-FSTools.Unmount RAMDISK ~
-
-FSTools.CloseFiles ../Test/A2.iso ../Test/CD.Bin ../Test/CD.log ../Test/IDE.Bin ../Test/IDE.log ~
-
-System.Show CD image build time:  ~ System.Timer elapsed ~
 ~~
 
-# Step 3b: Create image for bootable CD (A2mini.iso)
+######################################################
+# Step 3b: Create image for bootable CD (A2mini.iso) #
+######################################################
 
 System.DoCommands
 
-System.Timer start ~
+	System.Timer start ~
 
-FSTools.Mount RAMDISK RamFS 2000000 4096 ~
-FSTools.DeleteFiles RAMDISK:A2.Dsk ~
+	FSTools.DeleteFiles -i ../Test/A2mini.iso ~
 
-VirtualDisks.Create RAMDISK:A2.Dsk 80000 512 ~
-VirtualDisks.Install -c=80 -h=2 -s=18 -b=512 VDISK0 RAMDISK:A2.Dsk ~
+	PCAAMD64.Assemble OBLUnreal.Asm ~
+	PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
 
-Linker.Link \P../Test/ \.Obx ../Test/CD.Bin 0100000H 1000H
-	Kernel Traps ATADisks DiskVolumes RAMVolumes DiskFS Loader BootConsole ~
+	FSTools.Mount RAMDISK RamFS 25000 4096 ~
+	FSTools.DeleteFiles -i RAMDISK:A2.Dsk ~
 
-Partitions.Format VDISK0#0 AosFS 1024 ../Test/CD.Bin ~
-FSTools.Mount TEMP AosFS VDISK0#0 ~
+	VirtualDisks.Create RAMDISK:A2.Dsk 100000 512 ~
+	VirtualDisks.Install -c=80 -h=2 -s=18 -b=512 VDISK0 RAMDISK:A2.Dsk ~
 
-ZipTool.Delete ../Test/Applications.zip InstallerPackages.XML ~
-ZipTool.Add --nopath ../Test/Applications.zip ../Test/InstallerPackages.XML ~
+	Partitions.Format VDISK0#0 AosFS -1 ../Test/CD.Bin ~ (* -1 makes sure that actual boot file size is taken as offset for AosFS *)
+	FSTools.Mount TEMP AosFS VDISK0#0 ~
 
-ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
-	Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Compiler.zip GuiApplicationsMini.zip Build.zip
-	KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip  CompilerSrc.zip GuiApplicationsMiniSrc.zip BuildSrc.zip
-	ScreenFonts.zip ~
+	ZipTool.Delete -i ../Test/Applications.zip InstallerPackages.XML ~
+	ZipTool.Add -i --nopath ../Test/Applications.zip ../Test/InstallerPackages.XML ~
 
-FSTools.Watch TEMP ~
-FSTools.Unmount TEMP ~
+	ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
+		Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Compiler.zip GuiApplicationsMini.zip Build.zip
+		KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip  CompilerSrc.zip GuiApplicationsMiniSrc.zip BuildSrc.zip
+		ScreenFonts.zip ~
 
-Partitions.SetConfig VDISK0#0
-	TraceMode="0" TracePort="1" TraceBPS="19200" TraceMem="0B8000H,2,80,25"
-	BootVol1="RAM RamFS 8000 4096"
-	BootVol2="CD AosFS #0,R"
-	RamFS="RAMVolumes.New DiskFS.NewFS"
-	AosFS="DiskVolumes.New DiskFS.NewFS"
-	Boot1="Keyboard.Install;MousePS2.Install"
-	Boot2="DriverDatabase.Enable;UsbHubDriver.Install;UsbEhciPCI.Install;UsbUhci.Install;UsbOhci.Install"
-	Boot3="WindowManager.Install"
-	Boot5="Autostart.Run"
-	Boot="DisplayLinear.Install"
-	Init="117"
-	CacheSize="1000"
-	AutoNetConfig="1"
-	ATAPIForcePIO="1"
-	~
-VirtualDisks.Uninstall VDISK0 ~
-IsoImages.Make ../Test/A2mini.iso RAMDISK:A2.Dsk ~
-FSTools.Unmount RAMDISK ~
+	FSTools.Watch TEMP ~
+	FSTools.Unmount TEMP ~
 
-System.Show CD image build time:  ~ System.Timer elapsed ~
+	Partitions.SetConfig VDISK0#0
+		TraceMode="0" TracePort="1" TraceBPS="19200" TraceMem="0B8000H,2,80,25"
+		BootVol1="RAM RamFS 8000 4096"
+		BootVol2="CD AosFS #0,R"
+		RamFS="RAMVolumes.New DiskFS.NewFS"
+		AosFS="DiskVolumes.New DiskFS.NewFS"
+		Boot1="Keyboard.Install;MousePS2.Install"
+		Boot2="DriverDatabase.Enable;UsbHubDriver.Install;UsbEhciPCI.Install;UsbUhci.Install;UsbOhci.Install"
+		Boot3="WindowManager.Install"
+		Boot5="Autostart.Run"
+		Boot="DisplayLinear.Install"
+		Init="117"
+		CacheSize="1000"
+		AutoNetConfig="1"
+		ATAPIForcePIO="1"
+		~
+	VirtualDisks.Uninstall VDISK0 ~
+	IsoImages.Make ../Test/A2mini.iso RAMDISK:A2.Dsk ~
+	FSTools.Unmount RAMDISK ~
+
+	FSTools.CloseFiles ../Test/A2mini.iso ~
+
+	System.Show CD image build time:  ~ System.Timer elapsed ~
+
 ~~
 
-***********************************************************************
-# Step 1: Compile modules and generate ZIP packages
-Release.Build --path="../Test/" --build --zip --xml Bios32 ~
-
-# Step 3c: Create image for bootable HDD (A2HDD.img)
+######################################################
+# Step 3c: Create image for bootable HDD (A2HDD.img) #
+######################################################
 
 System.DoCommands
 
-System.Timer start ~
+	System.Timer start ~
 
-PCAAMD64.Assemble OBLUnreal.Asm ~
-PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
-PCAAMD64.Assemble BootManager.Asm ~
-BootManager.Split BootManager.Bin ~
+	PCAAMD64.Assemble OBLUnreal.Asm ~
+	PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
+	PCAAMD64.Assemble BootManager.Asm ~
+	BootManager.Split BootManager.Bin ~
 
-FSTools.DeleteFiles -i ../Test/A2HDD.img ~
+	VirtualDisks.Create ../Test/A2HDD.img 320000 512 ~
+	VirtualDisks.Install -b=512 VDISK0 ../Test/A2HDD.img ~
 
-VirtualDisks.Create ../Test/A2HDD.img 320000 512 ~
-VirtualDisks.Install -b=512 VDISK0 ../Test/A2HDD.img ~
+	Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~
+	Partitions.InstallBootManager VDISK0#0 BootManagerMBR.Bin BootManagerTail.Bin ~
+	Partitions.Create VDISK0#1 76 150 ~
 
-Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/HDD.Bin
-	Kernel Traps
-	ATADisks
-	DiskVolumes DiskFS Loader BootConsole ~
+	Partitions.Format VDISK0#1 AosFS -1 ../Test/IDE.Bin ~ (* -1 makes sure that actual boot file size is taken as offset for AosFS *)
+	FSTools.Mount TEMP AosFS VDISK0#1 ~
 
-Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~
-Partitions.InstallBootManager VDISK0#0 BootManagerMBR.Bin BootManagerTail.Bin ~
-Partitions.Create VDISK0#1 76 150 ~
+	ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
+		Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip CompilerSrc.zip
+		GuiApplicationsMini.zip GuiApplications.zip Fun.zip Contributions.zip Build.zip EFI.zip
+		Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
+		KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip
+		GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip FunSrc.zip BuildSrc.zip
+		ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
 
-Partitions.Format VDISK0#1 AosFS -1 ../Test/HDD.Bin ~ (* -1 makes sure that actual boot file size is taken as offset for AosFS *)
-FSTools.Mount TEMP AosFS VDISK0#1 ~
+	FSTools.Watch TEMP ~
+	FSTools.Unmount TEMP ~
 
-ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
-	Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip CompilerSrc.zip
-	GuiApplicationsMini.zip GuiApplications.zip Fun.zip Contributions.zip Build.zip EFI.zip
-	Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
-	KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip FunSrc.zip BuildSrc.zip
-	ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
+	Partitions.SetConfig VDISK0#1
+		TraceMode="1" TracePort="1" TraceBPS="115200"
+		BootVol1="AOS AosFS IDE0#1"
+		AosFS="DiskVolumes.New DiskFS.NewFS"
+		CacheSize="1000"
+		ExtMemSize="512"
+		MaxProcs="-1"
+		ATADetect="legacy"
+		Init="117"
+		Boot="DisplayLinear.Install"
+		Boot1="Keyboard.Install;MousePS2.Install"
+		Boot2="DriverDatabase.Enable;UsbHubDriver.Install;UsbEhciPCI.Install;UsbUhci.Install;UsbOhci.Install"
+		Boot3="WindowManager.Install"
+		Boot4="Autostart.Run"
+	~
+	VirtualDisks.Uninstall VDISK0 ~
 
-FSTools.Watch TEMP ~
-FSTools.Unmount TEMP ~
+	System.Show HDD image build time: ~ System.Timer elapsed ~
 
-Partitions.SetConfig VDISK0#1
-	TraceMode="1" TracePort="1" TraceBPS="115200"
-	BootVol1="AOS AosFS IDE0#1"
-	AosFS="DiskVolumes.New DiskFS.NewFS"
-	CacheSize="1000"
-	ExtMemSize="512"
-	MaxProcs="-1"
-	ATADetect="legacy"
-	Init="117"
-	Boot="DisplayLinear.Install"
-	Boot1="Keyboard.Install;MousePS2.Install"
-	Boot2="DriverDatabase.Enable;UsbHubDriver.Install;UsbEhciPCI.Install;UsbUhci.Install;UsbOhci.Install"
-	Boot3="WindowManager.Install"
-	Boot4="Autostart.Run"
-~
-VirtualDisks.Uninstall VDISK0 ~
+	FSTools.CloseFiles ../Test/A2HDD.img ~
 
-System.Show HDD image build time: ~ System.Timer elapsed ~
+~~
 
-FSTools.CloseFiles ../Test/A2HDD.img ~
+######################################################
+# Step 3d: Create image for bootable USB (A2USB.img) #
+######################################################
 
-~
+System.DoCommands
+
+	System.Timer start ~
+
+	PCAAMD64.Assemble OBLUnreal.Asm ~
+	PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
+	PCAAMD64.Assemble BootManager.Asm ~
+	BootManager.Split BootManager.Bin ~
+
+	FSTools.DeleteFiles -i ../Test/A2USB.img ~
+
+	VirtualDisks.Create ../Test/A2USB.img 320000 512 ~
+	VirtualDisks.Install -b=512 VDISK0 ../Test/A2USB.img ~
+
+	Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~
+	Partitions.InstallBootManager VDISK0#0 BootManagerMBR.Bin BootManagerTail.Bin ~
+	Partitions.Create VDISK0#1 76 150 ~
+
+	Partitions.Format VDISK0#1 AosFS -1 ../Test/USB.Bin ~ (* -1 makes sure that actual boot file size is taken as offset for AosFS *)
+	FSTools.Mount TEMP AosFS VDISK0#1 ~
+
+	ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
+		Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip CompilerSrc.zip
+		GuiApplicationsMini.zip GuiApplications.zip Fun.zip Contributions.zip Build.zip EFI.zip
+		Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
+		KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip
+		GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip FunSrc.zip BuildSrc.zip
+		ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
+
+	System.Show Copy IDE.Bin TEMP:  ~
+	FSTools.CopyTo -i TEMP: ../Test/
+		IDE.Bin ~
+
+	FSTools.Watch TEMP ~
+	FSTools.Unmount TEMP ~
+
+	Partitions.SetConfig VDISK0#1
+		TraceMode="1" TracePort="1" TraceBPS="115200"
+		BootVol1="AOS AosFS USB0#1"
+		AosFS="DiskVolumes.New DiskFS.NewFS"
+		CacheSize="1000"
+		ExtMemSize="512"
+		MaxProcs="-1"
+		ATADetect="legacy"
+		Init="117"
+		Boot="DisplayLinear.Install"
+		Boot1="Keyboard.Install;MousePS2.Install"
+		Boot2="DriverDatabase.Enable;UsbHubDriver.Install;UsbEhciPCI.Install;UsbUhci.Install;UsbOhci.Install"
+		Boot3="WindowManager.Install"
+		Boot4="Autostart.Run"
+	~
+	VirtualDisks.Uninstall VDISK0 ~
+
+	System.Show USB image build time: ~ System.Timer elapsed ~
+
+	FSTools.CloseFiles ../Test/A2USB.img ~
+
+~~
+
+
+
+
 
 
 # Step 3d: Create image for bootable H.D.D.  (A2HDD.img) for VirtualBox
@@ -296,77 +374,10 @@ System.Show HDD image build time:  ~ System.Timer elapsed ~
 # Step 1: Compile modules and generate ZIP packages
 Release.Build --path="../Test/" --build --zip --xml Bios32 ~
 
-# Step 3e: Create image for bootable USB (A2USB.img)
 
-System.DoCommands
 
-System.Timer start ~
-
-PCAAMD64.Assemble OBLUnreal.Asm ~
-PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
-PCAAMD64.Assemble BootManager.Asm ~
-BootManager.Split BootManager.Bin ~
-
-FSTools.DeleteFiles -i ../Test/A2USB.img ~
-
-VirtualDisks.Create ../Test/A2USB.img 320000 512 ~
-VirtualDisks.Install -b=512 VDISK0 ../Test/A2USB.img ~
-
-Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/USB.Bin
-	Kernel Traps ATADisks
-	UsbHubDriver UsbEhci UsbEhciPCI UsbStorageBoot
-	DiskVolumes DiskFS Loader BootConsole ~
-
-(* Needed for further system installation *)
-Linker.Link --path=../Test/ --platform=Bios32 --fileName=../Test/IDE.Bin
-	Kernel Traps ATADisks DiskVolumes DiskFS Loader BootConsole ~
-
-Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~
-Partitions.InstallBootManager VDISK0#0 BootManagerMBR.Bin BootManagerTail.Bin ~
-Partitions.Create VDISK0#1 76 150 ~
-
-Partitions.Format VDISK0#1 AosFS -1 ../Test/USB.Bin ~ (* -1 makes sure that actual boot file size is taken as offset for AosFS *)
-FSTools.Mount TEMP AosFS VDISK0#1 ~
-
-ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
-	Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip CompilerSrc.zip
-	GuiApplicationsMini.zip GuiApplications.zip Fun.zip Contributions.zip Build.zip EFI.zip
-	Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
-	KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip FunSrc.zip BuildSrc.zip
-	ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
-
-System.Show Copy IDE.Bin TEMP:  ~
-FSTools.CopyTo -i TEMP: ../Test/
-	IDE.Bin ~
-
-FSTools.Watch TEMP ~
-FSTools.Unmount TEMP ~
-
-Partitions.SetConfig VDISK0#1
-	TraceMode="1" TracePort="1" TraceBPS="115200"
-	BootVol1="AOS AosFS USB0#1"
-	AosFS="DiskVolumes.New DiskFS.NewFS"
-	CacheSize="1000"
-	ExtMemSize="512"
-	MaxProcs="-1"
-	ATADetect="legacy"
-	Init="117"
-	Boot="DisplayLinear.Install"
-	Boot1="Keyboard.Install;MousePS2.Install"
-	Boot2="DriverDatabase.Enable;UsbHubDriver.Install;UsbEhciPCI.Install;UsbUhci.Install;UsbOhci.Install"
-	Boot3="WindowManager.Install"
-	Boot4="Autostart.Run"
-~
-VirtualDisks.Uninstall VDISK0 ~
-
-System.Show USB image build time: ~ System.Timer elapsed ~
-
-FSTools.CloseFiles ../Test/A2USB.img ~
-
-~
 use this to test machine with autoreboot
 	Boot5="Reboot.Do 10000 reboot"
-
 
 WinDisks.Install E: RW ~
 

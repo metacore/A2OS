@@ -743,7 +743,7 @@ END BootShell.
 
 System.DoCommands
 
-	Linker.Link \P../Test/ \.Obx ../Test/IDE.Bin 0100000H 1000H Kernel Traps
+	Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/IDE.Bin Kernel Traps
 		ATADisks DiskVolumes DiskFS Keyboard BootShell BootConsole ~
 
 	VirtualDisks.Install VM0 E:/Private/A2/WinAos/VM/Old-f001.vmdk ~
@@ -755,14 +755,18 @@ System.DoCommands
 
 System.DoCommands
 
-	FSTools.DeleteFiles BootShell.img ~
+	FSTools.DeleteFiles -i ../Test/BootShell.img ../Test/CD.Bin ~
 
-	VirtualDisks.Create BootShell.img 2048 512 ~
-	VirtualDisks.Install -c=80 -h=2 -s=18 -b=512 VDISK0 BootShell.img ~
+	PCAAMD64.Assemble OBLUnreal.Asm ~
+	PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
 
-	Linker.Link \P../Test/ \.Obx ../Test/CD.Bin 0100000H 1000H Kernel Traps ProcessInfo System Keyboard BootShell BootConsole ~
+	VirtualDisks.Create ../Test/BootShell.img 3000 512 ~
+	VirtualDisks.Install -c=80 -h=2 -s=18 -b=512 VDISK0 ../Test/BootShell.img ~
 
-	Partitions.Format VDISK0#0 AosFS 640 ../Test/CD.Bin ~
+	Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/CD.Bin
+	  Kernel Traps ProcessInfo System Keyboard BootShell BootConsole ~
+
+	Partitions.Format VDISK0#0 AosFS -1 ../Test/CD.Bin ~
 
 	Partitions.SetConfig VDISK0#0
 		TraceMode="4" TracePort="1" TraceBPS="115200"
@@ -772,6 +776,8 @@ System.DoCommands
 	~
 	VirtualDisks.Uninstall VDISK0 ~
 
-	IsoImages.Make A2Diagnosis.iso BootShell.img ~
+	IsoImages.Make ../Test/A2Diagnosis.iso ../Test/BootShell.img ~
+
+	FSTools.CloseFiles ../Test/A2Diagnosis.iso ../Test/BootShell.img ~
 
 ~~

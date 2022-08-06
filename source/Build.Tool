@@ -41,20 +41,34 @@ System.DoCommands
 
 System.Timer start ~
 
-FSTools.Mount RAMDISK RamFS 2000000 4096 ~
-FSTools.DeleteFiles RAMDISK:A2.Dsk ~
+FSTools.DeleteFiles -i ../Test/A2.iso ../Test/CD.Bin ../Test/IDE.Bin  ~
 
-VirtualDisks.Create RAMDISK:A2.Dsk 320000 512 ~
+(*PCAAMD64.Assemble OBLUnreal.Asm ~
+PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~*)
+PCAAMD64.Assemble OBL.Asm ~
+PartitionsLib.SetBootLoaderFile OBL.Bin ~
+
+FSTools.Mount RAMDISK RamFS 100000 4096 ~
+FSTools.DeleteFiles -i RAMDISK:A2.Dsk ~
+
+VirtualDisks.Create RAMDISK:A2.Dsk 400000 512 ~
 VirtualDisks.Install -c=80 -h=2 -s=18 -b=512 VDISK0 RAMDISK:A2.Dsk  ~
 
-Linker.Link \P../Test/ \.Obx ../Test/CD.Bin 0100000H 1000H
+(* Linker.Link \P../Test/ \.Obx ../Test/CD.Bin 0100000H 1000H
+	Kernel Traps ATADisks DiskVolumes RAMVolumes DiskFS Loader BootConsole ~ *)
+
+Linker.Link --path=../Test/ --platform=Bios32 --fileName=../Test/CD.Bin
 	Kernel Traps ATADisks DiskVolumes RAMVolumes DiskFS Loader BootConsole ~
 
-Partitions.Format VDISK0#0 AosFS 1024 ../Test/CD.Bin ~
+(* Needed for further system installation *)
+Linker.Link --path=../Test/ --platform=Bios32 --fileName=../Test/IDE.Bin
+	Kernel Traps ATADisks DiskVolumes DiskFS Loader BootConsole ~
+
+Partitions.Format VDISK0#0 AosFS -1 ../Test/CD.Bin ~
 FSTools.Mount TEMP AosFS VDISK0#0 ~
 
-ZipTool.Delete ../Test/Applications.zip InstallerPackages.XML ~
-ZipTool.Add --nopath ../Test/Applications.zip ../Test/InstallerPackages.XML ~
+ZipTool.Delete -i ../Test/Applications.zip InstallerPackages.XML ~
+ZipTool.Add -i --nopath ../Test/Applications.zip ../Test/InstallerPackages.XML ~
 
 ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
 	Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip CompilerSrc.zip
@@ -64,7 +78,7 @@ ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
 	ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
 
 System.Show Copy ZIP archives to TEMP:  ~
-FSTools.CopyTo TEMP: ../Test/
+FSTools.CopyTo -i TEMP: ../Test/
 	Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip
 	GuiApplicationsMini.zip GuiApplications.zip
 	Fun.zip Testing.zip Build.zip EFI.zip Contributions.zip
@@ -103,6 +117,8 @@ Partitions.SetConfig VDISK0#0
 VirtualDisks.Uninstall VDISK0 ~
 IsoImages.Make ../Test/A2.iso RAMDISK:A2.Dsk ~
 FSTools.Unmount RAMDISK ~
+
+FSTools.CloseFiles ../Test/A2.iso ../Test/CD.Bin ../Test/CD.log ../Test/IDE.Bin ../Test/IDE.log ~
 
 System.Show CD image build time:  ~ System.Timer elapsed ~
 ~~
@@ -299,9 +315,13 @@ VirtualDisks.Create ../Test/A2USB.img 320000 512 ~
 VirtualDisks.Install -b=512 VDISK0 ../Test/A2USB.img ~
 
 Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/USB.Bin
-	Kernel Traps
+	Kernel Traps ATADisks
 	UsbHubDriver UsbEhci UsbEhciPCI UsbStorageBoot
 	DiskVolumes DiskFS Loader BootConsole ~
+
+(* Needed for further system installation *)
+Linker.Link --path=../Test/ --platform=Bios32 --fileName=../Test/IDE.Bin
+	Kernel Traps ATADisks DiskVolumes DiskFS Loader BootConsole ~
 
 Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~
 Partitions.InstallBootManager VDISK0#0 BootManagerMBR.Bin BootManagerTail.Bin ~
@@ -316,6 +336,10 @@ ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
 	Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
 	KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip FunSrc.zip BuildSrc.zip
 	ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
+
+System.Show Copy IDE.Bin TEMP:  ~
+FSTools.CopyTo -i TEMP: ../Test/
+	IDE.Bin ~
 
 FSTools.Watch TEMP ~
 FSTools.Unmount TEMP ~
@@ -344,7 +368,7 @@ FSTools.CloseFiles ../Test/A2USB.img ~
 ~
 use this to test machine with autoreboot
 	Boot5="Reboot.Do 10000 reboot"
-	
+
 
 WinDisks.Install E: RW ~
 

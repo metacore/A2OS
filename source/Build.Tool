@@ -43,10 +43,8 @@ System.Timer start ~
 
 FSTools.DeleteFiles -i ../Test/A2.iso ../Test/CD.Bin ../Test/IDE.Bin  ~
 
-(*PCAAMD64.Assemble OBLUnreal.Asm ~
-PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~*)
-PCAAMD64.Assemble OBL.Asm ~
-PartitionsLib.SetBootLoaderFile OBL.Bin ~
+PCAAMD64.Assemble OBLUnreal.Asm ~
+PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
 
 FSTools.Mount RAMDISK RamFS 100000 4096 ~
 FSTools.DeleteFiles -i RAMDISK:A2.Dsk ~

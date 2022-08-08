@@ -510,6 +510,8 @@ TYPE
 								stack.PushA(ADDRESSOF(v(StringValue).value[0]));
 								RETURN TRUE;
 							END;
+						ELSE
+							HALT(100);
 						END;
 					END;
 				END;
@@ -624,7 +626,7 @@ TYPE
 					SYSTEM.GET(address, s);
 					NEW(int, s);
 					RETURN int;
-			| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16 :
+			| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16, Reflection.sfTypeWORD :
 					SYSTEM.GET(address, i);
 					NEW(int, i);
 					RETURN int;

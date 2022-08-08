@@ -664,7 +664,7 @@ TYPE
 					s:= SIGNED8(h); SYSTEM.PUT(address, s);
 					RETURN TRUE;
 				END;
-			|Reflection.sfTypeINTEGER, Reflection.sfTypeSIGNED16:
+			|Reflection.sfTypeINTEGER, Reflection.sfTypeSIGNED16, Reflection.sfTypeWORD:
 				IF v.GetInt(h) THEN
 					i:= SIGNED16(h); SYSTEM.PUT(address, i);
 					RETURN TRUE;
@@ -699,6 +699,8 @@ TYPE
 					SYSTEM.PUT(address,set);
 					RETURN TRUE
 				END;
+			ELSE
+				HALT(100);
 			END;
 		END SetV;
 

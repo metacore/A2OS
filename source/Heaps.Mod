@@ -48,6 +48,8 @@ CONST
 	HeuristicStackInspectionGC* = 0;
 	MetaDataForStackGC* = 1;
 TYPE
+	Name* = ARRAY 96 OF CHAR;
+
 	RootObject* = OBJECT	(* ref. Linker0 *)
 		VAR nextRoot: RootObject;	(* for linking root objects during GC *)
 		PROCEDURE FindRoots*;	(** abstract *)
@@ -127,7 +129,7 @@ TYPE
 		tag: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
 		flags: SET;
 		mod: ADDRESS; (* module *)
-		name*: ARRAY 32 OF CHAR;
+		name*: Name;
 	END;
 
 	StaticTypeBlock*= POINTER TO StaticTypeDesc;

@@ -37,7 +37,12 @@ CONST
 
 TYPE
 	(* definitions for object-model loader support *)
+
+#IF COOP THEN
 	Name* = ARRAY 96 OF CHAR;
+#ELSE
+	Name* = Heaps.Name;
+#END
 
 	(* the correponding name array is protected from being GCed via module's internal pointer arrray
 		compiler generated!

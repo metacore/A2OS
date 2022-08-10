@@ -498,6 +498,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	# Generics
 	GenericCollections.Mod
 
+	WIN { Windows.HostLibs.Mod }
+	UNIX { Unix.HostLibs.Mod }
 END
 
 PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Device Drivers"
@@ -518,10 +520,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	NATIVE & ~BIOS { Beep.Mod }
 
 	# Pseudo sound driver for LinuxA2 and WinA2
-	
-	WIN { Windows.HostLibs.Mod }
-	UNIX { Unix.HostLibs.Mod }
-	
+
 	UNIX, WIN { OpenAL.Mod OpenALSound.Mod }
 
 	WIN { Windows.WinDisks.Mod } # direct windows disk access, implements Disks interface
@@ -776,8 +775,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	System.Mod
 	Reboot.Mod # Tool to reboot machine after delay (and write system reboot time to file)
 
-	WIN { Windows.PrecisionTimer.Mod Windows.HostLibs.Mod Windows.WinApplications.Mod }
-	UNIX { Unix.PrecisionTimer.Mod Unix.HostLibs.Mod }
+	WIN { Windows.PrecisionTimer.Mod Windows.WinApplications.Mod }
+	UNIX { Unix.PrecisionTimer.Mod }
 	UNIX, WIN { Stopwatch.Mod }
 
 	NATIVE {

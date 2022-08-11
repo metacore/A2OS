@@ -332,7 +332,8 @@ rk1:	push dword [si]	; save start & number
 
 rk2:	mov ax, 1	; max sectors that may be read on hd (max: 127 to stay in one segment)
 	cmp byte [drive], 80h	; hard disk?
-	jae short rk3	; yes, don't worry (can delete this to save space)
+	jb short rk3 ; by budden
+	; commented out by budden jae short rk3	; yes, don't worry (can delete this to save space)
 
 	mov ax, es
 	mov bx, ax
@@ -1395,7 +1396,7 @@ envbeg:	dw 0	; actual first char of env
 
 invalid:	db 'Invalid '
 init:	db 'Init',0
-hello1:	db ' loading',0
+hello1:	db ' loadIng',0
 backsp:	db 8,' ',8,0	; reply to backspace
 wrote:	db ' Done'	; reply to 'w'
 crlf:	db 13,10,0

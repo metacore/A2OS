@@ -63,8 +63,8 @@ System.DoCommands
 
 	FSTools.DeleteFiles -i ../Test/A2.iso ~
 
-	PCAAMD64.Assemble OBLUnreal.Asm ~
-	PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
+	PCAAMD64.Assemble OBLUnrealISO.Asm ~
+	PartitionsLib.SetBootLoaderFile OBLUnrealISO.Bin ~
 
 	FSTools.Mount RAMDISK RamFS 100000 4096 ~
 	FSTools.DeleteFiles -i RAMDISK:A2.Dsk ~
@@ -143,8 +143,8 @@ System.DoCommands
 
 	FSTools.DeleteFiles -i ../Test/A2mini.iso ~
 
-	PCAAMD64.Assemble OBLUnreal.Asm ~
-	PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
+	PCAAMD64.Assemble OBLUnrealISO.Asm ~
+	PartitionsLib.SetBootLoaderFile OBLUnrealISO.Bin ~
 
 	FSTools.Mount RAMDISK RamFS 25000 4096 ~
 	FSTools.DeleteFiles -i RAMDISK:A2.Dsk ~

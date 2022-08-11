@@ -757,8 +757,8 @@ System.DoCommands
 
 	FSTools.DeleteFiles -i ../Test/BootShell.img ../Test/CD.Bin ~
 
-	PCAAMD64.Assemble OBLUnreal.Asm ~
-	PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
+	PCAAMD64.Assemble OBLUnrealISO.Asm ~
+	PartitionsLib.SetBootLoaderFile OBLUnrealISO.Bin ~
 
 	VirtualDisks.Create ../Test/BootShell.img 3000 512 ~
 	VirtualDisks.Install -c=80 -h=2 -s=18 -b=512 VDISK0 ../Test/BootShell.img ~

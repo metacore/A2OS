@@ -331,15 +331,24 @@ rk1:	push dword [si]	; save start & number
 	push word [si+4]
 
 rk2:	mov ax, 1	; max sectors that may be read on hd (max: 127 to stay in one segment)
-	cmp byte [drive], 80h	; hard disk?
-	jae short rk3	; yes, don't worry (can delete this to save space)
 
-	mov ax, es
-	mov bx, ax
-	or ax, 4095	; ax = end of 64k area
-	sub ax, bx
-	inc ax	; ax = num of paras that may be read
-	shr ax, 5	; ax = num of sectors "   "  "   "
+; It seems that this comparison (cmp byte [drive], 80h) 
+; not needed nor for hard disk nor for Floppy emulated by CD.
+; We should just jump unconditionally to rk3.
+; This, definitely, will not work in case of real Floppy,
+; that is hard to distinguish from Floppy emulated by CD. This is for TODO.
+
+;	cmp byte [drive], 80h	; hard disk?
+
+	jmp short rk3
+
+;	jae short rk3	; yes, don't worry (can delete this to save space)
+;	mov ax, es
+;	mov bx, ax
+;	or ax, 4095	; ax = end of 64k area
+;	sub ax, bx
+;	inc ax	; ax = num of paras that may be read
+;	shr ax, 5	; ax = num of sectors "   "  "   "
 
 rk3:	mov cx, [si+4]	; cx = number of sectors
 	cmp ax, cx

@@ -19,9 +19,15 @@ Release.Build --path="../Test/" --build --zip --xml Bios64 ~
 # Step 2: Link boot files                            #
 ######################################################
 
+# Note:
+# Since USB.Bin gets too large (this already not a problem if OBLUnreal.Bin loader is used) when including all three host controller drivers,
+# USB.Bin only contains the host controller driver for high-speed USB (UsbEhci.Mod), assuming that the host supports it.
+# The low-/full-speed drivers (UsbUhci.Mod, UsbOhci.Mod) can be loaded later on-demand.
+# If you want to boot a computer that does not support high-speed USB, use USBSLOW.Bin
+
 System.DoCommands
 
-	FSTools.DeleteFiles -i ../Test/CD.Bin ../Test/IDE.Bin ../Test/USB.Bin  ~
+	FSTools.DeleteFiles -i ../Test/CD.Bin ../Test/IDE.Bin ../Test/USB.Bin ../Test/USBSLOW.Bin ../Test/SCSI.Bin ~
 
 	Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/CD.Bin
 		Kernel Traps ATADisks DiskVolumes RAMVolumes DiskFS Loader BootConsole ~
@@ -32,26 +38,18 @@ System.DoCommands
 	Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/USB.Bin
 		Kernel Traps ATADisks UsbHubDriver UsbEhci UsbEhciPCI UsbStorageBoot
 		DiskVolumes DiskFS Loader BootConsole ~
+		
+	Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/USBSLOW.Bin 
+		Kernel Traps UsbHubDriver UsbOhci UsbUhci UsbStorageBoot
+		DiskVolumes DiskFS Loader BootConsole ~
 
-	FSTools.CloseFiles ../Test/CD.Bin ../Test/CD.log
-		../Test/IDE.Bin ../Test/IDE.log ../Test/USB.Bin ../Test/USB.log ~
+	Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/SCSI.Bin
+		Kernel Traps Adaptec7 NCR810Disks  DiskVolumes DiskFS Loader BootConsole ~
+
+	FSTools.CloseFiles ../Test/CD.Bin ../Test/CD.log ../Test/IDE.Bin ../Test/IDE.log
+		../Test/USB.Bin ../Test/USB.log ../Test/USBSLOW.Bin ../Test/USBSLOW.log ../Test/SCSI.Bin ../Test/SCSI.log ~
 
 ~~
-
-# These boot images can't be built anymore because they get to large in terms of size
-Linker.Link \P../Test/ \.Obx ../Test/USB.Bin 0100000H 1000H Kernel Traps
-	UsbHubDriver UsbEhci UsbStorageBoot
-	DiskVolumes DiskFS Loader BootConsole ~
-Linker.Link \P../Test/ \.Obx ../Test/SCSI.Bin 0100000H 1000H Kernel Traps
-	Adaptec7 NCR810Disks  DiskVolumes DiskFS Loader BootConsole ~
-# Note:
-# Since USB.Bin gets too large when including all three host controller drivers,
-# USB.Bin only contains the host controller driver for high-speed USB (UsbEhci.Mod), assuming that the host supports it.
-# The low-/full-speed drivers (UsbUhci.Mod, UsbOhci.Mod) can be loaded later on-demand.
-# If you want to boot from a computer that does not support high-speed USB, use
-Linker.Link \P../Test/ \.Obx ../Test/USBSLOW.Bin 0100000H 1000H Kernel Traps
-	UsbHubDriver UsbOhci UsbUhci UsbStorageBoot
-	DiskVolumes DiskFS Loader BootConsole ~
 
 ######################################################
 # Step 3a: Create image for bootable CD (A2.iso)     #
@@ -63,13 +61,13 @@ System.DoCommands
 
 	FSTools.DeleteFiles -i ../Test/A2.iso ~
 
-	PCAAMD64.Assemble OBLUnrealISO.Asm ~
-	PartitionsLib.SetBootLoaderFile OBLUnrealISO.Bin ~
+	PCAAMD64.Assemble OBLUnreal.Asm ~
+	PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
 
 	FSTools.Mount RAMDISK RamFS 100000 4096 ~
 	FSTools.DeleteFiles -i RAMDISK:A2.Dsk ~
 
-	VirtualDisks.Create RAMDISK:A2.Dsk 400000 512 ~
+	VirtualDisks.Create RAMDISK:A2.Dsk 350000 512 ~
 	VirtualDisks.Install -c=80 -h=2 -s=18 -b=512 VDISK0 RAMDISK:A2.Dsk  ~
 
 	Partitions.Format VDISK0#0 AosFS -1 ../Test/CD.Bin ~ (* -1 makes sure that actual boot file size is taken as offset for AosFS *)
@@ -143,8 +141,8 @@ System.DoCommands
 
 	FSTools.DeleteFiles -i ../Test/A2mini.iso ~
 
-	PCAAMD64.Assemble OBLUnrealISO.Asm ~
-	PartitionsLib.SetBootLoaderFile OBLUnrealISO.Bin ~
+	PCAAMD64.Assemble OBLUnreal.Asm ~
+	PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
 
 	FSTools.Mount RAMDISK RamFS 25000 4096 ~
 	FSTools.DeleteFiles -i RAMDISK:A2.Dsk ~
@@ -205,7 +203,7 @@ System.DoCommands
 	PCAAMD64.Assemble BootManager.Asm ~
 	BootManager.Split BootManager.Bin ~
 
-	VirtualDisks.Create ../Test/A2HDD.img 320000 512 ~
+	VirtualDisks.Create ../Test/A2HDD.img 200000 512 ~
 	VirtualDisks.Install -b=512 VDISK0 ../Test/A2HDD.img ~
 
 	Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~
@@ -264,7 +262,7 @@ System.DoCommands
 
 	FSTools.DeleteFiles -i ../Test/A2USB.img ~
 
-	VirtualDisks.Create ../Test/A2USB.img 320000 512 ~
+	VirtualDisks.Create ../Test/A2USB.img 250000 512 ~
 	VirtualDisks.Install -b=512 VDISK0 ../Test/A2USB.img ~
 
 	Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~

@@ -12,7 +12,7 @@ CONST
 	AosFsName = "AosFS";
 
 	DefaultMBRFile = "OBEMBR.BIN";
-	DefaultBootLoader = "OBL.Bin";
+	DefaultBootLoader = "OBLUnreal.Bin";
 	DefaultBootfile = "IDE.Bin";
 	DefaultUsbBootfile = "USB.Bin";
 	DefaultBootManMBR = "BootManagerMBR.Bin";
@@ -649,7 +649,7 @@ TYPE
 			installLog.String(", Boot File: "); installLog.String(config.bootfile); installLog.String(") ... "); installLog.Update;
 			NEW(operation, disk, partition, out);
 			operation.SetParent(SELF);
-			operation.SetParameters(AosFsName, config.bootfile, -2, 0);
+			operation.SetParameters(AosFsName, config.bootfile, -1, 0);
 			operation.SetBlockingStart;
 			RETURN OperationDone(operation);
 		END DoFormatPartition;
@@ -1271,6 +1271,8 @@ BEGIN
 	END;
 END Install;
 
+BEGIN
+	PartitionsLib.InitBootLoader(DefaultBootLoader);
 END Installer.
 
 Installer.TestPackages Packages.XML ~

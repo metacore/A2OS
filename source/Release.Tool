@@ -284,9 +284,9 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	License.Text
 	OBEMBR.BIN												# MBR
-	BootManagerMBR.Bin BootManagerTail.Bin					# Boot manager
+	BootManagerMBR.Bin BootManagerTail.Bin			# Boot manager
 	BootManager.Bin BootManager.Text
-	OBL.Bin OBL.Text											# Boot loader
+	OBL.Bin OBL.Text OBLUnreal.Bin						# Boot loader
 	Setup.Text													# Documentation
 
 # Active Oberon run-time
@@ -1462,8 +1462,8 @@ PACKAGE Build ARCHIVE "Build.zip" SOURCE "BuildSrc.zip" DESCRIPTION "Build Tools
 	IsoImages.Mod
 	ReleaseThreadPool.Mod Release.Mod Release.Tool	# Build release tool
 	PETReleaseTree.Mod
-	OBEMBR4.ASM BootManager.Asm OBL.Asm # Asm
-	BootManager.Mod BootManager.Tool # Splits up BootManager.Bin into BootManagerMBR.Bin and BootManagerTail.Bin
+	OBEMBR4.ASM BootManager.Asm OBL.Asm OBLUnreal.Asm	# Asm
+	BootManager.Mod BootManager.Tool	# Splits up BootManager.Bin into BootManagerMBR.Bin and BootManagerTail.Bin
 END
 
 PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader and API"

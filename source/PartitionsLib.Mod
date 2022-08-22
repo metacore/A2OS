@@ -4120,21 +4120,32 @@ BEGIN
 	w.Int(k, 0); w.Char(suffix); w.Char("B");
 END WriteK;
 
+PROCEDURE InitBootLoader*(CONST fileName: ARRAY OF CHAR);
+VAR file: Files.File; context: Commands.Context;
+BEGIN
+	context := Commands.GetContext();
+	file := Files.Old(fileName);
+	IF file # NIL THEN
+		BootLoaderSize := (file.Length()(SIGNED32)-1) DIV BS + 1;
+		COPY(fileName, BootLoaderName);
+		context.out.String("PartitionsLib.BootLoaderName = ");
+		context.out.String(BootLoaderName); context.out.Ln;
+		context.out.String("PartitionsLib.BootLoaderSize =");
+		context.out.Int(BootLoaderSize, 1);context.out.Ln;
+	ELSE
+		context.error.String("File not present:");
+		context.error.String(fileName); context.error.Ln;
+	END;
+END InitBootLoader;
+
 PROCEDURE SetBootLoaderFile*(context: Commands.Context);
-VAR file: Files.File;fileName: Files.FileName;
+VAR fileName: Files.FileName;
 BEGIN
 	IF context.arg.GetString(fileName) THEN
-		file := Files.Old(fileName);
-		IF file # NIL THEN
-			BootLoaderSize := (file.Length()(SIGNED32)-1) DIV BS + 1;
-			COPY(fileName, BootLoaderName);
-			context.out.String("PartitionsLib.BootLoaderName = "); context.out.String(BootLoaderName); context.out.Ln;
-			context.out.String("PartitionsLib.BootLoaderSize ="); context.out.Int(BootLoaderSize,1);context.out.Ln;
-		ELSE
-			context.error.String("File not present:"); context.error.String(fileName); context.error.Ln;
-		END;
+		InitBootLoader(fileName);
 	ELSE
-		context.error.String("No file name specified.");  context.error.Ln;
+		context.error.String("No file name specified.");
+		context.error.Ln;
 	END;
 END SetBootLoaderFile;
 

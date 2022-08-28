@@ -225,11 +225,11 @@ System.DoCommands
 	FSTools.Unmount TEMP ~
 
 	Partitions.SetConfig VDISK0#1
-		TraceMode="1" TracePort="1" TraceBPS="115200"
+		TraceMode="4" TracePort="1" TraceBPS="115200"
 		BootVol1="AOS AosFS IDE0#1"
 		AosFS="DiskVolumes.New DiskFS.NewFS"
 		CacheSize="1000"
-		ExtMemSize="512"
+		ExtMemSize="64"
 		MaxProcs="-1"
 		ATADetect="legacy"
 		Init="117"

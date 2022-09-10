@@ -229,7 +229,7 @@ System.DoCommands
 		BootVol1="AOS AosFS IDE0#1"
 		AosFS="DiskVolumes.New DiskFS.NewFS"
 		CacheSize="1000"
-		ExtMemSize="64"
+		ExtMemSize="512"
 		MaxProcs="-1"
 		ATADetect="legacy"
 		Init="117"

@@ -2586,8 +2586,8 @@ PROCEDURE GetModuleInfo(
 			GetIdentifier(in, name);
 			IF (name # "") THEN
 				SkipComments(in);
-				GetContext(in, "I", "N", context, diagnostics, error);
 				SkipGenericParameters(in);
+				GetContext(in, "I", "N", context, diagnostics, error);
 				in.Char(ch);
 				IF ~error & (ch # ";") THEN
 					error := TRUE;
@@ -2614,6 +2614,7 @@ PROCEDURE GetModuleInfo(
 		GetIdentifier(in, import);
 		IF (import # "") THEN
 			GetContext(in, ':', '=', import, diagnostics, error);
+			SkipGenericParameters(in);
 			IF ~error THEN GetContext(in, "I", "N", context, diagnostics, error); END;
 		ELSE
 			error := TRUE;
@@ -2647,7 +2648,6 @@ PROCEDURE GetModuleInfo(
 					END;
 
 					SkipComments(in);
-					SkipGenericParameters(in);
 					in.Char(ch);
 					IF (ch = ",") THEN
 						(* continue *)

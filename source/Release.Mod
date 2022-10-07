@@ -110,6 +110,7 @@ CONST
 	ImportsSystem = 0;
 	SourceCode = 1;
 	HasReleasePrefix = 2; (* filename has prefix <ReleasePrefix> *)
+	Template = 3; (* module template *)
 
 	(* Package.installMode *)
 	Undefined = 0;
@@ -469,6 +470,11 @@ TYPE
 			RETURN SourceCode IN flags;
 		END IsSourceCode;
 
+		PROCEDURE IsTemplate*() : BOOLEAN;
+		BEGIN
+			RETURN Template IN flags;
+		END IsTemplate;
+
 		PROCEDURE CheckImports*(diagnostics : Diagnostics.Diagnostics; build : BuildObj; VAR error : BOOLEAN);
 		VAR file : File; i : SIZE; temp, message : ARRAY 256 OF CHAR;
 		BEGIN
@@ -712,6 +718,7 @@ TYPE
 			tw.SetFontStyle({});
 			tw.String("System.Timer start ~"); tw.Ln;
 			IF link THEN
+				ClearTemplates(); (* remove module templates from file list *)
 				tw.String(linker);
 				GetLinkerOptions(temp);
 			ELSE
@@ -1218,6 +1225,19 @@ TYPE
 				file := file.next;
 			END;
 		END ClearMarks;
+
+		(** Clear the doCompile flag of template files contained in this build and not excluded *)
+		PROCEDURE ClearTemplates;
+		VAR file : File;
+		BEGIN
+			file := files;
+			WHILE (file # NIL) DO
+				IF file.IsSourceCode() & file.IsTemplate() & file.IsInRelease(include) & ~PackageIsExcluded(file.package) THEN
+					file.doCompile := FALSE;
+				END;
+				file := file.next;
+			END;
+		END ClearTemplates;
 
 		(** Set the doCompile flag of all non-excluded source code files in this build that depend on the specified file *)
 		PROCEDURE MarkFiles(CONST filename : Files.FileName; VAR inBuild : BOOLEAN; VAR nofNewMarks : SIZE);
@@ -2527,6 +2547,7 @@ PROCEDURE GetModuleInfo(
 		in.SkipWhitespace;
 		ch := in.Peek();
 		IF ch = "(" THEN
+			INCL(mi.flags, Template);
 			in.Char(ch);
 			REPEAT
 				in.Char(ch);

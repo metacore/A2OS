@@ -613,6 +613,7 @@ TYPE
 			i: SIGNED16;
 			l: SIGNED32;
 			h: SIGNED64;
+			w: INTEGER;
 
 			int: IntegerValue;
 			a: ANY;
@@ -626,7 +627,7 @@ TYPE
 					SYSTEM.GET(address, s);
 					NEW(int, s);
 					RETURN int;
-			| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16, Reflection.sfTypeWORD :
+			| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16:
 					SYSTEM.GET(address, i);
 					NEW(int, i);
 					RETURN int;
@@ -638,6 +639,10 @@ TYPE
 					SYSTEM.GET(address, h);
 					NEW(int,SIGNED32(h));
 					RETURN int;
+			| Reflection.sfTypeWORD:
+				SYSTEM.GET(address, w);
+				NEW(int, w);
+				RETURN int;
 			| Reflection.sfTypePointerToRecord, Reflection.sfTypeANY, Reflection.sfTypeOBJECT, Reflection.sfTypePointerToArray:
 				SYSTEM.GET(address, a);
 					NEW(any, a);
@@ -649,7 +654,7 @@ TYPE
 
 		PROCEDURE SetV*(v: Value): BOOLEAN;
 		VAR
-			s: SIGNED8; i: SIGNED16; l: SIGNED32; h: SIGNED64;
+			s: SIGNED8; i: SIGNED16; l: SIGNED32; h: SIGNED64; w: INTEGER;
 			r: FLOAT32; x: FLOAT64;
 			b: BOOLEAN;
 			set: SET;
@@ -664,7 +669,7 @@ TYPE
 					s:= SIGNED8(h); SYSTEM.PUT(address, s);
 					RETURN TRUE;
 				END;
-			|Reflection.sfTypeINTEGER, Reflection.sfTypeSIGNED16, Reflection.sfTypeWORD:
+			|Reflection.sfTypeINTEGER, Reflection.sfTypeSIGNED16:
 				IF v.GetInt(h) THEN
 					i:= SIGNED16(h); SYSTEM.PUT(address, i);
 					RETURN TRUE;
@@ -678,6 +683,11 @@ TYPE
 				IF v.GetInt(h) THEN
 					SYSTEM.PUT(address, h);
 					RETURN TRUE
+				END;
+			| Reflection.sfTypeWORD:
+				IF v.GetInt(h) THEN
+					w:= INTEGER(h); SYSTEM.PUT(address, w);
+					RETURN TRUE;
 				END;
 			|Reflection.sfTypeREAL:
 				IF v.GetReal(x) THEN

@@ -408,6 +408,11 @@ BEGIN
 	IF ch < str2[i] THEN RETURN CmpLess ELSE RETURN CmpGreater END
 END Compare;
 
+PROCEDURE LessString*(l, r: Strings.String): BOOLEAN;
+BEGIN
+	RETURN Compare(l^, r^) < 0
+END LessString;
+
 PROCEDURE CompareToUnicode*(CONST utf8 : ARRAY OF CHAR; CONST unicode : ARRAY OF SIGNED32) : INTEGER;
 VAR len, i, j: SIZE; char, ucs: SIGNED32; result: INTEGER; valid, abort : BOOLEAN;
 BEGIN

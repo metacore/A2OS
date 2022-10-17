@@ -5,7 +5,7 @@ IMPORT
 	Math, Repositories, WMRepositories, WMUtilities,
 	WMRectangles, WMGraphics, WMMessages, WMWindowManager, WMRestorable, WMProperties, WMComponents, WMStandardComponents, WMEditors,
 	WMTrees, WMInspectionComponents, WMDialogs, Models, Configuration,
-	StringCollections := GenericCollections(Strings.String, LessString);
+	StringCollections := GenericCollections(Strings.String, UTF8Strings.LessString);
 
 CONST
 	WindowWidth = 130; WindowHeight = 320;
@@ -4024,11 +4024,6 @@ BEGIN
 	ignore := Repositories.ThisRepository("Shapes");
 END LoadRepositories;
 
-PROCEDURE LessString(l, r: Strings.String): BOOLEAN;
-BEGIN
-	RETURN UTF8Strings.Compare(l^, r^) < 0
-END LessString;
-
 PROCEDURE GetId() : SIGNED32;
 BEGIN {EXCLUSIVE}
 	INC(nextId);
@@ -4068,4 +4063,4 @@ END WMBuilder.
 
 WMBuilder.Open ~
 
-System.Free WMBuilder WMInspectionComponents GenericCollections(Strings_String,WMBuilder_LessString) ~
+System.Free WMBuilder WMInspectionComponents GenericCollections(Strings_String,UTF8Strings_LessString) ~

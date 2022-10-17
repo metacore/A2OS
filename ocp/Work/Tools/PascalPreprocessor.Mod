@@ -2,7 +2,7 @@ MODULE PascalPreprocessor;
 
 IMPORT
 	Commands, Files, Streams, Strings,
-	Containers, PreciseTimer;
+	Containers, PrecisionTimer;
 
 CONST
 	Eot             = 0X;
@@ -96,20 +96,31 @@ CONST
 	sym_ord         = 84;
 	sym_hex         = 85;
 	sym_hex_char    = 86;
+	sym_byte			 = 87;
+	sym_word			 = 88;
+	sym_dword			 = 89;
 
 	(* Oberon only keywords *)
 	KW_ANY          = "ANY";
 	KW_CODE         = "CODE";
-	KW_HUGEINT      = "HUGEINT";
 	KW_IMPORT       = "IMPORT";
-	KW_LONGREAL     = "LONGREAL";
+	KW_FLOAT32      = "FLOAT32";	
+	KW_FLOAT64      = "FLOAT64";
 	KW_MODULE       = "MODULE";
+	KW_SIGNED8		 = "SIGNED8";
+	KW_SIGNED16		 = "SIGNED16";	
+	KW_SIGNED32		 = "SIGNED32";
+	KW_SIGNED64		 = "SIGNED64";
+	KW_UNSIGNED8		 = "UNSIGNED8";
+	KW_UNSIGNED16	 = "UNSIGNED16";	
+	KW_UNSIGNED32	 = "UNSIGNED32";
 	(* Pascal and Pascal-Oberon common keywords *)
 	KW_AND          = "AND";
 	KW_ARRAY        = "ARRAY";
 	KW_ASM          = "ASM";
 	KW_BEGIN        = "BEGIN";
 	KW_BOOLEAN      = "BOOLEAN";
+	KW_BYTE				 = "BYTE";
 	KW_CASE         = "CASE";
 	KW_CHAR         = "CHAR";
 	KW_CHR          = "CHR";
@@ -169,18 +180,21 @@ CONST
 	KW_VAR          = "VAR";
 	KW_WHILE        = "WHILE";
 	KW_WITH         = "WITH";
+	KW_WORD				 = "WORD";
+	KW_CARDINAL		 = "CARDINAL";
+	KW_DWORD			 = "DWORD";
 
 TYPE
 
 	Scanner = OBJECT
 	VAR
 		buffer: Strings.String;
-		pos: LONGINT;	(*pos in buffer*)
+		pos: SIGNED32;	(*pos in buffer*)
 		ch: CHAR;	(**look-ahead *)
 		str, strUp: ARRAY 1024 OF CHAR;
 		itemCompare: KeywordsMapItem;
-		sym: LONGINT;
-		lastpos, curpos, errpos: LONGINT;	(*pos in text*)
+		sym: SIGNED32;
+		lastpos, curpos, errpos: SIGNED32;	(*pos in text*)
 		cw: Streams.StringWriter;
 
 		PROCEDURE &Init;
@@ -200,9 +214,9 @@ TYPE
 			IF newChar[ORD(ch)] THEN INC(curpos) END; (* curpos := pos; *)
 		END NextChar;
 
-		PROCEDURE Str(VAR sym: LONGINT);
+		PROCEDURE Str(VAR sym: SIGNED32);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			och: CHAR;
 		BEGIN
 			i := 0; och := ch;
@@ -216,8 +230,8 @@ TYPE
 			sym := sym_string
 		END Str;
 
-		PROCEDURE Space(VAR sym: LONGINT);
-		VAR i: LONGINT;
+		PROCEDURE Space(VAR sym: SIGNED32);
+		VAR i: SIGNED32;
 		BEGIN
 			i := 1;
 			str[0] := ch;
@@ -231,9 +245,9 @@ TYPE
 			
 		END Space;
 
-		PROCEDURE Identifier(VAR sym: LONGINT);
+		PROCEDURE Identifier(VAR sym: SIGNED32);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN i := 0;
 			REPEAT
 				str[i] := ch; INC(i); NextChar
@@ -246,7 +260,7 @@ TYPE
 
 		PROCEDURE Hex;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			i := 1;
 			str[0] := ch;
@@ -264,7 +278,7 @@ TYPE
 		
 		PROCEDURE Num;
 		VAR
-			i, n: LONGINT;
+			i, n: SIGNED32;
 			strTemp: ARRAY 24 OF CHAR;
 		BEGIN
 			i := 1;
@@ -283,7 +297,7 @@ TYPE
 			END
 		END Num;
 
-		PROCEDURE CommentStar(VAR sym: LONGINT);
+		PROCEDURE CommentStar(VAR sym: SIGNED32);
 		BEGIN
 			cw.Reset;
 			NextChar;
@@ -313,7 +327,7 @@ TYPE
 			sym := sym_comment
 		END CommentStar;
 
-		PROCEDURE CommentBrace(VAR sym: LONGINT);
+		PROCEDURE CommentBrace(VAR sym: SIGNED32);
 		BEGIN
 			cw.Reset;
 			NextChar;
@@ -334,7 +348,7 @@ TYPE
 			sym := sym_comment
 		END CommentBrace;
 
-		PROCEDURE CommentLine(VAR sym: LONGINT);
+		PROCEDURE CommentLine(VAR sym: SIGNED32);
 		BEGIN
 			cw.Reset;
 			NextChar;
@@ -351,7 +365,7 @@ TYPE
 			sym := sym_comment
 		END CommentLine;
 
-		PROCEDURE Get(VAR s: LONGINT);
+		PROCEDURE Get(VAR s: SIGNED32);
 		BEGIN
 			REPEAT
 				WHILE ignoredChar[ORD(ch)] DO
@@ -438,7 +452,7 @@ TYPE
 	
 	KeywordsMapItem = POINTER TO RECORD
 		key: Strings.String;
-		sym: LONGINT;
+		sym: SIGNED32;
 	END;
 	
 	KeywordsMap = OBJECT(Containers.CustomSet)
@@ -453,12 +467,12 @@ TYPE
 			RETURN first(KeywordsMapItem).key^ = second(KeywordsMapItem).key^
 		END KeywordsMapItemsEqual;
 		
-		PROCEDURE KeywordsMapItemHash(item: ANY): LONGINT;
+		PROCEDURE KeywordsMapItemHash(item: ANY): SIGNED32;
 		BEGIN
 			RETURN Containers.HashString(item(KeywordsMapItem).key)
 		END KeywordsMapItemHash;
 				
-		PROCEDURE Add(CONST key: ARRAY OF CHAR; sym: LONGINT);
+		PROCEDURE Add(CONST key: ARRAY OF CHAR; sym: SIGNED32);
 		VAR
 			item: KeywordsMapItem;
 		BEGIN 
@@ -473,7 +487,7 @@ TYPE
 			RETURN dictionary.Contains(item)
 		END Contains;
 		
-		PROCEDURE Get*(item: KeywordsMapItem): LONGINT;
+		PROCEDURE Get*(item: KeywordsMapItem): SIGNED32;
 		VAR
 			p: ANY;
 		BEGIN
@@ -510,7 +524,7 @@ VAR
 
 	PROCEDURE InitReservedChars;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO LEN(reservedChar)-1 DO
 			IF CHR(i) <= 20X THEN	(* TAB, CR, ESC ... *)
@@ -531,7 +545,7 @@ VAR
 
 	PROCEDURE InitNewChar;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO LEN(newChar)-1 DO
 			(* UTF-8 encoded characters with bits 10XXXXXX do not start a new unicode character *)
@@ -545,7 +559,7 @@ VAR
 
 	PROCEDURE InitIgnoredChar;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO LEN(ignoredChar)-1 DO
 			ignoredChar[i] :=
@@ -555,7 +569,7 @@ VAR
 	
 	PROCEDURE InitHexChar;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		ch: CHAR;
 	BEGIN
 		FOR i := 0 TO LEN(hexChar) - 1 DO
@@ -574,6 +588,10 @@ VAR
 		mapKeywords.Add(KW_ASM, sym_code);
 		mapKeywords.Add(KW_BEGIN, sym_begin);
 		mapKeywords.Add(KW_BOOLEAN, sym_boolean);
+		mapKeywords.Add(KW_BYTE, sym_byte);
+		mapKeywords.Add(KW_WORD, sym_word);
+		mapKeywords.Add(KW_DWORD, sym_dword);
+		mapKeywords.Add(KW_CARDINAL, sym_dword);
 		mapKeywords.Add(KW_CASE, sym_case);
 		mapKeywords.Add(KW_CHAR, sym_char);
 		mapKeywords.Add(KW_CHR, sym_chr);
@@ -655,7 +673,7 @@ VAR
 		
 		PROCEDURE PackSpaces(VAR str: ARRAY OF CHAR);
 		VAR
-			iIn, iOut, nSP: LONGINT;
+			iIn, iOut, nSP: SIGNED32;
 		BEGIN
 			iIn := 0;
 			iOut := 0;
@@ -680,7 +698,7 @@ VAR
 			str[iOut] := 0X
 		END PackSpaces;
 		
-		PROCEDURE Case(sym: LONGINT);
+		PROCEDURE Case(sym: SIGNED32);
 		BEGIN
 			CASE sym OF
 			| sym_ident, sym_space: w.String(s.str);
@@ -740,12 +758,15 @@ VAR
 			| sym_boolean: w.String(KW_BOOLEAN);
 			| sym_case: w.String(KW_CASE);
 			| sym_char: w.String(KW_CHAR);
+			| sym_byte: w.String(KW_UNSIGNED8);
+			| sym_word: w.String(KW_UNSIGNED16);
+			| sym_dword: w.String(KW_UNSIGNED32);
 			| sym_chr: w.String(KW_CHR);
 			| sym_const: w.String(KW_CONST);
 			| sym_dec: w.String(KW_DEC);
 			| sym_div: w.String(KW_DIV);
 			| sym_do: w.String(KW_DO);
-			| sym_double: w.String(KW_LONGREAL);
+			| sym_double: w.String(KW_FLOAT64);
 			| sym_else: w.String(KW_ELSE);
 			| sym_end: w.String(KW_END);
 			| sym_exit: w.String(KW_EXIT);
@@ -760,9 +781,9 @@ VAR
 			| sym_in: w.String(KW_IN);
 			| sym_inc: w.String(KW_INC);
 			| sym_interface: WriteComment(KW_INTERFACE)
-			| sym_int64: w.String(KW_HUGEINT);
+			| sym_int64: w.String(KW_SIGNED64);
 			| sym_is: w.String(KW_IS);
-			| sym_longint: w.String(KW_LONGINT);
+			| sym_longint: w.String(KW_SIGNED32);
 			| sym_mod: w.String(KW_MOD);
 			| sym_module: w.String(KW_MODULE);
 			| sym_nil: w.String(KW_NIL);
@@ -776,9 +797,9 @@ VAR
 			| sym_procedure: w.String(KW_PROCEDURE);
 			| sym_record: w.String(KW_RECORD);
 			| sym_repeat: w.String(KW_REPEAT);
-			| sym_shortint: w.String(KW_SHORTINT);
-			| sym_single: w.String(KW_REAL);
-			| sym_smallint: w.String(KW_INTEGER);
+			| sym_shortint: w.String(KW_SIGNED8);
+			| sym_single: w.String(KW_FLOAT32);
+			| sym_smallint: w.String(KW_SIGNED16);
 			| sym_then: w.String(KW_THEN);
 			| sym_to: w.String(KW_TO);
 			| sym_true: w.String(KW_TRUE);
@@ -828,7 +849,7 @@ VAR
 	VAR
 		strFileName, strName, strExt: ARRAY 1024 OF CHAR;
 		ext: Ext;
-		t: HUGEINT;
+		t: PrecisionTimer.Counter;
 	BEGIN
 		context.out.Ln;
 		WHILE context.arg.GetString(strFileName) DO
@@ -842,12 +863,12 @@ VAR
 				ext := ext.extNext
 			END;
 			IF ext # NIL THEN
-				t := PreciseTimer.GetTicks();
+				t := PrecisionTimer.GetCounter();
 				PreprocessFile(context, strFileName);
-				t := PreciseTimer.GetTicks() - t;
+				t := PrecisionTimer.GetCounter() - t;
 				context.out.Ln;
 				context.out.String("Time: ");
-				context.out.Float(PreciseTimer.GetTime(t), 15)
+				context.out.Float(t / PrecisionTimer.GetFrequency(), 15)
 			END;
 			context.out.Ln;
 			context.out.Update;
@@ -867,6 +888,8 @@ BEGIN
 END PascalPreprocessor.
 
 System.Free PascalPreprocessor ~
+
+PascalPreprocessor.Preprocess raylib.pas ~
 
 PascalPreprocessor.Preprocess Doom32/Doom32_combined.dpr Doom32/Doom32_combined_unit.pas ~
 

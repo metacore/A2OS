@@ -104,7 +104,7 @@ CONST
 	SearchStringMaxLen = 128;
 
 	MaxNbrOfTabs = 100;
-	MaxNbrOfCompilers = 8;
+	MaxNbrOfCompilers = 16;
 
 	WindowTitle = "TF Programmer's Editing Tool v2.1";
 
@@ -2724,12 +2724,13 @@ VAR
 PROCEDURE Open*(context : Commands.Context); (** [Options] {filename['@'position]} ~ *)
 VAR
 	window : Window; count, index, temp : SIZE; position : SIGNED32;
-	filename : Filename; format : ARRAY 32 OF CHAR;
+	path, filename : Filename; format : ARRAY 32 OF CHAR;
 	options: Options.Options;
 BEGIN
 	NEW(options);
 	options.Add("e","external",Options.Flag);
 	options.Add("f", "format", Options.String);
+	options.Add("p", "path", Options.String);
 	IF options.Parse(context.arg, context.error) THEN
 		IF (context.caller # NIL) & (context.caller IS Window) & ~options.GetFlag("external") THEN
 			window := context.caller(Window);
@@ -2737,11 +2738,17 @@ BEGIN
 			NEW(window, NIL);
 		END;
 		IF ~options.GetString("format", format) THEN format := "AUTO"; END;
+		IF ~options.GetString("path", path) THEN path := ""; END;
 		count := 0;
 		WHILE context.arg.GetString(filename) DO
 			position := 0; index := Strings.Find(filename, 0, '@');
 			IF index >= 0 THEN temp := index + 1; Strings.StrToIntPos(filename, position, temp); ASSERT (position # 0); Strings.Truncate(filename, index) END;
-			IF filename # "" THEN window.Load(filename, format); window.SetCursorPosition(position); INC(count) END
+			IF filename # "" THEN
+				IF path # "" THEN
+					Files.JoinPath(path, filename, filename);
+				END;
+				window.Load(filename, format); window.SetCursorPosition(position); INC(count)
+			END;
 		END;
 		IF count = 0 THEN window.Load("Untitled.Mod", "AUTO") END;
 	END;

@@ -150,7 +150,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				hwnd = CreateWindow("RichEdit", NULL, WS_CHILD | WS_VISIBLE | WS_HSCROLL |
 					WS_VSCROLL | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE,
 					0, 0, 0, 0, hWnd,	(HMENU)ID_EDIT,	hInst, (LPVOID)NULL);
-				SetWindowWord(hWnd, GWW_HWNDEDIT, (INTEGER)hwnd);
+				SetWindowWord(hWnd, GWW_HWNDEDIT, (WORD)hwnd);
 			}
 			break;
 		}

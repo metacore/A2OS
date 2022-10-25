@@ -1,13 +1,13 @@
 MODULE WMHexEditor; (** AUTHOR "BohdanT"; PURPOSE ""; *)
-(** 
+(**
 AUTHOR "BohdanT"; November 25, 2014,
 PURPOSE "part of WMDebugger, HexEditor visual component"
 VERSION 1.1
 *)
-IMPORT 
+IMPORT
 	SYSTEM,
 	KernelLog, WMComponents, Commands,
-	Modules,WM := WMWindowManager, 
+	Modules,WM := WMWindowManager,
 	WMGraphics, WMRectangles, Strings,
 	WMStandardComponents,
 	WMMessages,
@@ -30,19 +30,19 @@ CONST
 	AlignBottom=WMComponents.AlignBottom;
 
 	mouseWheelScrollSpeedI = 3;
-	
+
 	CONST
-		(* Color scheme *)	
+		(* Color scheme *)
 		clrSelection* = WMGraphics.Color(08080FFFFH);
 		clrCursor* = WMGraphics.Color(00000FFFFH);
 		clrBackGround* = WMGraphics.Color(000080FFH);
 		clrText* = WMGraphics.Color(0FFFF00FFH);
 		clrTextMod* = WMGraphics.Color(0FF9400FFH);
 		clrTextDif* = WMGraphics.Color(090FF00FFH);
-		
+
 TYPE
 	EditState= ENUM edAddr, edHex, edText END;
-		
+
 	Highlight* = POINTER TO RECORD
 		enable:BOOLEAN;
 		from*, to*:SIZE;
@@ -54,9 +54,9 @@ TYPE
 		VAR
 			p:Highlight;
 		BEGIN
-			KernelLog.String("Dump"); KernelLog.Ln; 
+			KernelLog.String("Dump"); KernelLog.Ln;
 			p:= highlights;
-			WHILE p#NIL DO 
+			WHILE p#NIL DO
 				KernelLog.String("f: "); KernelLog.Int(p.from, 5); KernelLog.String(" t: "); KernelLog.Int(p.to, 5);KernelLog.String(":");KernelLog.String(p.mem^); KernelLog.Ln;
 				p:=p.next;
 			END
@@ -70,7 +70,7 @@ TYPE
 			str[0] := ch; str[1] := 0X;
 			AddNewBlock(highlights, pos, str);
 		END AddNewChar;
-		
+
 		PROCEDURE AddNewBlock(VAR highlights: Highlight; pos:SIZE;str:String);
 		VAR
 			llen:SIZE;
@@ -104,15 +104,15 @@ TYPE
 					l.to:=r.to
 				END;
 			END NormaL;
-			
+
 			PROCEDURE NormaR(VAR l:Highlight;r:Highlight);
 			VAR
 				n,i:SIZE;
 			BEGIN
 				WHILE (r#NIL)&(l.to>=r.from) DO
 					IF r.to>=l.to THEN
-(*						KernelLog.String("!!!!!!!!!!!!!!!!!!!");KernelLog.Ln; 
-						KernelLog.String("L");KernelLog.String(l.mem^); KernelLog.Ln; 
+(*						KernelLog.String("!!!!!!!!!!!!!!!!!!!");KernelLog.Ln;
+						KernelLog.String("L");KernelLog.String(l.mem^); KernelLog.Ln;
 						KernelLog.String("R");KernelLog.String(r.mem^); KernelLog.Ln; *)
 						n:=r.to-l.from;
 						IF n>LEN(l.mem) THEN
@@ -128,7 +128,7 @@ TYPE
 (*							KernelLog.String("*");*)
 							l.mem[l.to-l.from+i]:=r.mem[l.to-r.from+i];
 						END;
-(*						KernelLog.Ln; 
+(*						KernelLog.Ln;
 						KernelLog.String(l.mem^);
 						KernelLog.Ln; *)
 						l.to:=r.to;
@@ -137,14 +137,14 @@ TYPE
 					r:=r.next;
 				END;
 			END NormaR;
-			
+
 		BEGIN
 			llen:=Strings.Length(str^);
-			IF Trace THEN 
+			IF Trace THEN
 				KernelLog.String("************ ");
 				KernelLog.String("add at:"); KernelLog.Int(pos, 5);KernelLog.String("to:"); KernelLog.Int(pos+llen, 5);KernelLog.Ln;
 			END;
-		
+
 			IF highlights=NIL THEN (*List emty*)
 				NEW(p);
 				highlights:=p;
@@ -155,18 +155,18 @@ TYPE
 			ELSE
 				p:=highlights;
 				last:=p;
-				WHILE (p.to<pos)&(p.next#NIL) DO 
-					last:=p; 
-					p:=p.next 
+				WHILE (p.to<pos)&(p.next#NIL) DO
+					last:=p;
+					p:=p.next
 				END;
 				IF Trace THEN KernelLog.String("<<<f: "); KernelLog.Int(p.from, 5); KernelLog.String(" t: "); KernelLog.Int(p.to, 5);KernelLog.Ln; END;
 
 				IF pos<p.from THEN (*Insert first*)
 				IF Trace THEN KernelLog.String("*0*");  KernelLog.Ln; END;
-				
+
 					NEW(p1);
-					IF p=highlights THEN 
-						highlights:=p1 
+					IF p=highlights THEN
+						highlights:=p1
 					ELSIF pos+llen<p.from THEN
 						last.next:=p1;
 					END;
@@ -185,7 +185,7 @@ TYPE
 					NormaL(p,p1);
 					NormaR(p,p.next);
 				ELSE
-					IF Trace THEN KernelLog.String("*2*");  KernelLog.Ln; 
+					IF Trace THEN KernelLog.String("*2*");  KernelLog.Ln;
 					KernelLog.String("len= "); KernelLog.Int(llen, 0); KernelLog.Ln;
 					END;
 					NEW(p1);
@@ -194,16 +194,16 @@ TYPE
 					p1.mem:=str;
 					p.next:=p1;
 				END;
-			END;	
+			END;
 
 (*			p.mem[pos-p.from] := char;*)
 		END AddNewBlock;
-		
-TYPE		
+
+TYPE
 	MemPanel* = OBJECT(WMComponents.VisualComponent)
 	VAR
 		font:WMGraphics.Font;
-		hl:Highlight;	
+		hl:Highlight;
 		editState : EditState;
 
 (*TODO: Make property*)
@@ -217,17 +217,17 @@ TYPE
 
 		textTop,
 		textLeft:SIZE;
-		
+
 		cursorIsVisible:BOOLEAN;
 		cursor:SIZE;
 		selection:Highlight;
-		
+
 (*		address-:WMProperties.Int32Property;*)
 		adrfrom:ADDRESS;
 		adr:ADDRESS;
 		siz:SIZE;
 		adrMode-:BOOLEAN;
-		
+
 
 		PROCEDURE SetFont(f:WMGraphics.Font);
 		VAR
@@ -243,7 +243,7 @@ TYPE
 			textLeft:=addrWidth+(16*3+6+2)*fontWidth;
 			Invalidate();
 		END SetFont;
-		
+
 		PROCEDURE &Init*();
 		VAR
 			i:INTEGER;
@@ -260,7 +260,7 @@ TYPE
 			selection.from:=-1;
 			selection.to:=-1;
 
-			
+
 			adr:=SELF;
 
 (*			font:=WMGraphics.GetFont("Courier", 12, {});*)
@@ -270,13 +270,13 @@ TYPE
 
 			textColor:=clrText;
 			selectionColor:=clrSelection;
-			
+
 			SetNameAsString(Strings.NewString("MemPanel"));
 (*			SetFont(WMGraphics.GetFont((*"Courier"*)"Courier", 12, {0}));*)
 			SetFont(WMGraphics.GetFont((*"Courier"*)"VeraMo", 12, {}));
 
 			cursor:=0;
-(*			KernelLog.String("fontHeight= ");KernelLog.Int(fontHeight,0); KernelLog.Ln; 
+(*			KernelLog.String("fontHeight= ");KernelLog.Int(fontHeight,0); KernelLog.Ln;
 			KernelLog.String("fontWidth= ");KernelLog.Int(fontWidth,0); KernelLog.Ln; *)
 			SetPointerInfo(manager.pointerText);
 
@@ -296,21 +296,21 @@ TYPE
 			EnableUpdate;*)
 			Invalidate();
 		END SetLimit;
-		
+
 		PROCEDURE SetAdrViewMode*(m:BOOLEAN);
 		BEGIN
 			adrMode:=m;
 			Invalidate();
 		END SetAdrViewMode;
-		
-		
+
+
 		PROCEDURE SetPageAdr*(a:ADDRESS);
 		BEGIN
 			IF a<adrfrom THEN
 				a:=adrfrom;
 				cursor:=0;
 			END;
-				
+
 			IF a<(adrfrom+siz) THEN
 				adr := a;
 			ELSE
@@ -319,7 +319,7 @@ TYPE
 			Invalidate;
 
 		END SetPageAdr;
-		
+
 
 		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
@@ -348,7 +348,7 @@ TYPE
 				x:=fontWidth*(2+x*3+(cursor MOD 2)+(x DIV 4)+(x DIV 8) )+addrWidth;
 				y:=fontHeight*(1+pos DIV 16)+textTop;
 				RETURN WMRectangles.MakeRect(x,y,x+fontWidth,y+2);
-			|EditState.edText:	
+			|EditState.edText:
 				pos:=cursor DIV 2;
 				x:=pos MOD 16;
 				x:=fontWidth*(x)+textLeft;
@@ -367,7 +367,7 @@ TYPE
 		BEGIN
 			RETURN ((y-textTop) DIV fontHeight);
 		END FindLineByY;
-		
+
 		PROCEDURE CheckPointer(a,b:ADDRESS):BOOLEAN;
 		BEGIN
 			IF a<04000000H THEN
@@ -388,7 +388,7 @@ TYPE
 				IF Trace THEN KernelLog.String("nh= "); KernelLog.Hex(ORD(h.mem[ofs-h.from]),8); END;
 				SYSTEM.GET(adrfrom+ofs,ch);
 				IF Trace THEN
-					KernelLog.String("oh= "); KernelLog.Hex(ORD(ch),8); KernelLog.Ln; 
+					KernelLog.String("oh= "); KernelLog.Hex(ORD(ch),8); KernelLog.Ln;
 					KernelLog.Ln;
 				END;
 				RETURN h.mem[ofs-h.from];
@@ -397,11 +397,11 @@ TYPE
 			RETURN ch;
 		END GetActualChar;
 
-		
+
 		PROCEDURE Draw*(canvas : Canvas);
 		VAR
-			pos, y, x, xi, i, j :SIZE; 
-			tmps1, tmps2 : ARRAY 9 OF CHAR; 
+			pos, y, x, xi, i, j :SIZE;
+			tmps1, tmps2 : ARRAY 9 OF CHAR;
 			tmp : INTEGER;
 			cursr, cliprect : WMRectangles.Rectangle; cstate : WMGraphics.CanvasState;
 			ch, cho, chn : CHAR;(*New and old char*)
@@ -414,15 +414,15 @@ TYPE
 			canvas.SaveState(cstate);
 			canvas.GetClipRect(cliprect);
 			IF WMRectangles.RectEmpty(cliprect) THEN RETURN END;
-	
+
 			canvas.SetClipRect(cliprect);
 			canvas.Fill(bounds.Get(), clrBackGround, WMGraphics.ModeSrcOverDst) ;
 			canvas.SetColor(textColor);
 			canvas.SetFont(font);
-			
+
 			la := FindLineByY(cliprect.t);
 			lb := FindLineByY(cliprect.b);
-			
+
 			pos:=0;
 			y:=0;xi:=0;
 			x:=addrWidth; y:=fontHeight;
@@ -439,11 +439,11 @@ TYPE
 				END;
 				la:=0;
 			END;
-			
+
 			WHILE (h#NIL)&(h.to<(la*16+adr-adrfrom)) DO h:=h.next; END;
-			
+
 			FOR i:=la TO lb DO
-				y:=(i+1)*(fontHeight)+textTop; pos:=i*16; 
+				y:=(i+1)*(fontHeight)+textTop; pos:=i*16;
 				(*Render line*)
 				IF adrMode THEN
 					Strings.IntToHexStr(adr+pos, 8, tmps1);
@@ -460,7 +460,7 @@ TYPE
 						IF (j MOD 4)=0 THEN INC(x,fontWidth); END;
 						IF (j MOD 8)=0 THEN INC(x,fontWidth); END;
 						IF (adr+pos)>1024 THEN(*??? TODO: WTF *)
-								
+
 							 	IF CheckPointer(adr,pos) THEN
 									SYSTEM.GET(adr+pos,cho);				(*TODO: make protect to read N/A address*)
 							 	ELSE
@@ -478,15 +478,15 @@ TYPE
 						(*Draw selection bkgrnd*)
 						IF ((adr+pos)>=MIN(selection.from,selection.to))&((adr+pos)<MAX(selection.from,selection.to)) THEN
 							canvas.Fill( (*Hex area *)
-(*!!!FIX!!*)			
+(*!!!FIX!!*)
 							WMGraphics.MakeRectangle(x,y - fontHeight+3,x+(3)*fontWidth, y+3),
 							clrSelection, WMGraphics.ModeSrcOverDst) ;
 
 							canvas.Fill( (*Text area *)
-(*!!!FIX!!*)			
+(*!!!FIX!!*)
 							WMGraphics.MakeRectangle(textLeft+(j)*fontWidth,y - fontHeight+3,textLeft+(j+1)*fontWidth, y+3),
 							clrSelection, WMGraphics.ModeSrcOverDst) ;
-						
+
 						END;
 
 						(*Draw cursor mark*)
@@ -498,7 +498,7 @@ TYPE
 							END;
 							IF  editState#EditState.edHex THEN
 								canvas.Fill(
-								WMGraphics.MakeRectangle(x,y - fontHeight,x+fontWidth*2, y), 
+								WMGraphics.MakeRectangle(x,y - fontHeight,x+fontWidth*2, y),
 								clrCursor, WMGraphics.ModeSrcOverDst);
 							END;
 						END;
@@ -526,9 +526,9 @@ TYPE
 						END;
 						INC(pos);INC(x,fontWidth*3);
 					END;
-				END;			
+				END;
 			END;
-			
+
 			cursr:=GetCursorRect();
 			IF cursorIsVisible THEN
 				canvas.Fill(cursr,WMGraphics.Color(0C0C040FFH),WMGraphics.ModeSrcOverDst);
@@ -539,7 +539,7 @@ TYPE
 			canvas.RestoreState(cstate);
 
 	END Draw;
-	
+
 		PROCEDURE WheelMove*(dz: SIZE); (** PROTECTED *)
 		BEGIN
 			IF mouseWheelScrollSpeedI # 0 THEN
@@ -553,7 +553,7 @@ TYPE
 				PROCEDURE GetHexX(x:SIZE):SIZE;
 				BEGIN
 					x:=x DIV fontWidth;
-					x:=x-((x+1) DIV 27);					
+					x:=x-((x+1) DIV 27);
 					x:=x-((x+1)  DIV 13);
 					x:=x-((x+1) DIV 3);
 					RETURN x;
@@ -574,12 +574,12 @@ TYPE
 				cursor:=y*32+x*2;
 			END;
 
-(*			KernelLog.String("dh= "); KernelLog.Hex(LONGINT(st),8); 
-			KernelLog.String("x= "); KernelLog.Int(x, 0); 
+(*			KernelLog.String("dh= "); KernelLog.Hex(LONGINT(st),8);
+			KernelLog.String("x= "); KernelLog.Int(x, 0);
 			KernelLog.String(" y= "); KernelLog.Int(y, 0); KernelLog.Ln;*)
 			RETURN 0;
 		END ViewToTextPos;
-		
+
 		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		VAR pos : INTEGER;
 		TYPE
@@ -604,14 +604,14 @@ TYPE
 		VAR
 		BEGIN
 			IF select THEN
-				
+
 				IF ~selection.enable THEN
 					selection.from:=adr+((old +1)DIV 2);
 				END;
 				selection.to:=adr+((cursor+1) DIV 2);
-				
+
 				selection.enable:=TRUE;
-					
+
 			ELSE
 				selection.enable:=FALSE;
 (*				selection.from:=-1;
@@ -625,10 +625,10 @@ TYPE
 			ELSE
 				cursor:=(siz-(adr-adrfrom))*2;
 			END;
-			
+
 
 		END MoveCursor;
-		
+
 		PROCEDURE HandleShortcut(ucs : SIZE; flags : SET; keysym : SIZE) : BOOLEAN;
 		VAR
 			tmp : ADDRESS;
@@ -651,11 +651,11 @@ TYPE
 				c:=CHR(INTEGER(SYSTEM.VAL(SET8, c)*SET8({0..3}))+t*16)
 			ELSE
 				IF Trace THEN
-					KernelLog.String("<<<c= ");  KernelLog.Hex(ORD(c),8); 
+					KernelLog.String("<<<c= ");  KernelLog.Hex(ORD(c),8);
 					KernelLog.String(" di= "); KernelLog.Int(t, 0); KernelLog.Ln;
 				END;
 					(*!c:=CHR(SYSTEM.VAL(SIZE,SYSTEM.VAL(SET, c)*{4..7})+t);*)
-					c:=CHR(INTEGER(SYSTEM.VAL(SET8, c)*SET8({4..7}))+t);					
+					c:=CHR(INTEGER(SYSTEM.VAL(SET8, c)*SET8({4..7}))+t);
 				IF Trace THEN
 					KernelLog.String(">>>c= ");  KernelLog.Hex(ORD(c),8); KernelLog.Ln;
 				END;
@@ -680,7 +680,7 @@ TYPE
 			END;
 			RETURN FALSE;
 		END ToRight;
-		
+
 		BEGIN
 			ss:=selection.enable;
 			IF editState=EditState.edHex THEN
@@ -689,7 +689,7 @@ TYPE
 				incx:=2;
 			END;
 			IF flags * Inputs.Ctrl # {} THEN incx:=8; END;
-			
+
 
 (*			KernelLog.String("dh= "); KernelLog.Hex(keysym, 8);KernelLog.Hex(SYSTEM.VAL(LONGINT,flags), 8);  KernelLog.Ln;*)
 				oldcur:=cursor;
@@ -700,7 +700,7 @@ TYPE
 						editState:=EditState.edText;
 					END;
 					Invalidate();
-					RETURN FALSE; 
+					RETURN FALSE;
 				ELSIF (keysym= 0FF51H)  THEN (* LEFT *)
 					IF	cursor>0 THEN
 						MoveCursor(-incx)
@@ -730,11 +730,11 @@ TYPE
 				ELSIF keysym = 0FF56H THEN (* Page Down *)
 					SetPageAdr(adr+(GetLineCount()-1)*16);
 					cursorIsVisible := TRUE;
-					RETURN FALSE; 
+					RETURN FALSE;
 				ELSIF keysym = 0FF55H THEN (* Page Up *)
 					SetPageAdr(adr-(GetLineCount()-1)*16);
 					cursorIsVisible := TRUE;
-					RETURN FALSE; 
+					RETURN FALSE;
 				ELSIF keysym = 0FF50H THEN (* Cursor Home *)
 					MoveCursor((cursor DIV 32)*32-cursor);
 				ELSIF keysym = 0FF57H THEN (* Cursor End *)
@@ -747,7 +747,7 @@ TYPE
 					cursorIsVisible := TRUE;
 					SetPageAdr(tmp);
 					RETURN FALSE;
-				ELSIF (flags-Inputs.Shift) = {} THEN 
+				ELSIF (flags-Inputs.Shift) = {} THEN
 					IF editState=EditState.edText THEN
 						IF keysym<=0FFH THEN
 							selection.enable:=FALSE;
@@ -776,7 +776,7 @@ TYPE
 				END;
 			RETURN FALSE;
 		END HandleShortcut;
-		
+
 		PROCEDURE SetBlinker(sender, data: ANY);
 		BEGIN
 			WITH sender: WMStandardComponents.Blinker DO
@@ -784,7 +784,7 @@ TYPE
 			END;
 			InvalidateRect(GetCursorRect());
 		END SetBlinker;
-		
+
 		PROCEDURE FocusReceived;
 		BEGIN
 			FocusReceived^;
@@ -810,7 +810,7 @@ TYPE
 	END MemPanel;
 
 
-	
+
 	Window* = OBJECT (WMComponents.FormWindow)
 	VAR
 		memPanel : MemPanel;
@@ -818,7 +818,7 @@ TYPE
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
 		VAR
 			panel : WMStandardComponents.Panel;
-			
+
 		BEGIN
 			NEW(panel);
 			panel.bounds.SetExtents(655, 700);
@@ -828,7 +828,7 @@ TYPE
 			NEW(memPanel);
 			memPanel.bounds.SetWidth (640);
 			memPanel.bounds.SetHeight (600);
-			memPanel.alignment.Set(WMComponents.AlignClient); 
+			memPanel.alignment.Set(WMComponents.AlignClient);
 (*			memPanel.SetLimit(ADDRESSOF(memPanel.font),2048-8(*SIZEOF(memPanel^)*) );*)
 			panel.AddContent(memPanel);
 			RETURN panel
@@ -857,29 +857,29 @@ TYPE
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN Close
 			ELSE Handle^ (x)
 			END
-		END Handle;			
+		END Handle;
 		PROCEDURE Load(CONST filename : ARRAY OF CHAR);
 		VAR
 			f:Files.File;
 			r: Files.Rider;
-			siz:UNSIGNED32;
+			siz:SIZE;
 		BEGIN
 				f := Files.Old(filename);
 				IF f # NIL THEN
 					IF Trace THEN KernelLog.String("Loading ");  KernelLog.String(filename);  KernelLog.Ln END;
 					f.Set(r, 0);
-					siz:=UNSIGNED32(f.Length());
+					siz:=f.Length()(SIZE);
 					NEW(buf, siz);
 					r.file.ReadBytes(r, buf^, 0, siz);
 					memPanel.SetLimit(ADDRESSOF(buf[0]), siz);
 				END;
 				memPanel.Invalidate();
 		END Load;
-		
+
 	END Window;
-	
+
 	KillerMsg = OBJECT	(* D *)
-	END KillerMsg; 	
+	END KillerMsg;
 
 VAR manager : WM.WindowManager;
 
@@ -893,7 +893,7 @@ VAR winstance : Window;
 
 BEGIN
 	NEW (winstance);
-	
+
 (*	winstance.DisableUpdate;
 	winstance.EnableUpdate;*)
 	WHILE context.arg.GetString(filename) DO
@@ -906,7 +906,7 @@ END Open;
 PROCEDURE Test*;
 VAR winstance : Window;
 
-BEGIN 
+BEGIN
 	NEW (winstance);
 	winstance.memPanel.SetAdrViewMode(TRUE);
 	winstance.memPanel.SetLimit(ADDRESSOF(winstance.memPanel.font), 4096);
@@ -915,12 +915,12 @@ END Test;
 PROCEDURE IncCount;	(* E *)
 BEGIN {EXCLUSIVE}
 	INC (nofWindows);
-END IncCount;		
+END IncCount;
 
 PROCEDURE DecCount;	(* F *)
 BEGIN {EXCLUSIVE}
 	DEC (nofWindows);
-END DecCount;	
+END DecCount;
 
 PROCEDURE Cleanup;	(* G *)
 VAR die : KillerMsg;
@@ -949,8 +949,8 @@ WMDebugger.Open  WMHexEditor.Mod~
 
 SystemTools.Free WMDebugger BtMenus BtDTraps BtDbgPanel I386Decoder2 BtDecoder WMComboBox WMHexEditor ~
 
-WMHexEditor.Open~		
-WMHexEditor.Test~	
+WMHexEditor.Open~
+WMHexEditor.Test~
 -b=AMD --warnings --objectFile=Generic --newObjectFile --mergeSections --symbolFileExtension=".SymW"  objectFileExtension=.GofW
 
 

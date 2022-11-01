@@ -59,6 +59,7 @@ CONST
 
 	Invalid = -1;
 
+	TAB = 09X;
 TYPE
 
 	Name* = ARRAY 32 OF CHAR;
@@ -73,6 +74,7 @@ TYPE
 		value : SIGNED64; (* Integer value if type = Integer *)
 		rvalue: FLOAT64; (*real value if type = real*)
 		string : Parameter; (* String value if type = String *)
+		description := NIL: Strings.String;
 	END;
 
 TYPE
@@ -100,7 +102,7 @@ TYPE
 		(**	Add option declaration.
 			- Duplicate names are not allowed!
 			- Numbers are not allowed as option character or as first character of an option name *)
-		PROCEDURE Add*(ch : CHAR; CONST name : Name; type : SIGNED32);
+		PROCEDURE Add*(ch : CHAR; CONST name : Name; type : SIGNED32; description := "": ARRAY OF CHAR);
 		VAR index : SIGNED32; char : Name;
 		BEGIN {EXCLUSIVE}
 			IF (("0" <= ch) & (ch <= "9")) OR (("0" <= name[0]) & (name[0] <= "9")) THEN
@@ -118,6 +120,7 @@ TYPE
 					options[nofOptions].ch := ch;
 					options[nofOptions].name := name;
 					options[nofOptions].type := type;
+					options[nofOptions].description := Strings.NewString(description);
 					INC(nofOptions);
 				ELSE
 					KernelLog.String("Command implementation error: Maximum number of option declarations exceeded. Ignore option ");
@@ -611,6 +614,35 @@ TYPE
 				error.String("--"); error.String(name);
 			END;
 		END ShowOption;
+
+		(** Debug: List all known options and their current values *)
+		PROCEDURE ShowOptions*(out : Streams.Writer);
+		VAR i : SIZE;
+		BEGIN {EXCLUSIVE}
+			IF (nofOptions > 0) THEN
+				out.String("Options:"); out.Ln;
+				FOR i := 0 TO (nofOptions - 1) DO
+					out.Char(TAB);
+					IF (options[i].ch # 0X) THEN
+						out.Char("-");
+						out.Char(options[i].ch);
+						IF (options[i].name # "") THEN out.String(", "); END;
+					END;
+					IF (options[i].name # "") THEN
+						out.String("--");
+						out.String(options[i].name);
+					END;
+					IF (options[i].description # NIL) & (options[i].description^ # "") THEN
+						out.Ln; out.Char(TAB); out.Char(TAB);
+						out.String(options[i].description^);
+					END;
+					out.Ln;
+				END;
+			ELSE
+				out.String("No options set"); out.Ln;
+			END;
+			out.Update;
+		END ShowOptions;
 
 		(** Debug: List all known options and their current values *)
 		PROCEDURE Show*(out : Streams.Writer);

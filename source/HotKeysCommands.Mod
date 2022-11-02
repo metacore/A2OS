@@ -76,7 +76,7 @@ TYPE
 			editor.onEscape.Add(HandleEscape);
 			editor.allowScrollbars.Set(FALSE);
 			editor.multiLine.Set(FALSE);
-			editor.tv.textAlignV.Set(WMGraphics.AlignCenter);
+			editor.tv.textAlignV.Set(WMGraphics.AlignTop);
 			editor.tv.defaultTextColor.Set(DefaultTextColor);
 			editor.tv.defaultTextBgColor.Set(0);
 			editor.fillColor.Set(DefaultTextBgColor);

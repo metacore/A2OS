@@ -50,7 +50,7 @@ TYPE
 			WM.AddWindow (SELF, Toleft, Fromtop);
 			manager := WM.GetDefaultManager();
 			manager.SetFocus(SELF);
-			SetTitle (WM.NewString ("SkinLoader"));
+			SetTitle (Strings.NewString ("SkinLoader"));
 
 			nextINchain := windows;
 			windows := SELF

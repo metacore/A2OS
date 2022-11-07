@@ -2150,7 +2150,7 @@ TYPE
 			WMWindowManager.AddWindow(SELF, 100, 100);
 			manager := WMWindowManager.GetDefaultManager ();
 			manager.SetFocus(SELF);
-			SetTitle(WMWindowManager.NewString("  Operation Status Report"));
+			SetTitle(Strings.NewString("  Operation Status Report"));
 		END Show;
 
 		PROCEDURE &New*(text : Texts.Text;  width, height : SIGNED32; visible : BOOLEAN);
@@ -2549,7 +2549,7 @@ TYPE
 			END;
 			Init(width, height, FALSE);
 
-			SetTitle(WMWindowManager.NewString("Partition Tool"));
+			SetTitle(Strings.NewString("Partition Tool"));
 			SetIcon(WMGraphics.LoadImage("WMIcons.tar://WMPartitions.png", TRUE));
 
 			scaling := FALSE;

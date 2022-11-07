@@ -53,7 +53,7 @@ TYPE
 			END AddLabelEdit;
 
 		BEGIN
-			SetTitle(WM.NewString("Hobbes' Chinese Tool"));
+			SetTitle(Strings.NewString("Hobbes' Chinese Tool"));
 
 			NEW(mainPanel); mainPanel.bounds.SetExtents(800, 600);
 			mainPanel.fillColor.Set(0FFFFFFFFH);

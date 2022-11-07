@@ -176,7 +176,7 @@ TYPE
 				WMWindowManager.AddWindow(SELF, posX, posY);
 			END;
 			manager.SetFocus(SELF);
-			SetTitle(WMWindowManager.NewString("Video Panel"));
+			SetTitle(Strings.NewString("Video Panel"));
 			SetIcon(WMGraphics.LoadImage("WMIcons.tar://MediaPlayer.png", TRUE));
 			IF autoHideCursor & (PointerInvisibleAfter > 0) THEN
 				NEW(timer);

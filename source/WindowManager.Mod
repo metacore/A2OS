@@ -451,8 +451,8 @@ TYPE
 			NEW(bg,0); bg.manager := SELF;
 			bottom := bg; bottom.next := top; top.prev := bottom;
 			bg.flags := {WM.FlagHidden};
-			SetWindowTitle(top, WM.NewString("Mouse Cursor"));
-			SetWindowTitle(bottom, WM.NewString("Old background"));
+			SetWindowTitle(top, Strings.NewString("Mouse Cursor"));
+			SetWindowTitle(bottom, Strings.NewString("Old background"));
 			decorate := DefaultDecorator;
 		END New;
 
@@ -1694,7 +1694,7 @@ BEGIN
 	IF noPointer THEN
 		INCL(bg.flags, WM.FlagNoPointer);
 	END;
-	wm.SetWindowTitle(bg, WM.NewString("New background"));
+	wm.SetWindowTitle(bg, Strings.NewString("New background"));
 	Rect.SetRect(bg.bounds, MIN(SIZE), MIN(SIZE), MAX(SIZE), MAX(SIZE));
 	wm.lock.AcquireWrite; t := wm.ReplaceBackground(bg); wm.lock.ReleaseWrite;
 END FillSession;

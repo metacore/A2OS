@@ -216,7 +216,7 @@ TYPE
 			SELF.interval := interval;
 			manager := WM.GetDefaultManager();
 			manager.Add(xpos, ypos, SELF, {WM.FlagFrame});
-			manager.SetWindowTitle(SELF, WM.NewString("Cluster Watch 3d"));
+			manager.SetWindowTitle(SELF, Strings.NewString("Cluster Watch 3d"));
 
 			(* Init navigation parameters *)
 			radius := 2000; angle := 0; height := 0;

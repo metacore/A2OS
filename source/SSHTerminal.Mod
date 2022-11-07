@@ -4,7 +4,7 @@ MODULE SSHTerminal; 	(* GF  10.12.2020 *)
 (* 10.06.2022	added support for iso8859-1 characters *)
 
 IMPORT
-	Kernel, Commands, Files, Inputs, Streams, Log := KernelLog, Beep, UTF8Strings,
+	Kernel, Commands, Files, Inputs, Streams, Log := KernelLog, Beep, Strings, UTF8Strings,
 	WMWindowManager, WMComponents, WMStandardComponents, WMG := WMGraphics,
 	WMMessages, WMEditors, WMRectangles, 
 	
@@ -927,7 +927,7 @@ Log.Ln;
 				vc := CreateForm();
 				Init( vc.bounds.GetWidth(), vc.bounds.GetHeight(), FALSE );
 				SetContent( vc );
-				SetTitle( WMWindowManager.NewString( "SSH Terminal" ) );
+				SetTitle( Strings.NewString( "SSH Terminal" ) );
 				WMWindowManager.DefaultAddWindow( SELF )
 			END New;
 

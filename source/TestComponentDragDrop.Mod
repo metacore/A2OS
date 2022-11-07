@@ -1,7 +1,7 @@
 MODULE TestComponentDragDrop;	(** AUTHOR "TF"; PURPOSE "Testing Component Drag & Drop"; *)
 
 IMPORT
-	KernelLog, Modules, WMStandardComponents,
+	KernelLog, Modules, WMStandardComponents,Strings,
 	WMComponents, WMGraphics, WMDialogs,
 	WM := WMWindowManager;
 
@@ -76,7 +76,7 @@ TYPE
 			SetContent(panel);
 
 			manager := WM.GetDefaultManager();
-			SetTitle(WM.NewString("Drag drop panels"));
+			SetTitle(Strings.NewString("Drag drop panels"));
 			(* open the window *)
 			manager.Add(100, 100, SELF, {WM.FlagFrame})
 		END New;

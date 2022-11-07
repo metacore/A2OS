@@ -77,7 +77,7 @@ TYPE
 			vc := CreateForm();
 			Init(width, DefaultHeight, TRUE);
 			SetContent(vc);
-			SetTitle(WM.NewString("Overlay Window"));
+			SetTitle(Strings.NewString("Overlay Window"));
 			WM.ExtAddViewBoundWindow(SELF, 0, 0, NIL, {WM.FlagNoFocus, WM.FlagStayOnTop, WM.FlagHidden});
 		END New;
 

@@ -446,7 +446,7 @@ TYPE
 			vc := CreateForm();
 			Init (vc.bounds.GetWidth(), vc.bounds.GetHeight(), FALSE);
 			SetContent (vc);
-			SetTitle (WM.NewString("Diff"));
+			SetTitle (Strings.NewString("Diff"));
 			IF c # NIL THEN
 				WMRestorable.AddByContext(SELF, c);
 			ELSE

@@ -6,7 +6,7 @@ MODULE MPEGVideoDecoder;
 IMPORT
 	SYSTEM, Codec := Codecs, Raster, Streams, KernelLog, Files, WMGraphics, MPEGTables,
 	WM := WMWindowManager, Rectangles := WMRectangles, Kernel, Commands,
-	Util := MPEGUtilities;
+	Util := MPEGUtilities, Strings;
 
 CONST
 	(* Video start codes in numeric order *)
@@ -2506,7 +2506,7 @@ TYPE
 
 			(* open the window *)
 			NEW(wnd, w, h, FALSE);
-			wnd.SetTitle(WM.NewString("Simple MPEG Player"));
+			wnd.SetTitle(Strings.NewString("Simple MPEG Player"));
 
 			(* decode some frames ... *)
 

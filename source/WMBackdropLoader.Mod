@@ -48,7 +48,7 @@ TYPE
 			WM.AddWindow (SELF, Toleft, Fromtop);
 			manager := WM.GetDefaultManager();
 			manager.SetFocus(SELF);
-			SetTitle (WM.NewString ("Backdrops"));
+			SetTitle (Strings.NewString ("Backdrops"));
 
 			nextINchain := windows;
 			windows := SELF

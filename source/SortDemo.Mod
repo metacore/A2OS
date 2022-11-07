@@ -649,7 +649,7 @@ TYPE
 				vc := CreateForm();
 				Init( vc.bounds.GetWidth(), vc.bounds.GetHeight(), FALSE );
 				SetContent( vc );
-				SetTitle( WM.NewString( "Sort Demo" ) );
+				SetTitle( Strings.NewString( "Sort Demo" ) );
 				WM.DefaultAddWindow( SELF );
 				NEW( av, SELF );
 				NEW( sorter, av )

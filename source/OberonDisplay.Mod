@@ -4,7 +4,7 @@ MODULE OberonDisplay;
 (** AUTHOR "pjm"; PURPOSE "Aos display driver for WM window"; *)
 
 IMPORT SYSTEM, Machine, Commands, Displays, Inputs, Modules, Plugins, Raster,
-	WMRectangles, WMGraphics,
+	WMRectangles, WMGraphics, Strings,
 	WM := WMWindowManager;
 
 CONST
@@ -344,9 +344,9 @@ TYPE
 				disp.SetPointerInfo(ptr)
 			END;
 			IF Flip THEN
-				disp.SetTitle(WM.NewString("Oberon for Bluebottle down under"))
+				disp.SetTitle(Strings.NewString("Oberon for Bluebottle down under"))
 			ELSE
-				disp.SetTitle(WM.NewString("Oberon for Bluebottle"))
+				disp.SetTitle(Strings.NewString("Oberon for Bluebottle"))
 			END;
 			disp.SetIcon(WMGraphics.LoadImage("WMIcons.tar://OberonDisplay.png", TRUE));
 			WM.AddWindow(disp, x, y);

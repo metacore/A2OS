@@ -919,9 +919,9 @@ MODULE WMVT100; (* ejz,  ph *)
 			error.Ln(); RETURN NIL;
 		END;
 		NEW(TC, C);
-			IF type=Telnet.Tcp THEN TC.flags:={Telnet.Echo}; title:=WMWindowManager.NewString("TCP Terminal");
-			ELSIF type=Telnet.Telnet THEN TC.flags:={Telnet.Telnet}; title:=WMWindowManager.NewString("Telnet Terminal");
-			ELSIF type=Telnet.VT100 THEN TC.flags:={Telnet.Telnet};  (*! add VT100?*) title:=WMWindowManager.NewString("VT100 Terminal");
+			IF type=Telnet.Tcp THEN TC.flags:={Telnet.Echo}; title:=Strings.NewString("TCP Terminal");
+			ELSIF type=Telnet.Telnet THEN TC.flags:={Telnet.Telnet}; title:=Strings.NewString("Telnet Terminal");
+			ELSIF type=Telnet.VT100 THEN TC.flags:={Telnet.Telnet};  (*! add VT100?*) title:=Strings.NewString("VT100 Terminal");
 			ELSE HALT(200)
 			END;
 		NEW(inst, TC); inst.SetTitle(title);

@@ -29,7 +29,7 @@ TYPE
 
 		PROCEDURE &New*(f : RawCCGFont);
 		BEGIN
-			SetTitle(WMWindowManager.NewString("CCG font explorer"));
+			SetTitle(Strings.NewString("CCG font explorer"));
 			font := f;
 			NEW(mainPanel); mainPanel.bounds.SetExtents(480, 400);
 			mainPanel.fillColor.Set(WMGraphics.RGBAToColor(200, 200, 200, 255));

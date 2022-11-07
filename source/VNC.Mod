@@ -10,7 +10,7 @@ References:
 1. Tristan Richardson and Kenneth R. Wood, "The RFB Protocol: Version 3.3", ORL, Cambridge, January 1998
 *)
 
-IMPORT SYSTEM, Streams, KernelLog, Objects, Commands, Network, IP, TCP, DNS, DES,
+IMPORT SYSTEM, Streams, KernelLog, Objects, Commands, Network, IP, TCP, DNS, DES, Strings,
 	Inputs, Raster, WMWindowManager, Rect := WMRectangles, Dialogs := WMDialogs, Beep, Files;
 
 CONST
@@ -900,7 +900,7 @@ BEGIN
 			IF c.res = Ok THEN
 				pool.Add(c);
 				COPY(svr, title); Files.AppendStr(" Port ", title); Files.AppendInt(port, title); Files.AppendStr(" - VNC ", title); Files.AppendInt(c.id, title);
-				c.w.SetTitle(WMWindowManager.NewString(title));
+				c.w.SetTitle(Strings.NewString(title));
 				Show(context)
 			ELSE
 				context.error.String("Error "); context.error.Int(c.res, 1); context.error.Ln

@@ -819,7 +819,7 @@ TYPE
 
 			COPY ("Chat - ", str);
 			Strings.Append (str, instance.login);
-			SetTitle (WM.NewString (str));
+			SetTitle (Strings.NewString (str));
 
 		END New;
 

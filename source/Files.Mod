@@ -580,12 +580,21 @@ BEGIN
 	END;
 END OpenReader;
 
-(** Open a writer on a file at the specified position.  Remember to call Streams.Update before registering or closing the file! *)
+PROCEDURE NewReader*(f: File; pos: Position): Reader;
+BEGIN
+	RETURN NEW Reader(f, pos)
+END NewReader;
 
+(** Open a writer on a file at the specified position.  Remember to call Streams.Update before registering or closing the file! *)
 PROCEDURE OpenWriter*(VAR b: Writer; f: File; pos: Position);
 BEGIN
 	NEW(b, f, pos)
 END OpenWriter;
+
+PROCEDURE NewWriter*(f: File; pos: Position): Writer;
+BEGIN
+	RETURN NEW Writer(f, pos)
+END NewWriter;
 
 (** File name prefix support. *)
 
@@ -1216,6 +1225,16 @@ END FindOpenFile;
 
 (** Portable routines to read the standard Oberon types.  DEPRECATED, use Streams instead. *)
 
+PROCEDURE Read*(VAR r: Rider; VAR x: CHAR);
+BEGIN
+	r.file.Read(r, x)
+END Read;
+
+PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE);
+BEGIN
+	r.file.ReadBytes(r, x, ofs, len);
+END ReadBytes;
+
 PROCEDURE ReadSInt*(VAR r: Rider; VAR x: SIGNED8);
 BEGIN
 	r.file.Read(r, SYSTEM.VAL(CHAR, x))
@@ -1301,6 +1320,16 @@ BEGIN
 END ReadSize;
 
 (** Portable routines to write the standard Oberon types. DEPRECATED, used Streams instead. *)
+
+PROCEDURE Write*(VAR r: Rider; x: CHAR);
+BEGIN
+	r.file.Write(r, x)
+END Write;
+
+PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE);
+BEGIN
+	r.file.WriteBytes(r, x, ofs, len);
+END WriteBytes;
 
 PROCEDURE WriteSInt*(VAR r: Rider; x: SIGNED8);
 BEGIN

@@ -117,22 +117,28 @@ TYPE
 		Unix.HandleSignal( Unix.SIGTERM );
 	END InitSignalHandling;
 
-BEGIN
-	Machine.VerboseLog;
-(*	InitializeCoreModules;	*)
+	PROCEDURE Start*;
+	BEGIN
+		Machine.VerboseLog;
+	(*	InitializeCoreModules;	*)
 
-	(* make current Frame the last one in FindRoots() *)
-	S.PUT( S.GetFramePointer(), ADDRESS( 0 ) );
+		(* make current Frame the last one in FindRoots() *)
+		S.PUT( S.GetFramePointer(), ADDRESS( 0 ) );
+		
+		Trace.StringLn( "BootConsole.Start" );
+		InitSignalHandling;
+		StartSystem;
+		#IF ~COOP THEN
+			(*	Keep main thread running.
+				If the thread is blocked by a mutex (Objects.MainThreadSleep)
+				the signals SIGHUP, SIGINT and SIGQUIT don't branch into SignalHandler
+				but terminate A2 (at least in Solaris).	*)
+			LOOP  Objects.Sleep( 100 )  END;
+		#END;
+	END Start;
 
-	InitSignalHandling;
-	StartSystem;
-	#IF ~COOP THEN
-		(*	Keep main thread running.
-			If the thread is blocked by a mutex (Objects.MainThreadSleep)
-			the signals SIGHUP, SIGINT and SIGQUIT don't branch into SignalHandler
-			but terminate A2 (at least in Solaris).	*)
-		LOOP  Objects.Sleep( 100 ) END;
-	#END;
+(*BEGIN
+	Start *)
 END BootConsole.
 
 

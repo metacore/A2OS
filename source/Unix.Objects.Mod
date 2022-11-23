@@ -167,14 +167,21 @@ TYPE
 	Condition = PROCEDURE ( slink: ADDRESS ): BOOLEAN;
 
 	GCContext = RECORD
+		p: Process; (* correspondig process *)
 		nextPos: SIZE; (* 0 to start with *)
 		last: ARRAY 32 OF RECORD bp, pc, sp: ADDRESS END;
-
+		
 		PROCEDURE AddContext(bp, pc, sp: ADDRESS);
 		BEGIN
 			last[nextPos].bp := bp;
 			last[nextPos].pc := pc;
 			last[nextPos].sp := sp;
+			IF nextPos = 0 THEN
+				(* needed by Object Tracker in Solaris and Darwin ports *)
+				p.state.PC := pc;
+				p.state.SP := sp;
+				p.state.BP := bp
+			END;
 			INC(nextPos);
 		END AddContext;
 
@@ -351,6 +358,7 @@ TYPE
 			context := CurrentContext();
 			(* must happen here before body is created! *)
 			gcContext.nextPos := 0;
+			gcContext.p := SELF;
 			IF CAS(root,NIL,SELF) = NIL THEN
 				(* first process *)
 				stackBottom := Glue.stackBottom;

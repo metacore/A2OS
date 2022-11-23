@@ -2,7 +2,7 @@ MODULE PrettyPrint; (** AUTOR "GF"; PURPOSE "pretty printing of Oberon programs"
 
 (* ----------------------------------------------------------
 	Usage:
-		PrettyPrint.Convert
+		PrettyPrint.Convert --format=Oberon
 			<filename>  <filename>  ...  ~
 
 
@@ -104,7 +104,7 @@ END PrettyPrint.
 
 	System.Free PrettyPrint ~
 
-	PrettyPrint.Convert  -f="BBT" PrettyPrint.Mod ~
+	PrettyPrint.Convert  --format=Oberon  PrettyPrint.Mod ~
 
 
 

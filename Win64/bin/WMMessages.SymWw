@@ -58,8 +58,8 @@ TYPE
 
 	AsyncToken* = OBJECT {EXCLUSIVE} 
 	VAR 
-		ready: BOOLEAN; 
-		result*: ANY ; 
+		ready := FALSE: BOOLEAN; 
+		result* := NIL: ANY ; 
 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ AwaitCompletion*; 

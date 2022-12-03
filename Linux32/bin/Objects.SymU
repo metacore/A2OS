@@ -76,6 +76,7 @@ TYPE
 	Condition = PROCEDURE (slink: ADDRESS):BOOLEAN; 
 
 	GCContext = RECORD 
+		p: Process; 
 		nextPos: SIZE; 
 		last: ARRAY 32 OF RECORD 
 			bp, pc, sp: ADDRESS; 

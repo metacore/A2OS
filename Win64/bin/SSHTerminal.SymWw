@@ -1,5 +1,5 @@
 MODULE SSHTerminal;
-	IMPORT Kernel, Commands, Files, Inputs, Streams, Log := KernelLog, Beep, WMWindowManager, WMComponents, WMStandardComponents, WMG := WMGraphics, WMMessages, WMEditors, WMRectangles, SSHAuthorize, SSHChannels;
+	IMPORT Kernel, Commands, Files, Inputs, Streams, Log := KernelLog, Beep, Strings, UTF8Strings, WMWindowManager, WMComponents, WMStandardComponents, WMG := WMGraphics, WMMessages, WMEditors, WMRectangles, SSHAuthorize, SSHChannels;
 CONST 
 	TerminalWidth = 80; 
 	TerminalHeight = 24; 
@@ -101,6 +101,7 @@ TYPE
 		PROCEDURE ^ Draw*(canvas: WMG.Canvas); 
 		PROCEDURE ^ MoveCursor(dr, dc: SIZE); 
 		PROCEDURE ^ ESCSequence(ch: CHAR; r: Streams.Reader); 
+		PROCEDURE ^ Iso8859char(c1: CHAR; r: Streams.Reader; VAR n: SIZE): CHAR; 
 		PROCEDURE ^ Consume(ch: CHAR; r: Streams.Reader); 
 		PROCEDURE ^ FocusReceived*; 
 		PROCEDURE ^ FocusLost*; 
@@ -109,6 +110,7 @@ TYPE
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ CursorKey(keySym: SIZE); 
+		PROCEDURE ^ WriteUcs(ucs: SIZE); 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keySym: SIZE); 
 		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
 		PROCEDURE ^ resized; 

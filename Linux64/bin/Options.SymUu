@@ -10,6 +10,7 @@ CONST
 	OptionDelimiter = \"-"\; 
 	Assignment = \"="\; 
 	Invalid =  -1; 
+	TAB = 9X; 
 TYPE 
 	Name* = ARRAY 32 OF CHAR; 
 
@@ -24,6 +25,7 @@ TYPE
 		value: SIGNED64; 
 		rvalue: FLOAT64; 
 		string: Parameter; 
+		description := NIL: Strings.String; 
 	END; 
 
 	Options* = OBJECT {EXCLUSIVE} 
@@ -37,7 +39,7 @@ TYPE
 		timestamp: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Add*(ch: CHAR; CONST name: Name; type: SIGNED32); 
+		PROCEDURE ^ Add*(ch: CHAR; CONST name: Name; type: SIGNED32; description:= \""\: ARRAY OF CHAR); 
 		PROCEDURE ^ GetFlag*(CONST name: Name): BOOLEAN; 
 		PROCEDURE ^ SetFlag*(ch: CHAR; CONST name: Name): BOOLEAN; 
 		PROCEDURE ^ GetInteger*(CONST name: Name; VAR integer: SIGNED32): BOOLEAN; 
@@ -65,6 +67,7 @@ TYPE
 		PROCEDURE ^ WrongUsage(option: Option); 
 		PROCEDURE ^ ShowPos(pos: Streams.Position); 
 		PROCEDURE ^ ShowOption(ch: CHAR; CONST name: Name); 
+		PROCEDURE ^ ShowOptions*(out: Streams.Writer); 
 		PROCEDURE ^ Show*(out: Streams.Writer); 
 	END Options; 
 

@@ -22,6 +22,8 @@ CONST
 	HeuristicStackInspectionGC* = 0; 
 	MetaDataForStackGC* = 1; 
 TYPE 
+	Name* = ARRAY 96 OF CHAR; 
+
 	RootObject* = OBJECT 
 	VAR 
 		nextRoot: RootObject; 
@@ -114,7 +116,7 @@ TYPE
 		tag: ADDRESS; 
 		flags: SET; 
 		mod: ADDRESS; 
-		name*: ARRAY 32 OF CHAR; 
+		name*: Name; 
 	END; 
 
 	StaticTypeBlock* = POINTER TO StaticTypeDesc; 

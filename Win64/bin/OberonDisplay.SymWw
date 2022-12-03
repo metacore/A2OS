@@ -1,5 +1,5 @@
 MODULE OberonDisplay;
-	IMPORT SYSTEM, Machine, Commands, Displays, Inputs, Modules, Plugins, Raster, WMRectangles, WMGraphics, WM := WMWindowManager;
+	IMPORT SYSTEM, Machine, Commands, Displays, Inputs, Modules, Plugins, Raster, WMRectangles, WMGraphics, Strings, WM := WMWindowManager;
 CONST 
 	DefaultDisplayName = \"Oberon"\; 
 	DefaultWidth = 1024; 

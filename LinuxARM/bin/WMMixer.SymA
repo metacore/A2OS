@@ -1,5 +1,5 @@
 MODULE WMMixer;
-	IMPORT Modules, SoundDevices, Strings, Plugins, WMComponents, WMStandardComponents, WMMessages, WMWindowManager, WMProperties;
+	IMPORT Modules, SoundDevices, Strings, Plugins, WMGraphics, WMComponents, WMStandardComponents, WMMessages, WMWindowManager, WMProperties;
 CONST 
 TYPE 
 	String = Strings.String; 

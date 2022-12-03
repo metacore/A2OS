@@ -1,5 +1,5 @@
 MODULE WMBuilder;
-	IMPORT Modules, Kernel, KernelLog, Streams, Commands, Inputs, Strings, UTF8Strings, Files, XML, XMLObjects, XMLScanner, XMLParser, Math, Repositories, WMRepositories, WMUtilities, WMRectangles, WMGraphics, WMMessages, WMWindowManager, WMRestorable, WMProperties, WMComponents, WMStandardComponents, WMEditors, WMTrees, WMInspectionComponents, WMDialogs, Models, Configuration, StringCollections := GenericCollections(Strings.String,LessString);
+	IMPORT Modules, Kernel, KernelLog, Streams, Commands, Inputs, Strings, UTF8Strings, Files, XML, XMLObjects, XMLScanner, XMLParser, Math, Repositories, WMRepositories, WMUtilities, WMRectangles, WMGraphics, WMMessages, WMWindowManager, WMRestorable, WMProperties, WMComponents, WMStandardComponents, WMEditors, WMTrees, WMInspectionComponents, WMDialogs, Models, Configuration, StringCollections := GenericCollections(Strings.String,UTF8Strings.LessString);
 CONST 
 	WindowWidth = 130; 
 	WindowHeight = 320; 
@@ -453,7 +453,6 @@ VAR
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
 	PROCEDURE ^ LoadCursors; 
 	PROCEDURE ^ LoadRepositories; 
-	PROCEDURE ^ LessString(l, r: Strings.String): BOOLEAN; 
 	PROCEDURE ^ GetId(): SIGNED32; 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 

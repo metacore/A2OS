@@ -491,6 +491,7 @@ VAR
 	PROCEDURE ^ GetErrorMsg*(CONST msg: ARRAY OF CHAR; res: INTEGER; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ GetTransferError*(dev: AosDisks.Device; op, start: SIGNED32; res: INTEGER; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ WriteK*(w: Streams.Writer; k: SIGNED32); 
+	PROCEDURE ^ InitBootLoader*(CONST fileName: ARRAY OF CHAR); 
 	PROCEDURE ^ SetBootLoaderFile*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 
 BEGIN

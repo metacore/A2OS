@@ -1,0 +1,37 @@
+MODULE Stopwatch;
+	IMPORT PrecisionTimer;
+CONST 
+	TicksPerMillisecond = Counter(10000); 
+	TicksPerSecond = (TicksPerMillisecond * 1000); 
+	TicksPerMinute = (TicksPerSecond * 60); 
+	TicksPerHour = (TicksPerMinute * 60); 
+TYPE 
+	Counter* = PrecisionTimer.Counter; 
+
+	Ref* = POINTER TO T; 
+
+	T* = RECORD 
+		elapsed, started: Counter; 
+		isAlive-: BOOLEAN; 
+
+		PROCEDURE ^  & Reset*; 
+		PROCEDURE ^ Start*; 
+		PROCEDURE ^ Restart*; 
+		PROCEDURE ^ StartNew*(): T; 
+		PROCEDURE ^ StartNewRef*(): Ref; 
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ Elapsed*(): Counter; 
+		PROCEDURE ^ ElapsedReal*(): FLOAT64; 
+		PROCEDURE ^ ElapsedMilliseconds*(): Counter; 
+		PROCEDURE ^ ElapsedTicks*(): Counter; 
+	END
+	; 
+VAR 
+	Frequency- := PrecisionTimer.GetFrequency(): Counter; 
+	TicksDivFrequency := (FLOAT64(TicksPerSecond) / Frequency): FLOAT64; 
+
+	PROCEDURE ^ Append(v: SIGNED32; len: SIZE; VAR s: ARRAY OF CHAR; VAR pos: SIZE); 
+	PROCEDURE ^ ToString*(aTicks: Counter; VAR date: ARRAY OF CHAR); 
+	PROCEDURE ^ ToStringReal*(aTicks: FLOAT64; VAR date: ARRAY OF CHAR); 
+BEGIN
+END Stopwatch.

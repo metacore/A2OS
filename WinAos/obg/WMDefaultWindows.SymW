@@ -1,5 +1,5 @@
 MODULE WMDefaultWindows;
-	IMPORT Strings, WM := WMWindowManager, WMRectangles, Raster, Graphics := WMGraphics, Messages := WMMessages, Inputs, KernelLog, WMGraphicUtilities;
+	IMPORT Strings, WM := WMWindowManager, WMRectangles, Raster, Graphics := WMGraphics, Messages := WMMessages, Inputs, WMGraphicUtilities;
 CONST 
 	DraggingSnapRangeBase = 40; 
 	NoCorner = 0; 
@@ -10,7 +10,15 @@ CONST
 	NoButton = 0; 
 	CloseButton = 1; 
 	MinimizeButton = 2; 
+	MaximizeButton = 3; 
+	RestoreButton = 4; 
+	HelpButton = 5; 
+	MenuButton = 6; 
+	UserButton = 7; 
+	Spacer = 8; 
 TYPE 
+	WindowState = WM.WindowState; 
+
 	Window = WM.Window; 
 
 	Message = Messages.Message; 
@@ -49,7 +57,7 @@ TYPE
 
 	TopWindow* = OBJECT (DecorWindow)
 	VAR 
-		closeInactive*, closeActive*, closeSelected*, closeHover*, minimizeInactive*, minimizeActive*, minimizeHover*, titleImg: Graphics.Image; 
+		closeInactive*, closeActive*, closeSelected*, closeHover*, closeHoverInactive*, closePressed*, minimizeInactive*, minimizeActive*, minimizeHover*, minimizeHoverInactive*, minimizePressed*, maximizeInactive*, maximizeActive*, maximizeHover*, maximizeHoverInactive*, maximizePressed*, restoreInactive*, restoreActive*, restoreHover*, restoreHoverInactive*, restorePressed*, titleImg: Graphics.Image; 
 		minimizeOffset, spaceBetweenButtons: SIGNED32; 
 		titleCanvas: Graphics.BufferCanvas; 
 		down, hover: SIGNED32; 

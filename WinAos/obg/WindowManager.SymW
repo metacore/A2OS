@@ -7,6 +7,8 @@ CONST
 	ZF = 9.E-1; 
 	ZD = 1.E-1; 
 TYPE 
+	WindowState = WM.WindowState; 
+
 	Window = WM.Window; 
 
 	Rectangle = Rect.Rectangle; 

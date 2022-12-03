@@ -187,6 +187,7 @@ WIN64 -- 64-bit windows a2
 		Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~	
 	
 -----
+	FSTools.CreateDirectory NewAos ~ 
 
 	System.DoCommands	
 		FSTools.DeleteFiles -s NewAos/* ~

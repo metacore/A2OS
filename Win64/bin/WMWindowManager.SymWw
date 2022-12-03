@@ -218,7 +218,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ InitCursors; 
-		PROCEDURE ^ ZeroSkin*; 
+		PROCEDURE ^ ZeroSkin*(broadcast:= TRUE: BOOLEAN); 
 		PROCEDURE ^ ShutDown*; 
 		PROCEDURE ^ Add*(l, t: SIZE; item: Window; flags: SET); 
 		PROCEDURE ^ Remove*(item: Window); 
@@ -242,9 +242,6 @@ TYPE
 		PROCEDURE ^ SetWindowInfo*(w: Window; CONST info: WindowInfo); 
 		PROCEDURE ^ GetWindowInfo*(w: Window; VAR info: WindowInfo): BOOLEAN; 
 		PROCEDURE ^ SetWindowFlag*(w: Window; flag: SIGNED32; value: BOOLEAN); 
-		PROCEDURE ^ Minimize*(w: Window); 
-		PROCEDURE ^ Maximize*(w: Window); 
-		PROCEDURE ^ Restore*(w: Window); 
 		PROCEDURE ^ SetAcceptDrag*(w: Window; accept: BOOLEAN); 
 		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY ; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
 		PROCEDURE ^ TransferPointer*(to: Window): BOOLEAN; 

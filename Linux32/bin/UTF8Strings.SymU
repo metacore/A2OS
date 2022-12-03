@@ -35,6 +35,7 @@ VAR
 	PROCEDURE ^ CanConcat*(CONST src1, src2, dst: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ CanInsert*(CONST src: ARRAY OF CHAR; idx: SIZE; CONST dst: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Compare*(CONST str1, str2: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ LessString*(l, r: Strings.String): BOOLEAN; 
 	PROCEDURE ^ CompareToUnicode*(CONST utf8: ARRAY OF CHAR; CONST unicode: ARRAY OF SIGNED32): INTEGER; 
 	PROCEDURE ^ FindNext*(CONST pat, str: ARRAY OF CHAR; startidx: SIZE; VAR found: BOOLEAN; VAR patidx: SIZE); 
 	PROCEDURE ^ FindPrev*(CONST pat, str: ARRAY OF CHAR; startidx: SIZE; VAR found: BOOLEAN; VAR patidx: SIZE); 

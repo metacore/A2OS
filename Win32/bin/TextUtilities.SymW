@@ -14,7 +14,7 @@ CONST
 	LoadFormated* = 2; 
 	StoreFormatted* = 3; 
 	BufferedAttributes = 256; 
-	pathToFonts = \"WindowManager.FontManager.SystemFonts"\; 
+	pathToFonts = \"WindowManager.FontManager."\; 
 TYPE 
 	Char32 = Texts.Char32; 
 
@@ -387,7 +387,7 @@ VAR
 	PROCEDURE ^ SetClipboard*(context: Commands.Context); 
 	PROCEDURE ^ GetTextReader*(CONST filename: ARRAY OF CHAR): Streams.Reader; 
 	PROCEDURE ^ GetDefaultAttributes*(): Texts.Attributes; 
-	PROCEDURE ^ GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR family: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetSystemFontSize*(CONST systemName: ARRAY OF CHAR; VAR size: SIZE): BOOLEAN; 
 BEGIN
 END TextUtilities.

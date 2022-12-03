@@ -422,6 +422,7 @@ VAR
 	SetForegroundWindow-: PROCEDURE {WINAPI}(hWnd: HWND):Kernel32.BOOL; 
 	SetMenu-: PROCEDURE {WINAPI}(hWnd: HWND; hMenu: HMenu):Kernel32.BOOL; 
 	SetMenuItemInfo-: PROCEDURE {WINAPI}(hMenu: HMenu; uItem: SIGNED32; fyByPosition: Kernel32.BOOL; VAR lpmii: MenuItemInfo):Kernel32.BOOL; 
+	SetProcessDPIAware-: PROCEDURE {WINAPI}():Kernel32.BOOL; 
 	SetProp-: PROCEDURE {WINAPI}(hWnd: HWND; lpString, hData: SIGNED32):Kernel32.BOOL; 
 	SetWindowsHookEx-: PROCEDURE {WINAPI}(idHook: SIGNED32; lpfn: HookProc; hMod: Kernel32.HINSTANCE; dwThreadId: SIGNED32):HHook; 
 	SetWindowLong-: PROCEDURE {WINAPI}(hWnd: HWND; nIndex, dwNewLong: SIGNED32):SIGNED32; 

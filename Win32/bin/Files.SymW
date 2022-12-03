@@ -188,7 +188,9 @@ VAR
 	fileClipboard: File; 
 
 	PROCEDURE ^ OpenReader*(VAR b: Reader; f: File; pos: Position); 
+	PROCEDURE ^ NewReader*(f: File; pos: Position): Reader; 
 	PROCEDURE ^ OpenWriter*(VAR b: Writer; f: File; pos: Position); 
+	PROCEDURE ^ NewWriter*(f: File; pos: Position): Writer; 
 	PROCEDURE ^ SplitName*(CONST fullname: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR); 
 	PROCEDURE ^ JoinName*(CONST prefix, name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR); 
 	PROCEDURE ^ SplitPath*(CONST pathname: ARRAY OF CHAR; VAR path, name: ARRAY OF CHAR); 
@@ -220,6 +222,8 @@ VAR
 	PROCEDURE ^ AddSearchPath*(context: Commands.Context); 
 	PROCEDURE ^ SetWorkPath*(context: Commands.Context); 
 	PROCEDURE ^ FindOpenFile(enum: FileSearcher; fs: FileSystem; key: SIGNED32): File; 
+	PROCEDURE ^ Read*(VAR r: Rider; VAR x: CHAR); 
+	PROCEDURE ^ ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE); 
 	PROCEDURE ^ ReadSInt*(VAR r: Rider; VAR x: SIGNED8); 
 	PROCEDURE ^ ReadInt*(VAR r: Rider; VAR x: SIGNED16); 
 	PROCEDURE ^ ReadLInt*(VAR r: Rider; VAR x: SIGNED32); 
@@ -231,6 +235,8 @@ VAR
 	PROCEDURE ^ ReadString*(VAR r: Rider; VAR x: ARRAY OF CHAR); 
 	PROCEDURE ^ ReadNum*(VAR r: Rider; VAR x: SIGNED32); 
 	PROCEDURE ^ ReadSize*(VAR r: Rider; VAR x: Size); 
+	PROCEDURE ^ Write*(VAR r: Rider; x: CHAR); 
+	PROCEDURE ^ WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
 	PROCEDURE ^ WriteSInt*(VAR r: Rider; x: SIGNED8); 
 	PROCEDURE ^ WriteInt*(VAR r: Rider; x: SIGNED16); 
 	PROCEDURE ^ WriteLInt*(VAR r: Rider; x: SIGNED32); 

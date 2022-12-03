@@ -1,5 +1,5 @@
 MODULE TestComponentDragDrop;
-	IMPORT KernelLog, Modules, WMStandardComponents, WMComponents, WMGraphics, WMDialogs, WM := WMWindowManager;
+	IMPORT KernelLog, Modules, WMStandardComponents, Strings, WMComponents, WMGraphics, WMDialogs, WM := WMWindowManager;
 CONST 
 TYPE 
 	TestComponent = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)

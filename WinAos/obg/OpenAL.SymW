@@ -1,0 +1,287 @@
+MODULE OpenAL;
+	IMPORT SYSTEM, Modules, Strings, KernelLog, HostLibs;
+CONST 
+	debug = FALSE; 
+	libname = \"OpenAL32.dll"\; 
+	AL_INVALID* =  -1; 
+	AL_NONE* = 0; 
+	AL_FALSE* = 0; 
+	AL_TRUE* = 1; 
+	AL_SOURCE_RELATIVE* = 514; 
+	AL_CONE_INNER_ANGLE* = 4097; 
+	AL_CONE_OUTER_ANGLE* = 4098; 
+	AL_PITCH* = 4099; 
+	AL_POSITION* = 4100; 
+	AL_DIRECTION* = 4101; 
+	AL_VELOCITY* = 4102; 
+	AL_LOOPING* = 4103; 
+	AL_BUFFER* = 4105; 
+	AL_GAIN* = 4106; 
+	AL_MIN_GAIN* = 4109; 
+	AL_MAX_GAIN* = 4110; 
+	AL_ORIENTATION* = 4111; 
+	AL_SOURCE_STATE* = 4112; 
+	AL_INITIAL* = 4113; 
+	AL_PLAYING* = 4114; 
+	AL_PAUSED* = 4115; 
+	AL_STOPPED* = 4116; 
+	AL_BUFFERS_QUEUED* = 4117; 
+	AL_BUFFERS_PROCESSED* = 4118; 
+	AL_REFERENCE_DISTANCE* = 4128; 
+	AL_ROLLOFF_FACTOR* = 4129; 
+	AL_CONE_OUTER_GAIN* = 4130; 
+	AL_MAX_DISTANCE* = 4131; 
+	AL_SEC_OFFSET* = 4132; 
+	AL_SAMPLE_OFFSET* = 4133; 
+	AL_BYTE_OFFSET* = 4134; 
+	AL_SOURCE_TYPE* = 4135; 
+	AL_STATIC* = 4136; 
+	AL_STREAMING* = 4137; 
+	AL_UNDETERMINED* = 4144; 
+	AL_FORMAT_MONO8* = 4352; 
+	AL_FORMAT_MONO16* = 4353; 
+	AL_FORMAT_STEREO8* = 4354; 
+	AL_FORMAT_STEREO16* = 4355; 
+	AL_FREQUENCY* = 8193; 
+	AL_BITS* = 8194; 
+	AL_CHANNELS* = 8195; 
+	AL_SIZE* = 8196; 
+	AL_UNUSED* = 8208; 
+	AL_PENDING* = 8209; 
+	AL_PROCESSED* = 8210; 
+	AL_NO_ERROR* = AL_FALSE; 
+	AL_INVALID_NAME* = 40961; 
+	AL_INVALID_ENUM* = 40962; 
+	AL_INVALID_VALUE* = 40963; 
+	AL_INVALID_OPERATION* = 40964; 
+	AL_OUT_OF_MEMORY* = 40965; 
+	AL_VENDOR* = 45057; 
+	AL_VERSION* = 45058; 
+	AL_RENDERER* = 45059; 
+	AL_EXTENSIONS* = 45060; 
+	AL_DOPPLER_FACTOR* = 49152; 
+	AL_DOPPLER_VELOCITY* = 49153; 
+	AL_SPEED_OF_SOUND* = 49155; 
+	AL_DISTANCE_MODEL* = 53248; 
+	AL_INVERSE_DISTANCE* = 53249; 
+	AL_INVERSE_DISTANCE_CLAMPED* = 53250; 
+	AL_LINEAR_DISTANCE* = 53251; 
+	AL_LINEAR_DISTANCE_CLAMPED* = 53252; 
+	AL_EXPONENT_DISTANCE* = 53253; 
+	AL_EXPONENT_DISTANCE_CLAMPED* = 53254; 
+	ALC_INVALID* =  -1; 
+	ALC_FALSE* = AL_FALSE; 
+	ALC_TRUE* = AL_TRUE; 
+	ALC_FREQUENCY* = 4103; 
+	ALC_REFRESH* = 4104; 
+	ALC_SYNC* = 4105; 
+	ALC_MONO_SOURCES* = 4112; 
+	ALC_STEREO_SOURCES* = 4113; 
+	ALC_NO_ERROR* = ALC_FALSE; 
+	ALC_INVALID_DEVICE* = 40961; 
+	ALC_INVALID_CONTEXT* = 40962; 
+	ALC_INVALID_ENUM* = 40963; 
+	ALC_INVALID_VALUE* = 40964; 
+	ALC_OUT_OF_MEMORY* = 40965; 
+	ALC_MAJOR_VERSION* = 4096; 
+	ALC_MINOR_VERSION* = 4097; 
+	ALC_ATTRIBUTES_SIZE* = 4098; 
+	ALC_ALL_ATTRIBUTES* = 4099; 
+	ALC_DEFAULT_DEVICE_SPECIFIER* = 4100; 
+	ALC_DEVICE_SPECIFIER* = 4101; 
+	ALC_EXTENSIONS* = 4102; 
+	ALC_CAPTURE_DEVICE_SPECIFIER* = 784; 
+	ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER* = 785; 
+	ALC_CAPTURE_SAMPLES* = 786; 
+	ALC_DEFAULT_ALL_DEVICES_SPECIFIER* = 4114; 
+	ALC_ALL_DEVICES_SPECIFIER* = 4115; 
+TYPE 
+	StringArray* = Strings.StringArray; 
+
+	ALboolean* = BOOLEAN; 
+
+	ALchar* = CHAR; 
+
+	ALbyte* = SIGNED8; 
+
+	ALubyte* = UNSIGNED8; 
+
+	ALshort* = SIGNED16; 
+
+	ALushort* = UNSIGNED16; 
+
+	ALint* = SIGNED32; 
+
+	ALuint* = UNSIGNED32; 
+
+	ALsizei* = SIGNED32; 
+
+	ALenum* = SIGNED32; 
+
+	ALfloat* = FLOAT32; 
+
+	ALdouble* = FLOAT64; 
+
+	ALvoid* = ADDRESS; 
+
+	PALboolean* = ADDRESS; 
+
+	PALfloat* = ADDRESS; 
+
+	PALdouble* = ADDRESS; 
+
+	PALbyte* = ADDRESS; 
+
+	PALshort* = ADDRESS; 
+
+	PALint* = ADDRESS; 
+
+	PALubyte* = ADDRESS; 
+
+	PALushort* = ADDRESS; 
+
+	PALuint* = ADDRESS; 
+
+	ALCboolean* = ALboolean; 
+
+	ALCchar* = ALchar; 
+
+	ALCbyte* = ALbyte; 
+
+	ALCubyte* = ALubyte; 
+
+	ALCshort* = ALshort; 
+
+	ALCushort* = ALushort; 
+
+	ALCint* = ALint; 
+
+	ALCuint* = ALuint; 
+
+	ALCsizei* = ALsizei; 
+
+	ALCenum* = ALenum; 
+
+	ALCfloat* = ALfloat; 
+
+	ALCdouble* = ALdouble; 
+
+	ALCvoid* = ALvoid; 
+
+	ALCcontext* = POINTER {UNTRACED, UNSAFE} TO RECORD 
+	END; 
+
+	ALCdevice* = POINTER {UNTRACED, UNSAFE} TO RECORD 
+	END; 
+
+	PALCint* = PALint; 
+
+	PALCuint* = PALuint; 
+VAR 
+	oalib-: HostLibs.LibHandle; 
+	alDistanceModel-: PROCEDURE {WINAPI}(value: ALenum); 
+	alDopplerFactor-: PROCEDURE {WINAPI}(value: ALfloat); 
+	alSpeedOfSound-: PROCEDURE {WINAPI}(value: ALfloat); 
+	alDopplerVelocity-: PROCEDURE {WINAPI}(value: ALfloat); 
+	alEnable-: PROCEDURE {WINAPI}(capability: ALenum); 
+	alDisable-: PROCEDURE {WINAPI}(capability: ALenum); 
+	alIsEnabled-: PROCEDURE {WINAPI}(capability: ALenum):ALboolean; 
+	XalGetString-: PROCEDURE {WINAPI}(param: ALenum):ADDRESS; 
+	alGetBooleanv-: PROCEDURE {WINAPI}(param: ALenum; VAR data: ALboolean); 
+	alGetIntegerv-: PROCEDURE {WINAPI}(param: ALenum; VAR data: ALint); 
+	alGetFloatv-: PROCEDURE {WINAPI}(param: ALenum; VAR data: ALfloat); 
+	alGetDoublev-: PROCEDURE {WINAPI}(param: ALenum; VAR data: ALdouble); 
+	alGetBoolean-: PROCEDURE {WINAPI}(param: ALenum):ALboolean; 
+	alGetInteger-: PROCEDURE {WINAPI}(param: ALenum):ALint; 
+	alGetFloat-: PROCEDURE {WINAPI}(param: ALenum):ALfloat; 
+	alGetDouble-: PROCEDURE {WINAPI}(param: ALenum):ALdouble; 
+	alGetError-: PROCEDURE {WINAPI}():ALenum; 
+	alIsExtensionPresent-: PROCEDURE {WINAPI}(CONST fname: ARRAY OF CHAR):ALboolean; 
+	XalGetProcAddress-: PROCEDURE {WINAPI}(CONST fname: ARRAY OF CHAR):ADDRESS; 
+	alGetEnumValue-: PROCEDURE {WINAPI}(CONST ename: ARRAY OF CHAR):ALenum; 
+	alListenerf-: PROCEDURE {WINAPI}(param: ALenum; value: ALfloat); 
+	alListener3f-: PROCEDURE {WINAPI}(param: ALenum; v1, v2, v3: ALfloat); 
+	alListenerfv-: PROCEDURE {WINAPI}(param: ALenum; values: PALfloat); 
+	alListeneri-: PROCEDURE {WINAPI}(param: ALenum; value: ALint); 
+	alListener3i-: PROCEDURE {WINAPI}(param: ALenum; v1, v2, v3: ALint); 
+	alListeneriv-: PROCEDURE {WINAPI}(param: ALenum; values: PALint); 
+	alGetListenerf-: PROCEDURE {WINAPI}(param: ALenum; VAR value: ALfloat); 
+	alGetListener3f-: PROCEDURE {WINAPI}(param: ALenum; VAR v1, v2, v3: ALfloat); 
+	alGetListenerfv-: PROCEDURE {WINAPI}(param: ALenum; values: PALfloat); 
+	alGetListeneri-: PROCEDURE {WINAPI}(param: ALenum; VAR value: ALint); 
+	alGetListener3i-: PROCEDURE {WINAPI}(param: ALenum; VAR v1, v2, v3: ALint); 
+	alGetListeneriv-: PROCEDURE {WINAPI}(param: ALenum; values: PALint); 
+	alGenSources-: PROCEDURE {WINAPI}(n: ALsizei; sources: PALuint); 
+	alDeleteSources-: PROCEDURE {WINAPI}(n: ALsizei; sources: PALuint); 
+	alIsSource-: PROCEDURE {WINAPI}(id: ALuint):ALboolean; 
+	alSourcef-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; value: ALfloat); 
+	alSource3f-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; v1, v2, v3: ALfloat); 
+	alSourcefv-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; values: PALfloat); 
+	alSourcei-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; value: ALuint); 
+	alSource3i-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; v1, v2, v3: ALint); 
+	alSourceiv-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; values: PALint); 
+	alGetSourcef-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; VAR value: ALfloat); 
+	alGetSource3f-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; VAR v1, v2, v3: ALfloat); 
+	alGetSourcefv-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; values: PALfloat); 
+	alGetSourcei-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; VAR value: ALint); 
+	alGetSource3i-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; VAR v1, v2, v3: ALint); 
+	alGetSourceiv-: PROCEDURE {WINAPI}(source: ALuint; param: ALenum; values: PALint); 
+	alSourcePlayv-: PROCEDURE {WINAPI}(n: ALsizei; sources: PALuint); 
+	alSourceStopv-: PROCEDURE {WINAPI}(n: ALsizei; sources: PALuint); 
+	alSourceRewindv-: PROCEDURE {WINAPI}(n: ALsizei; sources: PALuint); 
+	alSourcePausev-: PROCEDURE {WINAPI}(n: ALsizei; sources: PALuint); 
+	alSourcePlay-: PROCEDURE {WINAPI}(source: ALuint); 
+	alSourceStop-: PROCEDURE {WINAPI}(source: ALuint); 
+	alSourceRewind-: PROCEDURE {WINAPI}(source: ALuint); 
+	alSourcePause-: PROCEDURE {WINAPI}(source: ALuint); 
+	alSourceQueueBuffers-: PROCEDURE {WINAPI}(source: ALuint; n: ALsizei; buffers: PALuint); 
+	alSourceUnqueueBuffers-: PROCEDURE {WINAPI}(source: ALuint; n: ALsizei; buffers: PALuint); 
+	alGenBuffers-: PROCEDURE {WINAPI}(n: ALsizei; buffers: PALuint); 
+	alDeleteBuffers-: PROCEDURE {WINAPI}(n: ALsizei; buffers: PALuint); 
+	alIsBuffer-: PROCEDURE {WINAPI}(buffer: ALuint):ALboolean; 
+	alBufferData-: PROCEDURE {WINAPI}(buffer: ALuint; format: ALenum; data: ADDRESS; size, freq: ALsizei); 
+	alBufferf-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; value: ALfloat); 
+	alBuffer3f-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; v1, v2, v3: ALfloat); 
+	alBufferfv-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; value: PALfloat); 
+	alBufferi-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; value: ALint); 
+	alBuffer3i-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; v1, v2, v3: ALint); 
+	alBufferiv-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; value: PALint); 
+	alGetBufferf-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; VAR value: ALfloat); 
+	alGetBuffer3f-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; VAR v1, v2, v3: ALfloat); 
+	alGetBufferfv-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; value: PALfloat); 
+	alGetBufferi-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; VAR value: ALint); 
+	alGetBuffer3i-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; VAR v1, v2, v3: ALint); 
+	alGetBufferiv-: PROCEDURE {WINAPI}(buffer: ALuint; param: ALenum; value: PALint); 
+	alcCreateContext-: PROCEDURE {WINAPI}(device: ALCdevice; attrList: PALCint):ALCcontext; 
+	alcMakeContextCurrent-: PROCEDURE {WINAPI}(context: ALCcontext):ALCboolean; 
+	alcProcessContext-: PROCEDURE {WINAPI}(context: ALCcontext); 
+	alcSuspendContext-: PROCEDURE {WINAPI}(context: ALCcontext); 
+	alcDestroyContext-: PROCEDURE {WINAPI}(context: ALCcontext); 
+	alcGetCurrentContext-: PROCEDURE {WINAPI}():ALCcontext; 
+	alcGetContextsDevice-: PROCEDURE {WINAPI}(context: ALCcontext):ALCdevice; 
+	alcOpenDevice-: PROCEDURE {WINAPI}(CONST deviceName: ARRAY OF CHAR):ALCdevice; 
+	alcCloseDevice-: PROCEDURE {WINAPI}(device: ALCdevice):ALCboolean; 
+	alcGetError-: PROCEDURE {WINAPI}(device: ALCdevice):ALCenum; 
+	alcIsExtensionPresent-: PROCEDURE {WINAPI}(device: ALCdevice; CONST extName: ARRAY OF CHAR):ALCboolean; 
+	XalcGetProcAddress-: PROCEDURE {WINAPI}(device: ALCdevice; CONST funcName: ARRAY OF CHAR):ADDRESS; 
+	alcGetEnumValue-: PROCEDURE {WINAPI}(device: ALCdevice; VAR enumName: ALCubyte):ALCenum; 
+	XalcGetString-: PROCEDURE {WINAPI}(device: ALCdevice; param: ALCenum):ADDRESS; 
+	alcGetIntegerv-: PROCEDURE {WINAPI}(device: ALCdevice; param: ALCenum; size: ALCsizei; data: PALCint); 
+	alcCaptureOpenDevice-: PROCEDURE {WINAPI}(CONST devicename: ARRAY OF CHAR; frequency: ALCuint; format: ALCenum; buffersize: ALCsizei):ALCdevice; 
+	alcCaptureCloseDevice-: PROCEDURE {WINAPI}(device: ALCdevice):ALCboolean; 
+	alcCaptureStart-: PROCEDURE {WINAPI}(device: ALCdevice); 
+	alcCaptureStop-: PROCEDURE {WINAPI}(device: ALCdevice); 
+	alcCaptureSamples-: PROCEDURE {WINAPI}(device: ALCdevice; buffer: ALCvoid; samples: ALCsizei); 
+
+	PROCEDURE ^ GetProcAddress*(lib: HostLibs.LibHandle; CONST procName: ARRAY OF CHAR; adr: ADDRESS); 
+	PROCEDURE ^ LoadFunctions; 
+	PROCEDURE ^ OnClose; 
+	PROCEDURE ^ alGetProcAddress*(CONST funcName: ARRAY OF CHAR; adr: ADDRESS); 
+	PROCEDURE ^ alcGetProcAddress*(device: ALCdevice; CONST funcName: ARRAY OF CHAR; adr: ADDRESS); 
+	PROCEDURE ^ GetStringFromAddr*(adr: ADDRESS): Strings.String; 
+	PROCEDURE ^ alGetString*(name: ALenum): Strings.String; 
+	PROCEDURE ^ alcGetString*(device: ALCdevice; name: ALCenum): Strings.String; 
+	PROCEDURE ^ GetDevStringFromAddr*(adr: ADDRESS): Strings.String; 
+	PROCEDURE ^ ALCGetDeviceList*(device: ALCdevice; name: ALCenum): StringArray; 
+BEGIN
+END OpenAL.

@@ -19,7 +19,7 @@ CONST
 	PreciseGC* = 0; 
 	ModuleInitTimeout = SIGNED64(3000000000); 
 TYPE 
-	Name* = ARRAY 96 OF CHAR; 
+	Name* = Heaps.Name; 
 
 	DynamicName* = POINTER {UNSAFE, UNTRACED} TO ARRAY 256 OF CHAR; 
 

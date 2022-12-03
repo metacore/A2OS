@@ -1,5 +1,5 @@
 MODULE VNC;
-	IMPORT SYSTEM, Streams, KernelLog, Objects, Commands, Network, IP, TCP, DNS, DES, Inputs, Raster, WMWindowManager, Rect := WMRectangles, Dialogs := WMDialogs, Beep, Files;
+	IMPORT SYSTEM, Streams, KernelLog, Objects, Commands, Network, IP, TCP, DNS, DES, Strings, Inputs, Raster, WMWindowManager, Rect := WMRectangles, Dialogs := WMDialogs, Beep, Files;
 CONST 
 	OpenTimeout = 10000; 
 	CloseTimeout = 2000; 

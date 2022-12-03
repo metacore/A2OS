@@ -1,10 +1,11 @@
 MODULE OGGVorbisPlayer;
-	IMPORT SYSTEM, Strings, KernelLog, Streams, Files, Commands, SoundDevices, BIT, Math, OGGUtilities, Modules, Kernel, TCP, WebHTTP, WebHTTPClient;
+	IMPORT SYSTEM, Strings, KernelLog, Streams, Files, Commands, SoundDevices, BIT, Math, OGGUtilities, Modules, Kernel, TCP, WebHTTP, NewHTTPClient;
 CONST 
 	Trace = 1; 
 	Error = 2; 
 	Codec = 3; 
 	Debug = {Error}; 
+	http11 = TRUE; 
 	Vorbis = \"vorbis"\; 
 	CodebookSynchPattern = 5653314; 
 	Ok = 0; 
@@ -420,7 +421,7 @@ VAR
 	PROCEDURE ^ Stop*(context: Commands.Context); 
 	PROCEDURE ^ IsWebStream(VAR url: Strings.String): BOOLEAN; 
 	PROCEDURE ^ IsM3UPlaylist(VAR url: Strings.String): BOOLEAN; 
-	PROCEDURE ^ GetURLFromM3U(VAR url: Strings.String); 
+	PROCEDURE ^ GetURLFromM3U(httpCon: NewHTTPClient.HTTPConnection; VAR url: Strings.String): BOOLEAN; 
 	PROCEDURE ^ Cleanup; 
 BEGIN
 END OGGVorbisPlayer.

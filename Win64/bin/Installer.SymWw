@@ -5,7 +5,7 @@ CONST
 	Free =  -1; 
 	AosFsName = \"AosFS"\; 
 	DefaultMBRFile = \"OBEMBR.BIN"\; 
-	DefaultBootLoader = \"OBL.Bin"\; 
+	DefaultBootLoader = \"OBLUnreal.Bin"\; 
 	DefaultBootfile = \"IDE.Bin"\; 
 	DefaultUsbBootfile = \"USB.Bin"\; 
 	DefaultBootManMBR = \"BootManagerMBR.Bin"\; 

@@ -24,6 +24,7 @@ CONST
 	ImportsSystem = 0; 
 	SourceCode = 1; 
 	HasReleasePrefix = 2; 
+	Template = 3; 
 	Undefined = 0; 
 	Required = 1; 
 	Yes = 2; 
@@ -162,6 +163,7 @@ TYPE
 		PROCEDURE ^  & Init(builds: Builds); 
 		PROCEDURE ^ IsInRelease*(CONST release: Set): BOOLEAN; 
 		PROCEDURE ^ IsSourceCode*(): BOOLEAN; 
+		PROCEDURE ^ IsTemplate*(): BOOLEAN; 
 		PROCEDURE ^ CheckImports*(diagnostics: Diagnostics.Diagnostics; build: BuildObj; VAR error: BOOLEAN); 
 		PROCEDURE ^ ParseModule*(diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ Show*(w: Streams.Writer); 
@@ -216,6 +218,7 @@ TYPE
 		PROCEDURE ^ AnalyzeDependencies(out: Streams.Writer); 
 		PROCEDURE ^ ShowDependencies(out: Streams.Writer); 
 		PROCEDURE ^ ClearMarks; 
+		PROCEDURE ^ ClearTemplates; 
 		PROCEDURE ^ MarkFiles(CONST filename: Files.FileName; VAR inBuild: BOOLEAN; VAR nofNewMarks: SIZE); 
 		PROCEDURE ^ ShowDependentModules(CONST modulename: Modules.Name; mode: INTEGER; out: Streams.Writer); 
 		PROCEDURE ^ GetCompilerOptions(VAR options: ARRAY OF CHAR); 

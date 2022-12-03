@@ -16,6 +16,9 @@ CONST
 	MsgInvalidate* = 11; 
 	MsgSerialize* = 12; 
 	MsgMerged* = 15; 
+	MsgMinimize* = 16; 
+	MsgMaximize* = 17; 
+	MsgRestore* = 18; 
 	MsgSubPointerMove* = 0; 
 	MsgSubPointerDown* = 1; 
 	MsgSubPointerUp* = 2; 
@@ -55,8 +58,8 @@ TYPE
 
 	AsyncToken* = OBJECT {EXCLUSIVE} 
 	VAR 
-		ready: BOOLEAN; 
-		result*: ANY ; 
+		ready := FALSE: BOOLEAN; 
+		result* := NIL: ANY ; 
 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ AwaitCompletion*; 

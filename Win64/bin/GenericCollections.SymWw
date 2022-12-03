@@ -2,22 +2,22 @@
 (*
 
 	Module implements the base generic collection objects:
-		
+
 		Queue - simple (L)ast (I)n (F)irst (O)ut stack;
-		
+
 		DEQue - Double Ended Queue or (F)irst (I)n (F)irst (O)ut stack;
-		
+
 		Vector - simple linear container with possibilities of out of order elements' insertions and removal.
 			Also sorting and searching of elements are supported.
-	
+
 	Parameters of this module are:
-		
+
 		T - any type;
-		
+
 		Less - procedure, that returns result of "less than" comparison,
 			with signature "(l, r: T): BOOLEAN". Less procedure are present
 			mostly for Vector's sorting and searching functionality.
-		
+
 *)
 MODULE GenericCollections(TYPE T, CONST Less);
 CONST 

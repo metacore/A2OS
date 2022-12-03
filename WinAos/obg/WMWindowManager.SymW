@@ -14,6 +14,8 @@ CONST
 	FlagNoResizing* = 10; 
 	FlagNoPointer* = 11; 
 	FlagStorable* = 12; 
+	FlagDirty* = 13; 
+	FlagMaximize* = 14; 
 	SizeMinHeight = 3; 
 	SizeMinWidth = 3; 
 	Ok* = 0; 
@@ -40,13 +42,15 @@ TYPE
 
 	WindowStyle* = OBJECT 
 	VAR 
+		version*: SIGNED32; 
 		useBitmaps*: BOOLEAN; 
 		baCol*, biCol*: SIGNED32; 
 		basw*, bisw*: SIGNED32; 
 		th*, bh*, lw*, rw*: SIZE; 
 		taa*, tab*, tac*, tia*, tib*, tic*, laa*, lab*, lac*, lia*, lib*, lic*, raa*, rab*, rac*, ria*, rib*, ric*, baa*, bab*, bac*, bia*, bib*, bic*: Graphics.Image; 
-		ca*, ci*, closeHover*, ma*, mi*, minimizeHover*: Graphics.Image; 
-		spaceBetweenButtons*, minimizeOffset*: SIGNED32; 
+		ca*, ci*, closeHover*, closeHoverInactive*, closePressed*, ma*, mi*, minimizeHover*, minimizeHoverInactive*, minimizePressed*, maximizeActive*, maximizeInactive*, maximizeHover*, maximizeHoverInactive*, maximizePressed*, restoreActive*, restoreInactive*, restoreHover*, restoreHoverInactive*, restorePressed*, userActive*, userInactive*, userHover*, userHoverInactive*, userPressed*: Graphics.Image; 
+		buttonLeftMargin*, buttonTopMargin*, buttonRightMargin*, spaceBetweenButtons*, minimizeOffset*: SIGNED32; 
+		buttonAlignedToTop*, buttonAlignedToLeft*: BOOLEAN; 
 		atextX*, atextY*, atextColor*, itextX*, itextY*, itextColor*: SIGNED32; 
 		bgColor*, fgColor*, selectCol*, desktopColor*: Graphics.Color; 
 		topFocusThreshold*, topThreshold*, bottomFocusThreshold*, bottomThreshold*, leftFocusThreshold*, leftThreshold*, rightFocusThreshold*, rightThreshold*: SIGNED32; 
@@ -96,10 +100,13 @@ TYPE
 
 	WindowInfoPtr = POINTER TO WindowInfo; 
 
+	WindowState* = ENUM Normal* = 0, Minimized* = 1, Maximized* = 2 END; 
+
 	Window* = OBJECT 
 	VAR 
 		id-: SIGNED32; 
 		timestamp*: SIGNED32; 
+		windowState*, windowStateSaved*: WindowState; 
 		bounds*: Rectangle; 
 		initialBounds*: Rectangle; 
 		normalBounds*: Rectangle; 
@@ -211,7 +218,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ InitCursors; 
-		PROCEDURE ^ ZeroSkin*; 
+		PROCEDURE ^ ZeroSkin*(broadcast:= TRUE: BOOLEAN); 
 		PROCEDURE ^ ShutDown*; 
 		PROCEDURE ^ Add*(l, t: SIZE; item: Window; flags: SET); 
 		PROCEDURE ^ Remove*(item: Window); 

@@ -12,5 +12,6 @@ TYPE
 	PROCEDURE ^ Execute(CONST modName, procName: Modules.Name); 
 	PROCEDURE ^ StartSystem; 
 	PROCEDURE ^ InitSignalHandling; 
+	PROCEDURE ^ Start*; 
 BEGIN
 END BootConsole.

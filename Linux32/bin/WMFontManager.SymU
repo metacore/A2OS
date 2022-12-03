@@ -1,6 +1,9 @@
 MODULE WMFontManager;
 	IMPORT KernelLog, Kernel, Modules, Commands, WMGraphics, WMDefaultFont, Strings, Configuration, XML, XMLObjects;
 CONST 
+	FontName* = 0; 
+	FontSize* = 1; 
+	FontStyle* = 2; 
 TYPE 
 	String = XML.String; 
 
@@ -9,6 +12,7 @@ TYPE
 		name*: String; 
 		size*: SIZE; 
 		style*: SET; 
+		defined: SET; 
 
 		PROCEDURE ^  & Init*; 
 	END FontInfo; 
@@ -39,7 +43,7 @@ TYPE
 		found: BOOLEAN; 
 		exactLoaders, approximateLoaders: LoaderInfo; 
 		defaultFontName: ARRAY 256 OF CHAR; 
-		defaultFontSize: SIGNED32; 
+		defaultFontSize: SIZE; 
 		defaultFontStyle: SET; 
 		systemFontInfo: FontInfoArray; 
 		systemFontAlias: FontAliasArray; 
@@ -53,7 +57,8 @@ TYPE
 		PROCEDURE ^ GetConfig; 
 		PROCEDURE ^ Load(ln: String; fi: FontInfo): WMGraphics.Font; 
 		PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): WMGraphics.Font; 
-		PROCEDURE ^ GetSystemFont*(CONST alias: ARRAY OF CHAR): WMGraphics.Font; 
+		PROCEDURE ^ GetSystemFont*(CONST systemName: ARRAY OF CHAR): WMGraphics.Font; 
+		PROCEDURE ^ GetSystemFontInfo*(CONST systemName: ARRAY OF CHAR; VAR name: ARRAY OF CHAR; VAR size: SIZE; VAR style: SET): BOOLEAN; 
 	END FontManager; 
 VAR 
 	fm: FontManager; 

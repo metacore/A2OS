@@ -1,5 +1,5 @@
 MODULE MPEGVideoDecoder;
-	IMPORT SYSTEM, Codec := Codecs, Raster, Streams, KernelLog, Files, WMGraphics, MPEGTables, WM := WMWindowManager, Rectangles := WMRectangles, Kernel, Commands, Util := MPEGUtilities;
+	IMPORT SYSTEM, Codec := Codecs, Raster, Streams, KernelLog, Files, WMGraphics, MPEGTables, WM := WMWindowManager, Rectangles := WMRectangles, Kernel, Commands, Util := MPEGUtilities, Strings;
 CONST 
 	SCPicture* = CHR(0); 
 	SCUserData* = CHR(178); 

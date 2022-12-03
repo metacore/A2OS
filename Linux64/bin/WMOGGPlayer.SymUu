@@ -1,5 +1,5 @@
 MODULE WMOGGPlayer;
-	IMPORT Commands, Files, Modules, Strings, WMMessages, WMComponents, WMStandardComponents, WMGrids, WMStringGrids, OGGVorbisPlayer, WM := WMWindowManager;
+	IMPORT Commands, Files, Modules, Strings, WMMessages, WMComponents, WMStandardComponents, WMGrids, WMStringGrids, OGGVorbisPlayer, WM := WMWindowManager, WMRestorable;
 CONST 
 TYPE 
 	KillerMsg = OBJECT 
@@ -13,9 +13,8 @@ TYPE
 	Player = OBJECT {EXCLUSIVE} 
 	VAR 
 		url: Strings.String; 
-		dummy: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(url: Strings.String); 
+		PROCEDURE ^  & Init(url: Strings.String); 
 	BEGIN{ACTIVE} 
 	END Player; 
 
@@ -26,7 +25,7 @@ TYPE
 		player: Player; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
-		PROCEDURE ^  & New*(filename: Files.FileName); 
+		PROCEDURE ^  & New*(filename: Files.FileName; c: WMRestorable.Context); 
 		PROCEDURE ^ FillList(OGGlist: ARRAY OF CHAR); 
 		PROCEDURE ^ Play(sender, data: ANY ); 
 		PROCEDURE ^ Stop(sender, data: ANY ); 
@@ -37,6 +36,7 @@ VAR
 	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 
 	PROCEDURE ^ Cleanup; 

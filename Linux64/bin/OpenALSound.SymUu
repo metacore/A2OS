@@ -1,5 +1,5 @@
 MODULE OpenALSound;
-	IMPORT S := SYSTEM, Modules, SoundDevices, AL := OpenAL, Objects, Files, Strings, Streams, Log := KernelLog;
+	IMPORT Modules, SoundDevices, AL := OpenAL, Files, Strings, Streams, Kernel, Log := KernelLog;
 CONST 
 	StatePlaying = 1; 
 	StatePaused = 3; 
@@ -36,11 +36,12 @@ TYPE
 		buffers: ARRAY NumBuffers OF AL.ALuint; 
 		freeBuffers: AL.ALint; 
 		bufferListener: SoundDevices.BufferListener; 
-		frequency: AL.ALuint; 
+		frequency: AL.ALsizei; 
 		format: AL.ALenum; 
 		count: SIGNED32; 
 		volume: SIGNED32; 
 		state: SIGNED32; 
+		timer: Kernel.Timer; 
 		driver: Driver; 
 
 		PROCEDURE ^  & Initialize*(driver: Driver; samplingRate, bitsPerSample, nofChannels: SIGNED32); 

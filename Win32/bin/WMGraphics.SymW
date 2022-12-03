@@ -1,5 +1,5 @@
 MODULE WMGraphics;
-	IMPORT Kernel, Rectangles := WMRectangles, Raster, KernelLog, UTF8Strings, Strings, RasterScale := WMRasterScale, Codecs, Files, Streams, Reals, Configuration;
+	IMPORT Kernel, Rectangles := WMRectangles, Raster, KernelLog, UTF8Strings, Strings, RasterScale := WMRasterScale, Codecs, Files, Streams, Reals;
 CONST 
 	ModeCopy* = RasterScale.ModeCopy; 
 	ModeSrcOverDst* = RasterScale.ModeSrcOverDst; 
@@ -26,7 +26,6 @@ CONST
 	AlignRight* = 2; 
 	AlignTop* = 0; 
 	AlignBottom* = 2; 
-	pathToFonts = \"WindowManager.FontManager.SystemFonts"\; 
 TYPE 
 	Real* = FLOAT32; 
 
@@ -74,6 +73,7 @@ TYPE
 
 		PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): Font; 
 		PROCEDURE ^ GetSystemFont*(CONST name: ARRAY OF CHAR): Font; 
+		PROCEDURE ^ GetSystemFontInfo*(CONST systemName: ARRAY OF CHAR; VAR name: ARRAY OF CHAR; VAR size: SIZE; VAR style: SET): BOOLEAN; 
 	END FontManager; 
 
 	CanvasState* = RECORD 
@@ -167,6 +167,11 @@ VAR
 	PROCEDURE ^ MakeRectangle*(l, t, r, b: SIZE): Rectangle; 
 	PROCEDURE ^ ColorToRGBA*(color: Color; VAR r, g, b, a: SIGNED32); 
 	PROCEDURE ^ RGBAToColor*(r, g, b, a: SIGNED32): Color; 
+	PROCEDURE ^ RGBtoHSL*(r, g, b: SIGNED32; VAR h, s, l: SIGNED32); 
+	PROCEDURE ^ HSLtoRGB*(h, s, l: SIGNED32; VAR r, g, b: SIGNED32); 
+	PROCEDURE ^ ComplementaryRGB*(r, g, b: SIGNED32; VAR R, G, B: SIGNED32); 
+	PROCEDURE ^ DominantRGB*(r, g, b: SIGNED32; VAR R, G, B: SIGNED32); 
+	PROCEDURE ^ ChangeBrightnessHSL*(r, g, b: SIGNED32; VAR R, G, B: SIGNED32; amount: SIGNED32); 
 	PROCEDURE ^ Dark*(color: Color): Color; 
 	PROCEDURE ^ Light*(color: Color): Color; 
 	PROCEDURE ^ CheckImage(obj: ANY ; VAR cont: BOOLEAN); 
@@ -178,8 +183,9 @@ VAR
 	PROCEDURE ^ InstallDefaultFont*(f: Font); 
 	PROCEDURE ^ GetDefaultFont*(): Font; 
 	PROCEDURE ^ InstallFontManager*(fm: FontManager); 
-	PROCEDURE ^ GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR family: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetSystemFontFamily*(CONST systemName: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetSystemFontSize*(CONST systemName: ARRAY OF CHAR; VAR size: SIZE): BOOLEAN; 
+	PROCEDURE ^ GetSystemFontInfo*(CONST systemName: ARRAY OF CHAR; VAR name: ARRAY OF CHAR; VAR size: SIZE; VAR style: SET): BOOLEAN; 
 	PROCEDURE ^ GetSystemFont*(CONST name: ARRAY OF CHAR; VAR font: Font): BOOLEAN; 
 	PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): Font; 
 	PROCEDURE ^ FBRenderChar*(canvas: Canvas; x, y: Real; char: Char32); 

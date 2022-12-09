@@ -1,0 +1,7 @@
+From 9.12.2022 the repository has switched to a git-repository hosted at https://cas.inf.ethz.ch.
+
+This SVN-repository will remain available read-only in order to refer to older revisions and or in order to download material that will not make it into the git repository.
+
+Kind regards
+Felix Friedrich
+
